@@ -160,46 +160,71 @@ const Game = () => {
           <div className="relative perspective-1000">
             <Card 
               className={`
-                w-80 h-96 p-8 transition-all duration-700 transform-gpu 
+                w-80 h-96 p-0 transition-all duration-700 transform-gpu 
                 ${showCard ? 'scale-100 opacity-100 rotate-0' : 'scale-95 opacity-70 rotate-1'}
-                bg-gradient-to-br from-card via-card to-background
-                border-0 rounded-3xl shadow-2xl
+                border-0 rounded-[32px] shadow-2xl
                 relative overflow-hidden
                 hover:scale-105 hover:shadow-3xl
-                before:absolute before:inset-0 before:bg-gradient-to-br 
-                before:from-primary/5 before:via-transparent before:to-secondary/5
-                before:rounded-3xl before:opacity-50
-                after:absolute after:inset-[1px] after:bg-gradient-to-br 
-                after:from-background/90 after:to-background/70
-                after:rounded-3xl after:shadow-inner
+                ${currentLevel === 1 ? 'bg-gradient-to-br from-yellow-300 via-yellow-200 to-yellow-100' : ''}
+                ${currentLevel === 2 ? 'bg-gradient-to-br from-orange-400 via-orange-300 to-orange-200' : ''}
+                ${currentLevel === 3 ? 'bg-gradient-to-br from-red-400 via-red-300 to-red-200' : ''}
               `}
             >
-              {/* Card decorative corners */}
-              <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-primary/30 rounded-tl-lg"></div>
-              <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-primary/30 rounded-tr-lg"></div>
-              <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-primary/30 rounded-bl-lg"></div>
-              <div className="absolute bottom-4 right-4 w-3 h-3 border-b-2 border-r-2 border-primary/30 rounded-br-lg"></div>
-              
-              {/* Card content */}
-              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center space-y-6">
-                {/* Card suit icon */}
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                  <Heart className="w-4 h-4 text-primary-foreground" />
-                </div>
-                
-                {/* Card text */}
-                <p className="text-lg text-foreground font-medium leading-relaxed max-w-64 px-2">
-                  {currentCard}
-                </p>
-                
-                {/* Card number */}
-                <div className="absolute bottom-6 right-6 text-xs font-mono text-muted-foreground opacity-60">
-                  {cardIndex + 1}
+              {/* Inner card area with white background */}
+              <div className="absolute inset-4 bg-white rounded-[24px] shadow-inner">
+                {/* Card content */}
+                <div className="relative z-10 h-full flex flex-col items-center justify-center text-center space-y-6 p-6">
+                  {/* Level indicator at top */}
+                  <div className="absolute top-6 left-6 flex items-center space-x-2">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm
+                      ${currentLevel === 1 ? 'bg-yellow-500' : ''}
+                      ${currentLevel === 2 ? 'bg-orange-500' : ''}
+                      ${currentLevel === 3 ? 'bg-red-500' : ''}
+                    `}>
+                      {currentLevel}
+                    </div>
+                  </div>
+                  
+                  {/* Card suit icon */}
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg
+                    ${currentLevel === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : ''}
+                    ${currentLevel === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600' : ''}
+                    ${currentLevel === 3 ? 'bg-gradient-to-br from-red-400 to-red-600' : ''}
+                  `}>
+                    <Heart className="w-6 h-6 text-white" />
+                  </div>
+                  
+                  {/* Card text */}
+                  <p className="text-lg text-gray-800 font-medium leading-relaxed max-w-60 px-2">
+                    {currentCard}
+                  </p>
+                  
+                  {/* Level name at bottom */}
+                  <div className="absolute bottom-6 left-6 right-6 text-center">
+                    <p className={`text-sm font-semibold
+                      ${currentLevel === 1 ? 'text-yellow-600' : ''}
+                      ${currentLevel === 2 ? 'text-orange-600' : ''}
+                      ${currentLevel === 3 ? 'text-red-600' : ''}
+                    `}>
+                      {LEVEL_NAMES[currentLevel as keyof typeof LEVEL_NAMES]}
+                    </p>
+                  </div>
+                  
+                  {/* Card number */}
+                  <div className="absolute bottom-6 right-6 text-xs font-mono text-gray-400 opacity-80">
+                    {cardIndex + 1}/{totalCards}
+                  </div>
                 </div>
               </div>
               
+              {/* Decorative corners on outer border */}
+              <div className="absolute top-2 left-2 w-4 h-4 border-t-2 border-l-2 border-white/50 rounded-tl-lg"></div>
+              <div className="absolute top-2 right-2 w-4 h-4 border-t-2 border-r-2 border-white/50 rounded-tr-lg"></div>
+              <div className="absolute bottom-2 left-2 w-4 h-4 border-b-2 border-l-2 border-white/50 rounded-bl-lg"></div>
+              <div className="absolute bottom-2 right-2 w-4 h-4 border-b-2 border-r-2 border-white/50 rounded-br-lg"></div>
+              
               {/* Subtle shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent rounded-3xl opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent rounded-[32px] opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
             </Card>
           </div>
         </div>
