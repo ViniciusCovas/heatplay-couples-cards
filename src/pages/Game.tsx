@@ -156,18 +156,52 @@ const Game = () => {
         </div>
 
         {/* Card Display */}
-        <div className="flex-1 flex items-center justify-center">
-          <Card 
-            className={`w-full min-h-[300px] p-8 transition-all duration-500 transform ${
-              showCard ? 'scale-100 opacity-100' : 'scale-95 opacity-70'
-            } bg-gradient-to-br from-card to-card/80 border-2 border-primary/20 shadow-xl`}
-          >
-            <div className="h-full flex items-center justify-center">
-              <p className="text-lg text-center text-foreground font-body leading-relaxed">
-                {currentCard}
-              </p>
-            </div>
-          </Card>
+        <div className="flex-1 flex items-center justify-center px-4">
+          <div className="relative perspective-1000">
+            <Card 
+              className={`
+                w-80 h-96 p-8 transition-all duration-700 transform-gpu 
+                ${showCard ? 'scale-100 opacity-100 rotate-0' : 'scale-95 opacity-70 rotate-1'}
+                bg-gradient-to-br from-card via-card to-background
+                border-0 rounded-3xl shadow-2xl
+                relative overflow-hidden
+                hover:scale-105 hover:shadow-3xl
+                before:absolute before:inset-0 before:bg-gradient-to-br 
+                before:from-primary/5 before:via-transparent before:to-secondary/5
+                before:rounded-3xl before:opacity-50
+                after:absolute after:inset-[1px] after:bg-gradient-to-br 
+                after:from-background/90 after:to-background/70
+                after:rounded-3xl after:shadow-inner
+              `}
+            >
+              {/* Card decorative corners */}
+              <div className="absolute top-4 left-4 w-3 h-3 border-t-2 border-l-2 border-primary/30 rounded-tl-lg"></div>
+              <div className="absolute top-4 right-4 w-3 h-3 border-t-2 border-r-2 border-primary/30 rounded-tr-lg"></div>
+              <div className="absolute bottom-4 left-4 w-3 h-3 border-b-2 border-l-2 border-primary/30 rounded-bl-lg"></div>
+              <div className="absolute bottom-4 right-4 w-3 h-3 border-b-2 border-r-2 border-primary/30 rounded-br-lg"></div>
+              
+              {/* Card content */}
+              <div className="relative z-10 h-full flex flex-col items-center justify-center text-center space-y-6">
+                {/* Card suit icon */}
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                  <Heart className="w-4 h-4 text-primary-foreground" />
+                </div>
+                
+                {/* Card text */}
+                <p className="text-lg text-foreground font-medium leading-relaxed max-w-64 px-2">
+                  {currentCard}
+                </p>
+                
+                {/* Card number */}
+                <div className="absolute bottom-6 right-6 text-xs font-mono text-muted-foreground opacity-60">
+                  {cardIndex + 1}
+                </div>
+              </div>
+              
+              {/* Subtle shine effect */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent rounded-3xl opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+            </Card>
+          </div>
         </div>
 
         {/* Action Buttons */}
