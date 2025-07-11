@@ -45,7 +45,7 @@ const CreateRoom = () => {
     setIsWaiting(true);
     // TODO: Initialize session and wait for partner
     setTimeout(() => {
-      navigate('/level-select');
+      navigate(`/level-select?room=${roomCode}`);
     }, 2000);
   };
 

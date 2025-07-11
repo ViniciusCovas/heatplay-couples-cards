@@ -37,7 +37,7 @@ const JoinRoom = () => {
     setTimeout(() => {
       // Simulate validation
       if (roomCode.toUpperCase() === "TEST123") {
-        navigate('/level-select');
+        navigate(`/level-select?room=${roomCode}`);
       } else {
         toast({
           title: "Código no válido",
