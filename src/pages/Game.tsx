@@ -209,6 +209,7 @@ const Game = () => {
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   
   // Final report
@@ -253,15 +254,25 @@ const Game = () => {
   };
 
   const handleResponseSubmit = async (response: string, responseTime: number) => {
+    if (isSubmitting || !room) {
+      toast({
+        title: "Error",
+        description: "No se ha podido establecer conexión con la sala. Intenta de nuevo.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
     setCurrentResponse(response);
     setCurrentResponseTime(responseTime);
-    
+
     try {
       // STEP 1: Save response to database
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
-          room_id: room?.id || '',
+          room_id: room.id, // Se ha corregido aquí para usar siempre un ID válido
           player_id: playerId,
           card_id: currentCard,
           response: response,
@@ -275,19 +286,15 @@ const Game = () => {
       }
 
       if (isCloseProximity) {
-        // MODO JUNTOS: Inmediatamente a evaluación (el mismo jugador avanza y el otro califica)
         setGamePhase('evaluation');
       } else {
-        // MODO SEPARADOS: El que responde espera, el otro evalúa
-        // STEP 2: Switch to partner for evaluation
         const partnerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
         
         await updateGameState({
           current_phase: 'waiting-for-evaluation',
-          current_turn: partnerTurn // Now it's partner's turn to evaluate
+          current_turn: partnerTurn
         });
         
-        // STEP 3: Send response data to partner
         await syncAction('response_submit', {
           response,
           responseTime,
@@ -302,9 +309,11 @@ const Game = () => {
       console.error('Error submitting response:', error);
       toast({
         title: "Error",
-        description: "No se pudo guardar la respuesta",
+        description: "No se pudo guardar la respuesta. Por favor, inténtalo de nuevo.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -608,6 +617,7 @@ const Game = () => {
           onSubmitResponse={handleResponseSubmit}
           playerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
           isCloseProximity={isCloseProximity}
+          isSubmitting={isSubmitting} // Añade esta línea
         />
 
         {/* Response Evaluation Modal */}

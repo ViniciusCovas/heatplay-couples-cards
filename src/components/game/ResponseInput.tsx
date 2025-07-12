@@ -10,6 +10,7 @@ interface ResponseInputProps {
   onSubmitResponse: (response: string, responseTime: number) => void;
   playerName?: string;
   isCloseProximity?: boolean;
+  isSubmitting?: boolean; // Añade esta línea
 }
 
 export const ResponseInput = ({ 
@@ -17,7 +18,8 @@ export const ResponseInput = ({
   question, 
   onSubmitResponse,
   playerName = "Tú",
-  isCloseProximity = false
+  isCloseProximity = false,
+  isSubmitting = false // Añade esta línea
 }: ResponseInputProps) => {
   const [response, setResponse] = useState("");
   const [startTime, setStartTime] = useState<number>(0);
@@ -117,9 +119,19 @@ export const ResponseInput = ({
               onClick={handleSpokenResponse}
               className="w-full h-12 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
               size="lg"
+              disabled={isSubmitting} // Añade esta línea
             >
-              <Mic className="w-5 h-5 mr-2" />
-              Ya Respondimos
+              {isSubmitting ? (
+                <>
+                  <Timer className="w-5 h-5 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Mic className="w-5 h-5 mr-2" />
+                  Ya Respondimos
+                </>
+              )}
             </Button>
           </div>
         ) : (
@@ -147,11 +159,20 @@ export const ResponseInput = ({
             <Button 
               onClick={handleSubmit}
               className="w-full h-12 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
-              disabled={!response.trim()}
+              disabled={!response.trim() || isSubmitting} // Modifica esta línea
               size="lg"
             >
-              <Send className="w-5 h-5 mr-2" />
-              Enviar Respuesta
+              {isSubmitting ? (
+                <>
+                  <Timer className="w-5 h-5 mr-2 animate-spin" />
+                  Enviando...
+                </>
+              ) : (
+                <>
+                  <Send className="w-5 h-5 mr-2" />
+                  Enviar Respuesta
+                </>
+              )}
             </Button>
           </div>
         )}
