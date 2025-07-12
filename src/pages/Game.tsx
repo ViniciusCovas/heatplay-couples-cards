@@ -61,16 +61,29 @@ const Game = () => {
     const autoJoinRoom = async () => {
       if (roomCode && !isConnected && !room) {
         console.log('🔗 Auto-joining room:', roomCode);
-        const success = await joinRoom(roomCode);
-        if (!success) {
-          console.log('❌ Failed to join room, redirecting to home');
-          navigate('/');
+        try {
+          const success = await joinRoom(roomCode);
+          if (!success) {
+            console.log('❌ Failed to join room, but staying on game page to retry');
+            toast({
+              title: "Error de conexión",
+              description: `No se pudo conectar a la sala ${roomCode}`,
+              variant: "destructive"
+            });
+          }
+        } catch (error) {
+          console.error('❌ Auto-join error:', error);
+          toast({
+            title: "Error de conexión",
+            description: "No se pudo conectar a la sala",
+            variant: "destructive"
+          });
         }
       }
     };
     
     autoJoinRoom();
-  }, [roomCode, isConnected, room, joinRoom, navigate]);
+  }, [roomCode, isConnected, room, joinRoom]);
   
   // Game state
   const [currentCard, setCurrentCard] = useState('');

@@ -92,6 +92,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [playerId]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
+    console.log('🔗 Attempting to join room:', roomCode);
+    
     try {
       // Special handling for test code
       if (roomCode === 'TEST123') {
@@ -107,25 +109,41 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // Find the room
+      // Find the room - accept both waiting and playing status
       const { data: roomData, error: roomError } = await supabase
         .from('game_rooms')
         .select('*')
         .eq('room_code', roomCode)
-        .eq('status', 'waiting')
+        .in('status', ['waiting', 'playing'])
         .single();
 
       if (roomError || !roomData) {
+        console.log('❌ Room not found or error:', { roomError, roomData, roomCode });
         return false;
       }
+      
+      console.log('✅ Room found:', roomData);
 
-      // Check if room is full
+      // Check if player is already in the room
       const { data: existingParticipants, error: participantsError } = await supabase
         .from('room_participants')
         .select('*')
         .eq('room_id', roomData.id);
 
       if (participantsError) throw participantsError;
+
+      // Check if this player is already in the room
+      const playerAlreadyInRoom = existingParticipants.some(p => p.player_id === playerId);
+      
+      if (playerAlreadyInRoom) {
+        // Player already in room, just connect
+        setRoom({
+          ...roomData,
+          status: roomData.status as 'waiting' | 'playing' | 'finished'
+        });
+        setIsConnected(true);
+        return true;
+      }
 
       if (existingParticipants.length >= 2) {
         return false; // Room is full
