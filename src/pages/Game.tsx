@@ -276,7 +276,7 @@ const Game = () => {
           player_id: playerId,
           card_id: currentCard,
           response: response,
-          response_time: responseTime,
+          response_time: Math.round(responseTime), // Convert to integer
           round_number: usedCards.length + 1
         });
 
