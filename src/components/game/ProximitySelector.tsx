@@ -30,32 +30,25 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   }, [gameState, navigate, roomCode]);
 
   const handleSelect = async (isClose: boolean) => {
-    console.log('🔥 handleSelect called with:', isClose);
-    
     if (!room?.id || !playerId) {
-      console.log('❌ No room ID or player ID available');
+      console.warn('No room ID or player ID available for proximity selection');
       return;
     }
     
     setSelectedOption(isClose);
     setWaitingForPartner(true);
-    console.log('🔥 State updated, calling updateGameState...');
 
     try {
-      // Actualiza el estado del juego. La sincronización se hará a través 
-      // de la suscripción de Supabase a los cambios en la tabla 'game_rooms'.
       await updateGameState({
         proximity_response: isClose,
         proximity_question_answered: true,
         current_phase: 'level-select'
       });
       
-      console.log('🔥 updateGameState completed');
-
-      // La navegación ahora se basará en el cambio de estado del juego, 
-      // que se recibe a través del hook useGameSync.
+      // Call onSelect to notify parent component
+      onSelect(isClose);
     } catch (error) {
-      console.error('❌ Error handling proximity selection:', error);
+      console.error('Error handling proximity selection:', error);
       setWaitingForPartner(false);
     }
   };

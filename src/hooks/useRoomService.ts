@@ -92,7 +92,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [playerId]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    console.log('🔗 Attempting to join room:', roomCode);
+    if (!playerId) {
+      console.error('❌ No player ID available for joining room');
+      return false;
+    }
+    
+    console.log('🔗 Attempting to join room:', roomCode, 'with player:', playerId);
     
     try {
       // Special handling for test code
