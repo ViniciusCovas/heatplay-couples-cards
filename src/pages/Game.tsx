@@ -407,39 +407,30 @@ const Game = () => {
         roundNumber: currentRound
       });
 
-      // STEP 1: Get the response that needs to be evaluated (from the other player)
-      // Since currentTurn represents who should evaluate, we need the response from the PREVIOUS turn
-      const respondingPlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-      const respondingPlayerId = respondingPlayerTurn === 'player1' ? 
-        (playerNumber === 1 ? playerId : 'other_player') : 
-        (playerNumber === 2 ? playerId : 'other_player');
-
-      console.log('🔍 Looking for response from:', { 
-        currentTurn, 
-        respondingPlayerTurn, 
-        myPlayerId: playerId,
-        roundNumber: currentRound 
-      });
-
+      // STEP 1: Get the response that needs to be evaluated
+      // We need to find the most recent response for this card/round that's NOT from the current player
       const { data: responseData, error: fetchError } = await supabase
         .from('game_responses')
         .select('*')
         .eq('room_id', room?.id || '')
         .eq('card_id', currentCardFromState)
         .eq('round_number', currentRound)
+        .neq('player_id', playerId) // Exclude my own responses
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
+      console.log('🔍 Response query result:', { 
+        responseData, 
+        fetchError,
+        currentCard: currentCardFromState,
+        round: currentRound,
+        excludedPlayerId: playerId
+      });
+
       if (fetchError || !responseData) {
         console.error('❌ Error fetching response for evaluation:', fetchError);
         throw new Error('Response not found for evaluation');
-      }
-
-      // Verify this response is not from the current evaluator
-      if (responseData.player_id === playerId) {
-        console.error('❌ Found own response instead of partner response');
-        throw new Error('Cannot evaluate own response');
       }
 
       console.log('✅ Found response to evaluate:', responseData);
@@ -472,9 +463,10 @@ const Game = () => {
       
       setGameResponses(prev => [...prev, gameResponseData]);
       
-      // STEP 4: Determine next turn - alternate between players
-      // Since currentTurn is the evaluator, the next responder should be the other player
-      const nextResponseTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      // STEP 4: Determine next turn - FIXED LOGIC
+      // The current turn is the evaluator. After evaluation, the evaluator becomes the next responder
+      // This ensures players alternate: P1 responds -> P2 evaluates -> P2 responds -> P1 evaluates
+      const nextResponseTurn: PlayerTurn = currentTurn; // Current evaluator becomes next responder
       
       const nextCard = getNextCard();
       
@@ -483,12 +475,13 @@ const Game = () => {
           nextCard, 
           nextResponseTurn, 
           completedCard: currentCardFromState,
-          newUsedCards: [...(gameState?.used_cards || []), currentCardFromState]
+          newUsedCards: [...(gameState?.used_cards || []), currentCardFromState],
+          logic: 'evaluator becomes next responder'
         });
         
         // Continue with next card - update database first
         await updateGameState({
-          current_turn: nextResponseTurn, // Next player will respond
+          current_turn: nextResponseTurn, // Evaluator becomes responder
           current_phase: 'card-display',
           current_card: nextCard,
           used_cards: [...(gameState?.used_cards || []), currentCardFromState]
@@ -542,15 +535,65 @@ const Game = () => {
   };
 
   const generateFinalReport = async () => {
-    const connectionData = calculateConnectionScore(gameResponses);
-    setConnectionData(connectionData);
-    setGamePhase('final-report');
-    
-    // Update room status to finished
     try {
+      console.log('📊 Generating final report - fetching all game data from database');
+      
+      // Fetch all responses and evaluations from database for complete analysis
+      const { data: allResponses, error } = await supabase
+        .from('game_responses')
+        .select('*')
+        .eq('room_id', room?.id || '')
+        .not('response', 'is', null)
+        .not('evaluation', 'is', null)
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ Error fetching game responses:', error);
+        throw error;
+      }
+
+      console.log('📊 Retrieved responses for analysis:', allResponses);
+
+      if (!allResponses || allResponses.length === 0) {
+        console.log('⚠️ No responses found for analysis');
+        toast({
+          title: "Datos insuficientes",
+          description: "No hay suficientes datos para generar el reporte de conexión",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Convert database responses to GameResponse format
+      const formattedResponses: GameResponse[] = allResponses.map(response => ({
+        question: response.card_id,
+        response: response.response || '',
+        responseTime: response.response_time || 0,
+        evaluation: response.evaluation ? JSON.parse(response.evaluation) : {
+          honesty: 0,
+          attraction: 0,
+          intimacy: 0,
+          surprise: 0
+        },
+        level: currentLevel,
+        playerId: response.player_id
+      }));
+
+      console.log('📊 Formatted responses for connection analysis:', formattedResponses);
+
+      const connectionData = calculateConnectionScore(formattedResponses);
+      setConnectionData(connectionData);
+      setGamePhase('final-report');
+      
+      // Update room status to finished
       await updateRoomStatus('finished');
     } catch (error) {
-      console.error('Error updating room status:', error);
+      console.error('❌ Error generating final report:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el reporte final",
+        variant: "destructive"
+      });
     }
   };
 
@@ -733,8 +776,9 @@ const Game = () => {
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
-        {/* Response Evaluation Modal */}
+        {/* Response Evaluation Modal - FIXED: Added key to reset state */}
         <ResponseEvaluation
+          key={`${gameState?.current_card}-${currentTurn}-${(gameState?.used_cards?.length || 0) + 1}`}
           isVisible={gamePhase === 'evaluation'}
           question={gameState?.current_card || currentCard}
           response={evaluationResponseData?.response || ''}

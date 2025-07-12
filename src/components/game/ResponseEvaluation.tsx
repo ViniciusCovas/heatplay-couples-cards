@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Star, Flame, Zap, Clock, Gamepad2, Target } from "lucide-react";
@@ -33,6 +33,17 @@ export const ResponseEvaluation = ({
     intimacy: 0,
     surprise: 0
   });
+
+  // Reset evaluation when question changes (FIXED: prevent evaluation persistence)
+  useEffect(() => {
+    console.log('🔄 Resetting evaluation for new question:', question);
+    setEvaluation({
+      honesty: 0,
+      attraction: 0,
+      intimacy: 0,
+      surprise: 0
+    });
+  }, [question]);
 
   if (!isVisible) return null;
 

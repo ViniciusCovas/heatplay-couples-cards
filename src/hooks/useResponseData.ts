@@ -29,7 +29,12 @@ export const useResponseData = (
       setError(null);
 
       try {
-        console.log('🔍 Fetching response data:', { roomId, cardId, roundNumber, currentPlayerId });
+        console.log('🔍 useResponseData: Fetching response data:', {
+          roomId: roomId.substring(0, 8) + '...',
+          cardId: cardId.substring(0, 30) + '...',
+          roundNumber,
+          excludePlayerId: currentPlayerId
+        });
         
         // Get the most recent response for this card that is NOT from the current player
         const { data, error } = await supabase
@@ -39,30 +44,38 @@ export const useResponseData = (
           .eq('card_id', cardId)
           .eq('round_number', roundNumber)
           .neq('player_id', currentPlayerId) // Exclude current player's responses
+          .not('response', 'is', null) // Only get responses that exist
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(); // Use maybeSingle to avoid errors when no data found
 
         if (error) {
-          console.error('❌ Error fetching response data:', error);
+          console.error('❌ useResponseData: Database error:', error);
           setError('Could not fetch response data');
           return;
         }
 
         if (data) {
-          console.log('✅ Found response data:', data);
+          console.log('✅ useResponseData: Found response to evaluate:', {
+            hasResponse: !!data.response,
+            responseTime: data.response_time,
+            playerId: data.player_id,
+            responsePreview: data.response?.substring(0, 30) + '...'
+          });
           setResponseData({
             response: data.response || '',
             responseTime: data.response_time || 0,
             playerId: data.player_id
           });
         } else {
-          console.log('⚠️ No response data found for evaluation');
+          console.log('⚠️ useResponseData: No response found for evaluation');
           setError('No response found to evaluate');
+          setResponseData(null);
         }
       } catch (err) {
-        console.error('❌ Unexpected error fetching response data:', err);
+        console.error('❌ useResponseData: Unexpected error:', err);
         setError('Unexpected error occurred');
+        setResponseData(null);
       } finally {
         setIsLoading(false);
       }
