@@ -85,7 +85,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
               console.error('❌ Error updating game room:', updateError);
               toast.error('Error al avanzar. Intenta nuevamente.');
             } else {
-              console.log('✅ Game room successfully updated to proximity-selection');
+              console.log('✅ Game room successfully updated to card-display');
               console.log('📊 Updated data:', updateData);
             }
           } catch (err) {
