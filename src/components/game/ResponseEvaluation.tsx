@@ -74,10 +74,10 @@ export const ResponseEvaluation = ({
   );
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-purple-500/10 via-background to-pink-500/10 backdrop-blur-xl z-50 flex items-center justify-center p-2 sm:p-4">
-      {/* Scrollable container para móviles */}
-      <div className="w-full max-w-lg max-h-[95vh] overflow-y-auto">
-        <Card className="w-full p-4 sm:p-6 space-y-4 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10">
+    <div className="fixed inset-0 bg-gradient-to-br from-purple-500/10 via-background to-pink-500/10 backdrop-blur-xl z-50 flex items-start justify-center p-2 sm:p-4 overflow-y-auto">
+      {/* Scrollable container para móviles - FIXED */}
+      <div className="w-full max-w-lg min-h-full flex items-center justify-center py-4">
+        <Card className="w-full p-4 sm:p-6 space-y-4 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10 my-auto">
           {/* Gaming Header - más compacto */}
           <div className="text-center space-y-3">
             <div className="relative">
@@ -145,6 +145,12 @@ export const ResponseEvaluation = ({
             <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
             Confirmar Evaluación
           </Button>
+          
+          {/* Debug info for mobile */}
+          <div className="text-xs text-muted-foreground p-2 bg-muted/20 rounded">
+            <p>Response: {response?.substring(0, 20)}...</p>
+            <p>Time: {responseTime}s</p>
+          </div>
         </Card>
       </div>
     </div>
