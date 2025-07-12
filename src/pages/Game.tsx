@@ -236,6 +236,8 @@ const Game = () => {
         return isMyTurnInDB ? 'evaluation' : 'waiting-for-evaluation';
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
+      case 'final-report':
+        return 'final-report';
       default:
         return 'card-display';
     }
@@ -585,7 +587,10 @@ const Game = () => {
       setConnectionData(connectionData);
       setGamePhase('final-report');
       
-      // Update room status to finished
+      // Update room status to finished AND set phase to final-report in database
+      await updateGameState({
+        current_phase: 'final-report'
+      });
       await updateRoomStatus('finished');
     } catch (error) {
       console.error('❌ Error generating final report:', error);
