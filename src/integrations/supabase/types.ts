@@ -14,13 +14,133 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      game_responses: {
+        Row: {
+          card_id: string
+          created_at: string
+          evaluation: string | null
+          evaluation_by: string | null
+          id: string
+          player_id: string
+          response: string | null
+          response_time: number | null
+          room_id: string
+          round_number: number
+        }
+        Insert: {
+          card_id: string
+          created_at?: string
+          evaluation?: string | null
+          evaluation_by?: string | null
+          id?: string
+          player_id: string
+          response?: string | null
+          response_time?: number | null
+          room_id: string
+          round_number: number
+        }
+        Update: {
+          card_id?: string
+          created_at?: string
+          evaluation?: string | null
+          evaluation_by?: string | null
+          id?: string
+          player_id?: string
+          response?: string | null
+          response_time?: number | null
+          room_id?: string
+          round_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_responses_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_rooms: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          finished_at: string | null
+          id: string
+          level: number
+          room_code: string
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          level?: number
+          room_code: string
+          started_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          finished_at?: string | null
+          id?: string
+          level?: number
+          room_code?: string
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      room_participants: {
+        Row: {
+          id: string
+          is_ready: boolean
+          joined_at: string
+          last_activity: string
+          player_id: string
+          player_name: string | null
+          room_id: string
+        }
+        Insert: {
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          last_activity?: string
+          player_id: string
+          player_name?: string | null
+          room_id: string
+        }
+        Update: {
+          id?: string
+          is_ready?: boolean
+          joined_at?: string
+          last_activity?: string
+          player_id?: string
+          player_name?: string | null
+          room_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_inactive_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

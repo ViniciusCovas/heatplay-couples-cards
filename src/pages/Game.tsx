@@ -11,6 +11,7 @@ import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
 import { ProximitySelector } from "@/components/game/ProximitySelector";
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
+import { useRoomService } from "@/hooks/useRoomService";
 
 // Sample cards data - this will come from database later
 const SAMPLE_CARDS = {
@@ -50,6 +51,7 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { updateRoomStatus } = useRoomService();
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
@@ -167,10 +169,17 @@ const Game = () => {
     setWaitingForPartner(false);
   };
 
-  const generateFinalReport = () => {
+  const generateFinalReport = async () => {
     const connectionData = calculateConnectionScore(gameResponses);
     setConnectionData(connectionData);
     setGamePhase('final-report');
+    
+    // Update room status to finished
+    try {
+      await updateRoomStatus('finished');
+    } catch (error) {
+      console.error('Error updating room status:', error);
+    }
   };
 
   const handlePlayAgain = () => {
@@ -260,7 +269,7 @@ const Game = () => {
                 </Button>
                 
                 <Button 
-                  onClick={generateFinalReport}
+                  onClick={() => generateFinalReport()}
                   variant="destructive"
                   className="h-10 text-sm flex items-center gap-1"
                 >

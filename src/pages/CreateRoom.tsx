@@ -1,137 +1,106 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Copy, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useRoomService } from '@/hooks/useRoomService';
+import { WaitingRoom } from '@/components/game/WaitingRoom';
 
-const CreateRoom = () => {
+export default function CreateRoom() {
+  const [level] = useState(1); // Default level
+  const [isCreating, setIsCreating] = useState(false);
+  const [roomCode, setRoomCode] = useState('');
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [roomCode, setRoomCode] = useState("");
-  const [isWaiting, setIsWaiting] = useState(false);
+  const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
 
-  // Generate room code
-  useEffect(() => {
-    const generateCode = () => {
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-      let code = "";
-      for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    };
-    
-    setRoomCode(generateCode());
-  }, []);
-
-  const copyToClipboard = async () => {
+  const handleCreateRoom = async (): Promise<void> => {
+    setIsCreating(true);
     try {
-      await navigator.clipboard.writeText(roomCode);
-      toast({
-        title: "¡Código copiado!",
-        description: "Comparte este código con tu pareja",
-      });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "No se pudo copiar el código",
-        variant: "destructive",
-      });
+      const code = await createRoom(level);
+      setRoomCode(code);
+      toast.success('Sala creada exitosamente');
+    } catch (error) {
+      toast.error('Error al crear la sala');
+      console.error('Error creating room:', error);
+    } finally {
+      setIsCreating(false);
     }
   };
 
-  const startGame = () => {
-    setIsWaiting(true);
-    // TODO: Initialize session and wait for partner
-    setTimeout(() => {
-      navigate(`/level-select?room=${roomCode}`);
-    }, 2000);
+  const handleGameStart = (): void => {
+    startGame();
+    navigate(`/game?room=${roomCode}&level=${level}`);
   };
 
+  const handleLeaveRoom = (): void => {
+    leaveRoom();
+    navigate('/');
+  };
+
+  // Show waiting room if room is created
+  if (room && roomCode) {
+    return (
+      <WaitingRoom
+        roomCode={roomCode}
+        participants={participants}
+        onGameStart={handleGameStart}
+        onLeaveRoom={handleLeaveRoom}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        {/* Header */}
-        <div className="flex items-center mb-6">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => navigate('/')}
-            className="mr-3"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <h1 className="text-2xl font-heading text-foreground">Crear sala</h1>
-        </div>
-
-        {/* Room Code Display */}
-        <Card className="p-8 text-center space-y-6 shadow-lg border-2 border-primary/20">
-          <div className="space-y-3">
-            <p className="text-lg font-heading text-foreground">
-              Tu código de sala:
-            </p>
-            
-            <div className="relative">
-              <div className="bg-primary/10 border-2 border-primary rounded-lg p-6">
-                <span className="text-3xl font-bold font-mono text-primary tracking-widest">
-                  {roomCode}
-                </span>
-              </div>
-              
-              <Button
-                onClick={copyToClipboard}
-                variant="outline"
-                size="sm"
-                className="absolute -top-2 -right-2 bg-card border-primary/30"
-              >
-                <Copy className="w-4 h-4" />
-              </Button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+        <CardHeader className="text-center space-y-2 pb-4">
+          <div className="flex items-center justify-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/')}
+              className="absolute left-4 top-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Crear Sala
+            </CardTitle>
+          </div>
+          <p className="text-muted-foreground text-center">
+            Crea una sala para jugar con tu pareja
+          </p>
+        </CardHeader>
+        
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <Button 
+              onClick={handleCreateRoom}
+              className="w-full h-12 text-lg font-semibold"
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Creando sala...
+                </>
+              ) : (
+                'Crear Sala'
+              )}
+            </Button>
           </div>
 
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Comparte este código con tu pareja para que se una a la sala
-            </p>
-            
-            {!isWaiting ? (
-              <Button 
-                onClick={startGame}
-                className="w-full h-12 text-lg font-heading bg-primary hover:bg-primary/90"
-                size="lg"
-              >
-                Empezar
-              </Button>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-100"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-pulse delay-200"></div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Esperando a tu pareja...
-                </p>
-              </div>
-            )}
+          <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+            <h3 className="font-semibold mb-2">¿Cómo funciona?</h3>
+            <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+              <li>Crea una sala y obtén tu código único</li>
+              <li>Comparte el código con tu pareja</li>
+              <li>Espera a que se conecte</li>
+              <li>¡El juego comenzará automáticamente!</li>
+            </ol>
           </div>
-        </Card>
-
-        {/* Instructions */}
-        <Card className="p-4 bg-muted/30">
-          <div className="space-y-2">
-            <h3 className="font-heading text-sm text-foreground">Instrucciones:</h3>
-            <ul className="text-xs text-muted-foreground space-y-1">
-              <li>• Comparte el código con tu pareja</li>
-              <li>• Ambos deben estar listos antes de empezar</li>
-              <li>• Pueden estar juntos o en videollamada</li>
-            </ul>
-          </div>
-        </Card>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default CreateRoom;
+}
