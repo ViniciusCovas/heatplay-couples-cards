@@ -49,7 +49,6 @@ const LevelSelect = () => {
       icon: Heart,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      unlocked: true,
       cards: 15
     },
     {
@@ -59,7 +58,6 @@ const LevelSelect = () => {
       icon: MessageCircle,
       color: "text-secondary",
       bgColor: "bg-secondary/10",
-      unlocked: progress >= 0.7,
       cards: 20
     },
     {
@@ -69,7 +67,6 @@ const LevelSelect = () => {
       icon: Flame,
       color: "text-destructive",
       bgColor: "bg-destructive/10",
-      unlocked: progress >= 1.5,
       cards: 12
     }
   ];
@@ -78,14 +75,8 @@ const LevelSelect = () => {
     const level = levels.find(l => l.id === levelId);
     if (!level) return;
 
-    if (level.unlocked) {
-      // Level is unlocked, start directly
-      startLevel(levelId);
-    } else {
-      // Level is locked, show confirmation dialog
-      setSelectedLevel(levelId);
-      setShowConfirmDialog(true);
-    }
+    // All levels are now available - start directly
+    startLevel(levelId);
   };
 
   const startLevel = async (levelId: number) => {
@@ -177,7 +168,6 @@ const LevelSelect = () => {
         <div className="space-y-4">
           {levels.map((level) => {
             const IconComponent = level.icon;
-            const isLocked = !level.unlocked;
             const isSelected = hasVoted; // Si ha votado, mostrar que está seleccionado
             const isDisabled = isWaitingForPartner || agreedLevel !== null;
             
@@ -187,21 +177,15 @@ const LevelSelect = () => {
                 className={`p-6 transition-all duration-200 border-2 ${
                   isSelected 
                     ? 'border-primary bg-primary/5' 
-                    : isLocked 
-                      ? 'opacity-60 bg-muted/30 border-muted' 
-                      : isDisabled
-                        ? 'opacity-50 border-muted cursor-not-allowed'
-                        : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
+                    : isDisabled
+                      ? 'opacity-50 border-muted cursor-not-allowed'
+                      : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
                 }`}
                 onClick={() => !isDisabled && handleLevelClick(level.id)}
               >
                 <div className="flex items-start space-x-4">
                   <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0`}>
-                    {isLocked ? (
-                      <Lock className="w-6 h-6 text-muted-foreground" />
-                    ) : (
-                      <IconComponent className={`w-6 h-6 ${level.color}`} />
-                    )}
+                    <IconComponent className={`w-6 h-6 ${level.color}`} />
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -216,12 +200,6 @@ const LevelSelect = () => {
                     <p className="text-sm text-muted-foreground mb-3">
                       {level.description}
                     </p>
-                    
-                    {isLocked && (
-                      <p className="text-xs text-destructive font-medium">
-                        Completa el nivel anterior para desbloquear
-                      </p>
-                    )}
                     
                     {isSelected && (
                       <p className="text-xs text-primary font-medium">

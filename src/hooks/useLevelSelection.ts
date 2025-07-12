@@ -47,27 +47,48 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
 
           // Check if there are 2 votes and they match
           if (data.length >= 2) {
-            const latestVotes = data.slice(0, 2);
-            const levels = latestVotes.map(v => v.selected_level);
+            const uniquePlayerVotes = new Map();
+            data.forEach(vote => {
+              uniquePlayerVotes.set(vote.player_id, vote);
+            });
             
-            if (levels[0] === levels[1]) {
-              setAgreedLevel(levels[0]);
-              setIsWaitingForPartner(false);
-            } else {
-              // Levels don't match, reset votes and ask to vote again
-              await supabase
-                .from('level_selection_votes')
-                .delete()
-                .eq('room_id', roomId);
+            const latestVotes = Array.from(uniquePlayerVotes.values());
+            
+            if (latestVotes.length === 2) {
+              const levels = latestVotes.map(v => v.selected_level);
               
-              setVotes([]);
-              setHasVoted(false);
-              setIsWaitingForPartner(false);
-              
-              toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
+              if (levels[0] === levels[1]) {
+                setAgreedLevel(levels[0]);
+                setIsWaitingForPartner(false);
+                
+                // Update game room to proceed to next phase
+                await supabase
+                  .from('game_rooms')
+                  .update({ 
+                    level: levels[0],
+                    current_phase: 'proximity-selection' 
+                  })
+                  .eq('id', roomId);
+                  
+              } else {
+                // Levels don't match, reset votes and ask to vote again
+                await supabase
+                  .from('level_selection_votes')
+                  .delete()
+                  .eq('room_id', roomId);
+                
+                setVotes([]);
+                setHasVoted(false);
+                setIsWaitingForPartner(false);
+                
+                toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
+              }
             }
           } else if (data.length === 1) {
-            setIsWaitingForPartner(true);
+            const playerVote = data.find(v => v.player_id === playerId);
+            if (playerVote) {
+              setIsWaitingForPartner(true);
+            }
           }
         }
       } catch (error) {
@@ -101,18 +122,36 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setVotes(prev => {
             const updated = [newVote, ...prev.filter(v => v.player_id !== newVote.player_id)];
             
-            // Check if we now have matching votes
-            if (updated.length >= 2) {
-              const latestVotes = updated.slice(0, 2);
+            // Check if we now have matching votes from both players
+            const uniquePlayerVotes = new Map();
+            updated.forEach(vote => {
+              uniquePlayerVotes.set(vote.player_id, vote);
+            });
+            
+            const latestVotes = Array.from(uniquePlayerVotes.values());
+            
+            if (latestVotes.length === 2) {
               const levels = latestVotes.map(v => v.selected_level);
               
               if (levels[0] === levels[1]) {
                 setAgreedLevel(levels[0]);
                 setIsWaitingForPartner(false);
                 toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
+                
+                // Update game room to proceed to next phase
+                supabase
+                  .from('game_rooms')
+                  .update({ 
+                    level: levels[0],
+                    current_phase: 'proximity-selection' 
+                  })
+                  .eq('id', roomId);
+              } else {
+                // Levels don't match
+                toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
               }
             } else {
-              setIsWaitingForPartner(false);
+              setIsWaitingForPartner(true);
             }
             
             return updated;
