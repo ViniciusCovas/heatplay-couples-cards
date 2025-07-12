@@ -33,9 +33,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
     // Navigate when someone has answered (not necessarily both)
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
       console.log('🎯 Someone answered, navigating to level select...');
-      setTimeout(() => {
-        navigate(`/level-select?room=${roomCode}`);
-      }, 1000); // Small delay to show success state
+      // Navigate immediately, no delay
+      navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);
 
@@ -69,6 +68,12 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
       await syncAction('proximity_answer', { isClose: selectedOption });
       
       console.log('✅ Proximity selection confirmed successfully');
+      
+      // Close the modal quickly after confirmation
+      setTimeout(() => {
+        setWaitingForPartner(false);
+        // The navigation will be handled by the useEffect
+      }, 500);
       
     } catch (error) {
       console.error('❌ Error confirming proximity selection:', error);
@@ -114,13 +119,13 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
         {waitingForPartner ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
-              <Clock className="w-8 h-8 text-primary animate-pulse" />
+              <Check className="w-8 h-8 text-primary animate-pulse" />
             </div>
             <h3 className="text-lg font-heading text-foreground mb-2">
-              Respuesta confirmada ✓
+              ¡Confirmado! ✓
             </h3>
             <p className="text-sm text-muted-foreground">
-              Avanzando al siguiente paso...
+              Avanzando...
             </p>
             <div className="flex justify-center space-x-2 mt-4">
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
