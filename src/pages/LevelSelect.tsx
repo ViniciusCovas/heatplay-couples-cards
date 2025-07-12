@@ -18,6 +18,7 @@ import { useGameSync } from "@/hooks/useGameSync";
 import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useLevelSelection } from "@/hooks/useLevelSelection";
+import { supabase } from "@/integrations/supabase/client";
 
 const LevelSelect = () => {
   const navigate = useNavigate();
@@ -108,6 +109,58 @@ const LevelSelect = () => {
       return () => clearTimeout(timer);
     }
   }, [agreedLevel, navigate, roomCode, room?.id]);
+
+  // Force check if both players have voted but no level agreed yet
+  useEffect(() => {
+    const forceCheck = async () => {
+      if (room?.id && !agreedLevel && hasVoted && !isWaitingForPartner) {
+        console.log('🔍 FORCE CHECK: Both players might have voted, verifying...');
+        try {
+          const { data: allVotes } = await supabase
+            .from('level_selection_votes')
+            .select('*')
+            .eq('room_id', room.id);
+          
+          if (allVotes && allVotes.length >= 2) {
+            console.log('🔍 FORCE CHECK: Found votes, checking for match:', allVotes);
+            
+            // Check if both votes are for the same level
+            const uniquePlayerVotes = new Map();
+            allVotes.forEach(vote => {
+              const existing = uniquePlayerVotes.get(vote.player_id);
+              if (!existing || new Date(vote.created_at) > new Date(existing.created_at)) {
+                uniquePlayerVotes.set(vote.player_id, vote);
+              }
+            });
+            
+            const latestVotes = Array.from(uniquePlayerVotes.values());
+            if (latestVotes.length === 2) {
+              const levels = latestVotes.map((v: any) => v.selected_level);
+              if (levels[0] === levels[1]) {
+                console.log('🔍 FORCE CHECK: Levels match! Manual update needed.');
+                // Force update game room
+                await supabase
+                  .from('game_rooms')
+                  .update({ 
+                    level: levels[0],
+                    current_phase: 'card-display' 
+                  })
+                  .eq('id', room.id);
+                
+                // Navigate directly
+                navigate(`/game?room=${roomCode}&level=${levels[0]}`);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('🔍 FORCE CHECK Error:', error);
+        }
+      }
+    };
+    
+    const timer = setTimeout(forceCheck, 3000); // Check after 3 seconds
+    return () => clearTimeout(timer);
+  }, [room?.id, agreedLevel, hasVoted, isWaitingForPartner, navigate, roomCode]);
 
   // Auto-join room if not connected
   useEffect(() => {

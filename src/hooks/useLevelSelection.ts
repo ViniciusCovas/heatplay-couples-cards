@@ -201,6 +201,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           
           // Process all votes (including own) to ensure consistency
           const newVote = payload.new as LevelVote;
+          console.log('📨 New vote details:', newVote);
           
           // Re-fetch all votes to ensure we have the latest state
           const { data: allVotes, error } = await supabase
@@ -214,7 +215,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             return;
           }
 
-          console.log('🔄 Re-fetched all votes:', allVotes);
+          console.log('🔄 Re-fetched all votes for real-time:', allVotes);
           
           if (allVotes) {
             setVotes(allVotes);
@@ -224,7 +225,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             setHasVoted(!!playerVote);
             setSelectedLevel(playerVote ? playerVote.selected_level : null);
             
-            // Check for matching votes
+            // CRITICAL: Force check for matching votes
+            console.log('🚨 FORCING CHECK FOR MATCHING VOTES...');
             await checkForMatchingVotes(allVotes);
           }
         }
