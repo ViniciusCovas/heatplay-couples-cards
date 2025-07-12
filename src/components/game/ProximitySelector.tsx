@@ -43,8 +43,20 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   };
 
   const handleConfirm = async () => {
+    console.log('🔍 Debug handleConfirm values:', { 
+      selectedOption, 
+      roomId: room?.id, 
+      playerId,
+      roomObject: room 
+    });
+    
     if (selectedOption === null || !room?.id || !playerId) {
-      console.warn('❌ Missing selection, room ID or player ID');
+      console.error('❌ Missing selection, room ID or player ID', {
+        selectedOption,
+        roomId: room?.id,
+        playerId,
+        room
+      });
       return;
     }
     
