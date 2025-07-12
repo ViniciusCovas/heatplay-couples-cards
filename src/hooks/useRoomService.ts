@@ -77,6 +77,13 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       if (participantError) throw participantError;
 
+      // Set the room state after successful creation
+      setRoom({
+        ...roomData,
+        status: roomData.status as 'waiting' | 'playing' | 'finished'
+      });
+      setIsConnected(true);
+
       return roomCode;
     } catch (error) {
       console.error('Error creating room:', error);
