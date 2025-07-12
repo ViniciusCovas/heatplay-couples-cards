@@ -26,6 +26,18 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
 
   // Helper function to check for matching votes
   const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
+    console.log('🔍 checkForMatchingVotes called', { 
+      roomId, 
+      playerId, 
+      votesLength: allVotes.length,
+      votes: allVotes 
+    });
+    
+    if (!roomId) {
+      console.error('❌ No roomId in checkForMatchingVotes');
+      return;
+    }
+    
     if (allVotes.length >= 2) {
       console.log('🔍 Checking for matching votes with', allVotes.length, 'total votes');
       
@@ -47,25 +59,32 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         
         if (levels[0] === levels[1]) {
           console.log('✅ LEVELS MATCH! Advancing to next phase');
+          console.log('🎯 About to update room:', roomId, 'with level:', levels[0]);
+          
           setAgreedLevel(levels[0]);
           setIsWaitingForPartner(false);
           toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
           
           // Update game room with error handling
           try {
-            const { error: updateError } = await supabase
+            console.log('🔄 Starting game room update...');
+            const { data: updateData, error: updateError } = await supabase
               .from('game_rooms')
               .update({ 
                 level: levels[0],
                 current_phase: 'proximity-selection' 
               })
-              .eq('id', roomId);
+              .eq('id', roomId)
+              .select();
+              
+            console.log('📊 Update result:', { updateData, updateError });
               
             if (updateError) {
               console.error('❌ Error updating game room:', updateError);
               toast.error('Error al avanzar. Intenta nuevamente.');
             } else {
               console.log('✅ Game room successfully updated to proximity-selection');
+              console.log('📊 Updated data:', updateData);
             }
           } catch (err) {
             console.error('❌ Exception updating game room:', err);
@@ -90,11 +109,15 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           }
         }
       } else if (latestVotes.length === 1) {
+        console.log('🔄 Only one player has voted');
         const playerVote = latestVotes.find(v => v.player_id === playerId);
         if (playerVote) {
+          console.log('🕐 Current player voted, waiting for partner');
           setIsWaitingForPartner(true);
         }
       }
+    } else {
+      console.log('🔄 Not enough votes yet:', allVotes.length);
     }
   }, [roomId, playerId]);
 
@@ -131,6 +154,29 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
 
     loadVotes();
   }, [roomId, playerId, checkForMatchingVotes]);
+
+  // Force re-evaluation on mount in case votes are already there
+  useEffect(() => {
+    if (!roomId) return;
+    
+    const forceReEvaluation = async () => {
+      console.log('🔄 Force re-evaluation on mount');
+      const { data: currentVotes, error } = await supabase
+        .from('level_selection_votes')
+        .select('*')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: false });
+        
+      if (!error && currentVotes) {
+        console.log('🔄 Current votes for force evaluation:', currentVotes);
+        await checkForMatchingVotes(currentVotes);
+      }
+    };
+    
+    // Add a small delay to ensure state is ready
+    const timer = setTimeout(forceReEvaluation, 1000);
+    return () => clearTimeout(timer);
+  }, [roomId, checkForMatchingVotes]);
 
   // Listen for real-time updates
   useEffect(() => {
