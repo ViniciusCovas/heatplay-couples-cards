@@ -22,6 +22,7 @@ export interface RoomParticipant {
   is_ready: boolean;
   joined_at: string;
   last_activity: string;
+  player_number: 1 | 2; // Añadido para identificar claramente los jugadores
 }
 
 interface UseRoomServiceReturn {
@@ -33,6 +34,7 @@ interface UseRoomServiceReturn {
   leaveRoom: () => Promise<void>;
   startGame: () => Promise<void>;
   updateRoomStatus: (status: 'waiting' | 'playing' | 'finished') => Promise<void>;
+  getPlayerNumber: () => 1 | 2 | null; // Añadido para obtener el número del jugador actual
 }
 
 export const useRoomService = (): UseRoomServiceReturn => {
@@ -73,7 +75,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .insert({
           room_id: roomData.id,
           player_id: playerId,
-          is_ready: true
+          is_ready: true,
+          player_number: 1 // El creador siempre es jugador 1
         });
 
       if (participantError) throw participantError;
@@ -166,13 +169,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return false; // Room is full
       }
 
-      // Join the room
+      // Join the room - el que se une siempre es jugador 2
       const { error: joinError } = await supabase
         .from('room_participants')
         .insert({
           room_id: roomData.id,
           player_id: playerId,
-          is_ready: true
+          is_ready: true,
+          player_number: 2 // El que se une siempre es jugador 2
         });
 
       if (joinError) throw joinError;
@@ -326,6 +330,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
     loadParticipants();
   }, [room]);
 
+  const getPlayerNumber = useCallback((): 1 | 2 | null => {
+    if (!playerId || participants.length === 0) return null;
+    const participant = participants.find(p => p.player_id === playerId);
+    return participant?.player_number || null;
+  }, [playerId, participants]);
+
   return {
     room,
     participants,
@@ -334,6 +344,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     joinRoom,
     leaveRoom,
     startGame,
-    updateRoomStatus
+    updateRoomStatus,
+    getPlayerNumber
   };
 };
