@@ -39,25 +39,31 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         if (error) throw error;
 
         if (data) {
+          console.log('📊 Loaded votes:', data);
           setVotes(data);
           
           // Check if current player has voted
           const playerVote = data.find(v => v.player_id === playerId);
           setHasVoted(!!playerVote);
+          console.log('🗳️ Player has voted:', !!playerVote);
 
           // Check if there are 2 votes and they match
           if (data.length >= 2) {
+            console.log('🔍 Checking votes for match, total votes:', data.length);
             const uniquePlayerVotes = new Map();
             data.forEach(vote => {
               uniquePlayerVotes.set(vote.player_id, vote);
             });
             
             const latestVotes = Array.from(uniquePlayerVotes.values());
+            console.log('👥 Unique player votes:', latestVotes);
             
             if (latestVotes.length === 2) {
               const levels = latestVotes.map(v => v.selected_level);
+              console.log('🎯 Comparing levels:', levels);
               
               if (levels[0] === levels[1]) {
+                console.log('✅ LEVELS MATCH! Setting agreed level:', levels[0]);
                 setAgreedLevel(levels[0]);
                 setIsWaitingForPartner(false);
                 
@@ -69,6 +75,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                     current_phase: 'proximity-selection' 
                   })
                   .eq('id', roomId);
+                  
+                console.log('✅ Both players agreed on level', levels[0]);
                   
               } else {
                 // Levels don't match, reset votes and ask to vote again
@@ -138,6 +146,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setIsWaitingForPartner(false);
                 toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
                 
+                console.log('✅ Real-time: Both players agreed on level', levels[0]);
+                
                 // Update game room to proceed to next phase
                 supabase
                   .from('game_rooms')
@@ -145,7 +155,10 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                     level: levels[0],
                     current_phase: 'proximity-selection' 
                   })
-                  .eq('id', roomId);
+                  .eq('id', roomId)
+                  .then(() => {
+                    console.log('✅ Game room updated to proximity-selection phase');
+                  });
               } else {
                 // Levels don't match
                 toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
