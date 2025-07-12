@@ -16,6 +16,7 @@ import { calculateConnectionScore, type GameResponse } from "@/utils/connectionA
 import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { useResponseData } from "@/hooks/useResponseData";
 import { supabase } from "@/integrations/supabase/client";
 
 // Sample cards data - this will come from database later
@@ -158,54 +159,78 @@ const Game = () => {
   const [currentResponse, setCurrentResponse] = useState('');
   const [currentResponseTime, setCurrentResponseTime] = useState(0);
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
-  const [partnerResponse, setPartnerResponse] = useState('');
-  const [partnerResponseTime, setPartnerResponseTime] = useState(0);
+  
+  // Use hook to fetch response data for evaluation phase
+  const { responseData: evaluationResponseData } = useResponseData(
+    room?.id || null,
+    currentCard,
+    usedCards.length + 1,
+    gamePhase === 'evaluation' // Only fetch when in evaluation phase
+  );
 
   // Determine if it's my turn based on player number and current turn
   const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
                    (currentTurn === 'player2' && playerNumber === 2);
   
-  // Sync with game state
+  // Determine if I should be evaluating (opposite of who's responding)
+  const shouldEvaluate = !isMyTurn && gameState?.current_phase === 'waiting-for-evaluation';
+  
+  console.log('🎯 Turn logic:', { 
+    currentTurn, 
+    playerNumber, 
+    isMyTurn, 
+    shouldEvaluate, 
+    gamePhase: gameState?.current_phase 
+  });
+  
+  // Sync with game state - this is the single source of truth
   useEffect(() => {
     if (gameState) {
+      console.log('🔄 Syncing with game state:', gameState);
+      
+      // Update turn
       setCurrentTurn(gameState.current_turn);
-      if (gameState.current_card) {
+      
+      // Update card only if it exists in game state
+      if (gameState.current_card && gameState.current_card !== currentCard) {
+        console.log('📄 Card updated from game state:', gameState.current_card);
         setCurrentCard(gameState.current_card);
+        setShowCard(false);
+        setTimeout(() => setShowCard(true), 300);
       }
+      
+      // Update used cards
       if (gameState.used_cards) {
         setUsedCards(gameState.used_cards);
       }
       
-      // Sync game phase
-      if (gameState.current_phase === 'waiting-for-evaluation') {
-        setGamePhase('waiting-for-evaluation');
-      } else if (gameState.current_phase === 'card-display') {
-        setGamePhase('card-display');
+      // Sync game phase based on database state and player logic
+      const newPhase = deriveLocalPhase(gameState, playerNumber);
+      if (newPhase !== gamePhase) {
+        console.log('🎮 Phase changed:', { from: gamePhase, to: newPhase, reason: 'game state sync' });
+        setGamePhase(newPhase);
       }
     }
   }, [gameState]);
   
-  // Handle partner response events
-  useEffect(() => {
-    const handlePartnerResponse = (event: CustomEvent) => {
-      const { response, responseTime, question, from } = event.detail;
-      console.log('📩 Received partner response:', { response, responseTime, question, from });
-      
-      setPartnerResponse(response);
-      setPartnerResponseTime(responseTime);
-      
-      // If it's my turn to evaluate (current game state has switched the turn to me)
-      if (gameState?.current_phase === 'waiting-for-evaluation' && isMyTurn) {
-        setGamePhase('evaluation');
-      }
-    };
-
-    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
+  // Helper function to derive local phase from database state
+  const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
+    const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
+                         (dbState.current_turn === 'player2' && playerNum === 2);
     
-    return () => {
-      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
-    };
-  }, [gameState, isMyTurn]);
+    switch (dbState.current_phase) {
+      case 'card-display':
+        return 'card-display';
+      case 'waiting-for-evaluation':
+        // If it's waiting for evaluation, the evaluator should see 'evaluation'
+        // and the responder should see 'waiting-for-evaluation'
+        return isMyTurnInDB ? 'evaluation' : 'waiting-for-evaluation';
+      default:
+        return 'card-display';
+    }
+  };
+  
+  // No longer needed - we get response data from database via useResponseData hook
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
@@ -219,16 +244,21 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
-    if (levelCards.length > 0) {
+    if (levelCards.length > 0 && !currentCard && isMyTurn && gameState?.current_phase === 'card-display') {
       const availableCards = levelCards.filter(card => !usedCards.includes(card));
       if (availableCards.length > 0) {
         const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-        setCurrentCard(randomCard);
-        setShowCard(true);
+        console.log('🎲 Generating new card (my turn):', randomCard);
+        
+        // Update database first, then local state will sync
+        updateGameState({
+          current_card: randomCard
+        });
       }
     }
-  }, [levelCards, usedCards]);
+  }, [levelCards, usedCards, currentCard, isMyTurn, gameState?.current_phase]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
@@ -285,26 +315,33 @@ const Game = () => {
         throw responseError;
       }
 
-      if (isCloseProximity) {
-        setGamePhase('evaluation');
-      } else {
-        const partnerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-        
-        await updateGameState({
-          current_phase: 'waiting-for-evaluation',
-          current_turn: partnerTurn
-        });
-        
-        await syncAction('response_submit', {
-          response,
-          responseTime,
-          question: currentCard,
-          from: currentTurn,
-          respondingPlayer: currentTurn
-        });
-        
-        setGamePhase('waiting-for-evaluation');
-      }
+      // In both close and far proximity modes, we need the partner to evaluate
+      const partnerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      
+      console.log('📝 Response submitted, switching to evaluation phase:', {
+        isCloseProximity,
+        currentTurn,
+        partnerTurn,
+        respondingPlayer: currentTurn
+      });
+      
+      // Update database: partner should be the evaluator
+      await updateGameState({
+        current_phase: 'waiting-for-evaluation',
+        current_turn: partnerTurn // The partner will be in evaluation mode
+      });
+      
+      // Notify the partner with the response data
+      await syncAction('response_submit', {
+        response,
+        responseTime,
+        question: currentCard,
+        from: currentTurn,
+        respondingPlayer: currentTurn
+      });
+      
+      // The responding player waits for evaluation
+      setGamePhase('waiting-for-evaluation');
     } catch (error) {
       console.error('Error submitting response:', error);
       toast({
@@ -319,7 +356,15 @@ const Game = () => {
 
   const handleEvaluationSubmit = async (evaluation: ResponseEvaluationType) => {
     try {
-      // STEP 1: Get the original response from database
+      console.log('📊 Starting evaluation submission:', { 
+        evaluation, 
+        currentCard, 
+        currentTurn,
+        playerNumber,
+        roundNumber: usedCards.length + 1
+      });
+
+      // STEP 1: Get the original response from database for this round
       const { data: responseData, error: fetchError } = await supabase
         .from('game_responses')
         .select('*')
@@ -332,6 +377,8 @@ const Game = () => {
         console.error('Error fetching response for evaluation:', fetchError);
         throw new Error('Response not found');
       }
+
+      console.log('📥 Found response to evaluate:', responseData);
 
       // STEP 2: Save evaluation to database
       const { error: evalError } = await supabase
@@ -350,51 +397,50 @@ const Game = () => {
       // STEP 3: Save to local game responses for final report
       const gameResponseData: GameResponse = {
         question: currentCard,
-        response: partnerResponse || currentResponse,
-        responseTime: partnerResponseTime || currentResponseTime,
+        response: responseData.response, // Use response from database
+        responseTime: responseData.response_time, // Use response time from database
         evaluation,
         level: currentLevel,
         playerId: responseData.player_id
       };
       
       setGameResponses(prev => [...prev, gameResponseData]);
-      setUsedCards(prev => [...prev, currentCard]);
       
-      // STEP 4: Switch turns back to next player for responding
-      const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      // STEP 4: Determine next turn - switch back to the next responder
+      // The current turn in DB is the evaluator, so we need to switch to the next responder
+      const nextResponseTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       
       const nextCard = getNextCard();
       
       if (nextCard) {
-        // Continue with next card
+        console.log('🎯 Moving to next round:', { 
+          nextCard, 
+          nextResponseTurn, 
+          completedCard: currentCard 
+        });
+        
+        // Continue with next card - update database first
         await updateGameState({
-          current_turn: nextTurn,
+          current_turn: nextResponseTurn, // Next player will respond
           current_phase: 'card-display',
           current_card: nextCard,
           used_cards: [...usedCards, currentCard]
         });
         
-        setCurrentCard(nextCard);
-        setCurrentTurn(nextTurn);
-        setGamePhase('card-display');
-        setShowCard(false);
-        setTimeout(() => setShowCard(true), 300);
-        
         // Clear response data
         setCurrentResponse('');
-        setPartnerResponse('');
         setCurrentResponseTime(0);
-        setPartnerResponseTime(0);
         
-        // Notify other player
+        // Notify other player that evaluation is complete
         await syncAction('evaluation_submit', {
           evaluation,
-          nextTurn,
+          nextTurn: nextResponseTurn,
           nextCard,
           cardCompleted: currentCard
         });
       } else {
         // All cards completed for this level
+        console.log('🏁 All cards completed for level', currentLevel);
         if (currentLevel >= 3) {
           await generateFinalReport();
         } else {
@@ -624,8 +670,8 @@ const Game = () => {
         <ResponseEvaluation
           isVisible={gamePhase === 'evaluation'}
           question={currentCard}
-          response={partnerResponse || currentResponse}
-          responseTime={partnerResponseTime || currentResponseTime}
+          response={evaluationResponseData?.response || ''}
+          responseTime={evaluationResponseData?.responseTime || 0}
           onEvaluate={handleEvaluationSubmit}
           partnerName={`Jugador ${currentTurn === 'player1' ? 2 : 1}`}
         />
@@ -634,10 +680,10 @@ const Game = () => {
         <WaitingForEvaluation
           isVisible={gamePhase === 'waiting-for-evaluation'}
           question={currentCard}
-          response={partnerResponse || currentResponse}
-          responseTime={partnerResponseTime || currentResponseTime}
+          response={currentResponse} // My own response when waiting for evaluation
+          responseTime={currentResponseTime}
           onEvaluate={handleEvaluationSubmit}
-          isMyTurn={isMyTurn} // isMyTurn means it's my turn to evaluate now
+          isMyTurn={shouldEvaluate} // Use shouldEvaluate instead of isMyTurn
           partnerName={`Jugador ${currentTurn === 'player1' ? 1 : 2}`}
         />
 

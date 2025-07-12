@@ -117,6 +117,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   }, [roomId, playerId]);
 
   const handleSyncAction = (action: GameSyncAction) => {
+    console.log('🔔 Handling sync action:', action);
+    
     switch (action.action_type) {
       case 'proximity_answer':
         toast.success('Tu pareja respondió la pregunta de proximidad');
@@ -128,9 +130,11 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         toast.info('Nueva carta revelada');
         break;
       case 'response_submit':
+        console.log('📤 Partner submitted response, notifying for evaluation');
         toast.info('Tu pareja envió su respuesta. Es tu turno evaluar.');
         // Store partner's response data for evaluation
         if (action.action_data) {
+          console.log('📨 Dispatching partner response event:', action.action_data);
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
               response: action.action_data.response,
@@ -142,8 +146,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }
         break;
       case 'evaluation_submit':
+        console.log('📊 Partner completed evaluation');
         toast.info('Evaluación completada');
         if (action.action_data?.nextCard) {
+          console.log('🃏 Next card available:', action.action_data.nextCard);
           toast.info('Nueva carta disponible');
         }
         break;
