@@ -587,10 +587,7 @@ const Game = () => {
       setConnectionData(connectionData);
       setGamePhase('final-report');
       
-      // Update room status to finished AND set phase to final-report in database
-      await updateGameState({
-        current_phase: 'final-report'
-      });
+      // Update room status to finished
       await updateRoomStatus('finished');
     } catch (error) {
       console.error('❌ Error generating final report:', error);
