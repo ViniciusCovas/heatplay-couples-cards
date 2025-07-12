@@ -230,9 +230,10 @@ const Game = () => {
       case 'card-display':
         return 'card-display';
       case 'waiting-for-evaluation':
-        // FIXED: The non-responding player (evaluator) should see 'evaluation'
-        // The responding player should see 'waiting-for-evaluation'
-        return !isMyTurnInDB ? 'evaluation' : 'waiting-for-evaluation';
+        // FIXED: currentTurn represents who should evaluate
+        // If it's my turn in DB, I should evaluate
+        // If it's not my turn in DB, I should wait for evaluation
+        return isMyTurnInDB ? 'evaluation' : 'waiting-for-evaluation';
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
       default:
@@ -407,13 +408,25 @@ const Game = () => {
       });
 
       // STEP 1: Get the response that needs to be evaluated (from the other player)
+      // Since currentTurn represents who should evaluate, we need the response from the PREVIOUS turn
+      const respondingPlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      const respondingPlayerId = respondingPlayerTurn === 'player1' ? 
+        (playerNumber === 1 ? playerId : 'other_player') : 
+        (playerNumber === 2 ? playerId : 'other_player');
+
+      console.log('🔍 Looking for response from:', { 
+        currentTurn, 
+        respondingPlayerTurn, 
+        myPlayerId: playerId,
+        roundNumber: currentRound 
+      });
+
       const { data: responseData, error: fetchError } = await supabase
         .from('game_responses')
         .select('*')
         .eq('room_id', room?.id || '')
         .eq('card_id', currentCardFromState)
         .eq('round_number', currentRound)
-        .neq('player_id', playerId) // Get response from the other player
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -421,6 +434,12 @@ const Game = () => {
       if (fetchError || !responseData) {
         console.error('❌ Error fetching response for evaluation:', fetchError);
         throw new Error('Response not found for evaluation');
+      }
+
+      // Verify this response is not from the current evaluator
+      if (responseData.player_id === playerId) {
+        console.error('❌ Found own response instead of partner response');
+        throw new Error('Cannot evaluate own response');
       }
 
       console.log('✅ Found response to evaluate:', responseData);
