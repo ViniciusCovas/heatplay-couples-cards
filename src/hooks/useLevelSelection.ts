@@ -24,6 +24,80 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [agreedLevel, setAgreedLevel] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
 
+  // Helper function to check for matching votes
+  const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
+    if (allVotes.length >= 2) {
+      console.log('🔍 Checking for matching votes with', allVotes.length, 'total votes');
+      
+      // Get unique votes per player (latest vote wins)
+      const uniquePlayerVotes = new Map();
+      allVotes.forEach(vote => {
+        const existing = uniquePlayerVotes.get(vote.player_id);
+        if (!existing || new Date(vote.created_at) > new Date(existing.created_at)) {
+          uniquePlayerVotes.set(vote.player_id, vote);
+        }
+      });
+      
+      const latestVotes = Array.from(uniquePlayerVotes.values());
+      console.log('👥 Unique player votes:', latestVotes);
+      
+      if (latestVotes.length === 2) {
+        const levels = latestVotes.map(v => v.selected_level);
+        console.log('🎯 Comparing levels:', levels);
+        
+        if (levels[0] === levels[1]) {
+          console.log('✅ LEVELS MATCH! Advancing to next phase');
+          setAgreedLevel(levels[0]);
+          setIsWaitingForPartner(false);
+          toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
+          
+          // Update game room with error handling
+          try {
+            const { error: updateError } = await supabase
+              .from('game_rooms')
+              .update({ 
+                level: levels[0],
+                current_phase: 'proximity-selection' 
+              })
+              .eq('id', roomId);
+              
+            if (updateError) {
+              console.error('❌ Error updating game room:', updateError);
+              toast.error('Error al avanzar. Intenta nuevamente.');
+            } else {
+              console.log('✅ Game room successfully updated to proximity-selection');
+            }
+          } catch (err) {
+            console.error('❌ Exception updating game room:', err);
+            toast.error('Error al avanzar. Intenta nuevamente.');
+          }
+        } else {
+          console.log('❌ Levels do not match:', levels);
+          toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
+          setIsWaitingForPartner(false);
+          setHasVoted(false);
+          setAgreedLevel(null);
+          
+          // Clear mismatched votes
+          try {
+            await supabase
+              .from('level_selection_votes')
+              .delete()
+              .eq('room_id', roomId);
+            console.log('🗑️ Cleared mismatched votes');
+          } catch (err) {
+            console.error('❌ Error clearing votes:', err);
+          }
+        }
+      } else if (latestVotes.length === 1) {
+        const playerVote = latestVotes.find(v => v.player_id === playerId);
+        if (playerVote) {
+          setIsWaitingForPartner(true);
+        }
+      }
+    }
+  }, [roomId, playerId]);
+
   // Load existing votes
   useEffect(() => {
     if (!roomId) return;
@@ -47,57 +121,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setHasVoted(!!playerVote);
           console.log('🗳️ Player has voted:', !!playerVote);
 
-          // Check if there are 2 votes and they match
-          if (data.length >= 2) {
-            console.log('🔍 Checking votes for match, total votes:', data.length);
-            const uniquePlayerVotes = new Map();
-            data.forEach(vote => {
-              uniquePlayerVotes.set(vote.player_id, vote);
-            });
-            
-            const latestVotes = Array.from(uniquePlayerVotes.values());
-            console.log('👥 Unique player votes:', latestVotes);
-            
-            if (latestVotes.length === 2) {
-              const levels = latestVotes.map(v => v.selected_level);
-              console.log('🎯 Comparing levels:', levels);
-              
-              if (levels[0] === levels[1]) {
-                console.log('✅ LEVELS MATCH! Setting agreed level:', levels[0]);
-                setAgreedLevel(levels[0]);
-                setIsWaitingForPartner(false);
-                
-                // Update game room to proceed to next phase
-                await supabase
-                  .from('game_rooms')
-                  .update({ 
-                    level: levels[0],
-                    current_phase: 'proximity-selection' 
-                  })
-                  .eq('id', roomId);
-                  
-                console.log('✅ Both players agreed on level', levels[0]);
-                  
-              } else {
-                // Levels don't match, reset votes and ask to vote again
-                await supabase
-                  .from('level_selection_votes')
-                  .delete()
-                  .eq('room_id', roomId);
-                
-                setVotes([]);
-                setHasVoted(false);
-                setIsWaitingForPartner(false);
-                
-                toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
-              }
-            }
-          } else if (data.length === 1) {
-            const playerVote = data.find(v => v.player_id === playerId);
-            if (playerVote) {
-              setIsWaitingForPartner(true);
-            }
-          }
+          // Check for matching votes
+          await checkForMatchingVotes(data);
         }
       } catch (error) {
         console.error('Error loading votes:', error);
@@ -105,7 +130,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     };
 
     loadVotes();
-  }, [roomId, playerId]);
+  }, [roomId, playerId, checkForMatchingVotes]);
 
   // Listen for real-time updates
   useEffect(() => {
@@ -121,54 +146,36 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           table: 'level_selection_votes',
           filter: `room_id=eq.${roomId}`
         },
-        (payload) => {
+        async (payload) => {
+          console.log('📨 Real-time vote received:', payload);
+          
+          // Process all votes (including own) to ensure consistency
           const newVote = payload.new as LevelVote;
           
-          // Don't process our own votes
-          if (newVote.player_id === playerId) return;
+          // Re-fetch all votes to ensure we have the latest state
+          const { data: allVotes, error } = await supabase
+            .from('level_selection_votes')
+            .select('*')
+            .eq('room_id', roomId)
+            .order('created_at', { ascending: false });
 
-          setVotes(prev => {
-            const updated = [newVote, ...prev.filter(v => v.player_id !== newVote.player_id)];
+          if (error) {
+            console.error('❌ Error fetching votes in real-time:', error);
+            return;
+          }
+
+          console.log('🔄 Re-fetched all votes:', allVotes);
+          
+          if (allVotes) {
+            setVotes(allVotes);
             
-            // Check if we now have matching votes from both players
-            const uniquePlayerVotes = new Map();
-            updated.forEach(vote => {
-              uniquePlayerVotes.set(vote.player_id, vote);
-            });
+            // Check player vote status
+            const playerVote = allVotes.find(v => v.player_id === playerId);
+            setHasVoted(!!playerVote);
             
-            const latestVotes = Array.from(uniquePlayerVotes.values());
-            
-            if (latestVotes.length === 2) {
-              const levels = latestVotes.map(v => v.selected_level);
-              
-              if (levels[0] === levels[1]) {
-                setAgreedLevel(levels[0]);
-                setIsWaitingForPartner(false);
-                toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
-                
-                console.log('✅ Real-time: Both players agreed on level', levels[0]);
-                
-                // Update game room to proceed to next phase
-                supabase
-                  .from('game_rooms')
-                  .update({ 
-                    level: levels[0],
-                    current_phase: 'proximity-selection' 
-                  })
-                  .eq('id', roomId)
-                  .then(() => {
-                    console.log('✅ Game room updated to proximity-selection phase');
-                  });
-              } else {
-                // Levels don't match
-                toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
-              }
-            } else {
-              setIsWaitingForPartner(true);
-            }
-            
-            return updated;
-          });
+            // Check for matching votes
+            await checkForMatchingVotes(allVotes);
+          }
         }
       )
       .subscribe();
@@ -176,7 +183,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, playerId]);
+  }, [roomId, playerId, checkForMatchingVotes]);
 
   const submitLevelVote = useCallback(async (level: number) => {
     console.log('🗳️ submitLevelVote called:', { level, roomId, playerId });
