@@ -8,11 +8,14 @@ import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
 import { ResponseEvaluation, type ResponseEvaluation as ResponseEvaluationType } from "@/components/game/ResponseEvaluation";
+import { WaitingForEvaluation } from "@/components/game/WaitingForEvaluation";
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 import { useRoomService } from "@/hooks/useRoomService";
+import { useGameSync } from "@/hooks/useGameSync";
+import { usePlayerId } from "@/hooks/usePlayerId";
 
 // Sample cards data - this will come from database later
 const SAMPLE_CARDS = {
@@ -45,7 +48,7 @@ const LEVEL_NAMES = {
   3: "Sin filtros"
 };
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report' | 'waiting-for-evaluation';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -53,6 +56,10 @@ const Game = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { updateRoomStatus, room, joinRoom, isConnected } = useRoomService();
+  const playerId = usePlayerId();
+  
+  // Get game sync data
+  const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
@@ -139,12 +146,46 @@ const Game = () => {
   
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
-  const [isCloseProximity, setIsCloseProximity] = useState<boolean>(false);
+  
+  // Get proximity from game state
+  const isCloseProximity = gameState?.proximity_response || false;
+  
+  // Determine current player ID (player1 or player2)
+  const currentPlayerId = playerId;
   
   // Response and evaluation data
   const [currentResponse, setCurrentResponse] = useState('');
   const [currentResponseTime, setCurrentResponseTime] = useState(0);
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
+  const [partnerResponse, setPartnerResponse] = useState('');
+  const [partnerResponseTime, setPartnerResponseTime] = useState(0);
+  
+  // Sync with game state
+  useEffect(() => {
+    if (gameState) {
+      setCurrentTurn(gameState.current_turn);
+      if (gameState.current_card) {
+        setCurrentCard(gameState.current_card);
+      }
+      if (gameState.used_cards) {
+        setUsedCards(gameState.used_cards);
+      }
+      
+      // Sync game phase
+      if (gameState.current_phase === 'waiting-for-evaluation') {
+        setGamePhase('waiting-for-evaluation');
+      } else if (gameState.current_phase === 'card-display') {
+        setGamePhase('card-display');
+      }
+    }
+  }, [gameState]);
+  
+  // Handle sync actions from other player
+  useEffect(() => {
+    // This will be handled by useGameSync hook automatically
+    // When the other player submits a response, it will trigger a sync action
+    // and update the game state, which will then update our local state above
+  }, []);
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
@@ -191,13 +232,38 @@ const Game = () => {
     setGamePhase('response-input');
   };
 
-  const handleResponseSubmit = (response: string, responseTime: number) => {
+  const handleResponseSubmit = async (response: string, responseTime: number) => {
     setCurrentResponse(response);
     setCurrentResponseTime(responseTime);
-    setGamePhase('evaluation');
+    
+    if (isCloseProximity) {
+      // MODO JUNTOS: Inmediatamente a evaluación (el mismo jugador avanza y el otro califica)
+      setGamePhase('evaluation');
+    } else {
+      // MODO SEPARADOS: Guardar respuesta y enviar al otro jugador para que lea y califique
+      try {
+        // Actualizar en base de datos con la respuesta
+        await updateGameState({
+          current_phase: 'waiting-for-evaluation',
+          current_turn: currentTurn === 'player1' ? 'player2' : 'player1'
+        });
+        
+        // Enviar sync action
+        await syncAction('response_submit', {
+          response,
+          responseTime,
+          question: currentCard,
+          from: currentTurn
+        });
+        
+        setGamePhase('waiting-for-evaluation');
+      } catch (error) {
+        console.error('Error submitting response:', error);
+      }
+    }
   };
 
-  const handleEvaluationSubmit = (evaluation: ResponseEvaluationType) => {
+  const handleEvaluationSubmit = async (evaluation: ResponseEvaluationType) => {
     // Save the response data
     const responseData: GameResponse = {
       question: currentCard,
@@ -214,6 +280,24 @@ const Game = () => {
     // Switch turns and get next card
     const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
     setCurrentTurn(nextTurn);
+    
+    try {
+      // Update game state
+      await updateGameState({
+        current_turn: nextTurn,
+        current_phase: 'card-display',
+        used_cards: [...usedCards, currentCard]
+      });
+      
+      // Notify other player
+      await syncAction('evaluation_submit', {
+        evaluation,
+        nextTurn,
+        cardCompleted: currentCard
+      });
+    } catch (error) {
+      console.error('Error submitting evaluation:', error);
+    }
     
     const nextCard = getNextCard();
     if (nextCard) {
@@ -427,6 +511,17 @@ const Game = () => {
           response={currentResponse}
           responseTime={currentResponseTime}
           onEvaluate={handleEvaluationSubmit}
+          partnerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+        />
+
+        {/* Waiting for Evaluation Modal */}
+        <WaitingForEvaluation
+          isVisible={gamePhase === 'waiting-for-evaluation'}
+          question={currentCard}
+          response={partnerResponse || currentResponse}
+          responseTime={partnerResponseTime || currentResponseTime}
+          onEvaluate={handleEvaluationSubmit}
+          isMyTurn={currentTurn === currentPlayerId}
           partnerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
         />
 

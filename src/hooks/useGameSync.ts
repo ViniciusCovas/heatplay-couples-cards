@@ -5,14 +5,14 @@ import { toast } from 'sonner';
 interface GameSyncAction {
   id: string;
   room_id: string;
-  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select';
+  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance';
   action_data: any;
   triggered_by: string;
   created_at: string;
 }
 
 interface GameState {
-  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-select';
+  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-select' | 'waiting-for-evaluation';
   proximity_question_answered: boolean;
   proximity_response: boolean | null;
   current_turn: 'player1' | 'player2';
