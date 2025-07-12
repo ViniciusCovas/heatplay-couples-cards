@@ -123,16 +123,19 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         break;
       case 'navigate_to_level_select':
         toast.success('Navegando a selección de niveles...');
-        // The navigation will happen via state change
         break;
       case 'card_reveal':
         toast.info('Nueva carta revelada');
         break;
       case 'response_submit':
         toast.info('Tu pareja envió su respuesta');
+        // Aquí podemos actualizar el estado local con la respuesta del partner
         break;
       case 'evaluation_submit':
         toast.info('Evaluación completada');
+        break;
+      case 'turn_advance':
+        toast.info('Turno avanzado');
         break;
       case 'level_change':
         toast.success(`Nivel cambiado a ${action.action_data.level}`);

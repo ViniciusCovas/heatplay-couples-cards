@@ -137,7 +137,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       // Check if player is already in the room
       const { data: existingParticipants, error: participantsError } = await supabase
         .from('room_participants')
-        .select('*')
+        .select('*, player_number')
         .eq('room_id', roomData.id);
 
       if (participantsError) throw participantsError;
@@ -155,7 +155,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       if (playerAlreadyInRoom) {
         // Player already in room, just connect
         console.log('✅ Player already in room, connecting...');
-        setParticipants(existingParticipants);
+        setParticipants(existingParticipants as RoomParticipant[]);
         setRoom({
           ...roomData,
           status: roomData.status as 'waiting' | 'playing' | 'finished'
@@ -184,12 +184,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
       // Carga los participantes inmediatamente después de unirte a la sala
       const { data: participantsData, error: loadParticipantsError } = await supabase
         .from('room_participants')
-        .select('*')
+        .select('*, player_number')
         .eq('room_id', roomData.id);
 
       if (loadParticipantsError) throw loadParticipantsError;
       if (participantsData) {
-        setParticipants(participantsData);
+        setParticipants(participantsData as RoomParticipant[]);
       }
 
       setRoom({
@@ -279,11 +279,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
           // Refresh participants
           const { data } = await supabase
             .from('room_participants')
-            .select('*')
+            .select('*, player_number')
             .eq('room_id', room.id);
           
           if (data) {
-            setParticipants(data);
+            setParticipants(data as RoomParticipant[]);
           }
         }
       )
@@ -319,11 +319,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
     const loadParticipants = async () => {
       const { data } = await supabase
         .from('room_participants')
-        .select('*')
+        .select('*, player_number')
         .eq('room_id', room.id);
       
       if (data) {
-        setParticipants(data);
+        setParticipants(data as RoomParticipant[]);
       }
     };
 

@@ -150,6 +150,38 @@ export type Database = {
           },
         ]
       }
+      level_selection_votes: {
+        Row: {
+          created_at: string
+          id: string
+          player_id: string
+          room_id: string
+          selected_level: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          player_id: string
+          room_id: string
+          selected_level: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          player_id?: string
+          room_id?: string
+          selected_level?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "level_selection_votes_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       room_participants: {
         Row: {
           id: string
@@ -158,6 +190,7 @@ export type Database = {
           last_activity: string
           player_id: string
           player_name: string | null
+          player_number: number | null
           room_id: string
         }
         Insert: {
@@ -167,6 +200,7 @@ export type Database = {
           last_activity?: string
           player_id: string
           player_name?: string | null
+          player_number?: number | null
           room_id: string
         }
         Update: {
@@ -176,6 +210,7 @@ export type Database = {
           last_activity?: string
           player_id?: string
           player_name?: string | null
+          player_number?: number | null
           room_id?: string
         }
         Relationships: [

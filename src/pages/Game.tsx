@@ -55,8 +55,9 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { updateRoomStatus, room, joinRoom, isConnected } = useRoomService();
+  const { updateRoomStatus, room, joinRoom, isConnected, getPlayerNumber } = useRoomService();
   const playerId = usePlayerId();
+  const playerNumber = getPlayerNumber(); // 1 o 2
   
   // Get game sync data
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
@@ -150,15 +151,16 @@ const Game = () => {
   // Get proximity from game state
   const isCloseProximity = gameState?.proximity_response || false;
   
-  // Determine current player ID (player1 or player2)
-  const currentPlayerId = playerId;
-  
   // Response and evaluation data
   const [currentResponse, setCurrentResponse] = useState('');
   const [currentResponseTime, setCurrentResponseTime] = useState(0);
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
   const [partnerResponse, setPartnerResponse] = useState('');
   const [partnerResponseTime, setPartnerResponseTime] = useState(0);
+
+  // Determine if it's my turn based on player number and current turn
+  const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
+                   (currentTurn === 'player2' && playerNumber === 2);
   
   // Sync with game state
   useEffect(() => {
@@ -442,9 +444,10 @@ const Game = () => {
               <p className="text-xs text-muted-foreground">
                 {usedCards.length} de {totalCards} cartas completadas
               </p>
-              <p className="text-sm text-primary font-medium">
-                Turno: {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
-              </p>
+               <p className="text-sm text-primary font-medium">
+                 Turno: {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} 
+                 {isMyTurn ? ' (Tu turno)' : ' (Turno de tu pareja)'}
+               </p>
             </div>
           </div>
         </div>
@@ -461,37 +464,48 @@ const Game = () => {
               totalCards={totalCards}
             />
 
-            {/* Action Button */}
-            <div className="space-y-3 pb-8">
-              <Button 
-                onClick={handleStartResponse}
-                className="w-full h-12 text-base font-heading bg-primary hover:bg-primary/90"
-                size="lg"
-              >
-                <Play className="w-4 h-4 mr-2" />
-                {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} Responde
-              </Button>
-              
-              <div className="grid grid-cols-2 gap-3">
+            {/* Action Button - Solo mostrar si es mi turno */}
+            {isMyTurn && (
+              <div className="space-y-3 pb-8">
                 <Button 
-                  onClick={() => setShowLevelUpConfirmation(true)}
-                  variant="secondary"
-                  className="h-10 text-sm"
-                  disabled={currentLevel >= 3}
+                  onClick={handleStartResponse}
+                  className="w-full h-12 text-base font-heading bg-primary hover:bg-primary/90"
+                  size="lg"
                 >
-                  Subir nivel
+                  <Play className="w-4 h-4 mr-2" />
+                  Responder
                 </Button>
                 
-                <Button 
-                  onClick={() => generateFinalReport()}
-                  variant="destructive"
-                  className="h-10 text-sm flex items-center gap-1"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                  Finalizar
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => setShowLevelUpConfirmation(true)}
+                    variant="secondary"
+                    className="h-10 text-sm"
+                    disabled={currentLevel >= 3}
+                  >
+                    Subir nivel
+                  </Button>
+                  
+                  <Button 
+                    onClick={() => generateFinalReport()}
+                    variant="destructive"
+                    className="h-10 text-sm flex items-center gap-1"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    Finalizar
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Mensaje para jugador que espera */}
+            {!isMyTurn && (
+              <div className="text-center py-8 space-y-3">
+                <p className="text-muted-foreground">
+                  Esperando que {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} responda...
+                </p>
+              </div>
+            )}
           </>
         )}
 
@@ -521,8 +535,8 @@ const Game = () => {
           response={partnerResponse || currentResponse}
           responseTime={partnerResponseTime || currentResponseTime}
           onEvaluate={handleEvaluationSubmit}
-          isMyTurn={currentTurn === currentPlayerId}
-          partnerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+          isMyTurn={!isMyTurn} // Si no es mi turno responder, es mi turno evaluar
+          partnerName={`Jugador ${playerNumber === 1 ? 2 : 1}`}
         />
 
         {/* Level Up Confirmation Modal */}

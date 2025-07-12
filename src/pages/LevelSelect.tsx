@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Lock, Heart, MessageCircle, Flame, AlertTriangle } from "lucide-react";
+import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -17,17 +17,20 @@ import {
 import { useGameSync } from "@/hooks/useGameSync";
 import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { useLevelSelection } from "@/hooks/useLevelSelection";
 
 const LevelSelect = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('room');
-  const { room } = useRoomService();
+  const { room, getPlayerNumber } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const playerNumber = getPlayerNumber();
 
   const levels = [
     {
@@ -78,11 +81,9 @@ const LevelSelect = () => {
 
   const startLevel = async (levelId: number) => {
     try {
-      // Sync with partner that we're starting this level
-      await syncAction('level_change', { level: levelId, roomCode });
-      navigate(`/game?room=${roomCode}&level=${levelId}`);
+      await submitLevelVote(levelId);
     } catch (error) {
-      console.error('Error starting level:', error);
+      console.error('Error voting for level:', error);
     }
   };
 
@@ -94,6 +95,17 @@ const LevelSelect = () => {
     setSelectedLevel(null);
   };
 
+  // Navigate to game when level is agreed upon
+  useEffect(() => {
+    if (agreedLevel) {
+      const timer = setTimeout(() => {
+        navigate(`/game?room=${roomCode}&level=${agreedLevel}`);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [agreedLevel, navigate, roomCode]);
+
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col">
       <div className="w-full max-w-md mx-auto space-y-6 flex-1">
@@ -103,12 +115,31 @@ const LevelSelect = () => {
             <Heart className="w-6 h-6 text-secondary mr-2" />
             <h1 className="text-2xl font-heading text-foreground">Cartas Íntimas</h1>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Sala: <span className="font-mono font-bold text-primary">{roomCode}</span>
-          </p>
-          <p className="text-base text-muted-foreground">
-            Elige tu nivel de intensidad
-          </p>
+          <div className="flex items-center justify-center space-x-4 mb-2">
+            <p className="text-sm text-muted-foreground">
+              Sala: <span className="font-mono font-bold text-primary">{roomCode}</span>
+            </p>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Users className="w-4 h-4 mr-1" />
+              <span>Jugador {playerNumber}</span>
+            </div>
+          </div>
+          {agreedLevel ? (
+            <p className="text-base text-green-600 font-medium">
+              ¡Perfecto! Ambos eligieron el nivel {agreedLevel}. Iniciando juego...
+            </p>
+          ) : isWaitingForPartner ? (
+            <div className="flex items-center justify-center space-x-2 text-orange-600">
+              <Timer className="w-4 h-4 animate-pulse" />
+              <p className="text-base font-medium">
+                Esperando que tu pareja elija el nivel...
+              </p>
+            </div>
+          ) : (
+            <p className="text-base text-muted-foreground">
+              Elige tu nivel de intensidad
+            </p>
+          )}
         </div>
 
         {/* Levels */}
@@ -116,14 +147,22 @@ const LevelSelect = () => {
           {levels.map((level) => {
             const IconComponent = level.icon;
             const isLocked = !level.unlocked;
+            const isSelected = hasVoted; // Si ha votado, mostrar que está seleccionado
+            const isDisabled = isWaitingForPartner || agreedLevel !== null;
             
             return (
               <Card 
                 key={level.id}
-                className={`p-6 transition-all duration-200 cursor-pointer hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary/30 ${
-                  isLocked ? 'opacity-60 bg-muted/30' : ''
+                className={`p-6 transition-all duration-200 border-2 ${
+                  isSelected 
+                    ? 'border-primary bg-primary/5' 
+                    : isLocked 
+                      ? 'opacity-60 bg-muted/30 border-muted' 
+                      : isDisabled
+                        ? 'opacity-50 border-muted cursor-not-allowed'
+                        : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
                 }`}
-                onClick={() => handleLevelClick(level.id)}
+                onClick={() => !isDisabled && handleLevelClick(level.id)}
               >
                 <div className="flex items-start space-x-4">
                   <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0`}>
@@ -150,6 +189,12 @@ const LevelSelect = () => {
                     {isLocked && (
                       <p className="text-xs text-destructive font-medium">
                         Completa el nivel anterior para desbloquear
+                      </p>
+                    )}
+                    
+                    {isSelected && (
+                      <p className="text-xs text-primary font-medium">
+                        ✓ Has elegido este nivel
                       </p>
                     )}
                   </div>

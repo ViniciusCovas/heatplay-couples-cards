@@ -1,0 +1,168 @@
+import { useState, useEffect, useCallback } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+
+interface LevelVote {
+  id: string;
+  room_id: string;
+  player_id: string;
+  selected_level: number;
+  created_at: string;
+}
+
+interface UseLevelSelectionReturn {
+  submitLevelVote: (level: number) => Promise<void>;
+  votes: LevelVote[];
+  isWaitingForPartner: boolean;
+  agreedLevel: number | null;
+  hasVoted: boolean;
+}
+
+export const useLevelSelection = (roomId: string | null, playerId: string): UseLevelSelectionReturn => {
+  const [votes, setVotes] = useState<LevelVote[]>([]);
+  const [isWaitingForPartner, setIsWaitingForPartner] = useState(false);
+  const [agreedLevel, setAgreedLevel] = useState<number | null>(null);
+  const [hasVoted, setHasVoted] = useState(false);
+
+  // Load existing votes
+  useEffect(() => {
+    if (!roomId) return;
+
+    const loadVotes = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('level_selection_votes')
+          .select('*')
+          .eq('room_id', roomId)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        if (data) {
+          setVotes(data);
+          
+          // Check if current player has voted
+          const playerVote = data.find(v => v.player_id === playerId);
+          setHasVoted(!!playerVote);
+
+          // Check if there are 2 votes and they match
+          if (data.length >= 2) {
+            const latestVotes = data.slice(0, 2);
+            const levels = latestVotes.map(v => v.selected_level);
+            
+            if (levels[0] === levels[1]) {
+              setAgreedLevel(levels[0]);
+              setIsWaitingForPartner(false);
+            } else {
+              // Levels don't match, reset votes and ask to vote again
+              await supabase
+                .from('level_selection_votes')
+                .delete()
+                .eq('room_id', roomId);
+              
+              setVotes([]);
+              setHasVoted(false);
+              setIsWaitingForPartner(false);
+              
+              toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
+            }
+          } else if (data.length === 1) {
+            setIsWaitingForPartner(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading votes:', error);
+      }
+    };
+
+    loadVotes();
+  }, [roomId, playerId]);
+
+  // Listen for real-time updates
+  useEffect(() => {
+    if (!roomId) return;
+
+    const channel = supabase
+      .channel(`level-votes-${roomId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'level_selection_votes',
+          filter: `room_id=eq.${roomId}`
+        },
+        (payload) => {
+          const newVote = payload.new as LevelVote;
+          
+          // Don't process our own votes
+          if (newVote.player_id === playerId) return;
+
+          setVotes(prev => {
+            const updated = [newVote, ...prev.filter(v => v.player_id !== newVote.player_id)];
+            
+            // Check if we now have matching votes
+            if (updated.length >= 2) {
+              const latestVotes = updated.slice(0, 2);
+              const levels = latestVotes.map(v => v.selected_level);
+              
+              if (levels[0] === levels[1]) {
+                setAgreedLevel(levels[0]);
+                setIsWaitingForPartner(false);
+                toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
+              }
+            } else {
+              setIsWaitingForPartner(false);
+            }
+            
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [roomId, playerId]);
+
+  const submitLevelVote = useCallback(async (level: number) => {
+    if (!roomId) return;
+
+    try {
+      // Delete any existing vote from this player
+      await supabase
+        .from('level_selection_votes')
+        .delete()
+        .eq('room_id', roomId)
+        .eq('player_id', playerId);
+
+      // Insert new vote
+      const { error } = await supabase
+        .from('level_selection_votes')
+        .insert({
+          room_id: roomId,
+          player_id: playerId,
+          selected_level: level
+        });
+
+      if (error) throw error;
+
+      setHasVoted(true);
+      setIsWaitingForPartner(true);
+      
+      toast.success(`Has elegido el nivel ${level}. Esperando a tu pareja...`);
+    } catch (error) {
+      console.error('Error submitting vote:', error);
+      toast.error('Error al enviar tu voto');
+    }
+  }, [roomId, playerId]);
+
+  return {
+    submitLevelVote,
+    votes,
+    isWaitingForPartner,
+    agreedLevel,
+    hasVoted
+  };
+};
