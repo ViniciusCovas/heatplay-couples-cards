@@ -51,10 +51,26 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { updateRoomStatus, room } = useRoomService();
+  const { updateRoomStatus, room, joinRoom, isConnected } = useRoomService();
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
+  
+  // Auto-join room if we have a roomCode but aren't connected
+  useEffect(() => {
+    const autoJoinRoom = async () => {
+      if (roomCode && !isConnected && !room) {
+        console.log('🔗 Auto-joining room:', roomCode);
+        const success = await joinRoom(roomCode);
+        if (!success) {
+          console.log('❌ Failed to join room, redirecting to home');
+          navigate('/');
+        }
+      }
+    };
+    
+    autoJoinRoom();
+  }, [roomCode, isConnected, room, joinRoom, navigate]);
   
   // Game state
   const [currentCard, setCurrentCard] = useState('');
@@ -201,6 +217,23 @@ const Game = () => {
   useEffect(() => {
     setShowCard(true);
   }, []);
+
+  // Show loading if we're trying to connect to a room
+  if (roomCode && !isConnected && !room) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+            <Users className="w-8 h-8 text-primary animate-pulse" />
+          </div>
+          <div>
+            <h2 className="text-lg font-heading text-foreground">Conectando a la sala...</h2>
+            <p className="text-sm text-muted-foreground">Sala: {roomCode}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col">
