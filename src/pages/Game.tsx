@@ -9,6 +9,7 @@ import { ResponseInput } from "@/components/game/ResponseInput";
 import { ResponseEvaluation, type ResponseEvaluation as ResponseEvaluationType } from "@/components/game/ResponseEvaluation";
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
+import { ProximitySelector } from "@/components/game/ProximitySelector";
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 
 // Sample cards data - this will come from database later
@@ -42,7 +43,7 @@ const LEVEL_NAMES = {
   3: "Sin filtros"
 };
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -57,9 +58,10 @@ const Game = () => {
   const [currentCard, setCurrentCard] = useState('');
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
-  const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
+  const [gamePhase, setGamePhase] = useState<GamePhase>('proximity-selection');
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
+  const [isCloseProximity, setIsCloseProximity] = useState<boolean>(false);
   
   // Response and evaluation data
   const [currentResponse, setCurrentResponse] = useState('');
@@ -104,6 +106,11 @@ const Game = () => {
       return null;
     }
     return availableCards[Math.floor(Math.random() * availableCards.length)];
+  };
+
+  const handleProximitySelect = (isClose: boolean) => {
+    setIsCloseProximity(isClose);
+    setGamePhase('card-display');
   };
 
   const handleStartResponse = () => {
@@ -214,6 +221,12 @@ const Game = () => {
           </div>
         </div>
 
+        {/* Proximity Selection Modal */}
+        <ProximitySelector
+          isVisible={gamePhase === 'proximity-selection'}
+          onSelect={handleProximitySelect}
+        />
+
         {/* Game Content based on current phase */}
         {gamePhase === 'card-display' && (
           <>
@@ -265,6 +278,7 @@ const Game = () => {
           question={currentCard}
           onSubmitResponse={handleResponseSubmit}
           playerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+          isCloseProximity={isCloseProximity}
         />
 
         {/* Response Evaluation Modal */}
