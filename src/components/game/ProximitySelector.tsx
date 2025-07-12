@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, MessageSquare, Mic, Gamepad2, Clock } from "lucide-react";
+import { Users, MessageSquare, Mic, Gamepad2, Clock, Check } from "lucide-react";
 import { useGameSync } from "@/hooks/useGameSync";
 import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
@@ -20,8 +20,9 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
-  // Handle automatic navigation when both players have answered
+  // Handle automatic navigation when someone has answered
   useEffect(() => {
     console.log('🔍 ProximitySelector useEffect:', { 
       gameState, 
@@ -29,44 +30,50 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
       current_phase: gameState?.current_phase 
     });
     
+    // Navigate when someone has answered (not necessarily both)
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
-      console.log('🎯 Both players answered, navigating to level select...');
+      console.log('🎯 Someone answered, navigating to level select...');
       setTimeout(() => {
         navigate(`/level-select?room=${roomCode}`);
       }, 1000); // Small delay to show success state
     }
   }, [gameState, navigate, roomCode]);
 
-  const handleSelect = async (isClose: boolean) => {
-    console.log('🎯 ProximitySelector handleSelect:', { isClose, roomId: room?.id, playerId });
-    
-    if (!room?.id || !playerId) {
-      console.warn('❌ Missing room ID or player ID');
+  const handleSelect = (isClose: boolean) => {
+    console.log('🎯 ProximitySelector option selected:', { isClose });
+    setSelectedOption(isClose);
+  };
+
+  const handleConfirm = async () => {
+    if (selectedOption === null || !room?.id || !playerId) {
+      console.warn('❌ Missing selection, room ID or player ID');
       return;
     }
     
-    setSelectedOption(isClose);
+    console.log('🎯 ProximitySelector handleConfirm:', { selectedOption, roomId: room?.id, playerId });
+    
+    setIsConfirmed(true);
     setWaitingForPartner(true);
 
     try {
       // Update game state in database
       console.log('📝 Updating game state...');
       await updateGameState({
-        proximity_response: isClose,
+        proximity_response: selectedOption,
         proximity_question_answered: true,
         current_phase: 'level-select'
       });
       
       // Send sync action to notify other player
       console.log('🔄 Sending sync action...');
-      await syncAction('proximity_answer', { isClose });
+      await syncAction('proximity_answer', { isClose: selectedOption });
       
-      console.log('✅ Proximity selection completed successfully');
+      console.log('✅ Proximity selection confirmed successfully');
       
     } catch (error) {
-      console.error('❌ Error in proximity selection:', error);
+      console.error('❌ Error confirming proximity selection:', error);
       setWaitingForPartner(false);
-      setSelectedOption(null);
+      setIsConfirmed(false);
     }
   };
 
@@ -110,10 +117,10 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
               <Clock className="w-8 h-8 text-primary animate-pulse" />
             </div>
             <h3 className="text-lg font-heading text-foreground mb-2">
-              Respuesta enviada ✓
+              Respuesta confirmada ✓
             </h3>
             <p className="text-sm text-muted-foreground">
-              Esperando a tu pareja...
+              Avanzando al siguiente paso...
             </p>
             <div className="flex justify-center space-x-2 mt-4">
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
@@ -126,7 +133,11 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
             {/* Close Option */}
             <div 
               onClick={() => handleSelect(true)}
-              className="group relative p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border-2 border-green-500/20 hover:border-green-500/40 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20"
+              className={`group relative p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20 ${
+                selectedOption === true 
+                  ? 'border-green-500 bg-green-500/20 scale-[1.02]' 
+                  : 'border-green-500/20 hover:border-green-500/40'
+              }`}
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -140,7 +151,13 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
                     Respuestas habladas • Más íntimo • Cara a cara
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-full border-2 border-green-500/30 group-hover:border-green-500 group-hover:bg-green-500/20 transition-all"></div>
+                <div className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  selectedOption === true 
+                    ? 'border-green-500 bg-green-500 flex items-center justify-center' 
+                    : 'border-green-500/30 group-hover:border-green-500 group-hover:bg-green-500/20'
+                }`}>
+                  {selectedOption === true && <Check className="w-4 h-4 text-white" />}
+                </div>
               </div>
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
@@ -148,7 +165,11 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
             {/* Far Option */}
             <div 
               onClick={() => handleSelect(false)}
-              className="group relative p-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 border-purple-500/20 hover:border-purple-500/40 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20"
+              className={`group relative p-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 ${
+                selectedOption === false 
+                  ? 'border-purple-500 bg-purple-500/20 scale-[1.02]' 
+                  : 'border-purple-500/20 hover:border-purple-500/40'
+              }`}
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -162,10 +183,30 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
                     Respuestas escritas • A distancia • Por chat
                   </p>
                 </div>
-                <div className="w-8 h-8 rounded-full border-2 border-purple-500/30 group-hover:border-purple-500 group-hover:bg-purple-500/20 transition-all"></div>
+                <div className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  selectedOption === false 
+                    ? 'border-purple-500 bg-purple-500 flex items-center justify-center' 
+                    : 'border-purple-500/30 group-hover:border-purple-500 group-hover:bg-purple-500/20'
+                }`}>
+                  {selectedOption === false && <Check className="w-4 h-4 text-white" />}
+                </div>
               </div>
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
+            
+            {/* Confirm Button */}
+            {selectedOption !== null && !isConfirmed && (
+              <div className="pt-4">
+                <Button 
+                  onClick={handleConfirm}
+                  className="w-full h-14 text-lg font-heading bg-gradient-to-r from-primary to-primary-foreground hover:from-primary/90 hover:to-primary-foreground/90 shadow-lg"
+                  size="lg"
+                >
+                  <Check className="w-5 h-5 mr-2" />
+                  Confirmar selección
+                </Button>
+              </div>
+            )}
           </div>
         )}
 
