@@ -23,7 +23,7 @@ const LevelSelect = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('room');
-  const { room, getPlayerNumber } = useRoomService();
+  const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
   const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted } = useLevelSelection(room?.id || null, playerId);
@@ -31,6 +31,15 @@ const LevelSelect = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const playerNumber = getPlayerNumber();
+
+  // Debug information
+  console.log('📊 LevelSelect Debug:', {
+    roomCode,
+    room: room?.id,
+    isConnected,
+    playerId,
+    playerNumber
+  });
 
   const levels = [
     {
@@ -80,10 +89,12 @@ const LevelSelect = () => {
   };
 
   const startLevel = async (levelId: number) => {
+    console.log('🚀 startLevel called:', { levelId, roomId: room?.id, playerId });
+    
     try {
       await submitLevelVote(levelId);
     } catch (error) {
-      console.error('Error voting for level:', error);
+      console.error('❌ Error voting for level:', error);
     }
   };
 
@@ -106,6 +117,26 @@ const LevelSelect = () => {
     }
   }, [agreedLevel, navigate, roomCode]);
 
+  // Auto-join room if not connected
+  useEffect(() => {
+    if (roomCode && !isConnected && !room) {
+      console.log('🔗 Auto-joining room from LevelSelect:', roomCode);
+      joinRoom(roomCode);
+    }
+  }, [roomCode, isConnected, room, joinRoom]);
+
+  // Show connection status if not connected
+  if (roomCode && !isConnected && !room) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Conectando a la sala {roomCode}...</p>
+          <Button onClick={() => navigate('/')}>Volver al inicio</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col">
       <div className="w-full max-w-md mx-auto space-y-6 flex-1">
@@ -121,7 +152,7 @@ const LevelSelect = () => {
             </p>
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="w-4 h-4 mr-1" />
-              <span>Jugador {playerNumber}</span>
+              <span>Jugador {playerNumber || '?'}</span>
             </div>
           </div>
           {agreedLevel ? (

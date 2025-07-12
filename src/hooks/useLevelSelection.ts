@@ -127,33 +127,57 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   }, [roomId, playerId]);
 
   const submitLevelVote = useCallback(async (level: number) => {
-    if (!roomId) return;
+    console.log('🗳️ submitLevelVote called:', { level, roomId, playerId });
+    
+    if (!roomId) {
+      console.error('❌ No roomId provided');
+      toast.error('Error: No hay sala activa');
+      return;
+    }
+
+    if (!playerId) {
+      console.error('❌ No playerId provided');
+      toast.error('Error: No hay jugador identificado');
+      return;
+    }
 
     try {
+      console.log('🔄 Deleting existing votes...');
       // Delete any existing vote from this player
-      await supabase
+      const { error: deleteError } = await supabase
         .from('level_selection_votes')
         .delete()
         .eq('room_id', roomId)
         .eq('player_id', playerId);
 
+      if (deleteError) {
+        console.error('❌ Error deleting existing votes:', deleteError);
+      }
+
+      console.log('✅ Inserting new vote...');
       // Insert new vote
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('level_selection_votes')
         .insert({
           room_id: roomId,
           player_id: playerId,
           selected_level: level
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error inserting vote:', error);
+        throw error;
+      }
+
+      console.log('✅ Vote inserted successfully:', data);
 
       setHasVoted(true);
       setIsWaitingForPartner(true);
       
       toast.success(`Has elegido el nivel ${level}. Esperando a tu pareja...`);
     } catch (error) {
-      console.error('Error submitting vote:', error);
+      console.error('❌ Error submitting vote:', error);
       toast.error('Error al enviar tu voto');
     }
   }, [roomId, playerId]);
