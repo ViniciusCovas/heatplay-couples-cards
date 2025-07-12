@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
@@ -265,6 +266,20 @@ const Game = () => {
     setShowCard(true);
   }, []);
 
+  // Redirect to home if no room code
+  if (!roomCode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+        <Card className="p-6 text-center space-y-4">
+          <p className="text-muted-foreground">No hay código de sala</p>
+          <Button onClick={() => navigate('/')}>
+            Volver al inicio
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+  
   // Show loading if we're trying to connect to a room
   if (roomCode && !isConnected && !room) {
     return (
