@@ -261,11 +261,11 @@ const Game = () => {
                 
                 <Button 
                   onClick={generateFinalReport}
-                  variant="outline"
+                  variant="destructive"
                   className="h-10 text-sm flex items-center gap-1"
                 >
                   <BarChart3 className="w-4 h-4" />
-                  Ver reporte
+                  Finalizar
                 </Button>
               </div>
             </div>
