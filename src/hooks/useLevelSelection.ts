@@ -17,6 +17,8 @@ interface UseLevelSelectionReturn {
   agreedLevel: number | null;
   hasVoted: boolean;
   selectedLevel: number | null;
+  countdown: number | null;
+  bothPlayersVoted: boolean;
 }
 
 export const useLevelSelection = (roomId: string | null, playerId: string): UseLevelSelectionReturn => {
@@ -25,6 +27,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [agreedLevel, setAgreedLevel] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const [bothPlayersVoted, setBothPlayersVoted] = useState(false);
 
   // Helper function to check for matching votes
   const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
@@ -56,44 +60,65 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       console.log('👥 Unique player votes:', latestVotes);
       
       if (latestVotes.length === 2) {
+        setBothPlayersVoted(true);
         const levels = latestVotes.map(v => v.selected_level);
         console.log('🎯 Comparing levels:', levels);
         
         if (levels[0] === levels[1]) {
-          console.log('✅ LEVELS MATCH! Advancing to next phase');
-          console.log('🎯 About to update room:', roomId, 'with level:', levels[0]);
+          console.log('✅ LEVELS MATCH! Starting countdown...');
           
-          setAgreedLevel(levels[0]);
-          setIsWaitingForPartner(false);
-          toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}`);
-          
-          // Update game room with error handling
-          try {
-            console.log('🔄 Starting game room update...');
-            const { data: updateData, error: updateError } = await supabase
-              .from('game_rooms')
-              .update({ 
-                level: levels[0],
-                current_phase: 'card-display' 
-              })
-              .eq('id', roomId)
-              .select();
+          if (!agreedLevel) { // Only start countdown if not already agreed
+            setCountdown(10);
+            toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}. Iniciando en 10 segundos...`);
+            
+            // Start countdown
+            let timeLeft = 10;
+            const countdownInterval = setInterval(() => {
+              timeLeft--;
+              setCountdown(timeLeft);
               
-            console.log('📊 Update result:', { updateData, updateError });
-              
-            if (updateError) {
-              console.error('❌ Error updating game room:', updateError);
-              toast.error('Error al avanzar. Intenta nuevamente.');
-            } else {
-              console.log('✅ Game room successfully updated to card-display');
-              console.log('📊 Updated data:', updateData);
-            }
-          } catch (err) {
-            console.error('❌ Exception updating game room:', err);
-            toast.error('Error al avanzar. Intenta nuevamente.');
+              if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                setAgreedLevel(levels[0]);
+                setIsWaitingForPartner(false);
+                setCountdown(null);
+                
+                // Force update game room
+                const updateRoom = async () => {
+                  try {
+                    console.log('🔄 Starting game room update...');
+                    const { data: updateData, error: updateError } = await supabase
+                      .from('game_rooms')
+                      .update({ 
+                        level: levels[0],
+                        current_phase: 'card-display' 
+                      })
+                      .eq('id', roomId)
+                      .select();
+                      
+                    console.log('📊 Update result:', { updateData, updateError });
+                      
+                    if (updateError) {
+                      console.error('❌ Error updating game room:', updateError);
+                      toast.error('Error al avanzar. Intenta nuevamente.');
+                    } else {
+                      console.log('✅ Game room successfully updated to card-display');
+                      console.log('📊 Updated data:', updateData);
+                    }
+                  } catch (err) {
+                    console.error('❌ Exception updating game room:', err);
+                    toast.error('Error al avanzar. Intenta nuevamente.');
+                  }
+                };
+                
+                updateRoom();
+              }
+            }, 1000);
           }
         } else {
           console.log('❌ Levels do not match:', levels);
+          setBothPlayersVoted(false);
+          setCountdown(null);
           toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
           setIsWaitingForPartner(false);
           setHasVoted(false);
@@ -238,6 +263,73 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     };
   }, [roomId, playerId, checkForMatchingVotes]);
 
+  // Periodic verification - every 3 seconds check if room should advance
+  useEffect(() => {
+    if (!roomId || agreedLevel) return;
+    
+    const periodicCheck = async () => {
+      try {
+        // Check current room status
+        const { data: room, error: roomError } = await supabase
+          .from('game_rooms')
+          .select('current_phase, level')
+          .eq('id', roomId)
+          .single();
+        
+        if (roomError) {
+          console.error('❌ Error checking room status:', roomError);
+          return;
+        }
+        
+        // If room is still in level-select but should be in card-display
+        if (room?.current_phase === 'level-select') {
+          // Check if we have matching votes
+          const { data: allVotes, error: votesError } = await supabase
+            .from('level_selection_votes')
+            .select('*')
+            .eq('room_id', roomId);
+          
+          if (!votesError && allVotes && allVotes.length >= 2) {
+            const uniquePlayerVotes = new Map();
+            allVotes.forEach(vote => {
+              const existing = uniquePlayerVotes.get(vote.player_id);
+              if (!existing || new Date(vote.created_at) > new Date(existing.created_at)) {
+                uniquePlayerVotes.set(vote.player_id, vote);
+              }
+            });
+            
+            const latestVotes = Array.from(uniquePlayerVotes.values());
+            if (latestVotes.length === 2) {
+              const levels = latestVotes.map(v => v.selected_level);
+              if (levels[0] === levels[1]) {
+                console.log('🔄 PERIODIC CHECK: Found matching votes, forcing room update');
+                
+                // Force update the room
+                await supabase
+                  .from('game_rooms')
+                  .update({ 
+                    level: levels[0],
+                    current_phase: 'card-display' 
+                  })
+                  .eq('id', roomId);
+                
+                setAgreedLevel(levels[0]);
+                setIsWaitingForPartner(false);
+                setCountdown(null);
+                toast.success(`¡Niveles sincronizados! Iniciando nivel ${levels[0]}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error in periodic check:', error);
+      }
+    };
+    
+    const interval = setInterval(periodicCheck, 3000); // Check every 3 seconds
+    return () => clearInterval(interval);
+  }, [roomId, agreedLevel]);
+
   const submitLevelVote = useCallback(async (level: number) => {
     console.log('🗳️ submitLevelVote called:', { level, roomId, playerId });
     
@@ -301,6 +393,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     isWaitingForPartner,
     agreedLevel,
     hasVoted,
-    selectedLevel
+    selectedLevel,
+    countdown,
+    bothPlayersVoted
   };
 };

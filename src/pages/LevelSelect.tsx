@@ -27,7 +27,7 @@ const LevelSelect = () => {
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel } = useLevelSelection(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -149,10 +149,26 @@ const LevelSelect = () => {
               <span>Jugador {playerNumber || '?'}</span>
             </div>
           </div>
-          {agreedLevel ? (
+          {countdown !== null ? (
+            <div className="text-center space-y-3">
+              <div className="w-16 h-16 mx-auto rounded-full border-4 border-green-500 flex items-center justify-center bg-green-50">
+                <span className="text-2xl font-bold text-green-600">{countdown}</span>
+              </div>
+              <p className="text-base text-green-600 font-medium">
+                ¡Perfecto! Ambos eligieron el mismo nivel. Iniciando en {countdown}...
+              </p>
+            </div>
+          ) : agreedLevel ? (
             <p className="text-base text-green-600 font-medium">
               ¡Perfecto! Ambos eligieron el nivel {agreedLevel}. Iniciando juego...
             </p>
+          ) : bothPlayersVoted ? (
+            <div className="flex items-center justify-center space-x-2 text-orange-600">
+              <Timer className="w-4 h-4 animate-pulse" />
+              <p className="text-base font-medium">
+                Ambos han votado. Verificando niveles...
+              </p>
+            </div>
           ) : isWaitingForPartner ? (
             <div className="flex items-center justify-center space-x-2 text-orange-600">
               <Timer className="w-4 h-4 animate-pulse" />
