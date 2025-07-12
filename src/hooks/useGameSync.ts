@@ -128,11 +128,24 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         toast.info('Nueva carta revelada');
         break;
       case 'response_submit':
-        toast.info('Tu pareja envió su respuesta');
-        // Aquí podemos actualizar el estado local con la respuesta del partner
+        toast.info('Tu pareja envió su respuesta. Es tu turno evaluar.');
+        // Store partner's response data for evaluation
+        if (action.action_data) {
+          window.dispatchEvent(new CustomEvent('partnerResponse', {
+            detail: {
+              response: action.action_data.response,
+              responseTime: action.action_data.responseTime,
+              question: action.action_data.question,
+              from: action.action_data.from
+            }
+          }));
+        }
         break;
       case 'evaluation_submit':
         toast.info('Evaluación completada');
+        if (action.action_data?.nextCard) {
+          toast.info('Nueva carta disponible');
+        }
         break;
       case 'turn_advance':
         toast.info('Turno avanzado');

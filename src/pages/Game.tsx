@@ -16,6 +16,7 @@ import { calculateConnectionScore, type GameResponse } from "@/utils/connectionA
 import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { supabase } from "@/integrations/supabase/client";
 
 // Sample cards data - this will come from database later
 const SAMPLE_CARDS = {
@@ -182,12 +183,27 @@ const Game = () => {
     }
   }, [gameState]);
   
-  // Handle sync actions from other player
+  // Handle partner response events
   useEffect(() => {
-    // This will be handled by useGameSync hook automatically
-    // When the other player submits a response, it will trigger a sync action
-    // and update the game state, which will then update our local state above
-  }, []);
+    const handlePartnerResponse = (event: CustomEvent) => {
+      const { response, responseTime, question, from } = event.detail;
+      console.log('📩 Received partner response:', { response, responseTime, question, from });
+      
+      setPartnerResponse(response);
+      setPartnerResponseTime(responseTime);
+      
+      // If it's my turn to evaluate (current game state has switched the turn to me)
+      if (gameState?.current_phase === 'waiting-for-evaluation' && isMyTurn) {
+        setGamePhase('evaluation');
+      }
+    };
+
+    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    
+    return () => {
+      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    };
+  }, [gameState, isMyTurn]);
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
@@ -238,75 +254,149 @@ const Game = () => {
     setCurrentResponse(response);
     setCurrentResponseTime(responseTime);
     
-    if (isCloseProximity) {
-      // MODO JUNTOS: Inmediatamente a evaluación (el mismo jugador avanza y el otro califica)
-      setGamePhase('evaluation');
-    } else {
-      // MODO SEPARADOS: Guardar respuesta y enviar al otro jugador para que lea y califique
-      try {
-        // Actualizar en base de datos con la respuesta
+    try {
+      // STEP 1: Save response to database
+      const { error: responseError } = await supabase
+        .from('game_responses')
+        .insert({
+          room_id: room?.id || '',
+          player_id: playerId,
+          card_id: currentCard,
+          response: response,
+          response_time: responseTime,
+          round_number: usedCards.length + 1
+        });
+
+      if (responseError) {
+        console.error('Error saving response:', responseError);
+        throw responseError;
+      }
+
+      if (isCloseProximity) {
+        // MODO JUNTOS: Inmediatamente a evaluación (el mismo jugador avanza y el otro califica)
+        setGamePhase('evaluation');
+      } else {
+        // MODO SEPARADOS: El que responde espera, el otro evalúa
+        // STEP 2: Switch to partner for evaluation
+        const partnerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+        
         await updateGameState({
           current_phase: 'waiting-for-evaluation',
-          current_turn: currentTurn === 'player1' ? 'player2' : 'player1'
+          current_turn: partnerTurn // Now it's partner's turn to evaluate
         });
         
-        // Enviar sync action
+        // STEP 3: Send response data to partner
         await syncAction('response_submit', {
           response,
           responseTime,
           question: currentCard,
-          from: currentTurn
+          from: currentTurn,
+          respondingPlayer: currentTurn
         });
         
         setGamePhase('waiting-for-evaluation');
-      } catch (error) {
-        console.error('Error submitting response:', error);
       }
+    } catch (error) {
+      console.error('Error submitting response:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la respuesta",
+        variant: "destructive"
+      });
     }
   };
 
   const handleEvaluationSubmit = async (evaluation: ResponseEvaluationType) => {
-    // Save the response data
-    const responseData: GameResponse = {
-      question: currentCard,
-      response: currentResponse,
-      responseTime: currentResponseTime,
-      evaluation,
-      level: currentLevel,
-      playerId: currentTurn
-    };
-    
-    setGameResponses(prev => [...prev, responseData]);
-    setUsedCards(prev => [...prev, currentCard]);
-    
-    // Switch turns and get next card
-    const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-    setCurrentTurn(nextTurn);
-    
     try {
-      // Update game state
-      await updateGameState({
-        current_turn: nextTurn,
-        current_phase: 'card-display',
-        used_cards: [...usedCards, currentCard]
-      });
-      
-      // Notify other player
-      await syncAction('evaluation_submit', {
+      // STEP 1: Get the original response from database
+      const { data: responseData, error: fetchError } = await supabase
+        .from('game_responses')
+        .select('*')
+        .eq('room_id', room?.id || '')
+        .eq('card_id', currentCard)
+        .eq('round_number', usedCards.length + 1)
+        .single();
+
+      if (fetchError || !responseData) {
+        console.error('Error fetching response for evaluation:', fetchError);
+        throw new Error('Response not found');
+      }
+
+      // STEP 2: Save evaluation to database
+      const { error: evalError } = await supabase
+        .from('game_responses')
+        .update({
+          evaluation: JSON.stringify(evaluation),
+          evaluation_by: playerId
+        })
+        .eq('id', responseData.id);
+
+      if (evalError) {
+        console.error('Error saving evaluation:', evalError);
+        throw evalError;
+      }
+
+      // STEP 3: Save to local game responses for final report
+      const gameResponseData: GameResponse = {
+        question: currentCard,
+        response: partnerResponse || currentResponse,
+        responseTime: partnerResponseTime || currentResponseTime,
         evaluation,
-        nextTurn,
-        cardCompleted: currentCard
-      });
+        level: currentLevel,
+        playerId: responseData.player_id
+      };
+      
+      setGameResponses(prev => [...prev, gameResponseData]);
+      setUsedCards(prev => [...prev, currentCard]);
+      
+      // STEP 4: Switch turns back to next player for responding
+      const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      
+      const nextCard = getNextCard();
+      
+      if (nextCard) {
+        // Continue with next card
+        await updateGameState({
+          current_turn: nextTurn,
+          current_phase: 'card-display',
+          current_card: nextCard,
+          used_cards: [...usedCards, currentCard]
+        });
+        
+        setCurrentCard(nextCard);
+        setCurrentTurn(nextTurn);
+        setGamePhase('card-display');
+        setShowCard(false);
+        setTimeout(() => setShowCard(true), 300);
+        
+        // Clear response data
+        setCurrentResponse('');
+        setPartnerResponse('');
+        setCurrentResponseTime(0);
+        setPartnerResponseTime(0);
+        
+        // Notify other player
+        await syncAction('evaluation_submit', {
+          evaluation,
+          nextTurn,
+          nextCard,
+          cardCompleted: currentCard
+        });
+      } else {
+        // All cards completed for this level
+        if (currentLevel >= 3) {
+          await generateFinalReport();
+        } else {
+          setShowLevelUpConfirmation(true);
+        }
+      }
     } catch (error) {
       console.error('Error submitting evaluation:', error);
-    }
-    
-    const nextCard = getNextCard();
-    if (nextCard) {
-      setCurrentCard(nextCard);
-      setGamePhase('card-display');
-      setShowCard(false);
-      setTimeout(() => setShowCard(true), 300);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la evaluación",
+        variant: "destructive"
+      });
     }
   };
 
@@ -522,10 +612,10 @@ const Game = () => {
         <ResponseEvaluation
           isVisible={gamePhase === 'evaluation'}
           question={currentCard}
-          response={currentResponse}
-          responseTime={currentResponseTime}
+          response={partnerResponse || currentResponse}
+          responseTime={partnerResponseTime || currentResponseTime}
           onEvaluate={handleEvaluationSubmit}
-          partnerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+          partnerName={`Jugador ${currentTurn === 'player1' ? 2 : 1}`}
         />
 
         {/* Waiting for Evaluation Modal */}
@@ -535,8 +625,8 @@ const Game = () => {
           response={partnerResponse || currentResponse}
           responseTime={partnerResponseTime || currentResponseTime}
           onEvaluate={handleEvaluationSubmit}
-          isMyTurn={!isMyTurn} // Si no es mi turno responder, es mi turno evaluar
-          partnerName={`Jugador ${playerNumber === 1 ? 2 : 1}`}
+          isMyTurn={isMyTurn} // isMyTurn means it's my turn to evaluate now
+          partnerName={`Jugador ${currentTurn === 'player1' ? 1 : 2}`}
         />
 
         {/* Level Up Confirmation Modal */}
