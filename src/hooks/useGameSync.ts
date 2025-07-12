@@ -141,7 +141,12 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   };
 
   const syncAction = useCallback(async (action_type: GameSyncAction['action_type'], action_data: any) => {
-    if (!roomId) return;
+    console.log('🚀 syncAction called:', { action_type, action_data, roomId, playerId });
+    
+    if (!roomId) {
+      console.log('❌ syncAction: No roomId');
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -155,9 +160,14 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           triggered_by: playerId
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ syncAction database error:', error);
+        throw error;
+      }
+      
+      console.log('✅ syncAction completed successfully');
     } catch (error) {
-      console.error('Error syncing action:', error);
+      console.error('❌ Error syncing action:', error);
       toast.error('Error sincronizando la acción');
     } finally {
       setIsLoading(false);
@@ -165,7 +175,12 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   }, [roomId, playerId]);
 
   const updateGameState = useCallback(async (updates: Partial<GameState>) => {
-    if (!roomId) return;
+    console.log('🔄 updateGameState called:', { updates, roomId });
+    
+    if (!roomId) {
+      console.log('❌ updateGameState: No roomId');
+      return;
+    }
 
     try {
       setIsLoading(true);

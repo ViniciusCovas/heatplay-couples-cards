@@ -51,7 +51,7 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
-  const { updateRoomStatus } = useRoomService();
+  const { updateRoomStatus, room } = useRoomService();
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
@@ -61,6 +61,14 @@ const Game = () => {
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('proximity-selection');
+  
+  console.log('🎮 Game component render:', { 
+    roomCode, 
+    currentLevel, 
+    gamePhase, 
+    room: room?.id 
+  });
+  
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
   const [isCloseProximity, setIsCloseProximity] = useState<boolean>(false);

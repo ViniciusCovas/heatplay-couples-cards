@@ -30,32 +30,62 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   }, [gameState, navigate, roomCode]);
 
   const handleSelect = async (isClose: boolean) => {
-    if (!room?.id) return;
+    console.log('🔥 handleSelect called with:', isClose);
+    console.log('🔥 room?.id:', room?.id);
+    console.log('🔥 playerId:', playerId);
+    
+    if (!room?.id) {
+      console.log('❌ No room ID available');
+      return;
+    }
+    
+    if (!playerId) {
+      console.log('❌ No player ID available');
+      return;
+    }
     
     setSelectedOption(isClose);
     setWaitingForPartner(true);
+    console.log('🔥 State updated, calling sync actions...');
 
     try {
       // Update game state and sync with partner
-      await Promise.all([
-        updateGameState({
-          proximity_response: isClose,
-          proximity_question_answered: true,
-          current_phase: 'level-select'
-        }),
-        syncAction('proximity_answer', { isClose }),
-        syncAction('navigate_to_level_select', { roomCode })
-      ]);
+      console.log('🔥 Calling updateGameState...');
+      await updateGameState({
+        proximity_response: isClose,
+        proximity_question_answered: true,
+        current_phase: 'level-select'
+      });
+      
+      console.log('🔥 Calling syncAction proximity_answer...');
+      await syncAction('proximity_answer', { isClose });
+      
+      console.log('🔥 Calling syncAction navigate_to_level_select...');
+      await syncAction('navigate_to_level_select', { roomCode });
+
+      console.log('🔥 All sync actions completed');
 
       // If this is the second answer, navigate immediately
       if (gameState?.proximity_question_answered) {
+        console.log('🔥 Partner already answered, navigating immediately');
         navigate(`/level-select?room=${roomCode}`);
+      } else {
+        console.log('🔥 Waiting for partner response');
       }
     } catch (error) {
-      console.error('Error handling proximity selection:', error);
+      console.error('❌ Error handling proximity selection:', error);
       setWaitingForPartner(false);
     }
   };
+
+  console.log('🎯 ProximitySelector render:', { 
+    isVisible, 
+    roomCode, 
+    room: room?.id, 
+    playerId, 
+    gameState, 
+    waitingForPartner 
+  });
 
   if (!isVisible) return null;
 
