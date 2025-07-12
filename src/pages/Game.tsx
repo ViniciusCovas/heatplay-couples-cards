@@ -71,6 +71,21 @@ const Game = () => {
   const [isRetrying, setIsRetrying] = useState(false);
   const maxRetries = 3;
 
+  // Game state
+  const [currentCard, setCurrentCard] = useState('');
+  const [usedCards, setUsedCards] = useState<string[]>([]);
+  const [progress, setProgress] = useState(0);
+  const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
+  
+  console.log('🎮 Game component initialized:', { 
+    roomCode, 
+    currentLevel, 
+    room: room?.id,
+    gamePhase,
+    playerId,
+    playerNumber
+  });
+
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
@@ -132,19 +147,6 @@ const Game = () => {
     setRetryCount(0);
     setIsRetrying(true);
   };
-  
-  // Game state
-  const [currentCard, setCurrentCard] = useState('');
-  const [usedCards, setUsedCards] = useState<string[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
-  
-  console.log('🎮 Game component render:', { 
-    roomCode, 
-    currentLevel, 
-    gamePhase, 
-    room: room?.id 
-  });
   
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);

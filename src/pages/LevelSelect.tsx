@@ -99,14 +99,15 @@ const LevelSelect = () => {
 
   // Navigate to game when level is agreed upon
   useEffect(() => {
-    if (agreedLevel) {
+    if (agreedLevel && room?.id) {
+      console.log('🚀 Level agreed, navigating to game:', { agreedLevel, roomId: room.id });
       const timer = setTimeout(() => {
         navigate(`/game?room=${roomCode}&level=${agreedLevel}`);
-      }, 2000);
+      }, 1500); // Reduced time to 1.5 seconds
       
       return () => clearTimeout(timer);
     }
-  }, [agreedLevel, navigate, roomCode]);
+  }, [agreedLevel, navigate, roomCode, room?.id]);
 
   // Auto-join room if not connected
   useEffect(() => {
