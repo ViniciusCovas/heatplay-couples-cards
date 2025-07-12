@@ -234,6 +234,7 @@ const Game = () => {
         <ProximitySelector
           isVisible={gamePhase === 'proximity-selection'}
           onSelect={handleProximitySelect}
+          roomCode={roomCode}
         />
 
         {/* Game Content based on current phase */}

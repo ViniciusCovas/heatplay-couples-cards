@@ -65,34 +65,90 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          current_card: string | null
+          current_card_index: number | null
+          current_phase: string | null
+          current_turn: string | null
           finished_at: string | null
           id: string
           level: number
+          proximity_question_answered: boolean | null
+          proximity_response: boolean | null
           room_code: string
           started_at: string | null
           status: string
+          used_cards: string[] | null
         }
         Insert: {
           created_at?: string
           created_by?: string | null
+          current_card?: string | null
+          current_card_index?: number | null
+          current_phase?: string | null
+          current_turn?: string | null
           finished_at?: string | null
           id?: string
           level?: number
+          proximity_question_answered?: boolean | null
+          proximity_response?: boolean | null
           room_code: string
           started_at?: string | null
           status?: string
+          used_cards?: string[] | null
         }
         Update: {
           created_at?: string
           created_by?: string | null
+          current_card?: string | null
+          current_card_index?: number | null
+          current_phase?: string | null
+          current_turn?: string | null
           finished_at?: string | null
           id?: string
           level?: number
+          proximity_question_answered?: boolean | null
+          proximity_response?: boolean | null
           room_code?: string
           started_at?: string | null
           status?: string
+          used_cards?: string[] | null
         }
         Relationships: []
+      }
+      game_sync: {
+        Row: {
+          action_data: Json
+          action_type: string
+          created_at: string
+          id: string
+          room_id: string
+          triggered_by: string
+        }
+        Insert: {
+          action_data: Json
+          action_type: string
+          created_at?: string
+          id?: string
+          room_id: string
+          triggered_by: string
+        }
+        Update: {
+          action_data?: Json
+          action_type?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          triggered_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_sync_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_participants: {
         Row: {
