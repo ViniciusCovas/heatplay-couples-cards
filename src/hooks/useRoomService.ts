@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { usePlayerId } from '@/hooks/usePlayerId';
 
 export interface GameRoom {
   id: string;
@@ -39,7 +40,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-  const [playerId] = useState(() => `player_${Math.random().toString(36).substring(2, 15)}`);
+  const playerId = usePlayerId();
 
   const generateRoomCode = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -124,6 +125,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       if (roomError || !roomData) {
         console.log('❌ Room not found or error:', { roomError, roomData, roomCode });
+        if (roomError) console.error('Room query error details:', roomError);
         return false;
       }
       
@@ -140,8 +142,16 @@ export const useRoomService = (): UseRoomServiceReturn => {
       // Check if this player is already in the room
       const playerAlreadyInRoom = existingParticipants.some(p => p.player_id === playerId);
       
+      console.log('🔍 Room participants check:', { 
+        existingParticipants: existingParticipants.length, 
+        playerAlreadyInRoom,
+        currentPlayerId: playerId,
+        roomStatus: roomData.status 
+      });
+      
       if (playerAlreadyInRoom) {
         // Player already in room, just connect
+        console.log('✅ Player already in room, connecting...');
         setParticipants(existingParticipants);
         setRoom({
           ...roomData,
@@ -152,6 +162,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       if (existingParticipants.length >= 2) {
+        console.log('❌ Room is full, cannot join');
         return false; // Room is full
       }
 
