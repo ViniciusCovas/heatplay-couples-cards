@@ -137,6 +137,7 @@ const ProximitySelection = () => {
             isVisible={true}
             onSelect={handleProximitySelect}
             roomCode={roomCode}
+            room={room}
           />
         </div>
       </div>

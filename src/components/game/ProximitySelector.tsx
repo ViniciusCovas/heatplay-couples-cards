@@ -11,11 +11,11 @@ interface ProximitySelectorProps {
   isVisible: boolean;
   onSelect: (isClose: boolean) => void;
   roomCode: string | null;
+  room: any; // Add room as a prop
 }
 
-export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySelectorProps) => {
+export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: ProximitySelectorProps) => {
   const navigate = useNavigate();
-  const { room } = useRoomService();
   const playerId = usePlayerId();
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
