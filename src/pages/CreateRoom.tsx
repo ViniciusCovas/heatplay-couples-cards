@@ -30,7 +30,7 @@ export default function CreateRoom() {
 
   const handleGameStart = async (): Promise<void> => {
     await startGame(); // Espera a que startGame() termine
-    navigate(`/game?room=${roomCode}&level=${level}`);
+    navigate(`/proximity-selection?room=${roomCode}`);
   };
 
   const handleLeaveRoom = (): void => {

@@ -9,7 +9,7 @@ import { ResponseInput } from "@/components/game/ResponseInput";
 import { ResponseEvaluation, type ResponseEvaluation as ResponseEvaluationType } from "@/components/game/ResponseEvaluation";
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
-import { ProximitySelector } from "@/components/game/ProximitySelector";
+
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 import { useRoomService } from "@/hooks/useRoomService";
 
@@ -44,7 +44,7 @@ const LEVEL_NAMES = {
   3: "Sin filtros"
 };
 
-type GamePhase = 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -127,7 +127,7 @@ const Game = () => {
   const [currentCard, setCurrentCard] = useState('');
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
-  const [gamePhase, setGamePhase] = useState<GamePhase>('proximity-selection');
+  const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
   
   console.log('🎮 Game component render:', { 
     roomCode, 
@@ -185,10 +185,6 @@ const Game = () => {
     return availableCards[Math.floor(Math.random() * availableCards.length)];
   };
 
-  const handleProximitySelect = (isClose: boolean) => {
-    setIsCloseProximity(isClose);
-    setGamePhase('card-display');
-  };
 
   const handleStartResponse = () => {
     setGamePhase('response-input');
@@ -354,14 +350,6 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Proximity Selection - Inline in the game flow */}
-        {gamePhase === 'proximity-selection' && (
-          <ProximitySelector
-            isVisible={true}
-            onSelect={handleProximitySelect}
-            roomCode={roomCode}
-          />
-        )}
 
         {/* Game Content based on current phase */}
         {gamePhase === 'card-display' && (
