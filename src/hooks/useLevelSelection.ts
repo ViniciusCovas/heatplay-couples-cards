@@ -72,7 +72,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
               .from('game_rooms')
               .update({ 
                 level: levels[0],
-                current_phase: 'proximity-selection' 
+                current_phase: 'card-display' 
               })
               .eq('id', roomId)
               .select();
