@@ -21,17 +21,27 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
 
-  // Handle partner's response
+  // Handle automatic navigation when both players have answered
   useEffect(() => {
+    console.log('🔍 ProximitySelector useEffect:', { 
+      gameState, 
+      proximity_answered: gameState?.proximity_question_answered,
+      current_phase: gameState?.current_phase 
+    });
+    
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
-      // Both players answered, navigate to level select
-      navigate(`/level-select?room=${roomCode}`);
+      console.log('🎯 Both players answered, navigating to level select...');
+      setTimeout(() => {
+        navigate(`/level-select?room=${roomCode}`);
+      }, 1000); // Small delay to show success state
     }
   }, [gameState, navigate, roomCode]);
 
   const handleSelect = async (isClose: boolean) => {
+    console.log('🎯 ProximitySelector handleSelect:', { isClose, roomId: room?.id, playerId });
+    
     if (!room?.id || !playerId) {
-      console.warn('No room ID or player ID available for proximity selection');
+      console.warn('❌ Missing room ID or player ID');
       return;
     }
     
@@ -39,17 +49,24 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
     setWaitingForPartner(true);
 
     try {
+      // Update game state in database
+      console.log('📝 Updating game state...');
       await updateGameState({
         proximity_response: isClose,
         proximity_question_answered: true,
         current_phase: 'level-select'
       });
       
-      // Call onSelect to notify parent component
-      onSelect(isClose);
+      // Send sync action to notify other player
+      console.log('🔄 Sending sync action...');
+      await syncAction('proximity_answer', { isClose });
+      
+      console.log('✅ Proximity selection completed successfully');
+      
     } catch (error) {
-      console.error('Error handling proximity selection:', error);
+      console.error('❌ Error in proximity selection:', error);
       setWaitingForPartner(false);
+      setSelectedOption(null);
     }
   };
 

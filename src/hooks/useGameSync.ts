@@ -185,26 +185,36 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
     try {
       setIsLoading(true);
 
-      const { error } = await supabase
-        .from('game_rooms')
-        .update({
-          current_phase: updates.current_phase,
-          proximity_question_answered: updates.proximity_question_answered,
-          proximity_response: updates.proximity_response,
-          current_turn: updates.current_turn,
-          current_card: updates.current_card,
-          current_card_index: updates.current_card_index,
-          used_cards: updates.used_cards
-        })
-        .eq('id', roomId);
+      // Prepare update object, filtering out undefined values
+      const updateData: any = {};
+      if (updates.current_phase !== undefined) updateData.current_phase = updates.current_phase;
+      if (updates.proximity_question_answered !== undefined) updateData.proximity_question_answered = updates.proximity_question_answered;
+      if (updates.proximity_response !== undefined) updateData.proximity_response = updates.proximity_response;
+      if (updates.current_turn !== undefined) updateData.current_turn = updates.current_turn;
+      if (updates.current_card !== undefined) updateData.current_card = updates.current_card;
+      if (updates.current_card_index !== undefined) updateData.current_card_index = updates.current_card_index;
+      if (updates.used_cards !== undefined) updateData.used_cards = updates.used_cards;
 
-      if (error) throw error;
+      console.log('📝 Updating database with:', updateData);
+
+      const { data, error } = await supabase
+        .from('game_rooms')
+        .update(updateData)
+        .eq('id', roomId)
+        .select();
+
+      if (error) {
+        console.error('❌ Database update error:', error);
+        throw error;
+      }
+
+      console.log('✅ Database updated successfully:', data);
 
       // Update local state
       setGameState(prev => prev ? { ...prev, ...updates } : null);
     } catch (error) {
-      console.error('Error updating game state:', error);
-      toast.error('Error actualizando el estado del juego');
+      console.error('❌ Error updating game state:', error);
+      throw error; // Re-throw to let caller handle it
     } finally {
       setIsLoading(false);
     }
