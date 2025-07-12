@@ -26,7 +26,7 @@ const LevelSelect = () => {
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted } = useLevelSelection(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -166,9 +166,9 @@ const LevelSelect = () => {
 
         {/* Levels */}
         <div className="space-y-4">
-          {levels.map((level) => {
+        {levels.map((level) => {
             const IconComponent = level.icon;
-            const isSelected = hasVoted; // Si ha votado, mostrar que está seleccionado
+            const isSelected = votedLevel === level.id; // Solo mostrar como seleccionado el nivel específico votado
             const isDisabled = isWaitingForPartner || agreedLevel !== null;
             
             return (

@@ -16,6 +16,7 @@ interface UseLevelSelectionReturn {
   isWaitingForPartner: boolean;
   agreedLevel: number | null;
   hasVoted: boolean;
+  selectedLevel: number | null;
 }
 
 export const useLevelSelection = (roomId: string | null, playerId: string): UseLevelSelectionReturn => {
@@ -23,6 +24,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [isWaitingForPartner, setIsWaitingForPartner] = useState(false);
   const [agreedLevel, setAgreedLevel] = useState<number | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
 
   // Helper function to check for matching votes
   const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
@@ -95,6 +97,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
           setIsWaitingForPartner(false);
           setHasVoted(false);
+          setSelectedLevel(null);
           setAgreedLevel(null);
           
           // Clear mismatched votes
@@ -139,10 +142,11 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           console.log('📊 Loaded votes:', data);
           setVotes(data);
           
-          // Check if current player has voted
+          // Check if current player has voted and set selected level
           const playerVote = data.find(v => v.player_id === playerId);
           setHasVoted(!!playerVote);
-          console.log('🗳️ Player has voted:', !!playerVote);
+          setSelectedLevel(playerVote ? playerVote.selected_level : null);
+          console.log('🗳️ Player has voted:', !!playerVote, 'Level:', playerVote?.selected_level);
 
           // Check for matching votes
           await checkForMatchingVotes(data);
@@ -215,9 +219,10 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           if (allVotes) {
             setVotes(allVotes);
             
-            // Check player vote status
+            // Check player vote status and update selected level
             const playerVote = allVotes.find(v => v.player_id === playerId);
             setHasVoted(!!playerVote);
+            setSelectedLevel(playerVote ? playerVote.selected_level : null);
             
             // Check for matching votes
             await checkForMatchingVotes(allVotes);
@@ -278,6 +283,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       console.log('✅ Vote inserted successfully:', data);
 
       setHasVoted(true);
+      setSelectedLevel(level);
       setIsWaitingForPartner(true);
       
       toast.success(`Has elegido el nivel ${level}. Esperando a tu pareja...`);
@@ -292,6 +298,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     votes,
     isWaitingForPartner,
     agreedLevel,
-    hasVoted
+    hasVoted,
+    selectedLevel
   };
 };
