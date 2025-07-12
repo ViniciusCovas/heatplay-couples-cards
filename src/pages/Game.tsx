@@ -216,12 +216,19 @@ const Game = () => {
   
   // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
+    // Check if room is finished first - this overrides any phase logic
+    if (dbState.status === 'finished') {
+      console.log('🏁 Game is finished, showing final report');
+      return 'final-report';
+    }
+    
     const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
                          (dbState.current_turn === 'player2' && playerNum === 2);
     
     console.log('🎯 deriveLocalPhase:', { 
       dbPhase: dbState.current_phase, 
       dbTurn: dbState.current_turn, 
+      dbStatus: dbState.status,
       playerNum, 
       isMyTurnInDB 
     });
