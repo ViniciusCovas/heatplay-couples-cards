@@ -31,47 +31,29 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
 
   const handleSelect = async (isClose: boolean) => {
     console.log('🔥 handleSelect called with:', isClose);
-    console.log('🔥 room?.id:', room?.id);
-    console.log('🔥 playerId:', playerId);
     
-    if (!room?.id) {
-      console.log('❌ No room ID available');
-      return;
-    }
-    
-    if (!playerId) {
-      console.log('❌ No player ID available');
+    if (!room?.id || !playerId) {
+      console.log('❌ No room ID or player ID available');
       return;
     }
     
     setSelectedOption(isClose);
     setWaitingForPartner(true);
-    console.log('🔥 State updated, calling sync actions...');
+    console.log('🔥 State updated, calling updateGameState...');
 
     try {
-      // Update game state and sync with partner
-      console.log('🔥 Calling updateGameState...');
+      // Actualiza el estado del juego. La sincronización se hará a través 
+      // de la suscripción de Supabase a los cambios en la tabla 'game_rooms'.
       await updateGameState({
         proximity_response: isClose,
         proximity_question_answered: true,
         current_phase: 'level-select'
       });
       
-      console.log('🔥 Calling syncAction proximity_answer...');
-      await syncAction('proximity_answer', { isClose });
-      
-      console.log('🔥 Calling syncAction navigate_to_level_select...');
-      await syncAction('navigate_to_level_select', { roomCode });
+      console.log('🔥 updateGameState completed');
 
-      console.log('🔥 All sync actions completed');
-
-      // If this is the second answer, navigate immediately
-      if (gameState?.proximity_question_answered) {
-        console.log('🔥 Partner already answered, navigating immediately');
-        navigate(`/level-select?room=${roomCode}`);
-      } else {
-        console.log('🔥 Waiting for partner response');
-      }
+      // La navegación ahora se basará en el cambio de estado del juego, 
+      // que se recibe a través del hook useGameSync.
     } catch (error) {
       console.error('❌ Error handling proximity selection:', error);
       setWaitingForPartner(false);

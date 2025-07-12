@@ -137,6 +137,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       
       if (playerAlreadyInRoom) {
         // Player already in room, just connect
+        setParticipants(existingParticipants);
         setRoom({
           ...roomData,
           status: roomData.status as 'waiting' | 'playing' | 'finished'
@@ -159,6 +160,17 @@ export const useRoomService = (): UseRoomServiceReturn => {
         });
 
       if (joinError) throw joinError;
+
+      // Carga los participantes inmediatamente después de unirte a la sala
+      const { data: participantsData, error: loadParticipantsError } = await supabase
+        .from('room_participants')
+        .select('*')
+        .eq('room_id', roomData.id);
+
+      if (loadParticipantsError) throw loadParticipantsError;
+      if (participantsData) {
+        setParticipants(participantsData);
+      }
 
       setRoom({
         ...roomData,
