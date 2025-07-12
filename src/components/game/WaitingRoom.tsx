@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 interface WaitingRoomProps {
   roomCode: string;
   participants: RoomParticipant[];
-  onGameStart: () => void;
+  onGameStart: () => Promise<void>;
   onLeaveRoom: () => void;
 }
 
@@ -41,7 +41,10 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
     if (countdown === null) return;
 
     if (countdown === 0) {
-      onGameStart();
+      const start = async () => {
+        await onGameStart();
+      }
+      start();
       return;
     }
 

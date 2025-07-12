@@ -42,8 +42,8 @@ export default function JoinRoom() {
     }
   };
 
-  const handleGameStart = (): void => {
-    startGame();
+  const handleGameStart = async (): Promise<void> => {
+    await startGame(); // Espera a que startGame() termine
     navigate(`/game?room=${roomCode}&level=${room?.level || 1}`);
   };
 
