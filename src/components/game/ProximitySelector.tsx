@@ -30,10 +30,9 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
       current_phase: gameState?.current_phase 
     });
     
-    // Navigate when someone has answered (not necessarily both)
+    // Navigate when someone has answered
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
       console.log('🎯 Someone answered, navigating to level select...');
-      // Navigate immediately, no delay
       navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);
@@ -69,12 +68,6 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
       
       console.log('✅ Proximity selection confirmed successfully');
       
-      // Close the modal quickly after confirmation
-      setTimeout(() => {
-        setWaitingForPartner(false);
-        // The navigation will be handled by the useEffect
-      }, 500);
-      
     } catch (error) {
       console.error('❌ Error confirming proximity selection:', error);
       setWaitingForPartner(false);
@@ -94,8 +87,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
   if (!isVisible) return null;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-primary/20 via-background to-secondary/20 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg p-8 space-y-8 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10">
+    <div className="w-full max-w-md mx-auto space-y-6 p-4">{/* Removed fixed positioning and backdrop */}
+      <Card className="w-full p-8 space-y-8 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10">
         {/* Gaming Header */}
         <div className="text-center space-y-4">
           <div className="relative">
@@ -127,11 +120,6 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode }: ProximitySe
             <p className="text-sm text-muted-foreground">
               Avanzando...
             </p>
-            <div className="flex justify-center space-x-2 mt-4">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
           </div>
         ) : (
           <div className="space-y-4">

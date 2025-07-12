@@ -354,12 +354,14 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Proximity Selection Modal */}
-        <ProximitySelector
-          isVisible={gamePhase === 'proximity-selection'}
-          onSelect={handleProximitySelect}
-          roomCode={roomCode}
-        />
+        {/* Proximity Selection - Inline in the game flow */}
+        {gamePhase === 'proximity-selection' && (
+          <ProximitySelector
+            isVisible={true}
+            onSelect={handleProximitySelect}
+            roomCode={roomCode}
+          />
+        )}
 
         {/* Game Content based on current phase */}
         {gamePhase === 'card-display' && (
