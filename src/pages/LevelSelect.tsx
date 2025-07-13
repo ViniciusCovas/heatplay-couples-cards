@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users, RefreshCw } from "lucide-react";
+import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
 import * as LucideReact from "lucide-react";
 import { 
   AlertDialog,
@@ -28,7 +28,8 @@ const LevelSelect = () => {
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted, forceSync, levelsMismatch, tryAgain } = useLevelSelection(room?.id || null, playerId);
+  // Remove unused imports and methods since we're now fully automatic
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted, levelsMismatch } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -233,10 +234,12 @@ const LevelSelect = () => {
                 </div>
                 {showMatchAnimation && (
                   <>
-                    <Heart className="absolute -top-2 -right-2 w-8 h-8 text-pink-500 animate-bounce" />
+                    <Heart className="absolute -top-2 -right-2 w-8 h-8 text-pink-500 animate-heartbeat" />
                     <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
                     <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
                     <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+                    <div className="absolute -top-3 left-1/2 w-1 h-1 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+                    <div className="absolute -right-3 top-1/2 w-1 h-1 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '0.7s' }}></div>
                   </>
                 )}
               </div>
@@ -253,39 +256,27 @@ const LevelSelect = () => {
               <div className="flex items-center justify-center space-x-2 text-red-600">
                 <AlertTriangle className={`w-5 h-5 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
                 <p className="text-base font-medium">
-                  You both selected different levels. You need to select the same level to start.
+                  You selected different levels. You must select the same level to play.
                 </p>
               </div>
               <div className={`w-full max-w-xs mx-auto h-1 bg-red-100 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
                 <div className="h-full bg-red-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
               </div>
-              <Button 
-                onClick={tryAgain}
-                variant="outline" 
-                size="sm"
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
-              </Button>
+              <p className="text-sm text-muted-foreground animate-fade-in">
+                Resetting automatically in a moment...
+              </p>
             </div>
            ) : isWaitingForPartner ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
               <div className="flex items-center space-x-2">
                 <Timer className="w-4 h-4 animate-pulse" />
                 <p className="text-base font-medium">
-                  Esperando que tu pareja elija el nivel...
+                  Waiting for your partner to select the level...
                 </p>
               </div>
-              <Button 
-                onClick={forceSync}
-                variant="outline" 
-                size="sm"
-                className="text-xs"
-              >
-                <RefreshCw className="w-3 h-3 mr-1" />
-                Sincronizar
-              </Button>
+              <div className="w-6 h-6 mx-auto">
+                <div className="w-full h-full border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
+              </div>
             </div>
           ) : (
             <p className="text-base text-muted-foreground">
@@ -324,9 +315,13 @@ const LevelSelect = () => {
                     ) : (
                       <level.iconDisplay.component className={`w-6 h-6 ${level.color}`} />
                     )}
-                    {isSelected && agreedLevel === level.id && showMatchAnimation && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full animate-ping"></div>
-                    )}
+                        {isSelected && agreedLevel === level.id && showMatchAnimation && (
+                          <>
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full animate-ping"></div>
+                            <Heart className="absolute -top-2 -left-2 w-4 h-4 text-pink-500 animate-heartbeat" />
+                            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+                          </>
+                        )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -348,7 +343,7 @@ const LevelSelect = () => {
                           ✓ Has elegido este nivel
                         </p>
                         {agreedLevel === level.id && showMatchAnimation && (
-                          <Heart className="w-4 h-4 text-pink-500 animate-bounce" />
+                          <Heart className="w-4 h-4 text-pink-500 animate-heartbeat" />
                         )}
                       </div>
                     )}

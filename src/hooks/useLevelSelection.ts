@@ -124,7 +124,33 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setLevelsMismatch(true);
           setCountdown(null);
           setIsWaitingForPartner(false);
-          toast.error('You both selected different levels. You need to select the same level to start.');
+          toast.error('You selected different levels. You must select the same level to play.');
+          
+          // Automatically reset after 4 seconds to allow reselection
+          setTimeout(async () => {
+            console.log('🔄 Auto-resetting after level mismatch');
+            try {
+              // Clear all votes for this room
+              await supabase
+                .from('level_selection_votes')
+                .delete()
+                .eq('room_id', roomId);
+              
+              // Reset states
+              setVotes([]);
+              setBothPlayersVoted(false);
+              setLevelsMismatch(false);
+              setHasVoted(false);
+              setSelectedLevel(null);
+              setAgreedLevel(null);
+              setIsWaitingForPartner(false);
+              setCountdown(null);
+              
+              toast.info('Ready to select again!');
+            } catch (error) {
+              console.error('❌ Error in auto-reset:', error);
+            }
+          }, 4000);
         }
       } else if (latestVotes.length === 1) {
         console.log('🔄 Only one player has voted');

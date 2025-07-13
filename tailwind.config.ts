@@ -89,6 +89,10 @@ const config: Config = {
 					"0%": { transform: "scale(0.95)", opacity: "0" },
 					"100%": { transform: "scale(1)", opacity: "1" },
 				},
+				"heartbeat": {
+					"0%, 100%": { transform: "scale(1)" },
+					"50%": { transform: "scale(1.1)" }
+				}
 			},
 			animation: {
 				"accordion-down": "accordion-down 0.2s ease-out",
@@ -97,6 +101,7 @@ const config: Config = {
 				"fade-in": "fade-in 0.3s ease-out",
 				"shake": "shake 0.5s ease-in-out",
 				"scale-in": "scale-in 0.2s ease-out",
+				"heartbeat": "heartbeat 1s ease-in-out infinite",
 			},
 		},
 	},
