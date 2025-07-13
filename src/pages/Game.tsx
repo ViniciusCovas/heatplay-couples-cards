@@ -602,6 +602,12 @@ const Game = () => {
       
       console.log('🏁 Setting game to finished state');
       
+      // Sync the final report to both players
+      await syncAction('game_finish', {
+        connectionData: connectionData,
+        message: 'Game finished'
+      });
+      
       // Update room status to finished (this will trigger deriveLocalPhase to return 'final-report')
       await updateRoomStatus('finished');
       
@@ -618,16 +624,56 @@ const Game = () => {
   };
 
   const handlePlayAgain = () => {
-    navigate(`/level-select?room=${roomCode}`);
+    navigate('/');
   };
 
   const handleGoHome = () => {
-    navigate(`/?room=${roomCode}`);
+    navigate('/');
+  };
+
+  const handleChangeLevel = async () => {
+    try {
+      await syncAction('change_level_request', {
+        message: 'Player wants to change level'
+      });
+      navigate(`/level-select?room=${roomCode}`);
+    } catch (error) {
+      console.error('❌ Error requesting level change:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo solicitar el cambio de nivel",
+        variant: "destructive"
+      });
+    }
   };
 
   useEffect(() => {
     setShowCard(true);
-  }, []);
+    
+    // Listen for game finish events from partner
+    const handleGameFinish = (event: CustomEvent) => {
+      console.log('🏁 Received game finish event from partner');
+      const { connectionData } = event.detail;
+      if (connectionData) {
+        setConnectionData(connectionData);
+      }
+      setGamePhase('final-report');
+    };
+
+    // Listen for level change requests from partner
+    const handleChangeLevelRequest = (event: CustomEvent) => {
+      console.log('🎯 Received level change request from partner');
+      navigate(`/level-select?room=${roomCode}`);
+    };
+
+    window.addEventListener('gameFinish', handleGameFinish as EventListener);
+    window.addEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
+
+    return () => {
+      window.removeEventListener('gameFinish', handleGameFinish as EventListener);
+      window.removeEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
+    };
+  }, [roomCode, navigate]);
 
   // Redirect to home if no room code
   if (!roomCode) {
@@ -753,7 +799,15 @@ const Game = () => {
                   Responder
                 </Button>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button 
+                    onClick={handleChangeLevel}
+                    variant="outline"
+                    className="h-10 text-sm"
+                  >
+                    Cambiar nivel
+                  </Button>
+                  
                   <Button 
                     onClick={() => setShowLevelUpConfirmation(true)}
                     variant="secondary"
@@ -775,12 +829,19 @@ const Game = () => {
               </div>
             )}
 
-            {/* Mensaje para jugador que espera */}
+            {/* Mensaje para jugador que espera - también puede cambiar nivel */}
             {!isMyTurn && (
-              <div className="text-center py-8 space-y-3">
+              <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">
                   Esperando que {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} responda...
                 </p>
+                <Button 
+                  onClick={handleChangeLevel}
+                  variant="outline"
+                  className="h-10 text-sm"
+                >
+                  Cambiar nivel
+                </Button>
               </div>
             )}
           </>

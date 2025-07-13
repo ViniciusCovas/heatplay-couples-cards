@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 interface GameSyncAction {
   id: string;
   room_id: string;
-  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance';
+  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance' | 'game_finish' | 'change_level_request';
   action_data: any;
   triggered_by: string;
   created_at: string;
@@ -158,6 +158,19 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         break;
       case 'level_change':
         toast.success(`Nivel cambiado a ${action.action_data.level}`);
+        break;
+      case 'game_finish':
+        console.log('🏁 Game finished, triggering final report');
+        window.dispatchEvent(new CustomEvent('gameFinish', {
+          detail: action.action_data
+        }));
+        break;
+      case 'change_level_request':
+        console.log('🎯 Level change requested by partner');
+        toast.info('Tu pareja quiere cambiar de nivel');
+        window.dispatchEvent(new CustomEvent('changeLevelRequest', {
+          detail: action.action_data
+        }));
         break;
     }
   };
