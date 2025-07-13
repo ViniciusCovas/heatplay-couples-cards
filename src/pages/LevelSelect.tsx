@@ -46,6 +46,8 @@ const LevelSelect = () => {
   // Database levels state
   const [levels, setLevels] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showMismatchAnimation, setShowMismatchAnimation] = useState(false);
+  const [showMatchAnimation, setShowMatchAnimation] = useState(false);
 
   // Fetch levels from database
   useEffect(() => {
@@ -68,19 +70,30 @@ const LevelSelect = () => {
               .eq('level_id', level.id)
               .eq('is_active', true);
 
-            // Get icon component from lucide-react
-            const getIconComponent = (iconStr: string) => {
-              if (!iconStr) return Heart;
-              // Try to find the icon in lucide-react
-              const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
-              return (LucideReact as any)[iconName] || Heart;
+            // Check if icon is emoji or lucide icon name
+            const getIconDisplay = (iconStr: string) => {
+              if (!iconStr) return { type: 'lucide', component: Heart, emoji: null };
+              
+              // Check if it's an emoji (contains non-ASCII characters or common emoji patterns)
+              const isEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|❤️|💖|🔥|💪|⚡|🎯|💎|🌟/u.test(iconStr);
+              
+              if (isEmoji) {
+                return { type: 'emoji', component: null, emoji: iconStr };
+              } else {
+                // Try to find the icon in lucide-react
+                const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
+                const component = (LucideReact as any)[iconName] || Heart;
+                return { type: 'lucide', component, emoji: null };
+              }
             };
+
+            const iconDisplay = getIconDisplay(level.icon);
 
             return {
               id: level.sort_order, // Use sort_order as id for compatibility
               title: level.name,
               description: level.description || '',
-              icon: getIconComponent(level.icon),
+              iconDisplay,
               color: level.color ? `text-[${level.color}]` : "text-primary",
               bgColor: level.bg_color || "bg-primary/10",
               cards: count || 0,
@@ -137,6 +150,19 @@ const LevelSelect = () => {
     setShowConfirmDialog(false);
     setSelectedLevel(null);
   };
+
+  // Handle match and mismatch animations
+  useEffect(() => {
+    if (agreedLevel) {
+      setShowMatchAnimation(true);
+      const timer = setTimeout(() => setShowMatchAnimation(false), 3000);
+      return () => clearTimeout(timer);
+    } else if (bothPlayersVoted && !agreedLevel) {
+      setShowMismatchAnimation(true);
+      const timer = setTimeout(() => setShowMismatchAnimation(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [agreedLevel, bothPlayersVoted]);
 
   // Navigate to game when level is agreed upon
   useEffect(() => {
@@ -200,12 +226,22 @@ const LevelSelect = () => {
             </div>
           </div>
           {countdown !== null ? (
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 mx-auto rounded-full border-4 border-green-500 flex items-center justify-center bg-green-50">
-                <span className="text-2xl font-bold text-green-600">{countdown}</span>
+            <div className="text-center space-y-4">
+              <div className={`relative ${showMatchAnimation ? 'animate-pulse' : ''}`}>
+                <div className="w-20 h-20 mx-auto rounded-full border-4 border-green-500 flex items-center justify-center bg-green-50 animate-scale-in">
+                  <span className="text-3xl font-bold text-green-600">{countdown}</span>
+                </div>
+                {showMatchAnimation && (
+                  <>
+                    <Heart className="absolute -top-2 -right-2 w-8 h-8 text-pink-500 animate-bounce" />
+                    <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
+                  </>
+                )}
               </div>
-              <p className="text-base text-green-600 font-medium">
-                ¡Perfecto! Ambos eligieron el mismo nivel. Iniciando en {countdown}...
+              <p className="text-lg text-green-600 font-medium animate-fade-in">
+                💖 ¡Conexión establecida! Iniciando en {countdown}...
               </p>
             </div>
           ) : agreedLevel ? (
@@ -213,11 +249,16 @@ const LevelSelect = () => {
               ¡Perfecto! Ambos eligieron el nivel {agreedLevel}. Iniciando juego...
             </p>
           ) : bothPlayersVoted ? (
-            <div className="flex items-center justify-center space-x-2 text-orange-600">
-              <Timer className="w-4 h-4 animate-pulse" />
-              <p className="text-base font-medium">
-                Ambos han votado. Verificando niveles...
-              </p>
+            <div className={`text-center space-y-3 transition-all duration-500 ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
+              <div className="flex items-center justify-center space-x-2 text-red-600">
+                <AlertTriangle className={`w-5 h-5 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
+                <p className="text-base font-medium">
+                  Niveles no sincronizados. Por favor, vuelvan a elegir.
+                </p>
+              </div>
+              <div className="w-full max-w-xs mx-auto h-1 bg-red-100 rounded-full overflow-hidden">
+                <div className={`h-full bg-red-500 rounded-full ${showMismatchAnimation ? 'animate-pulse' : ''}`} style={{ width: '100%' }}></div>
+              </div>
             </div>
           ) : isWaitingForPartner ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
@@ -247,16 +288,20 @@ const LevelSelect = () => {
         {/* Levels */}
         <div className="space-y-4">
         {levels.map((level) => {
-            const IconComponent = level.icon;
-            const isSelected = votedLevel === level.id; // Solo mostrar como seleccionado el nivel específico votado
+            const isSelected = votedLevel === level.id;
             const isDisabled = isWaitingForPartner || agreedLevel !== null;
+            const isMismatched = bothPlayersVoted && !agreedLevel && isSelected;
             
             return (
               <Card 
                 key={level.id}
-                className={`p-6 transition-all duration-200 border-2 ${
+                className={`p-6 transition-all duration-300 border-2 ${
                   isSelected 
-                    ? 'border-primary bg-primary/5' 
+                    ? isMismatched
+                      ? `border-red-500 bg-red-50 ${showMismatchAnimation ? 'animate-shake' : ''}`
+                      : agreedLevel === level.id
+                        ? `border-green-500 bg-green-50 ${showMatchAnimation ? 'animate-pulse' : ''}`
+                        : 'border-primary bg-primary/5'
                     : isDisabled
                       ? 'opacity-50 border-muted cursor-not-allowed'
                       : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
@@ -264,8 +309,15 @@ const LevelSelect = () => {
                 onClick={() => !isDisabled && handleLevelClick(level.id)}
               >
                 <div className="flex items-start space-x-4">
-                  <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0`}>
-                    <IconComponent className={`w-6 h-6 ${level.color}`} />
+                  <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0 relative`}>
+                    {level.iconDisplay.type === 'emoji' ? (
+                      <span className="text-2xl">{level.iconDisplay.emoji}</span>
+                    ) : (
+                      <level.iconDisplay.component className={`w-6 h-6 ${level.color}`} />
+                    )}
+                    {isSelected && agreedLevel === level.id && showMatchAnimation && (
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full animate-ping"></div>
+                    )}
                   </div>
                   
                   <div className="flex-1 min-w-0">
@@ -282,8 +334,19 @@ const LevelSelect = () => {
                     </p>
                     
                     {isSelected && (
-                      <p className="text-xs text-primary font-medium">
-                        ✓ Has elegido este nivel
+                      <div className="flex items-center space-x-2">
+                        <p className="text-xs text-primary font-medium">
+                          ✓ Has elegido este nivel
+                        </p>
+                        {agreedLevel === level.id && showMatchAnimation && (
+                          <Heart className="w-4 h-4 text-pink-500 animate-bounce" />
+                        )}
+                      </div>
+                    )}
+                    
+                    {isMismatched && showMismatchAnimation && (
+                      <p className="text-xs text-red-600 font-medium mt-2 animate-pulse">
+                        ⚠️ Tu pareja eligió un nivel diferente
                       </p>
                     )}
                   </div>
