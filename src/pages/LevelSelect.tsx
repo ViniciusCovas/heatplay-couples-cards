@@ -254,17 +254,22 @@ const LevelSelect = () => {
            ) : levelsMismatch ? (
             <div className={`text-center space-y-4 transition-all duration-500 ${showMismatchAnimation ? 'animate-shake' : ''}`}>
               <div className="flex items-center justify-center space-x-2 text-red-600">
-                <AlertTriangle className={`w-5 h-5 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
-                <p className="text-base font-medium">
-                  You selected different levels. You must select the same level to play.
+                <AlertTriangle className={`w-6 h-6 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
+                <p className="text-lg font-bold">
+                  Different levels selected!
                 </p>
               </div>
-              <div className={`w-full max-w-xs mx-auto h-1 bg-red-100 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
-                <div className="h-full bg-red-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-lg">
+                <p className="text-base text-red-700 font-medium mb-2">
+                  You selected different levels. You must select the same level to play.
+                </p>
+                <div className={`w-full max-w-xs mx-auto h-2 bg-red-200 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
+                  <div className="h-full bg-red-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                </div>
+                <p className="text-sm text-red-600 mt-2 animate-fade-in">
+                  🔄 Resetting automatically... You can select again in a moment.
+                </p>
               </div>
-              <p className="text-sm text-muted-foreground animate-fade-in">
-                Resetting automatically in a moment...
-              </p>
             </div>
            ) : isWaitingForPartner ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
@@ -298,7 +303,7 @@ const LevelSelect = () => {
                 className={`p-6 transition-all duration-300 border-2 ${
                   isSelected 
                     ? isMismatched
-                      ? `border-red-500 bg-red-50 ${showMismatchAnimation ? 'animate-shake' : ''}`
+                      ? `border-red-500 bg-red-50 ${showMismatchAnimation ? 'animate-shake border-red-600' : ''}`
                       : agreedLevel === level.id
                         ? `border-green-500 bg-green-50 ${showMatchAnimation ? 'animate-pulse' : ''}`
                         : 'border-primary bg-primary/5'
@@ -349,9 +354,10 @@ const LevelSelect = () => {
                     )}
                     
                     {isMismatched && showMismatchAnimation && (
-                      <p className="text-xs text-red-600 font-medium mt-2 animate-pulse">
-                        ⚠️ Tu pareja eligió un nivel diferente
-                      </p>
+                      <div className="text-xs text-red-600 font-bold mt-2 animate-pulse flex items-center space-x-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        <span>⚠️ Different from partner's choice</span>
+                      </div>
                     )}
                   </div>
                 </div>

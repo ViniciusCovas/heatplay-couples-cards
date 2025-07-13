@@ -120,11 +120,33 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             }, 1000);
           }
         } else {
-          console.log('❌ Levels do not match:', levels);
+          console.log('❌ MISMATCH DETECTED! Levels do not match:', levels);
+          console.log('🔍 Player 1 level:', levels[0], 'Player 2 level:', levels[1]);
+          
+          // Set mismatch state immediately
           setLevelsMismatch(true);
           setCountdown(null);
           setIsWaitingForPartner(false);
+          setBothPlayersVoted(true); // Keep this true to show mismatch UI
+          
           toast.error('You selected different levels. You must select the same level to play.');
+          
+          // Use game_sync to coordinate mismatch state between players
+          try {
+            await supabase
+              .from('game_sync')
+              .insert({
+                room_id: roomId,
+                action_type: 'level_mismatch',
+                action_data: { 
+                  levels, 
+                  player_votes: latestVotes.map(v => ({ player_id: v.player_id, level: v.selected_level }))
+                },
+                triggered_by: playerId
+              });
+          } catch (error) {
+            console.error('❌ Error syncing mismatch state:', error);
+          }
           
           // Automatically reset after 4 seconds to allow reselection
           setTimeout(async () => {
@@ -135,6 +157,16 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 .from('level_selection_votes')
                 .delete()
                 .eq('room_id', roomId);
+              
+              // Sync reset action
+              await supabase
+                .from('game_sync')
+                .insert({
+                  room_id: roomId,
+                  action_type: 'reset_votes',
+                  action_data: { reason: 'level_mismatch_auto_reset' },
+                  triggered_by: playerId
+                });
               
               // Reset states
               setVotes([]);
@@ -223,7 +255,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     return () => clearTimeout(timer);
   }, [roomId, checkForMatchingVotes]);
 
-  // Listen for real-time updates
+  // Listen for real-time updates - votes and sync actions
   useEffect(() => {
     if (!roomId) return;
 
@@ -269,6 +301,45 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             // CRITICAL: Force check for matching votes
             console.log('🚨 FORCING CHECK FOR MATCHING VOTES...');
             await checkForMatchingVotes(allVotes);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'game_sync',
+          filter: `room_id=eq.${roomId}`
+        },
+        async (payload) => {
+          console.log('📨 Real-time sync action received:', payload);
+          const syncAction = payload.new as any;
+          
+          // Don't process our own sync actions
+          if (syncAction.triggered_by === playerId) {
+            console.log('🔄 Ignoring own sync action');
+            return;
+          }
+          
+          if (syncAction.action_type === 'level_mismatch') {
+            console.log('📨 Processing level mismatch sync from partner');
+            setLevelsMismatch(true);
+            setCountdown(null);
+            setIsWaitingForPartner(false);
+            setBothPlayersVoted(true);
+            toast.error('You selected different levels. You must select the same level to play.');
+          } else if (syncAction.action_type === 'reset_votes') {
+            console.log('📨 Processing vote reset sync from partner');
+            setVotes([]);
+            setBothPlayersVoted(false);
+            setLevelsMismatch(false);
+            setHasVoted(false);
+            setSelectedLevel(null);
+            setAgreedLevel(null);
+            setIsWaitingForPartner(false);
+            setCountdown(null);
+            toast.info('Ready to select again!');
           }
         }
       )
