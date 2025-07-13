@@ -28,7 +28,7 @@ const LevelSelect = () => {
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted, forceSync } = useLevelSelection(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted, forceSync, levelsMismatch, tryAgain } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -155,14 +155,14 @@ const LevelSelect = () => {
   useEffect(() => {
     if (agreedLevel) {
       setShowMatchAnimation(true);
-      const timer = setTimeout(() => setShowMatchAnimation(false), 3000);
+      const timer = setTimeout(() => setShowMatchAnimation(false), 4000);
       return () => clearTimeout(timer);
-    } else if (bothPlayersVoted && !agreedLevel) {
+    } else if (levelsMismatch) {
       setShowMismatchAnimation(true);
-      const timer = setTimeout(() => setShowMismatchAnimation(false), 3000);
+      const timer = setTimeout(() => setShowMismatchAnimation(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [agreedLevel, bothPlayersVoted]);
+  }, [agreedLevel, levelsMismatch]);
 
   // Navigate to game when level is agreed upon
   useEffect(() => {
@@ -241,26 +241,35 @@ const LevelSelect = () => {
                 )}
               </div>
               <p className="text-lg text-green-600 font-medium animate-fade-in">
-                💖 ¡Conexión establecida! Iniciando en {countdown}...
+                💖 You are connected. Let's play! Starting in {countdown}...
               </p>
             </div>
           ) : agreedLevel ? (
             <p className="text-base text-green-600 font-medium">
               ¡Perfecto! Ambos eligieron el nivel {agreedLevel}. Iniciando juego...
             </p>
-          ) : bothPlayersVoted ? (
-            <div className={`text-center space-y-3 transition-all duration-500 ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
+           ) : levelsMismatch ? (
+            <div className={`text-center space-y-4 transition-all duration-500 ${showMismatchAnimation ? 'animate-shake' : ''}`}>
               <div className="flex items-center justify-center space-x-2 text-red-600">
                 <AlertTriangle className={`w-5 h-5 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
                 <p className="text-base font-medium">
-                  Niveles no sincronizados. Por favor, vuelvan a elegir.
+                  You both selected different levels. You need to select the same level to start.
                 </p>
               </div>
-              <div className="w-full max-w-xs mx-auto h-1 bg-red-100 rounded-full overflow-hidden">
-                <div className={`h-full bg-red-500 rounded-full ${showMismatchAnimation ? 'animate-pulse' : ''}`} style={{ width: '100%' }}></div>
+              <div className={`w-full max-w-xs mx-auto h-1 bg-red-100 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
+                <div className="h-full bg-red-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
               </div>
+              <Button 
+                onClick={tryAgain}
+                variant="outline" 
+                size="sm"
+                className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
             </div>
-          ) : isWaitingForPartner ? (
+           ) : isWaitingForPartner ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
               <div className="flex items-center space-x-2">
                 <Timer className="w-4 h-4 animate-pulse" />
@@ -289,8 +298,8 @@ const LevelSelect = () => {
         <div className="space-y-4">
         {levels.map((level) => {
             const isSelected = votedLevel === level.id;
-            const isDisabled = isWaitingForPartner || agreedLevel !== null;
-            const isMismatched = bothPlayersVoted && !agreedLevel && isSelected;
+            const isDisabled = isWaitingForPartner || agreedLevel !== null || levelsMismatch;
+            const isMismatched = levelsMismatch && isSelected;
             
             return (
               <Card 

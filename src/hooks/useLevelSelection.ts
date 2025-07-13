@@ -20,6 +20,8 @@ interface UseLevelSelectionReturn {
   countdown: number | null;
   bothPlayersVoted: boolean;
   forceSync: () => Promise<void>;
+  levelsMismatch: boolean;
+  tryAgain: () => Promise<void>;
 }
 
 export const useLevelSelection = (roomId: string | null, playerId: string): UseLevelSelectionReturn => {
@@ -30,6 +32,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [bothPlayersVoted, setBothPlayersVoted] = useState(false);
+  const [levelsMismatch, setLevelsMismatch] = useState(false);
 
   // Helper function to check for matching votes
   const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
@@ -118,24 +121,10 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           }
         } else {
           console.log('❌ Levels do not match:', levels);
-          setBothPlayersVoted(false);
+          setLevelsMismatch(true);
           setCountdown(null);
-          toast.error('Los niveles no coinciden. Por favor, vuelvan a elegir.');
           setIsWaitingForPartner(false);
-          setHasVoted(false);
-          setSelectedLevel(null);
-          setAgreedLevel(null);
-          
-          // Clear mismatched votes
-          try {
-            await supabase
-              .from('level_selection_votes')
-              .delete()
-              .eq('room_id', roomId);
-            console.log('🗑️ Cleared mismatched votes');
-          } catch (err) {
-            console.error('❌ Error clearing votes:', err);
-          }
+          toast.error('You both selected different levels. You need to select the same level to start.');
         }
       } else if (latestVotes.length === 1) {
         console.log('🔄 Only one player has voted');
@@ -401,6 +390,37 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     }
   }, [roomId, playerId]);
 
+  // Try again function - clears votes and resets state
+  const tryAgain = useCallback(async () => {
+    if (!roomId) return;
+    
+    try {
+      console.log('🔄 Try again triggered - clearing votes');
+      toast.info('Clearing votes...');
+      
+      // Clear all votes for this room
+      await supabase
+        .from('level_selection_votes')
+        .delete()
+        .eq('room_id', roomId);
+      
+      // Reset states
+      setVotes([]);
+      setBothPlayersVoted(false);
+      setLevelsMismatch(false);
+      setHasVoted(false);
+      setSelectedLevel(null);
+      setAgreedLevel(null);
+      setIsWaitingForPartner(false);
+      setCountdown(null);
+      
+      toast.success('Ready to select again!');
+    } catch (error) {
+      console.error('❌ Error in try again:', error);
+      toast.error('Error clearing votes');
+    }
+  }, [roomId]);
+
   // Manual sync function for stuck players
   const forceSync = useCallback(async () => {
     if (!roomId) return;
@@ -454,6 +474,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     selectedLevel,
     countdown,
     bothPlayersVoted,
-    forceSync
+    forceSync,
+    levelsMismatch,
+    tryAgain
   };
 };
