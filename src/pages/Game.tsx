@@ -209,6 +209,13 @@ const Game = () => {
       const newPhase = deriveLocalPhase(gameState, playerNumber);
       if (newPhase !== gamePhase) {
         console.log('🎮 Phase changed:', { from: gamePhase, to: newPhase, reason: 'game state sync' });
+        
+        // Extra protection: don't change away from final-report if we're already there
+        if (gamePhase === 'final-report' && newPhase !== 'final-report' && room?.status !== 'finished') {
+          console.log('🛡️ Protecting final-report phase from unwanted changes');
+          return;
+        }
+        
         setGamePhase(newPhase);
       }
     }
@@ -217,7 +224,7 @@ const Game = () => {
   // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
     // Check if room is finished first - this overrides any phase logic
-    if (dbState.status === 'finished') {
+    if (room?.status === 'finished') {
       console.log('🏁 Game is finished, showing final report');
       return 'final-report';
     }
@@ -228,7 +235,7 @@ const Game = () => {
     console.log('🎯 deriveLocalPhase:', { 
       dbPhase: dbState.current_phase, 
       dbTurn: dbState.current_turn, 
-      dbStatus: dbState.status,
+      roomStatus: room?.status,
       playerNum, 
       isMyTurnInDB 
     });
@@ -592,10 +599,14 @@ const Game = () => {
 
       const connectionData = calculateConnectionScore(formattedResponses);
       setConnectionData(connectionData);
-      setGamePhase('final-report');
       
-      // Update room status to finished
+      console.log('🏁 Setting game to finished state');
+      
+      // Update room status to finished (this will trigger deriveLocalPhase to return 'final-report')
       await updateRoomStatus('finished');
+      
+      // Set local phase after database updates
+      setGamePhase('final-report');
     } catch (error) {
       console.error('❌ Error generating final report:', error);
       toast({
