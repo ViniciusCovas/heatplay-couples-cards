@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
+import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users, RefreshCw } from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +27,7 @@ const LevelSelect = () => {
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted } = useLevelSelection(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, bothPlayersVoted, forceSync } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -170,11 +170,22 @@ const LevelSelect = () => {
               </p>
             </div>
           ) : isWaitingForPartner ? (
-            <div className="flex items-center justify-center space-x-2 text-orange-600">
-              <Timer className="w-4 h-4 animate-pulse" />
-              <p className="text-base font-medium">
-                Esperando que tu pareja elija el nivel...
-              </p>
+            <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
+              <div className="flex items-center space-x-2">
+                <Timer className="w-4 h-4 animate-pulse" />
+                <p className="text-base font-medium">
+                  Esperando que tu pareja elija el nivel...
+                </p>
+              </div>
+              <Button 
+                onClick={forceSync}
+                variant="outline" 
+                size="sm"
+                className="text-xs"
+              >
+                <RefreshCw className="w-3 h-3 mr-1" />
+                Sincronizar
+              </Button>
             </div>
           ) : (
             <p className="text-base text-muted-foreground">

@@ -19,6 +19,7 @@ interface UseLevelSelectionReturn {
   selectedLevel: number | null;
   countdown: number | null;
   bothPlayersVoted: boolean;
+  forceSync: () => Promise<void>;
 }
 
 export const useLevelSelection = (roomId: string | null, playerId: string): UseLevelSelectionReturn => {
@@ -263,9 +264,9 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     };
   }, [roomId, playerId, checkForMatchingVotes]);
 
-  // Periodic verification - every 3 seconds check if room should advance
+  // Enhanced periodic verification with state recovery
   useEffect(() => {
-    if (!roomId || agreedLevel) return;
+    if (!roomId) return;
     
     const periodicCheck = async () => {
       try {
@@ -281,9 +282,20 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           return;
         }
         
-        // If room is still in level-select but should be in card-display
-        if (room?.current_phase === 'level-select') {
-          // Check if we have matching votes
+        console.log('🔄 Periodic check - Room state:', room);
+        
+        // STATE RECOVERY: If room is already in card-display but we're still waiting locally
+        if (room?.current_phase === 'card-display' && !agreedLevel) {
+          console.log('🚨 STATE RECOVERY: Room is in card-display but local state is waiting');
+          setAgreedLevel(room.level);
+          setIsWaitingForPartner(false);
+          setCountdown(null);
+          toast.success(`¡Recuperando estado! Iniciando nivel ${room.level}`);
+          return;
+        }
+        
+        // If room is still in level-select, check for matching votes
+        if (room?.current_phase === 'level-select' && !agreedLevel) {
           const { data: allVotes, error: votesError } = await supabase
             .from('level_selection_votes')
             .select('*')
@@ -326,7 +338,9 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       }
     };
     
-    const interval = setInterval(periodicCheck, 3000); // Check every 3 seconds
+    // Check immediately and then every 2 seconds for faster recovery
+    periodicCheck();
+    const interval = setInterval(periodicCheck, 2000);
     return () => clearInterval(interval);
   }, [roomId, agreedLevel]);
 
@@ -387,6 +401,50 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     }
   }, [roomId, playerId]);
 
+  // Manual sync function for stuck players
+  const forceSync = useCallback(async () => {
+    if (!roomId) return;
+    
+    try {
+      console.log('🔄 Force sync triggered');
+      toast.info('Sincronizando...');
+      
+      // Check room state
+      const { data: room } = await supabase
+        .from('game_rooms')
+        .select('current_phase, level')
+        .eq('id', roomId)
+        .single();
+      
+      if (room?.current_phase === 'card-display') {
+        setAgreedLevel(room.level);
+        setIsWaitingForPartner(false);
+        setCountdown(null);
+        toast.success(`¡Sincronizado! Iniciando nivel ${room.level}`);
+        return;
+      }
+      
+      // Re-fetch and check votes
+      const { data: allVotes } = await supabase
+        .from('level_selection_votes')
+        .select('*')
+        .eq('room_id', roomId);
+      
+      if (allVotes) {
+        setVotes(allVotes);
+        const playerVote = allVotes.find(v => v.player_id === playerId);
+        setHasVoted(!!playerVote);
+        setSelectedLevel(playerVote ? playerVote.selected_level : null);
+        await checkForMatchingVotes(allVotes);
+      }
+      
+      toast.success('Estado sincronizado');
+    } catch (error) {
+      console.error('❌ Error in force sync:', error);
+      toast.error('Error al sincronizar');
+    }
+  }, [roomId, playerId, checkForMatchingVotes]);
+
   return {
     submitLevelVote,
     votes,
@@ -395,6 +453,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     hasVoted,
     selectedLevel,
     countdown,
-    bothPlayersVoted
+    bothPlayersVoted,
+    forceSync
   };
 };
