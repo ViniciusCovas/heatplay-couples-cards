@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users, RefreshCw } from "lucide-react";
+import * as LucideReact from "lucide-react";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -42,35 +43,74 @@ const LevelSelect = () => {
     playerNumber
   });
 
-  const levels = [
-    {
-      id: 1,
-      title: "Descubrimiento",
-      description: "Conocerse mejor, romper el hielo",
-      icon: Heart,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      cards: 15
-    },
-    {
-      id: 2,
-      title: "Confianza",
-      description: "Preguntas más profundas e íntimas",
-      icon: MessageCircle,
-      color: "text-secondary",
-      bgColor: "bg-secondary/10",
-      cards: 20
-    },
-    {
-      id: 3,
-      title: "Sin filtros",
-      description: "Máxima conexión y sinceridad",
-      icon: Flame,
-      color: "text-destructive",
-      bgColor: "bg-destructive/10",
-      cards: 12
-    }
-  ];
+  // Database levels state
+  const [levels, setLevels] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch levels from database
+  useEffect(() => {
+    const fetchLevels = async () => {
+      try {
+        const { data: levelsData, error: levelsError } = await supabase
+          .from('levels')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order');
+
+        if (levelsError) throw levelsError;
+
+        // Get question counts for each level
+        const levelsWithCounts = await Promise.all(
+          levelsData.map(async (level) => {
+            const { count } = await supabase
+              .from('questions')
+              .select('*', { count: 'exact', head: true })
+              .eq('level_id', level.id)
+              .eq('is_active', true);
+
+            // Get icon component from lucide-react
+            const getIconComponent = (iconStr: string) => {
+              if (!iconStr) return Heart;
+              // Try to find the icon in lucide-react
+              const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
+              return (LucideReact as any)[iconName] || Heart;
+            };
+
+            return {
+              id: level.sort_order, // Use sort_order as id for compatibility
+              title: level.name,
+              description: level.description || '',
+              icon: getIconComponent(level.icon),
+              color: level.color ? `text-[${level.color}]` : "text-primary",
+              bgColor: level.bg_color || "bg-primary/10",
+              cards: count || 0,
+              database_id: level.id // Keep reference to actual database ID
+            };
+          })
+        );
+
+        setLevels(levelsWithCounts);
+      } catch (error) {
+        console.error('Error fetching levels:', error);
+        // Fallback to default levels if database fails
+        setLevels([
+          {
+            id: 1,
+            title: "Básico",
+            description: "Preguntas simples para conocerse mejor",
+            icon: Heart,
+            color: "text-primary",
+            bgColor: "bg-primary/10",
+            cards: 5
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLevels();
+  }, []);
 
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
@@ -119,7 +159,17 @@ const LevelSelect = () => {
     }
   }, [roomCode, isConnected, room, joinRoom]);
 
-  // Show connection status if not connected
+  // Show loading or connection status
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Cargando niveles...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (roomCode && !isConnected && !room) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">

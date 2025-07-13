@@ -10,6 +10,9 @@ import ProximitySelection from "./pages/ProximitySelection";
 import LevelSelect from "./pages/LevelSelect";
 import Game from "./pages/Game";
 import Admin from "./pages/Admin";
+import AdminLevels from "./pages/AdminLevels";
+import AdminQuestionsBulk from "./pages/AdminQuestionsBulk";
+import AdminQuestionsManual from "./pages/AdminQuestionsManual";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +31,9 @@ const App = () => (
           <Route path="/level-select" element={<LevelSelect />} />
           <Route path="/game" element={<Game />} />
           <Route path="/admin-panel-secret" element={<Admin />} />
+          <Route path="/admin/levels" element={<AdminLevels />} />
+          <Route path="/admin/questions-bulk" element={<AdminQuestionsBulk />} />
+          <Route path="/admin/questions-manual" element={<AdminQuestionsManual />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

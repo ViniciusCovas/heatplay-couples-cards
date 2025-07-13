@@ -19,37 +19,6 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useResponseData } from "@/hooks/useResponseData";
 import { supabase } from "@/integrations/supabase/client";
 
-// Sample cards data - this will come from database later
-const SAMPLE_CARDS = {
-  1: [
-    "¿Cuál fue tu primera impresión de mí?",
-    "¿Qué es lo que más admiras de nuestra relación?",
-    "Cuenta tu momento más vergonzoso",
-    "¿Cuál es tu mayor sueño compartido?",
-    "¿Qué canción te recuerda a nosotros?"
-  ],
-  2: [
-    "¿Hay algo que siempre has querido decirme pero no te has atrevido?",
-    "¿Cuál es tu mayor miedo en las relaciones?",
-    "Describe el momento en que supiste que me amabas",
-    "¿Qué es lo que más te excita de mí?",
-    "¿Hay alguna fantasía que te gustaría compartir?"
-  ],
-  3: [
-    "¿Cuál es tu fantasía más secreta?",
-    "¿Qué es lo más atrevido que has hecho?",
-    "Si pudieras cambiar algo de nuestra intimidad, ¿qué sería?",
-    "¿Cuál es tu mayor turn-on?",
-    "¿Hay algo nuevo que te gustaría probar juntos?"
-  ]
-};
-
-const LEVEL_NAMES = {
-  1: "Descubrimiento",
-  2: "Confianza", 
-  3: "Sin filtros"
-};
-
 type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report' | 'waiting-for-evaluation';
 type PlayerTurn = 'player1' | 'player2';
 
@@ -60,6 +29,10 @@ const Game = () => {
   const { updateRoomStatus, room, joinRoom, isConnected, getPlayerNumber } = useRoomService();
   const playerId = usePlayerId();
   const playerNumber = getPlayerNumber(); // 1 o 2
+  
+  // Questions will be loaded from database
+  const [levelCards, setLevelCards] = useState<string[]>([]);
+  const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
@@ -267,9 +240,56 @@ const Game = () => {
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   
-  const levelCards = SAMPLE_CARDS[currentLevel as keyof typeof SAMPLE_CARDS] || [];
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
+
+  // Fetch questions from database
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        // Get level information
+        const { data: levelData, error: levelError } = await supabase
+          .from('levels')
+          .select('*')
+          .eq('sort_order', currentLevel)
+          .eq('is_active', true)
+          .single();
+
+        if (levelError) throw levelError;
+
+        // Get questions for this level
+        const { data: questionsData, error: questionsError } = await supabase
+          .from('questions')
+          .select('text')
+          .eq('level_id', levelData.id)
+          .eq('is_active', true);
+
+        if (questionsError) throw questionsError;
+
+        const questions = questionsData.map(q => q.text);
+        setLevelCards(questions);
+        setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
+
+        console.log('📚 Loaded questions:', { 
+          level: currentLevel, 
+          levelName: levelData.name, 
+          questionCount: questions.length 
+        });
+      } catch (error) {
+        console.error('Error fetching questions:', error);
+        // Fallback to sample data
+        const fallbackQuestions = [
+          "¿Cuál fue tu primera impresión de mí?",
+          "¿Qué es lo que más admiras de nuestra relación?",
+          "¿Cuál es tu mayor sueño compartido?"
+        ];
+        setLevelCards(fallbackQuestions);
+        setLevelNames(prev => ({ ...prev, [currentLevel]: "Nivel " + currentLevel }));
+      }
+    };
+
+    fetchQuestions();
+  }, [currentLevel]);
 
   // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
@@ -760,7 +780,7 @@ const Game = () => {
           
           <div className="space-y-1">
             <h1 className="text-xl font-heading text-foreground">
-              Nivel {currentLevel}: {LEVEL_NAMES[currentLevel as keyof typeof LEVEL_NAMES]}
+              Nivel {currentLevel}: {levelNames[currentLevel] || `Nivel ${currentLevel}`}
             </h1>
             <div className="space-y-2">
               <Progress value={progress} className="h-2" />
