@@ -148,7 +148,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             console.error('❌ Error syncing mismatch state:', error);
           }
           
-          // Automatically reset after 4 seconds to allow reselection
+          // Automatically reset after 3 seconds to allow reselection
           setTimeout(async () => {
             console.log('🔄 Auto-resetting after level mismatch');
             try {
@@ -158,15 +158,20 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 .delete()
                 .eq('room_id', roomId);
               
-              // Sync reset action
-              await supabase
-                .from('game_sync')
-                .insert({
-                  room_id: roomId,
-                  action_type: 'reset_votes',
-                  action_data: { reason: 'level_mismatch_auto_reset' },
-                  triggered_by: playerId
-                });
+              // Sync reset action - only first player triggers to avoid race conditions
+              const playerVotes = latestVotes.find(v => v.player_id === playerId);
+              const shouldTriggerReset = playerVotes && latestVotes.findIndex(v => v.player_id === playerId) === 0;
+              
+              if (shouldTriggerReset) {
+                await supabase
+                  .from('game_sync')
+                  .insert({
+                    room_id: roomId,
+                    action_type: 'reset_votes',
+                    action_data: { reason: 'level_mismatch_auto_reset' },
+                    triggered_by: playerId
+                  });
+              }
               
               // Reset states
               setVotes([]);
@@ -182,7 +187,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             } catch (error) {
               console.error('❌ Error in auto-reset:', error);
             }
-          }, 4000);
+          }, 3000);
         }
       } else if (latestVotes.length === 1) {
         console.log('🔄 Only one player has voted');
@@ -316,20 +321,23 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           console.log('📨 Real-time sync action received:', payload);
           const syncAction = payload.new as any;
           
-          // Don't process our own sync actions
-          if (syncAction.triggered_by === playerId) {
-            console.log('🔄 Ignoring own sync action');
-            return;
-          }
-          
           if (syncAction.action_type === 'level_mismatch') {
-            console.log('📨 Processing level mismatch sync from partner');
+            console.log('📨 Processing level mismatch sync (from both own and partner actions)');
             setLevelsMismatch(true);
             setCountdown(null);
             setIsWaitingForPartner(false);
             setBothPlayersVoted(true);
-            toast.error('You selected different levels. You must select the same level to play.');
+            
+            // Only show toast if it's from partner to avoid duplicate notifications
+            if (syncAction.triggered_by !== playerId) {
+              toast.error('You selected different levels. You must select the same level to play.');
+            }
           } else if (syncAction.action_type === 'reset_votes') {
+            // Only process reset from partner to avoid double-resets
+            if (syncAction.triggered_by === playerId) {
+              console.log('🔄 Ignoring own reset action');
+              return;
+            }
             console.log('📨 Processing vote reset sync from partner');
             setVotes([]);
             setBothPlayersVoted(false);
