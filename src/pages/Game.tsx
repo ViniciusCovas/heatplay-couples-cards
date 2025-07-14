@@ -835,6 +835,16 @@ const Game = () => {
                   <Button 
                     onClick={async () => {
                       try {
+                        // Clear existing level selection votes first
+                        const { error: clearError } = await supabase
+                          .from('level_selection_votes')
+                          .delete()
+                          .eq('room_id', room?.id);
+                        
+                        if (clearError) {
+                          console.error('❌ Error clearing level votes:', clearError);
+                        }
+                        
                         await syncAction('level_change_request', {
                           roomCode,
                           currentLevel,

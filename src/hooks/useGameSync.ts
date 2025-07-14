@@ -116,7 +116,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
     };
   }, [roomId, playerId]);
 
-  const handleSyncAction = (action: GameSyncAction) => {
+  const handleSyncAction = async (action: GameSyncAction) => {
     console.log('🔔 Handling sync action:', action);
     
     switch (action.action_type) {
@@ -179,6 +179,29 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       case 'level_change_request':
         console.log('🎯 Level change requested by partner');
         toast.info('Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...');
+        
+        // Clear existing level selection votes for fresh start
+        const { error: clearError } = await supabase
+          .from('level_selection_votes')
+          .delete()
+          .eq('room_id', action.room_id);
+        
+        if (clearError) {
+          console.error('❌ Error clearing level votes:', clearError);
+        }
+        
+        // Reset room phase to level selection
+        const { error: updateError } = await supabase
+          .from('game_rooms')
+          .update({ 
+            current_phase: 'level-select'
+          })
+          .eq('id', action.room_id);
+        
+        if (updateError) {
+          console.error('❌ Error updating room phase:', updateError);
+        }
+        
         // Navigate both players to level selection
         window.location.href = `/level-select?room=${action.action_data.roomCode}`;
         break;
