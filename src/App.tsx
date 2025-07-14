@@ -9,7 +9,8 @@ import JoinRoom from "./pages/JoinRoom";
 import ProximitySelection from "./pages/ProximitySelection";
 import LevelSelect from "./pages/LevelSelect";
 import Game from "./pages/Game";
-import Admin from "./pages/Admin";
+
+import AdminDashboard from "./pages/AdminDashboard";
 import AdminLevels from "./pages/AdminLevels";
 import AdminQuestionsBulk from "./pages/AdminQuestionsBulk";
 import AdminQuestionsManual from "./pages/AdminQuestionsManual";
@@ -30,7 +31,7 @@ const App = () => (
           <Route path="/proximity-selection" element={<ProximitySelection />} />
           <Route path="/level-select" element={<LevelSelect />} />
           <Route path="/game" element={<Game />} />
-          <Route path="/admin-panel-secret" element={<Admin />} />
+          <Route path="/admin-panel-secret" element={<AdminDashboard />} />
           <Route path="/admin/levels" element={<AdminLevels />} />
           <Route path="/admin/questions-bulk" element={<AdminQuestionsBulk />} />
           <Route path="/admin/questions-manual" element={<AdminQuestionsManual />} />
