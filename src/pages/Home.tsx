@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Heart, Users, MessageCircle } from "lucide-react";
+import { Heart, Users, MessageCircle, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
@@ -75,6 +77,33 @@ const Home = () => {
             </div>
           </div>
         </Card>
+
+        {/* Admin Access - Only show for admins */}
+        {isAdmin && (
+          <div className="text-center">
+            <Button 
+              onClick={() => navigate('/admin-panel-secret')}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Panel de Administración
+            </Button>
+          </div>
+        )}
+
+        {/* Auth Access */}
+        <div className="text-center">
+          <Button 
+            onClick={() => navigate('/auth')}
+            variant="ghost"
+            size="sm"
+            className="text-xs text-muted-foreground"
+          >
+            Iniciar Sesión
+          </Button>
+        </div>
       </div>
     </div>
   );
