@@ -423,6 +423,33 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setIsWaitingForPartner(false);
                 setCountdown(null);
                 toast.success(`¡Niveles sincronizados! Iniciando nivel ${levels[0]}`);
+              } else {
+                // THIS IS THE NEW LOGIC TO HANDLE MISMATCH IN PERIODIC CHECK
+                console.log('🔄 PERIODIC CHECK: Found mismatching votes, forcing reset');
+                setLevelsMismatch(true);
+                setCountdown(null);
+                setIsWaitingForPartner(false);
+                setBothPlayersVoted(true);
+                toast.error('Han elegido niveles diferentes. Deben elegir el mismo para poder jugar.');
+                
+                // Automatically reset after 3 seconds
+                setTimeout(async () => {
+                  console.log('🔄 Auto-resetting after level mismatch (from polling)');
+                  try {
+                    await supabase.from('level_selection_votes').delete().eq('room_id', roomId);
+                    setVotes([]);
+                    setBothPlayersVoted(false);
+                    setLevelsMismatch(false);
+                    setHasVoted(false);
+                    setSelectedLevel(null);
+                    setAgreedLevel(null);
+                    setIsWaitingForPartner(false);
+                    setCountdown(null);
+                    toast.info('¡Listos para elegir de nuevo!');
+                  } catch (error) {
+                    console.error('❌ Error in auto-reset (from polling):', error);
+                  }
+                }, 3000);
               }
             }
           }
@@ -436,7 +463,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     periodicCheck();
     const interval = setInterval(periodicCheck, 2000);
     return () => clearInterval(interval);
-  }, [roomId, agreedLevel]);
+  }, [roomId, agreedLevel, levelsMismatch]);
 
   const submitLevelVote = useCallback(async (level: number) => {
     console.log('🗳️ submitLevelVote called:', { level, roomId, playerId });
