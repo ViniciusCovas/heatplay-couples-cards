@@ -328,7 +328,8 @@ const Game = () => {
       if (currentLevel >= 3) {
         generateFinalReport();
       } else {
-        setShowLevelUpConfirmation(true);
+        // All cards completed - automatically navigate to level selection
+        navigate(`/level-select?room=${roomCode}`);
       }
       return null;
     }
@@ -540,7 +541,8 @@ const Game = () => {
         if (currentLevel >= 3) {
           await generateFinalReport();
         } else {
-          setShowLevelUpConfirmation(true);
+          // All cards completed - automatically navigate to level selection
+          navigate(`/level-select?room=${roomCode}`);
         }
       }
     } catch (error) {
@@ -653,7 +655,9 @@ const Game = () => {
 
   const handleChangeLevel = async () => {
     try {
-      await syncAction('change_level_request', {
+      await syncAction('level_change_request', {
+        roomCode,
+        currentLevel,
         message: 'Player wants to change level'
       });
       navigate(`/level-select?room=${roomCode}`);
@@ -829,10 +833,25 @@ const Game = () => {
                   </Button>
                   
                   <Button 
-                    onClick={() => setShowLevelUpConfirmation(true)}
+                    onClick={async () => {
+                      try {
+                        await syncAction('level_change_request', {
+                          roomCode,
+                          currentLevel,
+                          message: 'Player wants to select a new level'
+                        });
+                        navigate(`/level-select?room=${roomCode}`);
+                      } catch (error) {
+                        console.error('❌ Error requesting level change:', error);
+                        toast({
+                          title: "Error",
+                          description: "No se pudo solicitar el cambio de nivel",
+                          variant: "destructive"
+                        });
+                      }
+                    }}
                     variant="secondary"
                     className="h-10 text-sm"
-                    disabled={currentLevel >= 3}
                   >
                     Subir nivel
                   </Button>

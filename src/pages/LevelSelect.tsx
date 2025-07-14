@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
 import * as LucideReact from "lucide-react";
 import { 
@@ -24,6 +24,7 @@ import { supabase } from "@/integrations/supabase/client";
 const LevelSelect = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const roomCode = searchParams.get('room');
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
@@ -283,11 +284,11 @@ const LevelSelect = () => {
                 <div className="w-full h-full border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
               </div>
             </div>
-          ) : (
-            <p className="text-base text-muted-foreground">
-              Elige tu nivel de intensidad
-            </p>
-          )}
+           ) : (
+             <p className="text-base text-muted-foreground">
+               {location.pathname.includes('game') ? 'Elige el nuevo nivel de intensidad' : 'Elige tu nivel de intensidad'}
+             </p>
+           )}
         </div>
 
         {/* Levels */}
