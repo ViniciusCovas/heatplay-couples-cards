@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 interface GameSyncAction {
   id: string;
   room_id: string;
-  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance' | 'game_finish' | 'change_level_request';
+  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance' | 'game_finish' | 'change_level_request' | 'level_mismatch';
   action_data: any;
   triggered_by: string;
   created_at: string;
@@ -171,6 +171,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         window.dispatchEvent(new CustomEvent('changeLevelRequest', {
           detail: action.action_data
         }));
+        break;
+      case 'level_mismatch':
+        console.log('⚠️ Level mismatch detected by partner');
+        toast.error('You selected different levels. You must select the same level to play.');
         break;
     }
   };
