@@ -90,18 +90,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       return roomCode;
     } catch (error) {
-      console.error('Error creating room:', error);
       throw error;
     }
   }, [playerId]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     if (!playerId) {
-      console.error('❌ No player ID available for joining room');
       return false;
     }
-    
-    console.log('🔗 Attempting to join room:', roomCode, 'with player:', playerId);
     
     try {
       // Special handling for test code
@@ -127,12 +123,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .single();
 
       if (roomError || !roomData) {
-        console.log('❌ Room not found or error:', { roomError, roomData, roomCode });
-        if (roomError) console.error('Room query error details:', roomError);
         return false;
       }
-      
-      console.log('✅ Room found:', roomData);
 
       // Check if player is already in the room
       const { data: existingParticipants, error: participantsError } = await supabase
@@ -145,16 +137,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
       // Check if this player is already in the room
       const playerAlreadyInRoom = existingParticipants.some(p => p.player_id === playerId);
       
-      console.log('🔍 Room participants check:', { 
-        existingParticipants: existingParticipants.length, 
-        playerAlreadyInRoom,
-        currentPlayerId: playerId,
-        roomStatus: roomData.status 
-      });
-      
       if (playerAlreadyInRoom) {
         // Player already in room, just connect
-        console.log('✅ Player already in room, connecting...');
         setParticipants(existingParticipants as RoomParticipant[]);
         setRoom({
           ...roomData,
@@ -165,7 +149,6 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       if (existingParticipants.length >= 2) {
-        console.log('❌ Room is full, cannot join');
         return false; // Room is full
       }
 
@@ -199,7 +182,6 @@ export const useRoomService = (): UseRoomServiceReturn => {
       setIsConnected(true);
       return true;
     } catch (error) {
-      console.error('Error joining room:', error);
       return false;
     }
   }, [playerId]);
@@ -223,7 +205,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       setParticipants([]);
       setIsConnected(false);
     } catch (error) {
-      console.error('Error leaving room:', error);
+      // Silent error handling
     }
   }, [room, channel, playerId]);
 
@@ -239,7 +221,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         })
         .eq('id', room.id);
     } catch (error) {
-      console.error('Error starting game:', error);
+      // Silent error handling
     }
   }, [room]);
 
@@ -257,7 +239,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .update(updateData)
         .eq('id', room.id);
     } catch (error) {
-      console.error('Error updating room status:', error);
+      // Silent error handling
     }
   }, [room]);
 

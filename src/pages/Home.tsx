@@ -3,22 +3,30 @@ import { Card } from "@/components/ui/card";
 import { Heart, Users, MessageCircle, Settings } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTranslation } from "react-i18next";
+import { LanguageSelector } from "@/components/ui/language-selector";
 
 const Home = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
+  const { t } = useTranslation();
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+      {/* Language Selector */}
+      <div className="absolute top-4 right-4">
+        <LanguageSelector />
+      </div>
+      
       <div className="w-full max-w-md space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center mb-4">
             <Heart className="w-8 h-8 text-secondary mr-2" />
-            <h1 className="text-3xl font-heading text-foreground">Cartas Íntimas</h1>
+            <h1 className="text-3xl font-heading text-foreground">{t('app.title')}</h1>
           </div>
           <p className="text-lg text-muted-foreground font-body">
-            ¿Listos para profundizar su conexión?
+            {t('app.subtitle')}
           </p>
         </div>
 
@@ -30,7 +38,7 @@ const Home = () => {
             size="lg"
           >
             <Users className="w-5 h-5 mr-2" />
-            Crear sala
+            {t('buttons.createRoom')}
           </Button>
           
           <Button 
@@ -40,17 +48,17 @@ const Home = () => {
             size="lg"
           >
             <MessageCircle className="w-5 h-5 mr-2" />
-            Unirme a sala
+            {t('buttons.joinRoom')}
           </Button>
         </Card>
 
         {/* Footer Info */}
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
-            Juego de conversación por niveles
+            {t('app.subtitle')}
           </p>
           <p className="text-xs text-destructive font-medium">
-            Para mayores de 18 años
+            18+
           </p>
         </div>
 
@@ -61,19 +69,19 @@ const Home = () => {
               <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-sm font-bold text-primary">1</span>
               </div>
-              <p className="text-xs text-muted-foreground">Descubrimiento</p>
+              <p className="text-xs text-muted-foreground">{t('levels.iceBreaker')}</p>
             </div>
             <div className="space-y-2">
               <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-sm font-bold text-secondary">2</span>
               </div>
-              <p className="text-xs text-muted-foreground">Confianza</p>
+              <p className="text-xs text-muted-foreground">{t('levels.gettingPersonal')}</p>
             </div>
             <div className="space-y-2">
               <div className="w-8 h-8 bg-destructive/20 rounded-full flex items-center justify-center mx-auto">
                 <span className="text-sm font-bold text-destructive">3</span>
               </div>
-              <p className="text-xs text-muted-foreground">Sin filtros</p>
+              <p className="text-xs text-muted-foreground">{t('levels.intimate')}</p>
             </div>
           </div>
         </Card>
@@ -88,7 +96,7 @@ const Home = () => {
               className="text-xs"
             >
               <Settings className="w-4 h-4 mr-2" />
-              Panel de Administración
+              {t('navigation.admin')}
             </Button>
           </div>
         )}
@@ -101,7 +109,7 @@ const Home = () => {
             size="sm"
             className="text-xs text-muted-foreground"
           >
-            Iniciar Sesión
+            Login
           </Button>
         </div>
       </div>

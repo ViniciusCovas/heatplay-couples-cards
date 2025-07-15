@@ -1,0 +1,94 @@
+{
+  "app": {
+    "title": "Connection Cards",
+    "subtitle": "Build deeper connections through meaningful conversations"
+  },
+  "navigation": {
+    "home": "Home",
+    "admin": "Admin Panel",
+    "levels": "Levels",
+    "questions": "Questions"
+  },
+  "buttons": {
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "startGame": "Start Game",
+    "nextCard": "Next Card",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "continue": "Continue",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close"
+  },
+  "game": {
+    "roomCode": "Room Code",
+    "playerName": "Player Name",
+    "waitingForPlayers": "Waiting for players...",
+    "selectLevel": "Select Level",
+    "currentLevel": "Current Level",
+    "round": "Round {{number}}",
+    "waitingForEvaluation": "Waiting for evaluation...",
+    "proximityQuestion": "How close are you?",
+    "responseTime": "Response time: {{time}}s",
+    "typeYourResponse": "Type your response...",
+    "evaluateResponse": "Evaluate this response"
+  },
+  "levels": {
+    "iceBreaker": "Ice Breaker",
+    "gettingPersonal": "Getting Personal",
+    "deepThoughts": "Deep Thoughts",
+    "intimate": "Intimate"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "manageQuestions": "Manage Questions",
+    "manageLevels": "Manage Levels",
+    "bulkImport": "Bulk Import",
+    "manualEntry": "Manual Entry",
+    "questionText": "Question Text",
+    "category": "Category",
+    "level": "Level",
+    "language": "Language",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "messages": {
+    "roomCreated": "Room created successfully!",
+    "joinedRoom": "Joined room successfully!",
+    "roomNotFound": "Room not found",
+    "gameStarted": "Game started!",
+    "gameEnded": "Game ended!",
+    "responseSubmitted": "Response submitted!",
+    "evaluationSubmitted": "Evaluation submitted!",
+    "questionAdded": "Question added successfully!",
+    "questionUpdated": "Question updated successfully!",
+    "questionDeleted": "Question deleted successfully!",
+    "levelUpdated": "Level updated successfully!",
+    "connectionEstablished": "Connection established!",
+    "accessDenied": "Access denied. Admin privileges required."
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "roomCodeRequired": "Room code is required",
+    "playerNameRequired": "Player name is required",
+    "questionTextRequired": "Question text is required",
+    "invalidRoomCode": "Invalid room code",
+    "roomFull": "Room is full",
+    "gameAlreadyStarted": "Game has already started"
+  },
+  "placeholders": {
+    "enterRoomCode": "Enter room code",
+    "enterPlayerName": "Enter your name",
+    "enterQuestionText": "Enter question text",
+    "searchQuestions": "Search questions...",
+    "selectCategory": "Select category",
+    "selectLevel": "Select level"
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "app": {
+    "title": "Cartas de Conexão",
+    "subtitle": "Construa conexões mais profundas através de conversas significativas"
+  },
+  "navigation": {
+    "home": "Início",
+    "admin": "Painel Administrativo",
+    "levels": "Níveis",
+    "questions": "Perguntas"
+  },
+  "buttons": {
+    "createRoom": "Criar Sala",
+    "joinRoom": "Entrar na Sala",
+    "startGame": "Iniciar Jogo",
+    "nextCard": "Próxima Carta",
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "yes": "Sim",
+    "no": "Não",
+    "close": "Fechar"
+  },
+  "game": {
+    "roomCode": "Código da Sala",
+    "playerName": "Nome do Jogador",
+    "waitingForPlayers": "Aguardando jogadores...",
+    "selectLevel": "Selecionar Nível",
+    "currentLevel": "Nível Atual",
+    "round": "Rodada {{number}}",
+    "waitingForEvaluation": "Aguardando avaliação...",
+    "proximityQuestion": "Quão próximos vocês estão?",
+    "responseTime": "Tempo de resposta: {{time}}s",
+    "typeYourResponse": "Digite sua resposta...",
+    "evaluateResponse": "Avalie esta resposta"
+  },
+  "levels": {
+    "iceBreaker": "Quebra-gelo",
+    "gettingPersonal": "Ficando Pessoal",
+    "deepThoughts": "Pensamentos Profundos",
+    "intimate": "Íntimo"
+  },
+  "admin": {
+    "dashboard": "Painel Administrativo",
+    "manageQuestions": "Gerenciar Perguntas",
+    "manageLevels": "Gerenciar Níveis",
+    "bulkImport": "Importação em Lote",
+    "manualEntry": "Entrada Manual",
+    "questionText": "Texto da Pergunta",
+    "category": "Categoria",
+    "level": "Nível",
+    "language": "Idioma",
+    "active": "Ativo",
+    "inactive": "Inativo"
+  },
+  "messages": {
+    "roomCreated": "Sala criada com sucesso!",
+    "joinedRoom": "Entrou na sala com sucesso!",
+    "roomNotFound": "Sala não encontrada",
+    "gameStarted": "Jogo iniciado!",
+    "gameEnded": "Jogo terminado!",
+    "responseSubmitted": "Resposta enviada!",
+    "evaluationSubmitted": "Avaliação enviada!",
+    "questionAdded": "Pergunta adicionada com sucesso!",
+    "questionUpdated": "Pergunta atualizada com sucesso!",
+    "questionDeleted": "Pergunta excluída com sucesso!",
+    "levelUpdated": "Nível atualizado com sucesso!",
+    "connectionEstablished": "Conexão estabelecida!",
+    "accessDenied": "Acesso negado. Privilégios de administrador necessários."
+  },
+  "errors": {
+    "generic": "Ocorreu um erro. Tente novamente.",
+    "networkError": "Erro de rede. Verifique sua conexão.",
+    "roomCodeRequired": "Código da sala é obrigatório",
+    "playerNameRequired": "Nome do jogador é obrigatório",
+    "questionTextRequired": "Texto da pergunta é obrigatório",
+    "invalidRoomCode": "Código da sala inválido",
+    "roomFull": "Sala está cheia",
+    "gameAlreadyStarted": "O jogo já começou"
+  },
+  "placeholders": {
+    "enterRoomCode": "Digite o código da sala",
+    "enterPlayerName": "Digite seu nome",
+    "enterQuestionText": "Digite o texto da pergunta",
+    "searchQuestions": "Buscar perguntas...",
+    "selectCategory": "Selecionar categoria",
+    "selectLevel": "Selecionar nível"
+  }
+}

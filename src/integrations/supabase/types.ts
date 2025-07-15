@@ -191,6 +191,7 @@ export type Database = {
           icon: string | null
           id: string
           is_active: boolean
+          language: string
           name: string
           sort_order: number
           updated_at: string
@@ -203,6 +204,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          language?: string
           name: string
           sort_order?: number
           updated_at?: string
@@ -215,6 +217,7 @@ export type Database = {
           icon?: string | null
           id?: string
           is_active?: boolean
+          language?: string
           name?: string
           sort_order?: number
           updated_at?: string
@@ -254,6 +257,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          language: string
           level_id: string
           text: string
           updated_at: string
@@ -263,6 +267,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          language?: string
           level_id: string
           text: string
           updated_at?: string
@@ -272,6 +277,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          language?: string
           level_id?: string
           text?: string
           updated_at?: string
@@ -335,6 +341,23 @@ export type Database = {
       cleanup_inactive_rooms: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      get_random_questions_for_level: {
+        Args: {
+          level_id_param: string
+          language_param?: string
+          limit_param?: number
+        }
+        Returns: {
+          id: string
+          text: string
+          category: string
+          level_id: string
+          language: string
+          created_at: string
+          updated_at: string
+          is_active: boolean
+        }[]
       }
       get_user_role: {
         Args: { user_id: string }

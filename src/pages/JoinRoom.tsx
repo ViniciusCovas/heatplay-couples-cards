@@ -7,12 +7,14 @@ import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
+import { useTranslation } from 'react-i18next';
 
 export default function JoinRoom() {
   const [roomCode, setRoomCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { room, participants, joinRoom, leaveRoom, startGame } = useRoomService();
+  const { t } = useTranslation();
 
   const handleJoinRoom = async (): Promise<void> => {
     if (!roomCode.trim()) {

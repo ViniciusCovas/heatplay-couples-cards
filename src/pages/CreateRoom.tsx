@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
+import { useTranslation } from 'react-i18next';
 
 export default function CreateRoom() {
   const [level] = useState(1); // Default level
@@ -13,16 +14,16 @@ export default function CreateRoom() {
   const [roomCode, setRoomCode] = useState('');
   const navigate = useNavigate();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
+  const { t } = useTranslation();
 
   const handleCreateRoom = async (): Promise<void> => {
     setIsCreating(true);
     try {
       const code = await createRoom(level);
       setRoomCode(code);
-      toast.success('Sala creada exitosamente');
+      toast.success(t('messages.roomCreated'));
     } catch (error) {
-      toast.error('Error al crear la sala');
-      console.error('Error creating room:', error);
+      toast.error(t('errors.generic'));
     } finally {
       setIsCreating(false);
     }
@@ -64,11 +65,11 @@ export default function CreateRoom() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Crear Sala
+              {t('buttons.createRoom')}
             </CardTitle>
           </div>
           <p className="text-muted-foreground text-center">
-            Crea una sala para jugar con tu pareja
+            {t('app.subtitle')}
           </p>
         </CardHeader>
         
@@ -82,10 +83,10 @@ export default function CreateRoom() {
               {isCreating ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Creando sala...
+                  {t('buttons.createRoom')}...
                 </>
               ) : (
-                'Crear Sala'
+                t('buttons.createRoom')
               )}
             </Button>
           </div>

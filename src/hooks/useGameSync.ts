@@ -58,7 +58,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           });
         }
       } catch (error) {
-        console.error('Error loading game state:', error);
+        // Silent error handling for game state loading
       }
     };
 
@@ -117,8 +117,6 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   }, [roomId, playerId]);
 
   const handleSyncAction = async (action: GameSyncAction) => {
-    console.log('🔔 Handling sync action:', action);
-    
     switch (action.action_type) {
       case 'proximity_answer':
         toast.success('Tu pareja respondió la pregunta de proximidad');
@@ -130,11 +128,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         toast.info('Nueva carta revelada');
         break;
       case 'response_submit':
-        console.log('📤 Partner submitted response, notifying for evaluation');
         toast.info('Tu pareja envió su respuesta. Es tu turno evaluar.');
-        // Store partner's response data for evaluation
         if (action.action_data) {
-          console.log('📨 Dispatching partner response event:', action.action_data);
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
               response: action.action_data.response,
@@ -146,10 +141,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }
         break;
       case 'evaluation_submit':
-        console.log('📊 Partner completed evaluation');
         toast.info('Evaluación completada');
         if (action.action_data?.nextCard) {
-          console.log('🃏 Next card available:', action.action_data.nextCard);
           toast.info('Nueva carta disponible');
         }
         break;
@@ -160,47 +153,35 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         toast.success(`Nivel cambiado a ${action.action_data.level}`);
         break;
       case 'game_finish':
-        console.log('🏁 Game finished, triggering final report');
         window.dispatchEvent(new CustomEvent('gameFinish', {
           detail: action.action_data
         }));
         break;
       case 'change_level_request':
-        console.log('🎯 Level change requested by partner');
         toast.info('Tu pareja quiere cambiar de nivel');
         window.dispatchEvent(new CustomEvent('changeLevelRequest', {
           detail: action.action_data
         }));
         break;
       case 'level_mismatch':
-        console.log('⚠️ Level mismatch detected by partner');
         toast.error('You selected different levels. You must select the same level to play.');
         break;
       case 'level_change_request':
-        console.log('🎯 Level change requested by partner');
         toast.info('Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...');
         
         // Clear existing level selection votes for fresh start
-        const { error: clearError } = await supabase
+        await supabase
           .from('level_selection_votes')
           .delete()
           .eq('room_id', action.room_id);
         
-        if (clearError) {
-          console.error('❌ Error clearing level votes:', clearError);
-        }
-        
         // Reset room phase to level selection
-        const { error: updateError } = await supabase
+        await supabase
           .from('game_rooms')
           .update({ 
             current_phase: 'level-select'
           })
           .eq('id', action.room_id);
-        
-        if (updateError) {
-          console.error('❌ Error updating room phase:', updateError);
-        }
         
         // Navigate both players to level selection
         window.location.href = `/level-select?room=${action.action_data.roomCode}`;
@@ -209,10 +190,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   };
 
   const syncAction = useCallback(async (action_type: GameSyncAction['action_type'], action_data: any) => {
-    console.log('🚀 syncAction called:', { action_type, action_data, roomId, playerId });
-    
     if (!roomId) {
-      console.log('❌ syncAction: No roomId');
       return;
     }
 
@@ -229,13 +207,9 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         });
 
       if (error) {
-        console.error('❌ syncAction database error:', error);
         throw error;
       }
-      
-      console.log('✅ syncAction completed successfully');
     } catch (error) {
-      console.error('❌ Error syncing action:', error);
       toast.error('Error sincronizando la acción');
     } finally {
       setIsLoading(false);
@@ -243,10 +217,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   }, [roomId, playerId]);
 
   const updateGameState = useCallback(async (updates: Partial<GameState>) => {
-    console.log('🔄 updateGameState called:', { updates, roomId });
-    
     if (!roomId) {
-      console.log('❌ updateGameState: No roomId');
       return;
     }
 
@@ -263,26 +234,19 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       if (updates.current_card_index !== undefined) updateData.current_card_index = updates.current_card_index;
       if (updates.used_cards !== undefined) updateData.used_cards = updates.used_cards;
 
-      console.log('📝 Updating database with:', updateData);
-
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('game_rooms')
         .update(updateData)
-        .eq('id', roomId)
-        .select();
+        .eq('id', roomId);
 
       if (error) {
-        console.error('❌ Database update error:', error);
         throw error;
       }
-
-      console.log('✅ Database updated successfully:', data);
 
       // Update local state
       setGameState(prev => prev ? { ...prev, ...updates } : null);
     } catch (error) {
-      console.error('❌ Error updating game state:', error);
-      throw error; // Re-throw to let caller handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }
