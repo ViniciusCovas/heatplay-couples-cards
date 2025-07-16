@@ -94,5 +94,20 @@
     "searchQuestions": "Rechercher des questions...",
     "selectCategory": "Sélectionner une catégorie",
     "selectLevel": "Sélectionner un niveau"
+  },
+  "loading": {
+    "levels": "Chargement des niveaux..."
+  },
+  "connecting": {
+    "room": "Connexion à la salle {{roomCode}}..."
+  },
+  "button": {
+    "back_home": "Retour à l'accueil"
+  },
+  "level": {
+    "basic": {
+      "title": "Basique",
+      "description": "Questions simples pour mieux se connaître"
+    }
   }
 }

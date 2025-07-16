@@ -96,5 +96,20 @@
     "searchQuestions": "Search questions...",
     "selectCategory": "Select category",
     "selectLevel": "Select level"
+  },
+  "loading": {
+    "levels": "Loading levels..."
+  },
+  "connecting": {
+    "room": "Connecting to room {{roomCode}}..."
+  },
+  "button": {
+    "back_home": "Back to Home"
+  },
+  "level": {
+    "basic": {
+      "title": "Basic",
+      "description": "Simple questions to get to know each other better"
+    }
   }
 }

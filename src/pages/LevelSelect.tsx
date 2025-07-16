@@ -27,7 +27,7 @@ const LevelSelect = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const roomCode = searchParams.get('room');
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
@@ -44,7 +44,10 @@ const LevelSelect = () => {
     room: room?.id,
     isConnected,
     playerId,
-    playerNumber
+    playerNumber,
+    currentLanguage: i18n.language,
+    browserLanguage: navigator.language,
+    detectedLanguage: i18n.language
   });
 
   // Database levels state
@@ -57,12 +60,15 @@ const LevelSelect = () => {
   useEffect(() => {
     const fetchLevels = async () => {
       try {
+        console.log('🔍 Fetching levels for language:', i18n.language);
         const { data: levelsData, error: levelsError } = await supabase
           .from('levels')
           .select('*')
           .eq('is_active', true)
           .eq('language', i18n.language)
           .order('sort_order');
+
+        console.log('📊 Levels query result:', { levelsData, levelsError, count: levelsData?.length });
 
         if (levelsError) throw levelsError;
 
@@ -108,6 +114,7 @@ const LevelSelect = () => {
           })
         );
 
+        console.log('✅ Final levels with counts:', levelsWithCounts);
         setLevels(levelsWithCounts);
       } catch (error) {
         console.error('Error fetching levels:', error);
@@ -115,9 +122,9 @@ const LevelSelect = () => {
         setLevels([
           {
             id: 1,
-            title: "Básico",
-            description: "Preguntas simples para conocerse mejor",
-            icon: Heart,
+            title: t('level.basic.title', 'Basic'),
+            description: t('level.basic.description', 'Simple questions to get to know each other better'),
+            iconDisplay: { type: 'lucide', component: Heart, emoji: null },
             color: "text-primary",
             bgColor: "bg-primary/10",
             cards: 5
@@ -196,7 +203,7 @@ const LevelSelect = () => {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Cargando niveles...</p>
+          <p className="text-muted-foreground">{t('loading.levels', 'Loading levels...')}</p>
         </div>
       </div>
     );
@@ -206,8 +213,8 @@ const LevelSelect = () => {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Conectando a la sala {roomCode}...</p>
-          <Button onClick={() => navigate('/')}>Volver al inicio</Button>
+          <p className="text-muted-foreground">{t('connecting.room', 'Connecting to room {{roomCode}}...', { roomCode })}</p>
+          <Button onClick={() => navigate('/')}>{t('button.back_home', 'Back to Home')}</Button>
         </div>
       </div>
     );
