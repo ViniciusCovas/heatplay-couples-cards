@@ -7,10 +7,13 @@ import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
+import { useTranslation } from 'react-i18next';
 
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
+import { ResponseEvaluation, type EvaluationData } from "@/components/game/ResponseEvaluation";
+import { LanguageIndicator } from "@/components/ui/language-indicator";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 import { useRoomService } from "@/hooks/useRoomService";
@@ -19,13 +22,14 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const { updateRoomStatus, room, joinRoom, isConnected, getPlayerNumber } = useRoomService();
   const playerId = usePlayerId();
   const playerNumber = getPlayerNumber(); // 1 o 2
@@ -86,11 +90,11 @@ const Game = () => {
               }, 2000);
             } else {
               setIsRetrying(false);
-              toast({
-                title: "Error de conexión",
-                description: `No se pudo conectar a la sala ${roomCode} después de ${maxRetries} intentos`,
-                variant: "destructive"
-              });
+            toast({
+              title: t('game.errors.connectionError'),
+              description: t('game.errors.connectionFailed', { roomCode, maxRetries }),
+              variant: "destructive"
+            });
             }
           }
         } catch (error) {
@@ -100,8 +104,8 @@ const Game = () => {
           
           if (retryCount + 1 >= maxRetries) {
             toast({
-              title: "Error de conexión",
-              description: "No se pudo conectar a la sala. Verifica el código de la sala.",
+              title: t('game.errors.connectionError'),
+              description: t('game.errors.verifyRoomCode'),
               variant: "destructive"
             });
           }
@@ -130,6 +134,14 @@ const Game = () => {
   
   // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
+  
+  // Evaluation state
+  const [pendingEvaluation, setPendingEvaluation] = useState<{
+    question: string;
+    response: string;
+    responseId: string;
+    playerName: string;
+  } | null>(null);
   
 
   // Determine if it's my turn based on player number and current turn
@@ -180,6 +192,59 @@ const Game = () => {
       }
     }
   }, [gameState]);
+
+  // Set up evaluation data when entering evaluation phase
+  useEffect(() => {
+    const setupEvaluationData = async () => {
+      if (gamePhase === 'evaluation' && gameState && room && !pendingEvaluation) {
+        console.log('🔄 Setting up evaluation data for evaluator');
+        
+        try {
+          // Get the current round number
+          const currentRound = (gameState.used_cards?.length || 0) + 1;
+          const currentCardFromState = gameState.current_card;
+          
+          // Fetch the partner's response for the current card/round (not my own)
+          const { data: responseData, error } = await supabase
+            .from('game_responses')
+            .select('*')
+            .eq('room_id', room.id)
+            .eq('card_id', currentCardFromState)
+            .eq('round_number', currentRound)
+            .neq('player_id', playerId)  // Get partner's response, not my own
+            .is('evaluation', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (error) {
+            console.error('❌ Error fetching response for evaluation:', error);
+            return;
+          }
+
+          if (responseData) {
+            // Get partner's name based on their player ID
+            const partnerName = responseData.player_id !== playerId ? 
+              (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
+              t('game.yourResponse');
+
+            setPendingEvaluation({
+              question: responseData.card_id,
+              response: responseData.response || '',
+              responseId: responseData.id,
+              playerName: partnerName
+            });
+
+            console.log('✅ Evaluation data set up successfully for partner response');
+          }
+        } catch (error) {
+          console.error('❌ Error setting up evaluation data:', error);
+        }
+      }
+    };
+
+    setupEvaluationData();
+  }, [gamePhase, gameState, room, pendingEvaluation, playerId, playerNumber, t]);
   
   // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
@@ -205,6 +270,9 @@ const Game = () => {
         return 'card-display';
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
+      case 'evaluation':
+        // In evaluation phase, both players can evaluate
+        return 'evaluation';
       case 'final-report':
         return 'final-report';
       default:
@@ -225,15 +293,21 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Track previous language to detect changes
+  const [prevLanguage, setPrevLanguage] = useState(i18n.language);
+  
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
+        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
+        
         // Get level information
         const { data: levelData, error: levelError } = await supabase
           .from('levels')
           .select('*')
           .eq('sort_order', currentLevel)
+          .eq('language', i18n.language)
           .eq('is_active', true)
           .single();
 
@@ -244,6 +318,7 @@ const Game = () => {
           .from('questions')
           .select('text')
           .eq('level_id', levelData.id)
+          .eq('language', i18n.language)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
@@ -255,23 +330,40 @@ const Game = () => {
         console.log('📚 Loaded questions:', { 
           level: currentLevel, 
           levelName: levelData.name, 
-          questionCount: questions.length 
+          questionCount: questions.length,
+          language: i18n.language
         });
+        
+        // If language changed, reset the game state for new language
+        if (prevLanguage !== i18n.language) {
+          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
+          
+          // Clear current card and used cards to start fresh with new language
+          if (gameState?.current_card) {
+            await updateGameState({
+              current_card: null,
+              used_cards: []
+            });
+          }
+          
+          setPrevLanguage(i18n.language);
+        }
+        
       } catch (error) {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          "¿Cuál fue tu primera impresión de mí?",
-          "¿Qué es lo que más admiras de nuestra relación?",
-          "¿Cuál es tu mayor sueño compartido?"
+          t('game.fallbackQuestions.question1'),
+          t('game.fallbackQuestions.question2'),
+          t('game.fallbackQuestions.question3')
         ];
         setLevelCards(fallbackQuestions);
-        setLevelNames(prev => ({ ...prev, [currentLevel]: "Nivel " + currentLevel }));
+        setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
       }
     };
 
     fetchQuestions();
-  }, [currentLevel]);
+  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
   // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
@@ -330,8 +422,8 @@ const Game = () => {
   const handleResponseSubmit = async (response: string, responseTime: number) => {
     if (isSubmitting || !room) {
       toast({
-        title: "Error",
-        description: "No se ha podido establecer conexión con la sala. Intenta de nuevo.",
+        title: t('common.error'),
+        description: t('game.errors.connectionLost'),
         variant: "destructive",
       });
       return;
@@ -354,7 +446,7 @@ const Game = () => {
       });
 
       // STEP 1: Save response to database
-      const { error: responseError } = await supabase
+      const { data: responseData, error: responseError } = await supabase
         .from('game_responses')
         .insert({
           room_id: room.id,
@@ -363,7 +455,9 @@ const Game = () => {
           response: response,
           response_time: Math.round(responseTime),
           round_number: currentRound
-        });
+        })
+        .select()
+        .single();
 
       if (responseError) {
         console.error('❌ Error saving response:', responseError);
@@ -372,13 +466,117 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
-      // STEP 2: Move to next question
+      // STEP 2: Check if both players have responded to this card/round
+      const { data: allResponses, error: checkError } = await supabase
+        .from('game_responses')
+        .select('player_id')
+        .eq('room_id', room.id)
+        .eq('card_id', currentCardFromState)
+        .eq('round_number', currentRound)
+        .not('response', 'is', null);
+
+      if (checkError) {
+        console.error('❌ Error checking responses:', checkError);
+        throw checkError;
+      }
+
+      const uniquePlayerIds = new Set(allResponses.map(r => r.player_id));
+      const bothPlayersResponded = uniquePlayerIds.size >= 2;
+
+      console.log('🔍 Response check:', { 
+        responsesCount: allResponses.length, 
+        uniquePlayers: uniquePlayerIds.size,
+        bothPlayersResponded 
+      });
+
+      if (bothPlayersResponded) {
+        // Both players have responded, move to evaluation phase
+        console.log('✅ Both players responded, moving to evaluation phase');
+        await updateGameState({
+          current_phase: 'evaluation'
+        });
+      } else {
+        // Only one player responded, switch turns and stay in response-input
+        const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+        console.log('🔄 Switching turns, waiting for other player to respond');
+        await updateGameState({
+          current_turn: nextTurn,
+          current_phase: 'response-input'
+        });
+      }
+      
+      // Store response for final report
+      const gameResponseData: GameResponse = {
+        question: currentCardFromState,
+        response,
+        responseTime,
+        level: currentLevel,
+        playerId
+      };
+      setGameResponses(prev => [...prev, gameResponseData]);
+      
+      // Notify the partner about the response
+      await syncAction('response_submit', {
+        response,
+        responseTime,
+        question: currentCardFromState,
+        from: currentTurn,
+        round: currentRound,
+        responseId: responseData.id,
+        bothPlayersResponded
+      });
+      
+      setGamePhase('card-display');
+    } catch (error) {
+      console.error('❌ Error submitting response:', error);
+      toast({
+        title: t('common.error'),
+        description: t('game.errors.responseSaveFailed'),
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEvaluationSubmit = async (evaluation: EvaluationData) => {
+    if (!pendingEvaluation || !room) {
+      toast({
+        title: t('common.error'),
+        description: t('game.errors.connectionLost'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    try {
+      console.log('📊 Submitting evaluation:', { evaluation, responseId: pendingEvaluation.responseId });
+
+      // Save evaluation to database
+      const { error: evaluationError } = await supabase
+        .from('game_responses')
+        .update({
+          evaluation: JSON.stringify(evaluation),
+          evaluation_by: playerId
+        })
+        .eq('id', pendingEvaluation.responseId);
+
+      if (evaluationError) {
+        console.error('❌ Error saving evaluation:', evaluationError);
+        throw evaluationError;
+      }
+
+      console.log('✅ Evaluation saved successfully');
+
+      // Move to next question
       const nextCard = getNextCard();
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       
       if (nextCard) {
         // Continue with next question
-        const newUsedCards = [...(gameState?.used_cards || []), currentCardFromState];
+        const newUsedCards = [...(gameState?.used_cards || []), pendingEvaluation.question];
         
         await updateGameState({
           current_card: nextCard,
@@ -387,24 +585,12 @@ const Game = () => {
           current_phase: 'card-display'
         });
         
-        // Store response for final report
-        const gameResponseData: GameResponse = {
-          question: currentCardFromState,
-          response,
-          responseTime,
-          level: currentLevel,
-          playerId
-        };
-        setGameResponses(prev => [...prev, gameResponseData]);
-        
         // Notify the partner
-        await syncAction('response_submit', {
-          response,
-          responseTime,
-          question: currentCardFromState,
+        await syncAction('evaluation_submit', {
+          evaluation,
           nextCard,
           from: currentTurn,
-          round: currentRound
+          responseId: pendingEvaluation.responseId
         });
         
         setGamePhase('card-display');
@@ -416,16 +602,23 @@ const Game = () => {
           navigate(`/level-select?room=${roomCode}`);
         }
       }
+      
+      setPendingEvaluation(null);
     } catch (error) {
-      console.error('❌ Error submitting response:', error);
+      console.error('❌ Error submitting evaluation:', error);
       toast({
-        title: "Error",
-        description: "No se pudo guardar la respuesta. Por favor, inténtalo de nuevo.",
+        title: t('common.error'),
+        description: t('game.errors.evaluationSaveFailed'),
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEvaluationCancel = () => {
+    setPendingEvaluation(null);
+    setGamePhase('card-display');
   };
 
 
@@ -469,8 +662,8 @@ const Game = () => {
       if (!allResponses || allResponses.length === 0) {
         console.log('⚠️ No responses found for analysis');
         toast({
-          title: "Datos insuficientes",
-          description: "No hay suficientes datos para generar el reporte de conexión",
+          title: t('game.errors.insufficientData'),
+          description: t('game.errors.insufficientDataDescription'),
           variant: "destructive"
         });
         return;
@@ -512,8 +705,8 @@ const Game = () => {
     } catch (error) {
       console.error('❌ Error generating final report:', error);
       toast({
-        title: "Error",
-        description: "No se pudo generar el reporte final",
+        title: t('common.error'),
+        description: t('game.errors.finalReportFailed'),
         variant: "destructive"
       });
     }
@@ -538,8 +731,8 @@ const Game = () => {
     } catch (error) {
       console.error('❌ Error requesting level change:', error);
       toast({
-        title: "Error",
-        description: "No se pudo solicitar el cambio de nivel",
+        title: t('common.error'),
+        description: t('game.errors.levelChangeFailed'),
         variant: "destructive"
       });
     }
@@ -578,9 +771,9 @@ const Game = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
-          <p className="text-muted-foreground">No hay código de sala</p>
+          <p className="text-muted-foreground">{t('game.noRoomCode')}</p>
           <Button onClick={() => navigate('/')}>
-            Volver al inicio
+            {t('common.backToHome')}
           </Button>
         </Card>
       </div>
@@ -597,12 +790,12 @@ const Game = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-heading text-foreground">
-              {isRetrying ? `Reintentando conexión...` : 'Conectando a la sala...'}
+              {isRetrying ? t('game.retryingConnection') : t('game.connectingToRoom')}
             </h2>
-            <p className="text-sm text-muted-foreground">Sala: {roomCode}</p>
+            <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>
             {retryCount > 0 && (
               <p className="text-xs text-orange-500">
-                Intento {retryCount} de {maxRetries}
+                {t('game.attempt', { current: retryCount, max: maxRetries })}
               </p>
             )}
           </div>
@@ -610,7 +803,7 @@ const Game = () => {
           {retryCount >= maxRetries && (
             <div className="space-y-4">
               <p className="text-sm text-destructive">
-                No se pudo conectar a la sala
+                {t('game.connectionFailed')}
               </p>
               <div className="space-y-2">
                 <Button 
@@ -618,7 +811,7 @@ const Game = () => {
                   className="w-full"
                   disabled={isRetrying}
                 >
-                  {isRetrying ? 'Reintentando...' : 'Reintentar conexión'}
+                  {isRetrying ? t('game.retrying') : t('game.retryConnection')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -626,7 +819,7 @@ const Game = () => {
                   className="w-full"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Volver al inicio
+                  {t('common.backToHome')}
                 </Button>
               </div>
             </div>
@@ -642,14 +835,7 @@ const Game = () => {
         {/* Header */}
         <div className="text-center space-y-2 pt-4">
           <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(`/level-select?room=${roomCode}`)}
-            >
-              <ArrowUp className="w-4 h-4 mr-1" />
-              Volver
-            </Button>
+            <LanguageIndicator />
             <div className="flex items-center">
               <Users className="w-4 h-4 text-muted-foreground mr-1" />
               <span className="text-xs font-mono text-muted-foreground">{roomCode}</span>
@@ -658,16 +844,16 @@ const Game = () => {
           
           <div className="space-y-1">
             <h1 className="text-xl font-heading text-foreground">
-              Nivel {currentLevel}: {levelNames[currentLevel] || `Nivel ${currentLevel}`}
+              {t('game.levelTitle', { level: currentLevel, name: levelNames[currentLevel] || t('game.level', { level: currentLevel }) })}
             </h1>
             <div className="space-y-2">
               <Progress value={progress} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {usedCards.length} de {totalCards} cartas completadas
+                {t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
               </p>
                <p className="text-sm text-primary font-medium">
-                 Turno: {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} 
-                 {isMyTurn ? ' (Tu turno)' : ' (Turno de tu pareja)'}
+                 {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')} 
+                 {isMyTurn ? t('game.yourTurn') : t('game.partnerTurn')}
                </p>
             </div>
           </div>
@@ -694,7 +880,7 @@ const Game = () => {
                   size="lg"
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  Responder
+                  {t('game.respond')}
                 </Button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -703,7 +889,7 @@ const Game = () => {
                     variant="outline"
                     className="h-10 text-sm"
                   >
-                    Cambiar nivel
+                    {t('game.changeLevel')}
                   </Button>
                   
                   
@@ -713,7 +899,7 @@ const Game = () => {
                     className="h-10 text-sm flex items-center gap-1"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    Finalizar
+                    {t('game.finish')}
                   </Button>
                 </div>
               </div>
@@ -723,14 +909,14 @@ const Game = () => {
             {!isMyTurn && (
               <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">
-                  Esperando que {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} responda...
+                  {t('game.waitingForResponse', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })}
                 </p>
                 <Button 
                   onClick={handleChangeLevel}
                   variant="outline"
                   className="h-10 text-sm"
                 >
-                  Cambiar nivel
+                  {t('game.changeLevel')}
                 </Button>
               </div>
             )}
@@ -742,11 +928,23 @@ const Game = () => {
           isVisible={gamePhase === 'response-input'}
           question={currentCard}
           onSubmitResponse={handleResponseSubmit}
-          playerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+          playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
           isCloseProximity={isCloseProximity}
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
+        {/* Response Evaluation Modal */}
+        {pendingEvaluation && (
+          <ResponseEvaluation
+            isVisible={gamePhase === 'evaluation'}
+            question={pendingEvaluation.question}
+            response={pendingEvaluation.response}
+            playerName={pendingEvaluation.playerName}
+            onSubmitEvaluation={handleEvaluationSubmit}
+            onCancel={handleEvaluationCancel}
+            isSubmitting={isSubmitting}
+          />
+        )}
 
         {/* Level Up Confirmation Modal */}
         <LevelUpConfirmation
@@ -772,7 +970,7 @@ const Game = () => {
         {/* Safety Note */}
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            💜 Recuerden comunicarse y respetar sus límites
+            💜 {t('game.safetyNote')}
           </p>
         </div>
       </div>

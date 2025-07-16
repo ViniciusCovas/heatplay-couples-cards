@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Heart, Users, MessageCircle, Settings } from "lucide-react";
+import { Heart, Users, MessageCircle, Settings, Sparkles, ArrowRight, Shield, Clock, Zap, Star, TrendingUp, Users2, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -12,105 +11,265 @@ const Home = () => {
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Elements */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
+      <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      
       {/* Language Selector */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-6 right-6 z-20">
         <LanguageSelector />
       </div>
       
-      <div className="w-full max-w-md space-y-8">
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center mb-4">
-            <Heart className="w-8 h-8 text-secondary mr-2" />
-            <h1 className="text-3xl font-heading text-foreground">{t('app.title')}</h1>
-          </div>
-          <p className="text-lg text-muted-foreground font-body">
-            {t('app.subtitle')}
-          </p>
-        </div>
-
-        {/* Main Actions */}
-        <Card className="p-6 space-y-4 shadow-lg border-2 border-primary/20">
-          <Button 
-            onClick={() => navigate('/create-room')}
-            className="w-full h-12 text-lg font-heading bg-primary hover:bg-primary/90 text-primary-foreground"
-            size="lg"
-          >
-            <Users className="w-5 h-5 mr-2" />
-            {t('buttons.createRoom')}
-          </Button>
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-screen">
           
-          <Button 
-            onClick={() => navigate('/join-room')}
-            variant="outline"
-            className="w-full h-12 text-lg font-heading border-2 border-primary text-primary hover:bg-primary/10"
-            size="lg"
-          >
-            <MessageCircle className="w-5 h-5 mr-2" />
-            {t('buttons.joinRoom')}
-          </Button>
-        </Card>
+          {/* Left Side - Hero Content */}
+          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
+            {/* Trust Indicators */}
+            <div className="flex items-center justify-center lg:justify-start gap-6 mb-6">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                <Shield className="w-4 h-4" />
+                <span>{t('home.trustBadge.private')}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-sm font-medium">
+                <Users2 className="w-4 h-4" />
+                <span>{t('home.trustBadge.couples')}</span>
+              </div>
+            </div>
+            
+            {/* Brand */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+                  <Heart className="w-7 h-7 text-white animate-heartbeat" />
+                </div>
+                <h1 className="text-3xl font-bold text-foreground">{t('app.title')}</h1>
+              </div>
+              
+              {/* Main Headline */}
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] tracking-tight">
+                {t('home.headline.transform')}
+                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> {t('home.headline.connection')}</span>
+                <br />
+                {t('home.headline.into')}
+                <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent"> {t('home.headline.extraordinary')}</span>
+              </h2>
+              
+              {/* Sub-headline */}
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                {t('home.subtitle')}
+              </p>
+              
+              {/* Social Proof */}
+              <div className="flex items-center justify-center lg:justify-start gap-4 pt-2">
+                <div className="flex -space-x-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary border-2 border-white"></div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-white"></div>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary via-secondary to-primary border-2 border-white"></div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                    ))}
+                  </div>
+                  <span className="text-sm text-muted-foreground ml-2">{t('home.socialProof')}</span>
+                </div>
+              </div>
+            </div>
 
-        {/* Footer Info */}
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
-            {t('app.subtitle')}
-          </p>
-          <p className="text-xs text-destructive font-medium">
-            18+
-          </p>
+            {/* CTA Buttons */}
+            <div className="space-y-4 max-w-md mx-auto lg:mx-0">
+              <Button 
+                onClick={() => navigate('/create-room')}
+                className="w-full h-16 text-lg font-bold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group"
+                size="lg"
+              >
+                <Users className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
+                {t('home.buttons.startJourney')}
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              
+              <Button 
+                onClick={() => navigate('/join-room')}
+                className="w-full h-16 text-lg font-bold btn-gradient-secondary group"
+                variant="outline"
+                size="lg"
+              >
+                <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
+                {t('home.buttons.joinPartner')}
+              </Button>
+            </div>
+
+            {/* Value Props */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0 pt-8">
+              <div className="flex items-center gap-3 text-center sm:text-left">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 text-primary" />
+                </div>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.ready')}</span>
+              </div>
+              <div className="flex items-center gap-3 text-center sm:text-left">
+                <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-5 h-5 text-secondary" />
+                </div>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.private')}</span>
+              </div>
+              <div className="flex items-center gap-3 text-center sm:text-left">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Zap className="w-5 h-5 text-primary" />
+                </div>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.instant')}</span>
+              </div>
+            </div>
+
+            {/* Age Notice */}
+            <div className="text-center lg:text-left">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-medium">
+                <CheckCircle className="w-4 h-4 mr-2" />
+                {t('home.ageNotice')}
+              </span>
+            </div>
+
+            {/* Admin & Auth Links */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-4">
+              {isAdmin && (
+                <Button 
+                  onClick={() => navigate('/admin-panel-secret')}
+                  variant="ghost"
+                  size="sm"
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  {t('navigation.admin')}
+                </Button>
+              )}
+              
+              <Button 
+                onClick={() => navigate('/auth')}
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+              >
+                {t('home.buttons.login')}
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Side - Dynamic Visual */}
+          <div className="lg:col-span-5 relative">
+            <div className="relative w-full max-w-lg mx-auto">
+              {/* Main Visual Container */}
+              <div className="relative aspect-square bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/20 rounded-[2rem] flex items-center justify-center overflow-hidden border border-white/20 shadow-2xl">
+                
+                {/* Floating Elements */}
+                <div className="absolute inset-0">
+                  {/* Connection Lines */}
+                  <div className="absolute top-1/3 left-1/4 w-32 h-px bg-gradient-to-r from-primary to-secondary opacity-60 animate-pulse"></div>
+                  <div className="absolute bottom-1/3 right-1/4 w-24 h-px bg-gradient-to-l from-secondary to-primary opacity-60 animate-pulse" style={{animationDelay: '1s'}}></div>
+                  
+                  {/* Heart Icons */}
+                  <Heart className="absolute top-8 left-8 w-6 h-6 text-primary animate-heartbeat" />
+                  <Heart className="absolute top-12 right-12 w-4 h-4 text-secondary animate-heartbeat" style={{animationDelay: '0.5s'}} />
+                  <Heart className="absolute bottom-12 left-12 w-5 h-5 text-primary animate-heartbeat" style={{animationDelay: '1s'}} />
+                  
+                  {/* Sparkles */}
+                  <Sparkles className="absolute top-20 right-8 w-5 h-5 text-secondary animate-pulse" />
+                  <Sparkles className="absolute bottom-20 left-8 w-4 h-4 text-primary animate-pulse" style={{animationDelay: '0.8s'}} />
+                </div>
+                
+                {/* Central Content */}
+                <div className="relative z-10 text-center p-8">
+                  <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <Users2 className="w-10 h-10 text-white" />
+                  </div>
+                  
+                  <h3 className="text-2xl font-bold text-foreground mb-4">
+                    {t('home.visual.title')}
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                      <span>{t('home.visual.feature1')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                      <span>{t('home.visual.feature2')}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                      <span>{t('home.visual.feature3')}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Ambient Glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-secondary/10 rounded-[2rem]"></div>
+              </div>
+              
+              {/* Floating Stats */}
+              <div className="absolute -top-4 -right-4 bg-white rounded-xl p-4 shadow-lg border border-primary/20">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <div>
+                    <div className="text-sm font-bold text-foreground">98%</div>
+                    <div className="text-xs text-muted-foreground">{t('home.stats.successRate')}</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="absolute -bottom-4 -left-4 bg-white rounded-xl p-4 shadow-lg border border-secondary/20">
+                <div className="flex items-center gap-2">
+                  <Users2 className="w-5 h-5 text-secondary" />
+                  <div>
+                    <div className="text-sm font-bold text-foreground">50k+</div>
+                    <div className="text-xs text-muted-foreground">{t('home.stats.happyCouples')}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Features */}
-        <Card className="p-4 bg-muted/30">
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="space-y-2">
-              <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-sm font-bold text-primary">1</span>
+        {/* Features Section */}
+        <div className="mt-32 mb-16">
+          <div className="text-center mb-16">
+            <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              {t('home.features.title')}
+            </h3>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              {t('home.features.subtitle')}
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <div className="group text-center space-y-6 p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
+                <span className="text-3xl font-bold text-white">1</span>
               </div>
-              <p className="text-xs text-muted-foreground">{t('levels.iceBreaker')}</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level1.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level1.description')}</p>
             </div>
-            <div className="space-y-2">
-              <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-sm font-bold text-secondary">2</span>
+            
+            <div className="group text-center space-y-6 p-8 rounded-2xl bg-gradient-to-br from-secondary/5 to-transparent border border-secondary/10 hover:border-secondary/20 transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
+                <span className="text-3xl font-bold text-white">2</span>
               </div>
-              <p className="text-xs text-muted-foreground">{t('levels.gettingPersonal')}</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level2.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level2.description')}</p>
             </div>
-            <div className="space-y-2">
-              <div className="w-8 h-8 bg-destructive/20 rounded-full flex items-center justify-center mx-auto">
-                <span className="text-sm font-bold text-destructive">3</span>
+            
+            <div className="group text-center space-y-6 p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all duration-300">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary via-secondary to-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
+                <span className="text-3xl font-bold text-white">3</span>
               </div>
-              <p className="text-xs text-muted-foreground">{t('levels.intimate')}</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level3.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level3.description')}</p>
             </div>
           </div>
-        </Card>
-
-        {/* Admin Access - Only show for admins */}
-        {isAdmin && (
-          <div className="text-center">
-            <Button 
-              onClick={() => navigate('/admin-panel-secret')}
-              variant="outline"
-              size="sm"
-              className="text-xs"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              {t('navigation.admin')}
-            </Button>
-          </div>
-        )}
-
-        {/* Auth Access */}
-        <div className="text-center">
-          <Button 
-            onClick={() => navigate('/auth')}
-            variant="ghost"
-            size="sm"
-            className="text-xs text-muted-foreground"
-          >
-            Login
-          </Button>
         </div>
       </div>
     </div>

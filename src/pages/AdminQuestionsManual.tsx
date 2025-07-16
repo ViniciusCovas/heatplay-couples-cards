@@ -9,13 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 interface Level {
   id: string;
   name: string;
+  language: string;
 }
 
 interface Question {
@@ -24,6 +25,7 @@ interface Question {
   category: string;
   level_id: string;
   level_name: string;
+  language: string;
   is_active: boolean;
   created_at: string;
 }
@@ -32,7 +34,15 @@ interface QuestionFormData {
   text: string;
   category: string;
   level_id: string;
+  language: string;
 }
+
+const languages = [
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+];
 
 export default function AdminQuestionsManual() {
   const [levels, setLevels] = useState<Level[]>([]);
@@ -43,10 +53,12 @@ export default function AdminQuestionsManual() {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState<string>("all");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("es");
   const [formData, setFormData] = useState<QuestionFormData>({
     text: "",
     category: "",
     level_id: "",
+    language: "es",
   });
   const { toast } = useToast();
 
@@ -56,20 +68,25 @@ export default function AdminQuestionsManual() {
 
   useEffect(() => {
     filterQuestions();
-  }, [questions, searchTerm, filterLevel]);
+  }, [questions, searchTerm, filterLevel, selectedLanguage]);
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedLanguage]);
 
   const fetchData = async () => {
     try {
-      // Fetch levels
+      // Fetch levels for selected language
       const { data: levelsData, error: levelsError } = await supabase
         .from('levels')
-        .select('id, name')
+        .select('id, name, language')
+        .eq('language', selectedLanguage)
         .eq('is_active', true)
         .order('sort_order');
 
       if (levelsError) throw levelsError;
 
-      // Fetch questions with level names
+      // Fetch questions with level names for selected language
       const { data: questionsData, error: questionsError } = await supabase
         .from('questions')
         .select(`
@@ -77,10 +94,12 @@ export default function AdminQuestionsManual() {
           text,
           category,
           level_id,
+          language,
           is_active,
           created_at,
-          levels!inner(name)
+          levels!inner(name, language)
         `)
+        .eq('language', selectedLanguage)
         .order('created_at', { ascending: false });
 
       if (questionsError) throw questionsError;
@@ -126,7 +145,7 @@ export default function AdminQuestionsManual() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.text.trim() || !formData.level_id) {
+    if (!formData.text.trim() || !formData.level_id || !formData.language) {
       toast({
         title: "Error",
         description: "Por favor completa todos los campos obligatorios",
@@ -143,7 +162,8 @@ export default function AdminQuestionsManual() {
           .update({
             text: formData.text.trim(),
             category: formData.category.trim() || 'general',
-            level_id: formData.level_id
+            level_id: formData.level_id,
+            language: formData.language
           })
           .eq('id', editingQuestion.id);
 
@@ -160,7 +180,8 @@ export default function AdminQuestionsManual() {
           .insert([{
             text: formData.text.trim(),
             category: formData.category.trim() || 'general',
-            level_id: formData.level_id
+            level_id: formData.level_id,
+            language: formData.language
           }]);
 
         if (error) throw error;
@@ -173,7 +194,7 @@ export default function AdminQuestionsManual() {
 
       setIsDialogOpen(false);
       setEditingQuestion(null);
-      setFormData({ text: "", category: "", level_id: "" });
+      setFormData({ text: "", category: "", level_id: "", language: selectedLanguage });
       fetchData();
     } catch (error) {
       console.error('Error saving question:', error);
@@ -191,6 +212,7 @@ export default function AdminQuestionsManual() {
       text: question.text,
       category: question.category,
       level_id: question.level_id,
+      language: question.language,
     });
     setIsDialogOpen(true);
   };
@@ -221,7 +243,7 @@ export default function AdminQuestionsManual() {
   };
 
   const resetForm = () => {
-    setFormData({ text: "", category: "", level_id: "" });
+    setFormData({ text: "", category: "", level_id: "", language: selectedLanguage });
     setEditingQuestion(null);
   };
 
@@ -237,7 +259,24 @@ export default function AdminQuestionsManual() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Gestión Manual de Preguntas</h2>
+          <div>
+            <h2 className="text-2xl font-bold">Gestión Manual de Preguntas</h2>
+            <div className="flex items-center gap-2 mt-2">
+              <Globe className="w-4 h-4" />
+              <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.flag} {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <Dialog open={isDialogOpen} onOpenChange={(open) => {
             setIsDialogOpen(open);
             if (!open) resetForm();
@@ -255,6 +294,24 @@ export default function AdminQuestionsManual() {
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="language">Idioma *</Label>
+                  <Select 
+                    value={formData.language} 
+                    onValueChange={(value) => setFormData({ ...formData, language: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecciona un idioma" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {languages.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.flag} {lang.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label htmlFor="level_id">Nivel *</Label>
                   <Select 
@@ -370,6 +427,9 @@ export default function AdminQuestionsManual() {
                         </Badge>
                         <Badge variant="secondary">
                           {question.category}
+                        </Badge>
+                        <Badge variant="outline">
+                          {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
                         </Badge>
                         <Badge variant={question.is_active ? "default" : "secondary"}>
                           {question.is_active ? "Activa" : "Inactiva"}

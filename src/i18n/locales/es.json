@@ -3,6 +3,57 @@
     "title": "Cartas de Conexión",
     "subtitle": "Construye conexiones más profundas a través de conversaciones significativas"
   },
+  "home": {
+    "trustBadge": {
+      "private": "Privado y Seguro",
+      "couples": "50k+ Parejas"
+    },
+    "headline": {
+      "transform": "Transforma Tu",
+      "connection": "Conexión",
+      "into": "En Algo",
+      "extraordinary": "Extraordinario"
+    },
+    "subtitle": "Descubre el juego que acerca a las parejas a través de conversaciones significativas e intimidad más profunda.",
+    "socialProof": "Confiado por miles",
+    "buttons": {
+      "startJourney": "Comenzar Tu Viaje",
+      "joinPartner": "Unirse a Pareja",
+      "login": "Iniciar Sesión"
+    },
+    "valueProps": {
+      "ready": "Listo en 30 segundos",
+      "private": "100% Privado",
+      "instant": "Conexión instantánea"
+    },
+    "ageNotice": "Solo 18+ • Seguro y Protegido",
+    "visual": {
+      "title": "Conexión Más Profunda",
+      "feature1": "Conversaciones significativas",
+      "feature2": "Intimidad emocional",
+      "feature3": "Lazos más fuertes"
+    },
+    "stats": {
+      "successRate": "Tasa de Éxito",
+      "happyCouples": "Parejas Felices"
+    },
+    "features": {
+      "title": "Tres Niveles de Conexión",
+      "subtitle": "Profundiza progresivamente tu vínculo a través de niveles de conversación cuidadosamente elaborados",
+      "level1": {
+        "title": "Rompe el Hielo",
+        "description": "Rompe el hielo con iniciadores de conversación divertidos y preguntas ligeras"
+      },
+      "level2": {
+        "title": "Volverse Personal",
+        "description": "Profundiza en historias personales y experiencias significativas"
+      },
+      "level3": {
+        "title": "Intimidad Profunda",
+        "description": "Conecta en el nivel más profundo con conversaciones íntimas y vulnerables"
+      }
+    }
+  },
   "navigation": {
     "home": "Inicio",
     "admin": "Panel de Administración",
@@ -94,5 +145,99 @@
     "searchQuestions": "Buscar preguntas...",
     "selectCategory": "Seleccionar categoría",
     "selectLevel": "Seleccionar nivel"
+  },
+  "loading": {
+    "levels": "Cargando niveles..."
+  },
+  "connecting": {
+    "room": "Conectando a la sala {{roomCode}}..."
+  },
+  "button": {
+    "back_home": "Volver al inicio"
+  },
+  "level": {
+    "basic": {
+      "title": "Básico",
+      "description": "Preguntas simples para conocerse mejor"
+    }
+  },
+  "common": {
+    "error": "Error",
+    "backToHome": "Volver al inicio",
+    "submitting": "Enviando..."
+  },
+  "game": {
+    "errors": {
+      "connectionError": "Error de conexión",
+      "connectionFailed": "No se pudo conectar a la sala {{roomCode}} después de {{maxRetries}} intentos",
+      "verifyRoomCode": "No se pudo conectar a la sala. Verifica el código de la sala.",
+      "connectionLost": "No se ha podido establecer conexión con la sala. Intenta de nuevo.",
+      "responseSaveFailed": "No se pudo guardar la respuesta. Por favor, inténtalo de nuevo.",
+      "evaluationSaveFailed": "No se pudo guardar la evaluación. Por favor, inténtalo de nuevo.",
+      "insufficientData": "Datos insuficientes",
+      "insufficientDataDescription": "No hay suficientes datos para generar el reporte de conexión",
+      "finalReportFailed": "No se pudo generar el reporte final",
+      "levelChangeFailed": "No se pudo solicitar el cambio de nivel"
+    },
+    "noRoomCode": "No hay código de sala",
+    "retryingConnection": "Reintentando conexión...",
+    "connectingToRoom": "Conectando a la sala...",
+    "room": "Sala",
+    "attempt": "Intento {{current}} de {{max}}",
+    "connectionFailed": "No se pudo conectar a la sala",
+    "retrying": "Reintentando...",
+    "retryConnection": "Reintentar conexión",
+    "levelTitle": "Nivel {{level}}: {{name}}",
+    "level": "Nivel {{level}}",
+    "cardsCompleted": "{{completed}} de {{total}} cartas completadas",
+    "turn": "Turno",
+    "player1": "Jugador 1",
+    "player2": "Jugador 2",
+    "yourTurn": " (Tu turno)",
+    "partnerTurn": " (Turno de tu pareja)",
+    "respond": "Responder",
+    "changeLevel": "Cambiar nivel",
+    "finish": "Finalizar",
+    "waitingForResponse": "Esperando que {{player}} responda...",
+    "safetyNote": "Recuerden comunicarse y respetar sus límites",
+    "evaluation": {
+      "title": "Evaluar Respuesta",
+      "subtitle": "¿Cómo te hizo sentir la respuesta de {{player}}?",
+      "question": "Pregunta",
+      "response": "Respuesta",
+      "submit": "Enviar Evaluación",
+      "note": "Tu evaluación ayuda a crear un reporte de conexión significativo",
+      "honesty": "Honestidad",
+      "attraction": "Atracción",
+      "intimacy": "Intimidad",
+      "surprise": "Sorpresa",
+      "honestyDescription": "¿Qué tan genuina y auténtica fue la respuesta?",
+      "attractionDescription": "¿Qué tan atractiva encontraste la respuesta?",
+      "intimacyDescription": "¿Qué tan íntima y personal fue la respuesta?",
+      "surpriseDescription": "¿Qué tan sorprendente o inesperada fue la respuesta?"
+    },
+    "waitingForEvaluation": "Esperando a que {{player}} evalúe tu respuesta...",
+    "fallbackQuestions": {
+      "question1": "¿Cuál fue tu primera impresión de mí?",
+      "question2": "¿Qué es lo que más admiras de nuestra relación?",
+      "question3": "¿Cuál es tu mayor sueño compartido?"
+    },
+    "spokenResponse": "Respuesta hablada",
+    "yourTurnMessage": "{{playerName}}, tu turno",
+    "question": "Pregunta",
+    "spokenMode": "Modo Hablado",
+    "spokenModeDescription": "Respondan de manera hablada cara a cara. Cuando terminen, presionen continuar.",
+    "submitting": "Enviando",
+    "weResponded": "Ya Respondimos",
+    "yourResponse": "Tu respuesta",
+    "responsePlaceholder": "Escribe tu respuesta aquí...",
+    "submitShortcut": "Presiona Ctrl + Enter para enviar",
+    "submitResponse": "Enviar Respuesta"
+  },
+  "levels": {
+    "level1Name": "Descubrimiento",
+    "level2Name": "Conexión",
+    "level3Name": "Caliente",
+    "level4Name": "Sin Filtros"
   }
 }

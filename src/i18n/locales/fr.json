@@ -3,6 +3,57 @@
     "title": "Cartes de Connexion",
     "subtitle": "Construisez des connexions plus profondes grâce à des conversations significatives"
   },
+  "home": {
+    "trustBadge": {
+      "private": "Privé et Sécurisé",
+      "couples": "50k+ Couples"
+    },
+    "headline": {
+      "transform": "Transformez Votre",
+      "connection": "Connexion",
+      "into": "En Quelque Chose",
+      "extraordinary": "Extraordinaire"
+    },
+    "subtitle": "Découvrez le jeu qui rapproche les couples grâce à des conversations significatives et une intimité plus profonde.",
+    "socialProof": "Fait confiance par des milliers",
+    "buttons": {
+      "startJourney": "Commencer Votre Voyage",
+      "joinPartner": "Rejoindre le Partenaire",
+      "login": "Connexion"
+    },
+    "valueProps": {
+      "ready": "Prêt en 30 secondes",
+      "private": "100% Privé",
+      "instant": "Connexion instantanée"
+    },
+    "ageNotice": "18+ Seulement • Sûr et Sécurisé",
+    "visual": {
+      "title": "Connexion Plus Profonde",
+      "feature1": "Conversations significatives",
+      "feature2": "Intimité émotionnelle",
+      "feature3": "Liens plus forts"
+    },
+    "stats": {
+      "successRate": "Taux de Réussite",
+      "happyCouples": "Couples Heureux"
+    },
+    "features": {
+      "title": "Trois Niveaux de Connexion",
+      "subtitle": "Approfondissez progressivement votre lien grâce à des niveaux de conversation soigneusement conçus",
+      "level1": {
+        "title": "Briser la Glace",
+        "description": "Brisez la glace avec des démarreurs de conversation amusants et des questions légères"
+      },
+      "level2": {
+        "title": "Devenir Personnel",
+        "description": "Plongez plus profondément dans des histoires personnelles et des expériences significatives"
+      },
+      "level3": {
+        "title": "Intimité Profonde",
+        "description": "Connectez-vous au niveau le plus profond avec des conversations intimes et vulnérables"
+      }
+    }
+  },
   "navigation": {
     "home": "Accueil",
     "admin": "Panneau d'Administration",
@@ -94,5 +145,99 @@
     "searchQuestions": "Rechercher des questions...",
     "selectCategory": "Sélectionner une catégorie",
     "selectLevel": "Sélectionner un niveau"
+  },
+  "loading": {
+    "levels": "Chargement des niveaux..."
+  },
+  "connecting": {
+    "room": "Connexion à la salle {{roomCode}}..."
+  },
+  "button": {
+    "back_home": "Retour à l'accueil"
+  },
+  "level": {
+    "basic": {
+      "title": "Basique",
+      "description": "Questions simples pour mieux se connaître"
+    }
+  },
+  "common": {
+    "error": "Erreur",
+    "backToHome": "Retour à l'accueil",
+    "submitting": "Envoi en cours..."
+  },
+  "game": {
+    "errors": {
+      "connectionError": "Erreur de Connexion",
+      "connectionFailed": "Impossible de se connecter à la salle {{roomCode}} après {{maxRetries}} tentatives",
+      "verifyRoomCode": "Impossible de se connecter à la salle. Vérifiez le code de la salle.",
+      "connectionLost": "Impossible d'établir une connexion avec la salle. Veuillez réessayer.",
+      "responseSaveFailed": "Impossible de sauvegarder la réponse. Veuillez réessayer.",
+      "evaluationSaveFailed": "Impossible de sauvegarder l'évaluation. Veuillez réessayer.",
+      "insufficientData": "Données Insuffisantes",
+      "insufficientDataDescription": "Pas assez de données pour générer le rapport de connexion",
+      "finalReportFailed": "Impossible de générer le rapport final",
+      "levelChangeFailed": "Impossible de demander le changement de niveau"
+    },
+    "noRoomCode": "Aucun code de salle fourni",
+    "retryingConnection": "Nouvelle tentative de connexion...",
+    "connectingToRoom": "Connexion à la salle...",
+    "room": "Salle",
+    "attempt": "Tentative {{current}} sur {{max}}",
+    "connectionFailed": "Impossible de se connecter à la salle",
+    "retrying": "Nouvelle tentative...",
+    "retryConnection": "Réessayer la Connexion",
+    "levelTitle": "Niveau {{level}}: {{name}}",
+    "level": "Niveau {{level}}",
+    "cardsCompleted": "{{completed}} sur {{total}} cartes terminées",
+    "turn": "Tour",
+    "player1": "Joueur 1",
+    "player2": "Joueur 2",
+    "yourTurn": " (Votre tour)",
+    "partnerTurn": " (Tour du partenaire)",
+    "respond": "Répondre",
+    "changeLevel": "Changer de Niveau",
+    "finish": "Terminer",
+    "waitingForResponse": "En attente que {{player}} réponde...",
+    "safetyNote": "N'oubliez pas de communiquer et de respecter vos limites",
+    "evaluation": {
+      "title": "Évaluer la Réponse",
+      "subtitle": "Comment la réponse de {{player}} vous a-t-elle fait sentir?",
+      "question": "Question",
+      "response": "Réponse",
+      "submit": "Soumettre l'Évaluation",
+      "note": "Votre évaluation aide à créer un rapport de connexion significatif",
+      "honesty": "Honnêteté",
+      "attraction": "Attraction",
+      "intimacy": "Intimité",
+      "surprise": "Surprise",
+      "honestyDescription": "À quel point la réponse était-elle authentique?",
+      "attractionDescription": "À quel point avez-vous trouvé la réponse attirante?",
+      "intimacyDescription": "À quel point la réponse était-elle intime et personnelle?",
+      "surpriseDescription": "À quel point la réponse était-elle surprenante ou inattendue?"
+    },
+    "waitingForEvaluation": "En attente de l'évaluation de {{player}}...",
+    "fallbackQuestions": {
+      "question1": "Quelle a été votre première impression de moi?",
+      "question2": "Qu'est-ce que vous admirez le plus dans notre relation?",
+      "question3": "Quel est votre plus grand rêve partagé?"
+    },
+    "spokenResponse": "Réponse orale",
+    "yourTurnMessage": "{{playerName}}, votre tour",
+    "question": "Question",
+    "spokenMode": "Mode Oral",
+    "spokenModeDescription": "Répondez oralement face à face. Quand vous avez terminé, appuyez sur continuer.",
+    "submitting": "Envoi en cours",
+    "weResponded": "Nous avons Répondu",
+    "yourResponse": "Votre réponse",
+    "responsePlaceholder": "Écrivez votre réponse ici...",
+    "submitShortcut": "Appuyez sur Ctrl + Entrée pour envoyer",
+    "submitResponse": "Envoyer la Réponse"
+  },
+  "levels": {
+    "level1Name": "Découverte",
+    "level2Name": "Connexion",
+    "level3Name": "Chaud",
+    "level4Name": "Sans Filtres"
   }
 }
