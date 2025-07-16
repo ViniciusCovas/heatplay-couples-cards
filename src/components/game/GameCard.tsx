@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
-import { useTranslation } from 'react-i18next';
 
 interface GameCardProps {
   currentCard: string;
@@ -10,12 +9,14 @@ interface GameCardProps {
   totalCards: number;
 }
 
+const LEVEL_NAMES = {
+  1: "Descubrimiento",
+  2: "Conexión", 
+  3: "Caliente",
+  4: "Sin Filtros"
+};
+
 export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, totalCards }: GameCardProps) => {
-  const { t } = useTranslation();
-  
-  const getLevelName = (level: number) => {
-    return t(`levels.level${level}Name`);
-  };
   return (
     <div className="flex-1 flex items-center justify-center px-4">
       <div className="relative perspective-1000">
@@ -71,7 +72,7 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
                   ${currentLevel === 3 ? 'text-red-600' : ''}
                   ${currentLevel === 4 ? 'text-gray-700' : ''}
                 `}>
-                  {getLevelName(currentLevel)}
+                  {LEVEL_NAMES[currentLevel as keyof typeof LEVEL_NAMES]}
                 </p>
               </div>
               

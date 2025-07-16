@@ -37,11 +37,6 @@ i18n
     interpolation: {
       escapeValue: false,
     },
-  })
-  .then(() => {
-    console.log('🌍 i18n initialized with language:', i18n.language);
-    console.log('🌍 Available languages:', Object.keys(resources));
-    console.log('🌍 Browser language:', navigator.language);
   });
 
 export default i18n;

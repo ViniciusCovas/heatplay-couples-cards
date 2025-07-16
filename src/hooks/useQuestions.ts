@@ -47,8 +47,6 @@ export const useQuestions = (): UseQuestionsReturn => {
         setIsLoading(true);
         setError(null);
 
-        console.log('🌍 Loading data for language:', currentLanguage);
-
         // Load levels
         const { data: levelsData, error: levelsError } = await supabase
           .from('levels')
@@ -68,15 +66,9 @@ export const useQuestions = (): UseQuestionsReturn => {
 
         if (questionsError) throw questionsError;
 
-        console.log('📊 Loaded', questionsData?.length || 0, 'questions and', levelsData?.length || 0, 'levels for', currentLanguage);
-
         setLevels(levelsData || []);
         setQuestions(questionsData || []);
-        
-        // Reset question history when language changes to avoid conflicts
-        questionTracker.reset();
       } catch (err) {
-        console.error('❌ Error loading questions/levels:', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

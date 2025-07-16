@@ -16,11 +16,7 @@ export function LanguageSelector() {
   const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
 
   const handleLanguageChange = (languageCode: string) => {
-    console.log('🌍 Language change requested:', languageCode);
-    console.log('🌍 Current language before change:', i18n.language);
-    i18n.changeLanguage(languageCode).then(() => {
-      console.log('🌍 Language changed to:', i18n.language);
-    });
+    i18n.changeLanguage(languageCode);
   };
 
   return (

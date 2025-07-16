@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Timer, Send, Mic, Play, Gamepad2 } from "lucide-react";
-import { useTranslation } from 'react-i18next';
 
 interface ResponseInputProps {
   isVisible: boolean;
@@ -22,7 +21,6 @@ export const ResponseInput = ({
   isCloseProximity = false,
   isSubmitting = false // Añade esta línea
 }: ResponseInputProps) => {
-  const { t } = useTranslation();
   const [response, setResponse] = useState("");
   const [startTime, setStartTime] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
@@ -61,7 +59,7 @@ export const ResponseInput = ({
 
   const handleSpokenResponse = () => {
     // Para modo hablado, enviamos respuesta sin texto
-    onSubmitResponse(t('game.spokenResponse'), elapsedTime);
+    onSubmitResponse("Respuesta hablada", elapsedTime);
   };
 
   return (
@@ -80,7 +78,7 @@ export const ResponseInput = ({
           
           <div>
             <h2 className="text-xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              {t('game.yourTurnMessage', { playerName })} 🎮
+              {playerName}, tu turno 🎮
             </h2>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-2">
               <Timer className="w-4 h-4 text-accent" />
@@ -100,7 +98,7 @@ export const ResponseInput = ({
           
           <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
             <Play className="w-4 h-4" />
-            {t('game.question')}:
+            Pregunta:
           </p>
           <p className="font-medium text-lg leading-relaxed">{question}</p>
         </div>
@@ -110,9 +108,10 @@ export const ResponseInput = ({
           <div className="space-y-4 text-center">
             <div className="p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
               <Mic className="w-12 h-12 mx-auto text-green-500 mb-3" />
-              <h3 className="font-heading text-lg mb-2">{t('game.spokenMode')} 🎙️</h3>
+              <h3 className="font-heading text-lg mb-2">Modo Hablado 🎙️</h3>
               <p className="text-sm text-muted-foreground">
-                {t('game.spokenModeDescription')}
+                Respondan de manera hablada cara a cara.
+                Cuando terminen, presionen continuar.
               </p>
             </div>
             
@@ -125,12 +124,12 @@ export const ResponseInput = ({
               {isSubmitting ? (
                 <>
                   <Timer className="w-5 h-5 mr-2 animate-spin" />
-                  {t('game.submitting')}...
+                  Enviando...
                 </>
               ) : (
                 <>
                   <Mic className="w-5 h-5 mr-2" />
-                  {t('game.weResponded')}
+                  Ya Respondimos
                 </>
               )}
             </Button>
@@ -141,19 +140,19 @@ export const ResponseInput = ({
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Send className="w-4 h-4 text-primary" />
-                <label className="text-sm font-medium">{t('game.yourResponse')}:</label>
+                <label className="text-sm font-medium">Tu respuesta:</label>
               </div>
               <Textarea
                 value={response}
                 onChange={(e) => setResponse(e.target.value)}
                 onKeyDown={handleKeyPress}
-                placeholder={t('game.responsePlaceholder')}
+                placeholder="Escribe tu respuesta aquí..."
                 className="min-h-[120px] resize-none border-primary/20 focus:border-primary/40 bg-gradient-to-r from-background to-muted/30"
                 autoFocus
               />
               <p className="text-xs text-muted-foreground flex items-center gap-1">
                 <Send className="w-3 h-3" />
-                {t('game.submitShortcut')}
+                Presiona Ctrl + Enter para enviar
               </p>
             </div>
 
@@ -166,12 +165,12 @@ export const ResponseInput = ({
               {isSubmitting ? (
                 <>
                   <Timer className="w-5 h-5 mr-2 animate-spin" />
-                  {t('game.submitting')}...
+                  Enviando...
                 </>
               ) : (
                 <>
                   <Send className="w-5 h-5 mr-2" />
-                  {t('game.submitResponse')}
+                  Enviar Respuesta
                 </>
               )}
             </Button>
