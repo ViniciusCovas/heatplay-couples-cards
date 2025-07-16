@@ -7,8 +7,8 @@ import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
-import { ResponseEvaluation, type ResponseEvaluation as ResponseEvaluationType } from "@/components/game/ResponseEvaluation";
-import { WaitingForEvaluation } from "@/components/game/WaitingForEvaluation";
+
+
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
 
@@ -16,10 +16,10 @@ import { calculateConnectionScore, type GameResponse } from "@/utils/connectionA
 import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { useResponseData } from "@/hooks/useResponseData";
+
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report' | 'waiting-for-evaluation';
+type GamePhase = 'card-display' | 'response-input' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -128,32 +128,19 @@ const Game = () => {
   // Get proximity from game state
   const isCloseProximity = gameState?.proximity_response || false;
   
-  // Response and evaluation data
-  const [currentResponse, setCurrentResponse] = useState('');
-  const [currentResponseTime, setCurrentResponseTime] = useState(0);
+  // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
   
-  // Use hook to fetch response data for evaluation phase
-  const { responseData: evaluationResponseData, isLoading: isLoadingResponseData, error: responseDataError } = useResponseData(
-    room?.id || null,
-    gameState?.current_card || currentCard,
-    (gameState?.used_cards?.length || 0) + 1, // Use game state round number
-    gamePhase === 'evaluation', // Only fetch when in evaluation phase
-    playerId // Exclude my own responses
-  );
 
   // Determine if it's my turn based on player number and current turn
   const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
                    (currentTurn === 'player2' && playerNumber === 2);
   
-  // Determine if I should be evaluating (opposite of who's responding)
-  const shouldEvaluate = !isMyTurn && gameState?.current_phase === 'waiting-for-evaluation';
   
   console.log('🎯 Turn logic:', { 
     currentTurn, 
     playerNumber, 
     isMyTurn, 
-    shouldEvaluate, 
     gamePhase: gameState?.current_phase 
   });
   
@@ -216,11 +203,6 @@ const Game = () => {
     switch (dbState.current_phase) {
       case 'card-display':
         return 'card-display';
-      case 'waiting-for-evaluation':
-        // FIXED: currentTurn represents who should evaluate
-        // If it's my turn in DB, I should evaluate
-        // If it's not my turn in DB, I should wait for evaluation
-        return isMyTurnInDB ? 'evaluation' : 'waiting-for-evaluation';
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
       case 'final-report':
@@ -356,8 +338,6 @@ const Game = () => {
     }
     
     setIsSubmitting(true);
-    setCurrentResponse(response);
-    setCurrentResponseTime(responseTime);
 
     try {
       // Use current game state for accurate round number
@@ -392,32 +372,50 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
-      // STEP 2: Switch turn to the evaluator (the other player)
-      const evaluatorTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      // STEP 2: Move to next question
+      const nextCard = getNextCard();
+      const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       
-      console.log('🔄 Switching to evaluation phase:', {
-        respondingPlayer: currentTurn,
-        evaluatorTurn,
-        currentRound
-      });
-      
-      // Update database: the other player will be the evaluator
-      await updateGameState({
-        current_phase: 'waiting-for-evaluation',
-        current_turn: evaluatorTurn // This will make the other player the evaluator
-      });
-      
-      // Notify the partner
-      await syncAction('response_submit', {
-        response,
-        responseTime,
-        question: currentCardFromState,
-        from: currentTurn,
-        round: currentRound
-      });
-      
-      console.log('🎮 Local phase set to waiting-for-evaluation');
-      setGamePhase('waiting-for-evaluation');
+      if (nextCard) {
+        // Continue with next question
+        const newUsedCards = [...(gameState?.used_cards || []), currentCardFromState];
+        
+        await updateGameState({
+          current_card: nextCard,
+          used_cards: newUsedCards,
+          current_turn: nextTurn,
+          current_phase: 'card-display'
+        });
+        
+        // Store response for final report
+        const gameResponseData: GameResponse = {
+          question: currentCardFromState,
+          response,
+          responseTime,
+          level: currentLevel,
+          playerId
+        };
+        setGameResponses(prev => [...prev, gameResponseData]);
+        
+        // Notify the partner
+        await syncAction('response_submit', {
+          response,
+          responseTime,
+          question: currentCardFromState,
+          nextCard,
+          from: currentTurn,
+          round: currentRound
+        });
+        
+        setGamePhase('card-display');
+      } else {
+        // No more cards, finish level
+        if (currentLevel >= 4) {
+          generateFinalReport();
+        } else {
+          navigate(`/level-select?room=${roomCode}`);
+        }
+      }
     } catch (error) {
       console.error('❌ Error submitting response:', error);
       toast({
@@ -430,130 +428,6 @@ const Game = () => {
     }
   };
 
-  const handleEvaluationSubmit = async (evaluation: ResponseEvaluationType) => {
-    try {
-      // Use current game state for accurate data
-      const currentRound = (gameState?.used_cards?.length || 0) + 1;
-      const currentCardFromState = gameState?.current_card || currentCard;
-      
-      console.log('📊 Starting evaluation submission:', { 
-        evaluation, 
-        currentCardFromState, 
-        currentTurn,
-        playerNumber,
-        roundNumber: currentRound
-      });
-
-      // STEP 1: Get the response that needs to be evaluated
-      // We need to find the most recent response for this card/round that's NOT from the current player
-      const { data: responseData, error: fetchError } = await supabase
-        .from('game_responses')
-        .select('*')
-        .eq('room_id', room?.id || '')
-        .eq('card_id', currentCardFromState)
-        .eq('round_number', currentRound)
-        .neq('player_id', playerId) // Exclude my own responses
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      console.log('🔍 Response query result:', { 
-        responseData, 
-        fetchError,
-        currentCard: currentCardFromState,
-        round: currentRound,
-        excludedPlayerId: playerId
-      });
-
-      if (fetchError || !responseData) {
-        console.error('❌ Error fetching response for evaluation:', fetchError);
-        throw new Error('Response not found for evaluation');
-      }
-
-      console.log('✅ Found response to evaluate:', responseData);
-
-      // STEP 2: Save evaluation to database
-      const { error: evalError } = await supabase
-        .from('game_responses')
-        .update({
-          evaluation: JSON.stringify(evaluation),
-          evaluation_by: playerId
-        })
-        .eq('id', responseData.id);
-
-      if (evalError) {
-        console.error('❌ Error saving evaluation:', evalError);
-        throw evalError;
-      }
-
-      console.log('✅ Evaluation saved successfully');
-
-      // STEP 3: Save to local game responses for final report
-      const gameResponseData: GameResponse = {
-        question: currentCardFromState,
-        response: responseData.response,
-        responseTime: responseData.response_time,
-        evaluation,
-        level: currentLevel,
-        playerId: responseData.player_id
-      };
-      
-      setGameResponses(prev => [...prev, gameResponseData]);
-      
-      // STEP 4: Determine next turn - FIXED LOGIC
-      // The current turn is the evaluator. After evaluation, the evaluator becomes the next responder
-      // This ensures players alternate: P1 responds -> P2 evaluates -> P2 responds -> P1 evaluates
-      const nextResponseTurn: PlayerTurn = currentTurn; // Current evaluator becomes next responder
-      
-      const nextCard = getNextCard();
-      
-      if (nextCard) {
-        console.log('🎯 Moving to next round:', { 
-          nextCard, 
-          nextResponseTurn, 
-          completedCard: currentCardFromState,
-          newUsedCards: [...(gameState?.used_cards || []), currentCardFromState],
-          logic: 'evaluator becomes next responder'
-        });
-        
-        // Continue with next card - update database first
-        await updateGameState({
-          current_turn: nextResponseTurn, // Evaluator becomes responder
-          current_phase: 'card-display',
-          current_card: nextCard,
-          used_cards: [...(gameState?.used_cards || []), currentCardFromState]
-        });
-        
-        // Clear response data
-        setCurrentResponse('');
-        setCurrentResponseTime(0);
-        
-        // Notify other player that evaluation is complete
-        await syncAction('evaluation_submit', {
-          evaluation,
-          nextTurn: nextResponseTurn,
-          nextCard,
-          cardCompleted: currentCardFromState
-        });
-      } else {
-        // All cards completed for this level
-        console.log('🏁 All cards completed for level', currentLevel);
-        if (currentLevel >= 4) {
-          await generateFinalReport();
-        } else {
-          // All cards completed - automatically navigate to level selection
-          navigate(`/level-select?room=${roomCode}`);
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error submitting evaluation:', error);
-      toast({
-        title: "Error",
-        description: "No se pudo guardar la evaluación",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleLevelUpConfirm = () => {
     // Simulate waiting for partner confirmation
@@ -823,7 +697,7 @@ const Game = () => {
                   Responder
                 </Button>
                 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   <Button 
                     onClick={handleChangeLevel}
                     variant="outline"
@@ -832,39 +706,6 @@ const Game = () => {
                     Cambiar nivel
                   </Button>
                   
-                  <Button 
-                    onClick={async () => {
-                      try {
-                        // Clear existing level selection votes first
-                        const { error: clearError } = await supabase
-                          .from('level_selection_votes')
-                          .delete()
-                          .eq('room_id', room?.id);
-                        
-                        if (clearError) {
-                          console.error('❌ Error clearing level votes:', clearError);
-                        }
-                        
-                        await syncAction('level_change_request', {
-                          roomCode,
-                          currentLevel,
-                          message: 'Player wants to select a new level'
-                        });
-                        navigate(`/level-select?room=${roomCode}`);
-                      } catch (error) {
-                        console.error('❌ Error requesting level change:', error);
-                        toast({
-                          title: "Error",
-                          description: "No se pudo solicitar el cambio de nivel",
-                          variant: "destructive"
-                        });
-                      }
-                    }}
-                    variant="secondary"
-                    className="h-10 text-sm"
-                  >
-                    Subir nivel
-                  </Button>
                   
                   <Button 
                     onClick={() => generateFinalReport()}
@@ -906,41 +747,6 @@ const Game = () => {
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
-        {/* Response Evaluation Modal - FIXED: Added key to reset state */}
-        <ResponseEvaluation
-          key={`${gameState?.current_card}-${currentTurn}-${(gameState?.used_cards?.length || 0) + 1}`}
-          isVisible={gamePhase === 'evaluation'}
-          question={gameState?.current_card || currentCard}
-          response={evaluationResponseData?.response || ''}
-          responseTime={evaluationResponseData?.responseTime || 0}
-          onEvaluate={handleEvaluationSubmit}
-          partnerName={`Jugador ${currentTurn === 'player1' ? 2 : 1}`}
-        />
-        
-        {/* Debug info for evaluation issues */}
-        {gamePhase === 'evaluation' && (
-          <div className="fixed top-4 right-4 bg-background/90 p-2 rounded text-xs max-w-xs z-50">
-            <p>🎯 Debug Info:</p>
-            <p>Phase: {gamePhase}</p>
-            <p>Turn: {currentTurn}</p>
-            <p>Player: {playerNumber}</p>
-            <p>Card: {gameState?.current_card?.substring(0, 20)}...</p>
-            <p>Response: {evaluationResponseData?.response ? 'Found' : 'Loading...'}</p>
-            <p>Error: {responseDataError || 'None'}</p>
-            <p>Loading: {isLoadingResponseData ? 'Yes' : 'No'}</p>
-          </div>
-        )}
-
-        {/* Waiting for Evaluation Modal */}
-        <WaitingForEvaluation
-          isVisible={gamePhase === 'waiting-for-evaluation'}
-          question={currentCard}
-          response={currentResponse} // My own response when waiting for evaluation
-          responseTime={currentResponseTime}
-          onEvaluate={handleEvaluationSubmit}
-          isMyTurn={shouldEvaluate} // Use shouldEvaluate instead of isMyTurn
-          partnerName={`Jugador ${currentTurn === 'player1' ? 1 : 2}`}
-        />
 
         {/* Level Up Confirmation Modal */}
         <LevelUpConfirmation
