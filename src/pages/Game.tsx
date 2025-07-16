@@ -270,8 +270,8 @@ const Game = () => {
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
       case 'evaluation':
-        // In evaluation phase, BOTH players see the card, but only evaluator gets evaluation interface
-        return 'card-display';
+        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
+        return isMyTurnInDB ? 'evaluation' : 'card-display';
       case 'final-report':
         return 'final-report';
       default:
@@ -841,8 +841,8 @@ const Game = () => {
               totalCards={totalCards}
             />
 
-            {/* Action Button - Solo mostrar si es mi turno */}
-            {isMyTurn && (
+            {/* Action Button - Only show if it's my turn and NOT in evaluation phase */}
+            {isMyTurn && gameState?.current_phase !== 'evaluation' && (
               <div className="space-y-3 pb-8">
                 <Button 
                   onClick={handleStartResponse}
@@ -906,18 +906,18 @@ const Game = () => {
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
-        {/* Response Evaluation Modal - Show only if it's my turn in evaluation phase */}
-        {pendingEvaluation && gameState?.current_phase === 'evaluation' && isMyTurn && (
-          <ResponseEvaluation
-            isVisible={true}
-            question={pendingEvaluation.question}
-            response={pendingEvaluation.response}
-            playerName={pendingEvaluation.playerName}
-            onSubmitEvaluation={handleEvaluationSubmit}
-            onCancel={handleEvaluationCancel}
-            isSubmitting={isSubmitting}
-          />
-        )}
+         {/* Response Evaluation Modal - Show only for evaluation phase */}
+         {pendingEvaluation && gamePhase === 'evaluation' && (
+           <ResponseEvaluation
+             isVisible={true}
+             question={pendingEvaluation.question}
+             response={pendingEvaluation.response}
+             playerName={pendingEvaluation.playerName}
+             onSubmitEvaluation={handleEvaluationSubmit}
+             onCancel={handleEvaluationCancel}
+             isSubmitting={isSubmitting}
+           />
+         )}
 
         {/* Level Up Confirmation Modal */}
         <LevelUpConfirmation
