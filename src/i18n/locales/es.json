@@ -3,6 +3,57 @@
     "title": "Cartas de Conexión",
     "subtitle": "Construye conexiones más profundas a través de conversaciones significativas"
   },
+  "home": {
+    "trustBadge": {
+      "private": "Privado y Seguro",
+      "couples": "50k+ Parejas"
+    },
+    "headline": {
+      "transform": "Transforma Tu",
+      "connection": "Conexión",
+      "into": "En Algo",
+      "extraordinary": "Extraordinario"
+    },
+    "subtitle": "Descubre el juego que acerca a las parejas a través de conversaciones significativas e intimidad más profunda.",
+    "socialProof": "Confiado por miles",
+    "buttons": {
+      "startJourney": "Comenzar Tu Viaje",
+      "joinPartner": "Unirse a Pareja",
+      "login": "Iniciar Sesión"
+    },
+    "valueProps": {
+      "ready": "Listo en 30 segundos",
+      "private": "100% Privado",
+      "instant": "Conexión instantánea"
+    },
+    "ageNotice": "Solo 18+ • Seguro y Protegido",
+    "visual": {
+      "title": "Conexión Más Profunda",
+      "feature1": "Conversaciones significativas",
+      "feature2": "Intimidad emocional",
+      "feature3": "Lazos más fuertes"
+    },
+    "stats": {
+      "successRate": "Tasa de Éxito",
+      "happyCouples": "Parejas Felices"
+    },
+    "features": {
+      "title": "Tres Niveles de Conexión",
+      "subtitle": "Profundiza progresivamente tu vínculo a través de niveles de conversación cuidadosamente elaborados",
+      "level1": {
+        "title": "Rompe el Hielo",
+        "description": "Rompe el hielo con iniciadores de conversación divertidos y preguntas ligeras"
+      },
+      "level2": {
+        "title": "Volverse Personal",
+        "description": "Profundiza en historias personales y experiencias significativas"
+      },
+      "level3": {
+        "title": "Intimidad Profunda",
+        "description": "Conecta en el nivel más profundo con conversaciones íntimas y vulnerables"
+      }
+    }
+  },
   "navigation": {
     "home": "Inicio",
     "admin": "Panel de Administración",

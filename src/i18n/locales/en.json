@@ -5,6 +5,57 @@
     "subtitle": "Conversation-first dating for people who crave real connection.",
     "tagline": "AI cards that reveal how close you really are."
   },
+  "home": {
+    "trustBadge": {
+      "private": "Private & Secure",
+      "couples": "50k+ Couples"
+    },
+    "headline": {
+      "transform": "Transform Your",
+      "connection": "Connection",
+      "into": "Into Something",
+      "extraordinary": "Extraordinary"
+    },
+    "subtitle": "Discover the game that brings couples closer together through meaningful conversations and deeper intimacy.",
+    "socialProof": "Trusted by thousands",
+    "buttons": {
+      "startJourney": "Start Your Journey",
+      "joinPartner": "Join Partner",
+      "login": "Login"
+    },
+    "valueProps": {
+      "ready": "Ready in 30 seconds",
+      "private": "100% Private",
+      "instant": "Instant connection"
+    },
+    "ageNotice": "18+ Only • Safe & Secure",
+    "visual": {
+      "title": "Deeper Connection",
+      "feature1": "Meaningful conversations",
+      "feature2": "Emotional intimacy",
+      "feature3": "Stronger bonds"
+    },
+    "stats": {
+      "successRate": "Success Rate",
+      "happyCouples": "Happy Couples"
+    },
+    "features": {
+      "title": "Three Levels of Connection",
+      "subtitle": "Progressively deepen your bond through carefully crafted conversation levels",
+      "level1": {
+        "title": "Break the Ice",
+        "description": "Break the ice with fun conversation starters and lighthearted questions"
+      },
+      "level2": {
+        "title": "Getting Personal",
+        "description": "Dive deeper into personal stories and meaningful experiences"
+      },
+      "level3": {
+        "title": "Deep Intimacy",
+        "description": "Connect on the deepest level with intimate and vulnerable conversations"
+      }
+    }
+  },
   "navigation": {
     "home": "Home",
     "admin": "Admin Panel",

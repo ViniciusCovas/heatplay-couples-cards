@@ -31,11 +31,11 @@ const Home = () => {
             <div className="flex items-center justify-center lg:justify-start gap-6 mb-6">
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
                 <Shield className="w-4 h-4" />
-                <span>Private & Secure</span>
+                <span>{t('home.trustBadge.private')}</span>
               </div>
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/10 text-secondary text-sm font-medium">
                 <Users2 className="w-4 h-4" />
-                <span>50k+ Couples</span>
+                <span>{t('home.trustBadge.couples')}</span>
               </div>
             </div>
             
@@ -50,16 +50,16 @@ const Home = () => {
               
               {/* Main Headline */}
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] tracking-tight">
-                Transform Your
-                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> Connection</span>
+                {t('home.headline.transform')}
+                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> {t('home.headline.connection')}</span>
                 <br />
-                Into Something
-                <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent"> Extraordinary</span>
+                {t('home.headline.into')}
+                <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent"> {t('home.headline.extraordinary')}</span>
               </h2>
               
               {/* Sub-headline */}
               <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-                Discover the game that brings couples closer together through meaningful conversations and deeper intimacy.
+                {t('home.subtitle')}
               </p>
               
               {/* Social Proof */}
@@ -75,7 +75,7 @@ const Home = () => {
                       <Star key={i} className="w-4 h-4 fill-primary text-primary" />
                     ))}
                   </div>
-                  <span className="text-sm text-muted-foreground ml-2">Trusted by thousands</span>
+                  <span className="text-sm text-muted-foreground ml-2">{t('home.socialProof')}</span>
                 </div>
               </div>
             </div>
@@ -88,7 +88,7 @@ const Home = () => {
                 size="lg"
               >
                 <Users className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
-                Start Your Journey
+                {t('home.buttons.startJourney')}
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
               
@@ -99,7 +99,7 @@ const Home = () => {
                 size="lg"
               >
                 <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
-                Join Partner
+                {t('home.buttons.joinPartner')}
               </Button>
             </div>
 
@@ -109,19 +109,19 @@ const Home = () => {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Clock className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm text-muted-foreground">Ready in 30 seconds</span>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.ready')}</span>
               </div>
               <div className="flex items-center gap-3 text-center sm:text-left">
                 <div className="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center flex-shrink-0">
                   <Shield className="w-5 h-5 text-secondary" />
                 </div>
-                <span className="text-sm text-muted-foreground">100% Private</span>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.private')}</span>
               </div>
               <div className="flex items-center gap-3 text-center sm:text-left">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Zap className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm text-muted-foreground">Instant connection</span>
+                <span className="text-sm text-muted-foreground">{t('home.valueProps.instant')}</span>
               </div>
             </div>
 
@@ -129,7 +129,7 @@ const Home = () => {
             <div className="text-center lg:text-left">
               <span className="inline-flex items-center px-4 py-2 rounded-full bg-secondary/10 text-secondary text-sm font-medium">
                 <CheckCircle className="w-4 h-4 mr-2" />
-                18+ Only • Safe & Secure
+                {t('home.ageNotice')}
               </span>
             </div>
 
@@ -153,7 +153,7 @@ const Home = () => {
                 size="sm"
                 className="text-muted-foreground hover:text-foreground"
               >
-                Login
+                {t('home.buttons.login')}
               </Button>
             </div>
           </div>
@@ -187,21 +187,21 @@ const Home = () => {
                   </div>
                   
                   <h3 className="text-2xl font-bold text-foreground mb-4">
-                    Deeper Connection
+                    {t('home.visual.title')}
                   </h3>
                   
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                      <span>Meaningful conversations</span>
+                      <span>{t('home.visual.feature1')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" style={{animationDelay: '0.3s'}}></div>
-                      <span>Emotional intimacy</span>
+                      <span>{t('home.visual.feature2')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{animationDelay: '0.6s'}}></div>
-                      <span>Stronger bonds</span>
+                      <span>{t('home.visual.feature3')}</span>
                     </div>
                   </div>
                 </div>
@@ -216,7 +216,7 @@ const Home = () => {
                   <TrendingUp className="w-5 h-5 text-primary" />
                   <div>
                     <div className="text-sm font-bold text-foreground">98%</div>
-                    <div className="text-xs text-muted-foreground">Success Rate</div>
+                    <div className="text-xs text-muted-foreground">{t('home.stats.successRate')}</div>
                   </div>
                 </div>
               </div>
@@ -226,7 +226,7 @@ const Home = () => {
                   <Users2 className="w-5 h-5 text-secondary" />
                   <div>
                     <div className="text-sm font-bold text-foreground">50k+</div>
-                    <div className="text-xs text-muted-foreground">Happy Couples</div>
+                    <div className="text-xs text-muted-foreground">{t('home.stats.happyCouples')}</div>
                   </div>
                 </div>
               </div>
@@ -238,10 +238,10 @@ const Home = () => {
         <div className="mt-32 mb-16">
           <div className="text-center mb-16">
             <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Three Levels of Connection
+              {t('home.features.title')}
             </h3>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Progressively deepen your bond through carefully crafted conversation levels
+              {t('home.features.subtitle')}
             </p>
           </div>
           
@@ -250,24 +250,24 @@ const Home = () => {
               <div className="w-20 h-20 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
                 <span className="text-3xl font-bold text-white">1</span>
               </div>
-              <h4 className="text-xl font-bold text-foreground">{t('levels.iceBreaker')}</h4>
-              <p className="text-muted-foreground">Break the ice with fun conversation starters and lighthearted questions</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level1.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level1.description')}</p>
             </div>
             
             <div className="group text-center space-y-6 p-8 rounded-2xl bg-gradient-to-br from-secondary/5 to-transparent border border-secondary/10 hover:border-secondary/20 transition-all duration-300">
               <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
                 <span className="text-3xl font-bold text-white">2</span>
               </div>
-              <h4 className="text-xl font-bold text-foreground">{t('levels.gettingPersonal')}</h4>
-              <p className="text-muted-foreground">Dive deeper into personal stories and meaningful experiences</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level2.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level2.description')}</p>
             </div>
             
             <div className="group text-center space-y-6 p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all duration-300">
               <div className="w-20 h-20 bg-gradient-to-br from-primary via-secondary to-primary rounded-2xl flex items-center justify-center mx-auto shadow-lg group-hover:scale-110 transition-transform">
                 <span className="text-3xl font-bold text-white">3</span>
               </div>
-              <h4 className="text-xl font-bold text-foreground">{t('levels.intimate')}</h4>
-              <p className="text-muted-foreground">Connect on the deepest level with intimate and vulnerable conversations</p>
+              <h4 className="text-xl font-bold text-foreground">{t('home.features.level3.title')}</h4>
+              <p className="text-muted-foreground">{t('home.features.level3.description')}</p>
             </div>
           </div>
         </div>

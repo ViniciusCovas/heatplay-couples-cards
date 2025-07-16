@@ -3,6 +3,57 @@
     "title": "Cartas de Conexão",
     "subtitle": "Construa conexões mais profundas através de conversas significativas"
   },
+  "home": {
+    "trustBadge": {
+      "private": "Privado e Seguro",
+      "couples": "50k+ Casais"
+    },
+    "headline": {
+      "transform": "Transforme Sua",
+      "connection": "Conexão",
+      "into": "Em Algo",
+      "extraordinary": "Extraordinário"
+    },
+    "subtitle": "Descubra o jogo que aproxima casais através de conversas significativas e intimidade mais profunda.",
+    "socialProof": "Confiado por milhares",
+    "buttons": {
+      "startJourney": "Comece Sua Jornada",
+      "joinPartner": "Junte-se ao Parceiro",
+      "login": "Entrar"
+    },
+    "valueProps": {
+      "ready": "Pronto em 30 segundos",
+      "private": "100% Privado",
+      "instant": "Conexão instantânea"
+    },
+    "ageNotice": "Apenas 18+ • Seguro e Protegido",
+    "visual": {
+      "title": "Conexão Mais Profunda",
+      "feature1": "Conversas significativas",
+      "feature2": "Intimidade emocional",
+      "feature3": "Laços mais fortes"
+    },
+    "stats": {
+      "successRate": "Taxa de Sucesso",
+      "happyCouples": "Casais Felizes"
+    },
+    "features": {
+      "title": "Três Níveis de Conexão",
+      "subtitle": "Aprofunde progressivamente seu vínculo através de níveis de conversa cuidadosamente elaborados",
+      "level1": {
+        "title": "Quebrar o Gelo",
+        "description": "Quebre o gelo com iniciadores de conversa divertidos e perguntas descontraídas"
+      },
+      "level2": {
+        "title": "Ficando Pessoal",
+        "description": "Mergulhe mais fundo em histórias pessoais e experiências significativas"
+      },
+      "level3": {
+        "title": "Intimidade Profunda",
+        "description": "Conecte-se no nível mais profundo com conversas íntimas e vulneráveis"
+      }
+    }
+  },
   "navigation": {
     "home": "Início",
     "admin": "Painel Administrativo",

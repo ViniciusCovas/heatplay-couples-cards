@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
+import { LanguageIndicator } from "@/components/ui/language-indicator";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 import { useRoomService } from "@/hooks/useRoomService";
@@ -227,10 +228,15 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Track previous language to detect changes
+  const [prevLanguage, setPrevLanguage] = useState(i18n.language);
+  
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
+        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
+        
         // Get level information
         const { data: levelData, error: levelError } = await supabase
           .from('levels')
@@ -259,8 +265,25 @@ const Game = () => {
         console.log('📚 Loaded questions:', { 
           level: currentLevel, 
           levelName: levelData.name, 
-          questionCount: questions.length 
+          questionCount: questions.length,
+          language: i18n.language
         });
+        
+        // If language changed, reset the game state for new language
+        if (prevLanguage !== i18n.language) {
+          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
+          
+          // Clear current card and used cards to start fresh with new language
+          if (gameState?.current_card) {
+            await updateGameState({
+              current_card: null,
+              used_cards: []
+            });
+          }
+          
+          setPrevLanguage(i18n.language);
+        }
+        
       } catch (error) {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
@@ -275,7 +298,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, i18n.language]);
+  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
   // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
@@ -645,7 +668,8 @@ const Game = () => {
       <div className="w-full max-w-md mx-auto space-y-6 flex-1">
         {/* Header */}
         <div className="text-center space-y-2 pt-4">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <LanguageIndicator />
             <div className="flex items-center">
               <Users className="w-4 h-4 text-muted-foreground mr-1" />
               <span className="text-xs font-mono text-muted-foreground">{roomCode}</span>

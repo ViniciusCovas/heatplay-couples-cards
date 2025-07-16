@@ -3,6 +3,57 @@
     "title": "Cartes de Connexion",
     "subtitle": "Construisez des connexions plus profondes grâce à des conversations significatives"
   },
+  "home": {
+    "trustBadge": {
+      "private": "Privé et Sécurisé",
+      "couples": "50k+ Couples"
+    },
+    "headline": {
+      "transform": "Transformez Votre",
+      "connection": "Connexion",
+      "into": "En Quelque Chose",
+      "extraordinary": "Extraordinaire"
+    },
+    "subtitle": "Découvrez le jeu qui rapproche les couples grâce à des conversations significatives et une intimité plus profonde.",
+    "socialProof": "Fait confiance par des milliers",
+    "buttons": {
+      "startJourney": "Commencer Votre Voyage",
+      "joinPartner": "Rejoindre le Partenaire",
+      "login": "Connexion"
+    },
+    "valueProps": {
+      "ready": "Prêt en 30 secondes",
+      "private": "100% Privé",
+      "instant": "Connexion instantanée"
+    },
+    "ageNotice": "18+ Seulement • Sûr et Sécurisé",
+    "visual": {
+      "title": "Connexion Plus Profonde",
+      "feature1": "Conversations significatives",
+      "feature2": "Intimité émotionnelle",
+      "feature3": "Liens plus forts"
+    },
+    "stats": {
+      "successRate": "Taux de Réussite",
+      "happyCouples": "Couples Heureux"
+    },
+    "features": {
+      "title": "Trois Niveaux de Connexion",
+      "subtitle": "Approfondissez progressivement votre lien grâce à des niveaux de conversation soigneusement conçus",
+      "level1": {
+        "title": "Briser la Glace",
+        "description": "Brisez la glace avec des démarreurs de conversation amusants et des questions légères"
+      },
+      "level2": {
+        "title": "Devenir Personnel",
+        "description": "Plongez plus profondément dans des histoires personnelles et des expériences significatives"
+      },
+      "level3": {
+        "title": "Intimité Profonde",
+        "description": "Connectez-vous au niveau le plus profond avec des conversations intimes et vulnérables"
+      }
+    }
+  },
   "navigation": {
     "home": "Accueil",
     "admin": "Panneau d'Administration",
