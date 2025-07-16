@@ -325,7 +325,7 @@ const Game = () => {
     const availableCards = levelCards.filter(card => !usedCards.includes(card));
     if (availableCards.length === 0) {
       // All cards completed for this level
-      if (currentLevel >= 3) {
+      if (currentLevel >= 4) {
         generateFinalReport();
       } else {
         // All cards completed - automatically navigate to level selection
@@ -538,7 +538,7 @@ const Game = () => {
       } else {
         // All cards completed for this level
         console.log('🏁 All cards completed for level', currentLevel);
-        if (currentLevel >= 3) {
+        if (currentLevel >= 4) {
           await generateFinalReport();
         } else {
           // All cards completed - automatically navigate to level selection

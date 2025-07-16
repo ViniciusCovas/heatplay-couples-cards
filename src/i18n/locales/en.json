@@ -43,7 +43,11 @@
     "iceBreaker": "Ice Breaker",
     "gettingPersonal": "Getting Personal",
     "deepThoughts": "Deep Thoughts",
-    "intimate": "Intimate"
+    "intimate": "Intimate",
+    "level1": "Discovery",
+    "level2": "Connection",
+    "level3": "Hot",
+    "level4": "No Filters"
   },
   "admin": {
     "dashboard": "Admin Dashboard",

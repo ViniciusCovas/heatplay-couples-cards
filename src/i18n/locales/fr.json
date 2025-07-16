@@ -43,7 +43,11 @@
     "iceBreaker": "Brise-glace",
     "gettingPersonal": "Devenir Personnel",
     "deepThoughts": "Pensées Profondes",
-    "intimate": "Intime"
+    "intimate": "Intime",
+    "level1": "Découverte",
+    "level2": "Connexion",
+    "level3": "Chaud",
+    "level4": "Sans Filtres"
   },
   "admin": {
     "dashboard": "Tableau de Bord Administrateur",

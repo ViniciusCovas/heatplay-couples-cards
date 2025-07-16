@@ -43,7 +43,11 @@
     "iceBreaker": "Quebra-gelo",
     "gettingPersonal": "Ficando Pessoal",
     "deepThoughts": "Pensamentos Profundos",
-    "intimate": "Íntimo"
+    "intimate": "Íntimo",
+    "level1": "Descoberta",
+    "level2": "Conexão",
+    "level3": "Quente",
+    "level4": "Sem Filtros"
   },
   "admin": {
     "dashboard": "Painel Administrativo",

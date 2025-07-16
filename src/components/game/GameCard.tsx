@@ -11,8 +11,9 @@ interface GameCardProps {
 
 const LEVEL_NAMES = {
   1: "Descubrimiento",
-  2: "Confianza", 
-  3: "Sin filtros"
+  2: "Conexión", 
+  3: "Caliente",
+  4: "Sin Filtros"
 };
 
 export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, totalCards }: GameCardProps) => {
@@ -26,9 +27,10 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
             border-0 rounded-[32px] shadow-2xl
             relative overflow-hidden
             hover:scale-105 hover:shadow-3xl
-            ${currentLevel === 1 ? 'bg-gradient-to-br from-yellow-300 via-yellow-200 to-yellow-100' : ''}
-            ${currentLevel === 2 ? 'bg-gradient-to-br from-orange-400 via-orange-300 to-orange-200' : ''}
+            ${currentLevel === 1 ? 'bg-gradient-to-br from-green-300 via-green-200 to-green-100' : ''}
+            ${currentLevel === 2 ? 'bg-gradient-to-br from-purple-400 via-purple-300 to-purple-200' : ''}
             ${currentLevel === 3 ? 'bg-gradient-to-br from-red-400 via-red-300 to-red-200' : ''}
+            ${currentLevel === 4 ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-600' : ''}
           `}
         >
           {/* Inner card area with white background */}
@@ -38,9 +40,10 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
               {/* Level indicator at top */}
               <div className="absolute top-6 left-6 flex items-center space-x-2">
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm
-                  ${currentLevel === 1 ? 'bg-yellow-500' : ''}
-                  ${currentLevel === 2 ? 'bg-orange-500' : ''}
+                  ${currentLevel === 1 ? 'bg-green-500' : ''}
+                  ${currentLevel === 2 ? 'bg-purple-500' : ''}
                   ${currentLevel === 3 ? 'bg-red-500' : ''}
+                  ${currentLevel === 4 ? 'bg-gray-900' : ''}
                 `}>
                   {currentLevel}
                 </div>
@@ -48,9 +51,10 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
               
               {/* Card suit icon */}
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg
-                ${currentLevel === 1 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' : ''}
-                ${currentLevel === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600' : ''}
+                ${currentLevel === 1 ? 'bg-gradient-to-br from-green-400 to-green-600' : ''}
+                ${currentLevel === 2 ? 'bg-gradient-to-br from-purple-400 to-purple-600' : ''}
                 ${currentLevel === 3 ? 'bg-gradient-to-br from-red-400 to-red-600' : ''}
+                ${currentLevel === 4 ? 'bg-gradient-to-br from-gray-700 to-gray-900' : ''}
               `}>
                 <Heart className="w-6 h-6 text-white" />
               </div>
@@ -63,9 +67,10 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
               {/* Level name at bottom */}
               <div className="absolute bottom-6 left-6 right-6 text-center">
                 <p className={`text-sm font-semibold
-                  ${currentLevel === 1 ? 'text-yellow-600' : ''}
-                  ${currentLevel === 2 ? 'text-orange-600' : ''}
+                  ${currentLevel === 1 ? 'text-green-600' : ''}
+                  ${currentLevel === 2 ? 'text-purple-600' : ''}
                   ${currentLevel === 3 ? 'text-red-600' : ''}
+                  ${currentLevel === 4 ? 'text-gray-700' : ''}
                 `}>
                   {LEVEL_NAMES[currentLevel as keyof typeof LEVEL_NAMES]}
                 </p>
