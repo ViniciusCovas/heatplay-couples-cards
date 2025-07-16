@@ -415,7 +415,6 @@ const Game = () => {
     await updateGameState({
       current_phase: 'response-input'
     });
-    setGamePhase('response-input');
   };
 
   const handleResponseSubmit = async (response: string, responseTime: number) => {
@@ -493,10 +492,9 @@ const Game = () => {
         round: currentRound,
         responseId: responseData.id,
         nextTurn
-      });
-      
-      // Both players should now see the card, but only evaluator gets evaluation interface
-      setGamePhase('card-display');
+       });
+       
+       // Database state will trigger phase update via useEffect
     } catch (error) {
       console.error('❌ Error submitting response:', error);
       toast({
@@ -610,7 +608,7 @@ const Game = () => {
 
   const handleEvaluationCancel = () => {
     setPendingEvaluation(null);
-    setGamePhase('card-display');
+    // Database state will trigger phase update via useEffect
   };
 
 
