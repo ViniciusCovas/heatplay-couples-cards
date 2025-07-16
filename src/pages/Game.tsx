@@ -394,19 +394,17 @@ const Game = () => {
     setProgress((usedCards.length / totalCards) * 100);
   }, [usedCards, totalCards]);
 
-  const getNextCard = () => {
-    const availableCards = levelCards.filter(card => !usedCards.includes(card));
+  // Deterministic card selection based on database state
+  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: string[], roundNumber: number) => {
+    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card));
     if (availableCards.length === 0) {
-      // All cards completed for this level
-      if (currentLevel >= 4) {
-        generateFinalReport();
-      } else {
-        // All cards completed - automatically navigate to level selection
-        navigate(`/level-select?room=${roomCode}`);
-      }
       return null;
     }
-    return availableCards[Math.floor(Math.random() * availableCards.length)];
+    
+    // Use round number as seed for deterministic selection
+    // This ensures all players get the same card based on the same database state
+    const deterministicIndex = roundNumber % availableCards.length;
+    return availableCards[deterministicIndex];
   };
 
 
@@ -488,19 +486,24 @@ const Game = () => {
 
     console.log('🎯 Advancing to next round after completing:', completedQuestion);
 
-    // Determine next card using the same logic for all players
-    const nextCard = getNextCard();
+    // Calculate the round number based on current used cards + the completed question
+    const currentUsedCards = gameState.used_cards || [];
+    const nextRoundNumber = currentUsedCards.length + 1;
+    
+    // Use deterministic card selection based on database state
+    const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
     const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
     
     if (nextCard) {
       // Continue with next question
-      const newUsedCards = [...(gameState.used_cards || []), completedQuestion];
+      const newUsedCards = [...currentUsedCards, completedQuestion];
       
-      console.log('🎯 Moving to next card:', {
+      console.log('🎯 Moving to next card (deterministic):', {
         nextCard,
         nextTurn,
         newUsedCards: newUsedCards.length,
-        currentLevel
+        currentLevel,
+        roundNumber: nextRoundNumber
       });
       
       await updateGameState({
