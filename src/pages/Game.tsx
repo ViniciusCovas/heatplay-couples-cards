@@ -443,8 +443,8 @@ const Game = () => {
         currentTurn 
       });
 
-      // STEP 1: Save response to database
-      const { data: responseData, error: responseError } = await supabase
+      // Save response to database
+      const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
           room_id: room.id,
@@ -453,9 +453,7 @@ const Game = () => {
           response: response,
           response_time: Math.round(responseTime),
           round_number: currentRound
-        })
-        .select()
-        .single();
+        });
 
       if (responseError) {
         console.error('❌ Error saving response:', responseError);
@@ -464,8 +462,7 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
-      // STEP 2: After any player submits response, immediately move to evaluation phase
-      // The OTHER player should evaluate the response  
+      // Transition to evaluation phase - other player evaluates
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       console.log('✅ Response submitted, moving to evaluation phase for other player');
       await updateGameState({
@@ -473,28 +470,6 @@ const Game = () => {
         current_phase: 'evaluation'
       });
       
-      // Store response for final report
-      const gameResponseData: GameResponse = {
-        question: currentCardFromState,
-        response,
-        responseTime,
-        level: currentLevel,
-        playerId
-      };
-      setGameResponses(prev => [...prev, gameResponseData]);
-      
-      // Notify the partner about the response
-      await syncAction('response_submit', {
-        response,
-        responseTime,
-        question: currentCardFromState,
-        from: currentTurn,
-        round: currentRound,
-        responseId: responseData.id,
-        nextTurn
-       });
-       
-       // Database state will trigger phase update via useEffect
     } catch (error) {
       console.error('❌ Error submitting response:', error);
       toast({
@@ -580,18 +555,8 @@ const Game = () => {
 
       console.log('✅ Evaluation saved successfully');
 
-      // Use centralized function to advance to next round
-      const result = await advanceToNextRound(pendingEvaluation.question);
-      
-      if (result) {
-        // Notify the partner about the evaluation and new card
-        await syncAction('evaluation_submit', {
-          evaluation,
-          nextCard: result.nextCard,
-          from: currentTurn,
-          responseId: pendingEvaluation.responseId
-        });
-      }
+      // Call centralized function to advance to next round
+      await advanceToNextRound(pendingEvaluation.question);
       
       setPendingEvaluation(null);
     } catch (error) {
