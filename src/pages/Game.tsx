@@ -551,7 +551,7 @@ const Game = () => {
           current_card: nextCard,
           used_cards: newUsedCards,
           current_turn: nextTurn,
-          current_phase: 'card-display'
+          current_phase: 'response-input'
         });
         
         // Notify the partner
