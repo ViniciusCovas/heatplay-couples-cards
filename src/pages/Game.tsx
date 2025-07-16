@@ -270,8 +270,8 @@ const Game = () => {
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
       case 'evaluation':
-        // In evaluation phase, only the player whose turn it is should evaluate
-        return isMyTurnInDB ? 'evaluation' : 'card-display';
+        // In evaluation phase, BOTH players see the card, but only evaluator gets evaluation interface
+        return 'card-display';
       case 'final-report':
         return 'final-report';
       default:
@@ -466,7 +466,7 @@ const Game = () => {
       console.log('✅ Response saved successfully');
 
       // STEP 2: After any player submits response, immediately move to evaluation phase
-      // The OTHER player should evaluate the response
+      // The OTHER player should evaluate the response  
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       console.log('✅ Response submitted, moving to evaluation phase for other player');
       await updateGameState({
@@ -495,6 +495,7 @@ const Game = () => {
         nextTurn
       });
       
+      // Both players should now see the card, but only evaluator gets evaluation interface
       setGamePhase('card-display');
     } catch (error) {
       console.error('❌ Error submitting response:', error);
@@ -878,7 +879,10 @@ const Game = () => {
             {!isMyTurn && (
               <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">
-                  {t('game.waitingForResponse', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })}
+                  {gameState?.current_phase === 'evaluation' 
+                    ? t('game.waitingForEvaluation', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })
+                    : t('game.waitingForResponse', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })
+                  }
                 </p>
                 <Button 
                   onClick={handleChangeLevel}
@@ -902,10 +906,10 @@ const Game = () => {
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
-        {/* Response Evaluation Modal */}
-        {pendingEvaluation && (
+        {/* Response Evaluation Modal - Show only if it's my turn in evaluation phase */}
+        {pendingEvaluation && gameState?.current_phase === 'evaluation' && isMyTurn && (
           <ResponseEvaluation
-            isVisible={gamePhase === 'evaluation'}
+            isVisible={true}
             question={pendingEvaluation.question}
             response={pendingEvaluation.response}
             playerName={pendingEvaluation.playerName}

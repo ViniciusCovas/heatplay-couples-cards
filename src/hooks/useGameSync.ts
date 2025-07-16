@@ -117,18 +117,35 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   }, [roomId, playerId]);
 
   const handleSyncAction = async (action: GameSyncAction) => {
+    // Add small delay to prevent notification overlap
+    const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
+      // Dismiss existing toasts and show new one after delay
+      setTimeout(() => {
+        switch(type) {
+          case 'success':
+            toast.success(message);
+            break;
+          case 'error':
+            toast.error(message);
+            break;
+          default:
+            toast.info(message);
+        }
+      }, 100);
+    };
+
     switch (action.action_type) {
       case 'proximity_answer':
-        toast.success('Tu pareja respondió la pregunta de proximidad');
+        showToast('Tu pareja respondió la pregunta de proximidad', 'success');
         break;
       case 'navigate_to_level_select':
-        toast.success('Navegando a selección de niveles...');
+        showToast('Navegando a selección de niveles...', 'success');
         break;
       case 'card_reveal':
-        toast.info('Nueva carta revelada');
+        showToast('Nueva carta revelada');
         break;
       case 'response_submit':
-        toast.info('Tu pareja envió su respuesta. Es tu turno evaluar.');
+        showToast('Tu pareja envió su respuesta. Es tu turno evaluar.');
         if (action.action_data) {
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
@@ -141,16 +158,16 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }
         break;
       case 'evaluation_submit':
-        toast.info('Evaluación completada');
+        showToast('Evaluación completada');
         if (action.action_data?.nextCard) {
-          toast.info('Nueva carta disponible');
+          setTimeout(() => showToast('Nueva carta disponible'), 500);
         }
         break;
       case 'turn_advance':
-        toast.info('Turno avanzado');
+        // Reduce frequency of turn advance notifications
         break;
       case 'level_change':
-        toast.success(`Nivel cambiado a ${action.action_data.level}`);
+        showToast(`Nivel cambiado a ${action.action_data.level}`, 'success');
         break;
       case 'game_finish':
         window.dispatchEvent(new CustomEvent('gameFinish', {
@@ -158,16 +175,16 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }));
         break;
       case 'change_level_request':
-        toast.info('Tu pareja quiere cambiar de nivel');
+        showToast('Tu pareja quiere cambiar de nivel');
         window.dispatchEvent(new CustomEvent('changeLevelRequest', {
           detail: action.action_data
         }));
         break;
       case 'level_mismatch':
-        toast.error('You selected different levels. You must select the same level to play.');
+        showToast('You selected different levels. You must select the same level to play.', 'error');
         break;
       case 'level_change_request':
-        toast.info('Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...');
+        showToast('Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...');
         
         // Clear existing level selection votes for fresh start
         await supabase
