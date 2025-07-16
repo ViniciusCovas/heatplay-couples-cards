@@ -192,6 +192,57 @@ const Game = () => {
       }
     }
   }, [gameState]);
+
+  // Set up evaluation data when entering evaluation phase
+  useEffect(() => {
+    const setupEvaluationData = async () => {
+      if (gamePhase === 'evaluation' && gameState && room && !pendingEvaluation) {
+        console.log('🔄 Setting up evaluation data for evaluator');
+        
+        try {
+          // Get the current round number
+          const currentRound = (gameState.used_cards?.length || 0) + 1;
+          const currentCardFromState = gameState.current_card;
+          
+          // Fetch the latest response for the current card/round
+          const { data: responseData, error } = await supabase
+            .from('game_responses')
+            .select('*')
+            .eq('room_id', room.id)
+            .eq('card_id', currentCardFromState)
+            .eq('round_number', currentRound)
+            .is('evaluation', null)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (error) {
+            console.error('❌ Error fetching response for evaluation:', error);
+            return;
+          }
+
+          if (responseData) {
+            const playerName = responseData.player_id === playerId ? 
+              t('game.yourResponse') : 
+              (gameState.current_turn === 'player1' ? t('game.player1') : t('game.player2'));
+
+            setPendingEvaluation({
+              question: responseData.card_id,
+              response: responseData.response || '',
+              responseId: responseData.id,
+              playerName
+            });
+
+            console.log('✅ Evaluation data set up successfully');
+          }
+        } catch (error) {
+          console.error('❌ Error setting up evaluation data:', error);
+        }
+      }
+    };
+
+    setupEvaluationData();
+  }, [gamePhase, gameState, room, pendingEvaluation, playerId, t]);
   
   // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
@@ -415,14 +466,6 @@ const Game = () => {
       // STEP 2: Move to evaluation phase
       await updateGameState({
         current_phase: 'evaluation'
-      });
-      
-      // Set up evaluation for partner
-      setPendingEvaluation({
-        question: currentCardFromState,
-        response,
-        responseId: responseData.id,
-        playerName: currentTurn === 'player1' ? t('game.player1') : t('game.player2')
       });
       
       // Store response for final report
