@@ -509,6 +509,48 @@ const Game = () => {
     }
   };
 
+  // Centralized function to advance to the next round
+  const advanceToNextRound = async (completedQuestion: string) => {
+    if (!room || !gameState) return;
+
+    console.log('🎯 Advancing to next round after completing:', completedQuestion);
+
+    // Determine next card using the same logic for all players
+    const nextCard = getNextCard();
+    const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+    
+    if (nextCard) {
+      // Continue with next question
+      const newUsedCards = [...(gameState.used_cards || []), completedQuestion];
+      
+      console.log('🎯 Moving to next card:', {
+        nextCard,
+        nextTurn,
+        newUsedCards: newUsedCards.length,
+        currentLevel
+      });
+      
+      await updateGameState({
+        current_card: nextCard,
+        used_cards: newUsedCards,
+        current_turn: nextTurn,
+        current_phase: 'response-input'
+      });
+      
+      return { nextCard, nextTurn };
+    } else {
+      // No more cards, finish level
+      console.log('🏁 No more cards available - finishing level:', currentLevel);
+      
+      if (currentLevel >= 4) {
+        generateFinalReport();
+      } else {
+        navigate(`/level-select?room=${roomCode}`);
+      }
+      return null;
+    }
+  };
+
   const handleEvaluationSubmit = async (evaluation: EvaluationData) => {
     if (!pendingEvaluation || !room) {
       toast({
@@ -540,37 +582,17 @@ const Game = () => {
 
       console.log('✅ Evaluation saved successfully');
 
-      // Move to next question
-      const nextCard = getNextCard();
-      const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      // Use centralized function to advance to next round
+      const result = await advanceToNextRound(pendingEvaluation.question);
       
-      if (nextCard) {
-        // Continue with next question
-        const newUsedCards = [...(gameState?.used_cards || []), pendingEvaluation.question];
-        
-        await updateGameState({
-          current_card: nextCard,
-          used_cards: newUsedCards,
-          current_turn: nextTurn,
-          current_phase: 'response-input'
-        });
-        
-        // Notify the partner
+      if (result) {
+        // Notify the partner about the evaluation and new card
         await syncAction('evaluation_submit', {
           evaluation,
-          nextCard,
+          nextCard: result.nextCard,
           from: currentTurn,
           responseId: pendingEvaluation.responseId
         });
-        
-        setGamePhase('card-display');
-      } else {
-        // No more cards, finish level
-        if (currentLevel >= 4) {
-          generateFinalReport();
-        } else {
-          navigate(`/level-select?room=${roomCode}`);
-        }
       }
       
       setPendingEvaluation(null);
