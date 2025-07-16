@@ -109,5 +109,65 @@
       "title": "Basique",
       "description": "Questions simples pour mieux se connaître"
     }
+  },
+  "common": {
+    "error": "Erreur",
+    "backToHome": "Retour à l'accueil"
+  },
+  "game": {
+    "errors": {
+      "connectionError": "Erreur de Connexion",
+      "connectionFailed": "Impossible de se connecter à la salle {{roomCode}} après {{maxRetries}} tentatives",
+      "verifyRoomCode": "Impossible de se connecter à la salle. Vérifiez le code de la salle.",
+      "connectionLost": "Impossible d'établir une connexion avec la salle. Veuillez réessayer.",
+      "responseSaveFailed": "Impossible de sauvegarder la réponse. Veuillez réessayer.",
+      "insufficientData": "Données Insuffisantes",
+      "insufficientDataDescription": "Pas assez de données pour générer le rapport de connexion",
+      "finalReportFailed": "Impossible de générer le rapport final",
+      "levelChangeFailed": "Impossible de demander le changement de niveau"
+    },
+    "noRoomCode": "Aucun code de salle fourni",
+    "retryingConnection": "Nouvelle tentative de connexion...",
+    "connectingToRoom": "Connexion à la salle...",
+    "room": "Salle",
+    "attempt": "Tentative {{current}} sur {{max}}",
+    "connectionFailed": "Impossible de se connecter à la salle",
+    "retrying": "Nouvelle tentative...",
+    "retryConnection": "Réessayer la Connexion",
+    "levelTitle": "Niveau {{level}}: {{name}}",
+    "level": "Niveau {{level}}",
+    "cardsCompleted": "{{completed}} sur {{total}} cartes terminées",
+    "turn": "Tour",
+    "player1": "Joueur 1",
+    "player2": "Joueur 2",
+    "yourTurn": " (Votre tour)",
+    "partnerTurn": " (Tour du partenaire)",
+    "respond": "Répondre",
+    "changeLevel": "Changer de Niveau",
+    "finish": "Terminer",
+    "waitingForResponse": "En attente que {{player}} réponde...",
+    "safetyNote": "N'oubliez pas de communiquer et de respecter vos limites",
+    "fallbackQuestions": {
+      "question1": "Quelle a été votre première impression de moi?",
+      "question2": "Qu'est-ce que vous admirez le plus dans notre relation?",
+      "question3": "Quel est votre plus grand rêve partagé?"
+    },
+    "spokenResponse": "Réponse orale",
+    "yourTurnMessage": "{{playerName}}, votre tour",
+    "question": "Question",
+    "spokenMode": "Mode Oral",
+    "spokenModeDescription": "Répondez oralement face à face. Quand vous avez terminé, appuyez sur continuer.",
+    "submitting": "Envoi en cours",
+    "weResponded": "Nous avons Répondu",
+    "yourResponse": "Votre réponse",
+    "responsePlaceholder": "Écrivez votre réponse ici...",
+    "submitShortcut": "Appuyez sur Ctrl + Entrée pour envoyer",
+    "submitResponse": "Envoyer la Réponse"
+  },
+  "levels": {
+    "level1Name": "Découverte",
+    "level2Name": "Connexion",
+    "level3Name": "Chaud",
+    "level4Name": "Sans Filtres"
   }
 }

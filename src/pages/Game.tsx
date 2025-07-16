@@ -7,6 +7,7 @@ import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
+import { useTranslation } from 'react-i18next';
 
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
@@ -26,6 +27,7 @@ const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
+  const { t, i18n } = useTranslation();
   const { updateRoomStatus, room, joinRoom, isConnected, getPlayerNumber } = useRoomService();
   const playerId = usePlayerId();
   const playerNumber = getPlayerNumber(); // 1 o 2
@@ -86,11 +88,11 @@ const Game = () => {
               }, 2000);
             } else {
               setIsRetrying(false);
-              toast({
-                title: "Error de conexión",
-                description: `No se pudo conectar a la sala ${roomCode} después de ${maxRetries} intentos`,
-                variant: "destructive"
-              });
+            toast({
+              title: t('game.errors.connectionError'),
+              description: t('game.errors.connectionFailed', { roomCode, maxRetries }),
+              variant: "destructive"
+            });
             }
           }
         } catch (error) {
@@ -100,8 +102,8 @@ const Game = () => {
           
           if (retryCount + 1 >= maxRetries) {
             toast({
-              title: "Error de conexión",
-              description: "No se pudo conectar a la sala. Verifica el código de la sala.",
+              title: t('game.errors.connectionError'),
+              description: t('game.errors.verifyRoomCode'),
               variant: "destructive"
             });
           }
@@ -234,6 +236,7 @@ const Game = () => {
           .from('levels')
           .select('*')
           .eq('sort_order', currentLevel)
+          .eq('language', i18n.language)
           .eq('is_active', true)
           .single();
 
@@ -244,6 +247,7 @@ const Game = () => {
           .from('questions')
           .select('text')
           .eq('level_id', levelData.id)
+          .eq('language', i18n.language)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
@@ -261,17 +265,17 @@ const Game = () => {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          "¿Cuál fue tu primera impresión de mí?",
-          "¿Qué es lo que más admiras de nuestra relación?",
-          "¿Cuál es tu mayor sueño compartido?"
+          t('game.fallbackQuestions.question1'),
+          t('game.fallbackQuestions.question2'),
+          t('game.fallbackQuestions.question3')
         ];
         setLevelCards(fallbackQuestions);
-        setLevelNames(prev => ({ ...prev, [currentLevel]: "Nivel " + currentLevel }));
+        setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
       }
     };
 
     fetchQuestions();
-  }, [currentLevel]);
+  }, [currentLevel, i18n.language]);
 
   // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
@@ -330,8 +334,8 @@ const Game = () => {
   const handleResponseSubmit = async (response: string, responseTime: number) => {
     if (isSubmitting || !room) {
       toast({
-        title: "Error",
-        description: "No se ha podido establecer conexión con la sala. Intenta de nuevo.",
+        title: t('common.error'),
+        description: t('game.errors.connectionLost'),
         variant: "destructive",
       });
       return;
@@ -419,8 +423,8 @@ const Game = () => {
     } catch (error) {
       console.error('❌ Error submitting response:', error);
       toast({
-        title: "Error",
-        description: "No se pudo guardar la respuesta. Por favor, inténtalo de nuevo.",
+        title: t('common.error'),
+        description: t('game.errors.responseSaveFailed'),
         variant: "destructive"
       });
     } finally {
@@ -469,8 +473,8 @@ const Game = () => {
       if (!allResponses || allResponses.length === 0) {
         console.log('⚠️ No responses found for analysis');
         toast({
-          title: "Datos insuficientes",
-          description: "No hay suficientes datos para generar el reporte de conexión",
+          title: t('game.errors.insufficientData'),
+          description: t('game.errors.insufficientDataDescription'),
           variant: "destructive"
         });
         return;
@@ -512,8 +516,8 @@ const Game = () => {
     } catch (error) {
       console.error('❌ Error generating final report:', error);
       toast({
-        title: "Error",
-        description: "No se pudo generar el reporte final",
+        title: t('common.error'),
+        description: t('game.errors.finalReportFailed'),
         variant: "destructive"
       });
     }
@@ -538,8 +542,8 @@ const Game = () => {
     } catch (error) {
       console.error('❌ Error requesting level change:', error);
       toast({
-        title: "Error",
-        description: "No se pudo solicitar el cambio de nivel",
+        title: t('common.error'),
+        description: t('game.errors.levelChangeFailed'),
         variant: "destructive"
       });
     }
@@ -578,9 +582,9 @@ const Game = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
-          <p className="text-muted-foreground">No hay código de sala</p>
+          <p className="text-muted-foreground">{t('game.noRoomCode')}</p>
           <Button onClick={() => navigate('/')}>
-            Volver al inicio
+            {t('common.backToHome')}
           </Button>
         </Card>
       </div>
@@ -597,12 +601,12 @@ const Game = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-heading text-foreground">
-              {isRetrying ? `Reintentando conexión...` : 'Conectando a la sala...'}
+              {isRetrying ? t('game.retryingConnection') : t('game.connectingToRoom')}
             </h2>
-            <p className="text-sm text-muted-foreground">Sala: {roomCode}</p>
+            <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>
             {retryCount > 0 && (
               <p className="text-xs text-orange-500">
-                Intento {retryCount} de {maxRetries}
+                {t('game.attempt', { current: retryCount, max: maxRetries })}
               </p>
             )}
           </div>
@@ -610,7 +614,7 @@ const Game = () => {
           {retryCount >= maxRetries && (
             <div className="space-y-4">
               <p className="text-sm text-destructive">
-                No se pudo conectar a la sala
+                {t('game.connectionFailed')}
               </p>
               <div className="space-y-2">
                 <Button 
@@ -618,7 +622,7 @@ const Game = () => {
                   className="w-full"
                   disabled={isRetrying}
                 >
-                  {isRetrying ? 'Reintentando...' : 'Reintentar conexión'}
+                  {isRetrying ? t('game.retrying') : t('game.retryConnection')}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -626,7 +630,7 @@ const Game = () => {
                   className="w-full"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Volver al inicio
+                  {t('common.backToHome')}
                 </Button>
               </div>
             </div>
@@ -641,15 +645,7 @@ const Game = () => {
       <div className="w-full max-w-md mx-auto space-y-6 flex-1">
         {/* Header */}
         <div className="text-center space-y-2 pt-4">
-          <div className="flex items-center justify-between">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(`/level-select?room=${roomCode}`)}
-            >
-              <ArrowUp className="w-4 h-4 mr-1" />
-              Volver
-            </Button>
+          <div className="flex items-center justify-end">
             <div className="flex items-center">
               <Users className="w-4 h-4 text-muted-foreground mr-1" />
               <span className="text-xs font-mono text-muted-foreground">{roomCode}</span>
@@ -658,16 +654,16 @@ const Game = () => {
           
           <div className="space-y-1">
             <h1 className="text-xl font-heading text-foreground">
-              Nivel {currentLevel}: {levelNames[currentLevel] || `Nivel ${currentLevel}`}
+              {t('game.levelTitle', { level: currentLevel, name: levelNames[currentLevel] || t('game.level', { level: currentLevel }) })}
             </h1>
             <div className="space-y-2">
               <Progress value={progress} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {usedCards.length} de {totalCards} cartas completadas
+                {t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
               </p>
                <p className="text-sm text-primary font-medium">
-                 Turno: {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} 
-                 {isMyTurn ? ' (Tu turno)' : ' (Turno de tu pareja)'}
+                 {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')} 
+                 {isMyTurn ? t('game.yourTurn') : t('game.partnerTurn')}
                </p>
             </div>
           </div>
@@ -694,7 +690,7 @@ const Game = () => {
                   size="lg"
                 >
                   <Play className="w-4 h-4 mr-2" />
-                  Responder
+                  {t('game.respond')}
                 </Button>
                 
                 <div className="grid grid-cols-2 gap-2">
@@ -703,7 +699,7 @@ const Game = () => {
                     variant="outline"
                     className="h-10 text-sm"
                   >
-                    Cambiar nivel
+                    {t('game.changeLevel')}
                   </Button>
                   
                   
@@ -713,7 +709,7 @@ const Game = () => {
                     className="h-10 text-sm flex items-center gap-1"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    Finalizar
+                    {t('game.finish')}
                   </Button>
                 </div>
               </div>
@@ -723,14 +719,14 @@ const Game = () => {
             {!isMyTurn && (
               <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">
-                  Esperando que {currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'} responda...
+                  {t('game.waitingForResponse', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })}
                 </p>
                 <Button 
                   onClick={handleChangeLevel}
                   variant="outline"
                   className="h-10 text-sm"
                 >
-                  Cambiar nivel
+                  {t('game.changeLevel')}
                 </Button>
               </div>
             )}
@@ -742,7 +738,7 @@ const Game = () => {
           isVisible={gamePhase === 'response-input'}
           question={currentCard}
           onSubmitResponse={handleResponseSubmit}
-          playerName={currentTurn === 'player1' ? 'Jugador 1' : 'Jugador 2'}
+          playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
           isCloseProximity={isCloseProximity}
           isSubmitting={isSubmitting} // Añade esta línea
         />
@@ -772,7 +768,7 @@ const Game = () => {
         {/* Safety Note */}
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            💜 Recuerden comunicarse y respetar sus límites
+            💜 {t('game.safetyNote')}
           </p>
         </div>
       </div>
