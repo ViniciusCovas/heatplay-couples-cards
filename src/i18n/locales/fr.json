@@ -163,7 +163,8 @@
   },
   "common": {
     "error": "Erreur",
-    "backToHome": "Retour à l'accueil"
+    "backToHome": "Retour à l'accueil",
+    "submitting": "Envoi en cours..."
   },
   "game": {
     "errors": {
@@ -172,6 +173,7 @@
       "verifyRoomCode": "Impossible de se connecter à la salle. Vérifiez le code de la salle.",
       "connectionLost": "Impossible d'établir une connexion avec la salle. Veuillez réessayer.",
       "responseSaveFailed": "Impossible de sauvegarder la réponse. Veuillez réessayer.",
+      "evaluationSaveFailed": "Impossible de sauvegarder l'évaluation. Veuillez réessayer.",
       "insufficientData": "Données Insuffisantes",
       "insufficientDataDescription": "Pas assez de données pour générer le rapport de connexion",
       "finalReportFailed": "Impossible de générer le rapport final",
@@ -198,6 +200,23 @@
     "finish": "Terminer",
     "waitingForResponse": "En attente que {{player}} réponde...",
     "safetyNote": "N'oubliez pas de communiquer et de respecter vos limites",
+    "evaluation": {
+      "title": "Évaluer la Réponse",
+      "subtitle": "Comment la réponse de {{player}} vous a-t-elle fait sentir?",
+      "question": "Question",
+      "response": "Réponse",
+      "submit": "Soumettre l'Évaluation",
+      "note": "Votre évaluation aide à créer un rapport de connexion significatif",
+      "honesty": "Honnêteté",
+      "attraction": "Attraction",
+      "intimacy": "Intimité",
+      "surprise": "Surprise",
+      "honestyDescription": "À quel point la réponse était-elle authentique?",
+      "attractionDescription": "À quel point avez-vous trouvé la réponse attirante?",
+      "intimacyDescription": "À quel point la réponse était-elle intime et personnelle?",
+      "surpriseDescription": "À quel point la réponse était-elle surprenante ou inattendue?"
+    },
+    "waitingForEvaluation": "En attente de l'évaluation de {{player}}...",
     "fallbackQuestions": {
       "question1": "Quelle a été votre première impression de moi?",
       "question2": "Qu'est-ce que vous admirez le plus dans notre relation?",

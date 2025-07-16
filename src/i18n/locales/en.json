@@ -165,7 +165,8 @@
   },
   "common": {
     "error": "Error",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "submitting": "Submitting..."
   },
   "game": {
     "errors": {
@@ -174,6 +175,7 @@
       "verifyRoomCode": "Could not connect to room. Please verify the room code.",
       "connectionLost": "Connection to room could not be established. Please try again.",
       "responseSaveFailed": "Could not save response. Please try again.",
+      "evaluationSaveFailed": "Could not save evaluation. Please try again.",
       "insufficientData": "Insufficient Data",
       "insufficientDataDescription": "Not enough data to generate the connection report",
       "finalReportFailed": "Could not generate final report",
@@ -200,6 +202,23 @@
     "finish": "Finish",
     "waitingForResponse": "Waiting for {{player}} to respond...",
     "safetyNote": "Remember to communicate and respect your boundaries",
+    "evaluation": {
+      "title": "Evaluate Response",
+      "subtitle": "How did {{player}}'s response make you feel?",
+      "question": "Question",
+      "response": "Response",
+      "submit": "Submit Evaluation",
+      "note": "Your evaluation helps create a meaningful connection report",
+      "honesty": "Honesty",
+      "attraction": "Attraction",
+      "intimacy": "Intimacy",
+      "surprise": "Surprise",
+      "honestyDescription": "How genuine and authentic was the response?",
+      "attractionDescription": "How attractive did you find the response?",
+      "intimacyDescription": "How intimate and personal was the response?",
+      "surpriseDescription": "How surprising or unexpected was the response?"
+    },
+    "waitingForEvaluation": "Waiting for {{player}} to evaluate your response...",
     "fallbackQuestions": {
       "question1": "What was your first impression of me?",
       "question2": "What do you admire most about our relationship?",

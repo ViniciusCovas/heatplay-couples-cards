@@ -163,7 +163,8 @@
   },
   "common": {
     "error": "Erro",
-    "backToHome": "Voltar ao início"
+    "backToHome": "Voltar ao início",
+    "submitting": "Enviando..."
   },
   "game": {
     "errors": {
@@ -172,6 +173,7 @@
       "verifyRoomCode": "Não foi possível conectar à sala. Verifique o código da sala.",
       "connectionLost": "Não foi possível estabelecer conexão com a sala. Tente novamente.",
       "responseSaveFailed": "Não foi possível salvar a resposta. Tente novamente.",
+      "evaluationSaveFailed": "Não foi possível salvar a avaliação. Tente novamente.",
       "insufficientData": "Dados Insuficientes",
       "insufficientDataDescription": "Não há dados suficientes para gerar o relatório de conexão",
       "finalReportFailed": "Não foi possível gerar o relatório final",
@@ -198,6 +200,23 @@
     "finish": "Finalizar",
     "waitingForResponse": "Esperando {{player}} responder...",
     "safetyNote": "Lembrem-se de se comunicar e respeitar seus limites",
+    "evaluation": {
+      "title": "Avaliar Resposta",
+      "subtitle": "Como a resposta de {{player}} te fez sentir?",
+      "question": "Pergunta",
+      "response": "Resposta",
+      "submit": "Enviar Avaliação",
+      "note": "Sua avaliação ajuda a criar um relatório de conexão significativo",
+      "honesty": "Honestidade",
+      "attraction": "Atração",
+      "intimacy": "Intimidade",
+      "surprise": "Surpresa",
+      "honestyDescription": "Quão genuína e autêntica foi a resposta?",
+      "attractionDescription": "Quão atraente você achou a resposta?",
+      "intimacyDescription": "Quão íntima e pessoal foi a resposta?",
+      "surpriseDescription": "Quão surpreendente ou inesperada foi a resposta?"
+    },
+    "waitingForEvaluation": "Esperando {{player}} avaliar sua resposta...",
     "fallbackQuestions": {
       "question1": "Qual foi sua primeira impressão de mim?",
       "question2": "O que você mais admira no nosso relacionamento?",

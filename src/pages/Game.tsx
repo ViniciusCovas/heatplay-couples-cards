@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
+import { ResponseEvaluation, type EvaluationData } from "@/components/game/ResponseEvaluation";
 import { LanguageIndicator } from "@/components/ui/language-indicator";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
@@ -21,7 +22,7 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -134,6 +135,14 @@ const Game = () => {
   // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
   
+  // Evaluation state
+  const [pendingEvaluation, setPendingEvaluation] = useState<{
+    question: string;
+    response: string;
+    responseId: string;
+    playerName: string;
+  } | null>(null);
+  
 
   // Determine if it's my turn based on player number and current turn
   const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
@@ -208,6 +217,8 @@ const Game = () => {
         return 'card-display';
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
+      case 'evaluation':
+        return !isMyTurnInDB ? 'evaluation' : 'card-display';
       case 'final-report':
         return 'final-report';
       default:
@@ -381,7 +392,7 @@ const Game = () => {
       });
 
       // STEP 1: Save response to database
-      const { error: responseError } = await supabase
+      const { data: responseData, error: responseError } = await supabase
         .from('game_responses')
         .insert({
           room_id: room.id,
@@ -390,7 +401,9 @@ const Game = () => {
           response: response,
           response_time: Math.round(responseTime),
           round_number: currentRound
-        });
+        })
+        .select()
+        .single();
 
       if (responseError) {
         console.error('❌ Error saving response:', responseError);
@@ -399,13 +412,90 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
-      // STEP 2: Move to next question
+      // STEP 2: Move to evaluation phase
+      await updateGameState({
+        current_phase: 'evaluation'
+      });
+      
+      // Set up evaluation for partner
+      setPendingEvaluation({
+        question: currentCardFromState,
+        response,
+        responseId: responseData.id,
+        playerName: currentTurn === 'player1' ? t('game.player1') : t('game.player2')
+      });
+      
+      // Store response for final report
+      const gameResponseData: GameResponse = {
+        question: currentCardFromState,
+        response,
+        responseTime,
+        level: currentLevel,
+        playerId
+      };
+      setGameResponses(prev => [...prev, gameResponseData]);
+      
+      // Notify the partner about the response
+      await syncAction('response_submit', {
+        response,
+        responseTime,
+        question: currentCardFromState,
+        from: currentTurn,
+        round: currentRound,
+        responseId: responseData.id
+      });
+      
+      setGamePhase('card-display');
+    } catch (error) {
+      console.error('❌ Error submitting response:', error);
+      toast({
+        title: t('common.error'),
+        description: t('game.errors.responseSaveFailed'),
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEvaluationSubmit = async (evaluation: EvaluationData) => {
+    if (!pendingEvaluation || !room) {
+      toast({
+        title: t('common.error'),
+        description: t('game.errors.connectionLost'),
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+
+    try {
+      console.log('📊 Submitting evaluation:', { evaluation, responseId: pendingEvaluation.responseId });
+
+      // Save evaluation to database
+      const { error: evaluationError } = await supabase
+        .from('game_responses')
+        .update({
+          evaluation: JSON.stringify(evaluation),
+          evaluation_by: playerId
+        })
+        .eq('id', pendingEvaluation.responseId);
+
+      if (evaluationError) {
+        console.error('❌ Error saving evaluation:', evaluationError);
+        throw evaluationError;
+      }
+
+      console.log('✅ Evaluation saved successfully');
+
+      // Move to next question
       const nextCard = getNextCard();
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       
       if (nextCard) {
         // Continue with next question
-        const newUsedCards = [...(gameState?.used_cards || []), currentCardFromState];
+        const newUsedCards = [...(gameState?.used_cards || []), pendingEvaluation.question];
         
         await updateGameState({
           current_card: nextCard,
@@ -414,24 +504,12 @@ const Game = () => {
           current_phase: 'card-display'
         });
         
-        // Store response for final report
-        const gameResponseData: GameResponse = {
-          question: currentCardFromState,
-          response,
-          responseTime,
-          level: currentLevel,
-          playerId
-        };
-        setGameResponses(prev => [...prev, gameResponseData]);
-        
         // Notify the partner
-        await syncAction('response_submit', {
-          response,
-          responseTime,
-          question: currentCardFromState,
+        await syncAction('evaluation_submit', {
+          evaluation,
           nextCard,
           from: currentTurn,
-          round: currentRound
+          responseId: pendingEvaluation.responseId
         });
         
         setGamePhase('card-display');
@@ -443,16 +521,23 @@ const Game = () => {
           navigate(`/level-select?room=${roomCode}`);
         }
       }
+      
+      setPendingEvaluation(null);
     } catch (error) {
-      console.error('❌ Error submitting response:', error);
+      console.error('❌ Error submitting evaluation:', error);
       toast({
         title: t('common.error'),
-        description: t('game.errors.responseSaveFailed'),
+        description: t('game.errors.evaluationSaveFailed'),
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEvaluationCancel = () => {
+    setPendingEvaluation(null);
+    setGamePhase('card-display');
   };
 
 
