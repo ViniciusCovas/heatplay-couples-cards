@@ -204,14 +204,13 @@ const Game = () => {
           const currentRound = (gameState.used_cards?.length || 0) + 1;
           const currentCardFromState = gameState.current_card;
           
-          // Fetch the partner's response for the current card/round (not my own)
+          // Fetch the latest response that needs evaluation for the current card/round
           const { data: responseData, error } = await supabase
             .from('game_responses')
             .select('*')
             .eq('room_id', room.id)
             .eq('card_id', currentCardFromState)
             .eq('round_number', currentRound)
-            .neq('player_id', playerId)  // Get partner's response, not my own
             .is('evaluation', null)
             .order('created_at', { ascending: false })
             .limit(1)
@@ -271,8 +270,8 @@ const Game = () => {
       case 'response-input':
         return isMyTurnInDB ? 'response-input' : 'card-display';
       case 'evaluation':
-        // In evaluation phase, both players can evaluate
-        return 'evaluation';
+        // In evaluation phase, only the player whose turn it is should evaluate
+        return isMyTurnInDB ? 'evaluation' : 'card-display';
       case 'final-report':
         return 'final-report';
       default:
@@ -466,44 +465,14 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
-      // STEP 2: Check if both players have responded to this card/round
-      const { data: allResponses, error: checkError } = await supabase
-        .from('game_responses')
-        .select('player_id')
-        .eq('room_id', room.id)
-        .eq('card_id', currentCardFromState)
-        .eq('round_number', currentRound)
-        .not('response', 'is', null);
-
-      if (checkError) {
-        console.error('❌ Error checking responses:', checkError);
-        throw checkError;
-      }
-
-      const uniquePlayerIds = new Set(allResponses.map(r => r.player_id));
-      const bothPlayersResponded = uniquePlayerIds.size >= 2;
-
-      console.log('🔍 Response check:', { 
-        responsesCount: allResponses.length, 
-        uniquePlayers: uniquePlayerIds.size,
-        bothPlayersResponded 
+      // STEP 2: After any player submits response, immediately move to evaluation phase
+      // The OTHER player should evaluate the response
+      const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+      console.log('✅ Response submitted, moving to evaluation phase for other player');
+      await updateGameState({
+        current_turn: nextTurn,
+        current_phase: 'evaluation'
       });
-
-      if (bothPlayersResponded) {
-        // Both players have responded, move to evaluation phase
-        console.log('✅ Both players responded, moving to evaluation phase');
-        await updateGameState({
-          current_phase: 'evaluation'
-        });
-      } else {
-        // Only one player responded, switch turns and stay in response-input
-        const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-        console.log('🔄 Switching turns, waiting for other player to respond');
-        await updateGameState({
-          current_turn: nextTurn,
-          current_phase: 'response-input'
-        });
-      }
       
       // Store response for final report
       const gameResponseData: GameResponse = {
@@ -523,7 +492,7 @@ const Game = () => {
         from: currentTurn,
         round: currentRound,
         responseId: responseData.id,
-        bothPlayersResponded
+        nextTurn
       });
       
       setGamePhase('card-display');
