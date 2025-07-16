@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
 import * as LucideReact from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,6 @@ const LevelSelect = () => {
   const [searchParams] = useSearchParams();
   const location = useLocation();
   const roomCode = searchParams.get('room');
-  const { i18n } = useTranslation();
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const playerId = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
@@ -61,7 +59,6 @@ const LevelSelect = () => {
           .from('levels')
           .select('*')
           .eq('is_active', true)
-          .eq('language', i18n.language)
           .order('sort_order');
 
         if (levelsError) throw levelsError;
@@ -73,7 +70,6 @@ const LevelSelect = () => {
               .from('questions')
               .select('*', { count: 'exact', head: true })
               .eq('level_id', level.id)
-              .eq('language', i18n.language)
               .eq('is_active', true);
 
             // Check if icon is emoji or lucide icon name
@@ -129,7 +125,7 @@ const LevelSelect = () => {
     };
 
     fetchLevels();
-  }, [i18n.language]);
+  }, []);
 
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
