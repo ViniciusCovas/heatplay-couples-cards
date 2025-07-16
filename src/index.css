@@ -4,27 +4,31 @@
 
 @layer base {
   :root {
-    /* Warm, intimate color palette */
-    --background: 44 33% 96%; /* #FFF6E8 - Vainilla cremosa */
-    --foreground: 0 0% 23%; /* #3A3A3A - Gris oscuro cálido */
-    --card: 0 0% 100%; /* #FFFFFF - Fondo de cartas */
-    --card-foreground: 0 0% 23%;
+    /* Modern dating app color palette */
+    --background: 44 100% 98%; /* #FFF9F5 - Off-white */
+    --foreground: 218 11% 25%; /* #3B3C42 - Charcoal */
+    --card: 0 0% 100%; /* #FFFFFF - Pure white cards */
+    --card-foreground: 218 11% 25%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 23%;
-    --primary: 44 100% 60%; /* #FFC533 - Amarillo dorado intenso */
-    --primary-foreground: 0 0% 23%;
-    --secondary: 347 100% 66%; /* #FF4F64 - Coral sensual */
+    --popover-foreground: 218 11% 25%;
+    --primary: 44 100% 67%; /* #FFC758 - Honey */
+    --primary-foreground: 218 11% 25%;
+    --secondary: 0 72% 69%; /* #FF6B6B - Coral */
     --secondary-foreground: 0 0% 100%;
-    --muted: 24 44% 89%; /* #FADBD2 - Beige rosado */
-    --muted-foreground: 0 0% 40%;
-    --accent: 44 100% 60%;
-    --accent-foreground: 0 0% 23%;
-    --destructive: 343 66% 56%; /* #C52B47 - Rojo frambuesa profundo */
+    --muted: 44 70% 95%; /* Light honey tint */
+    --muted-foreground: 218 11% 40%;
+    --accent: 44 100% 67%;
+    --accent-foreground: 218 11% 25%;
+    --destructive: 0 72% 69%;
     --destructive-foreground: 0 0% 100%;
-    --border: 24 44% 89%;
+    --border: 44 50% 88%;
     --input: 0 0% 100%;
-    --ring: 44 100% 60%;
-    --radius: 0.75rem;
+    --ring: 44 100% 67%;
+    --radius: 0.5rem;
+    
+    /* Gradients for buttons */
+    --gradient-primary: linear-gradient(135deg, hsl(44 100% 67%), hsl(29 100% 68%)); /* Honey to Coral */
+    --gradient-secondary: linear-gradient(135deg, hsl(0 72% 69%), hsl(14 100% 65%));
   }
 
   .dark {
@@ -56,10 +60,45 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
   }
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Poppins", system-ui, sans-serif;
+    font-family: "Inter", system-ui, sans-serif;
     font-weight: 600;
+  }
+  
+  .headline-hero {
+    font-size: 56px;
+    font-weight: 700;
+    line-height: 110%;
+  }
+  
+  .sub-headline {
+    font-size: 20px;
+    line-height: 140%;
+    color: hsl(218 11% 40%);
+  }
+  
+  .btn-gradient-primary {
+    background: var(--gradient-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-gradient-primary:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px -5px hsl(44 100% 67% / 0.3);
+  }
+  
+  .btn-gradient-secondary {
+    border: 2px solid transparent;
+    background: linear-gradient(white, white) padding-box, var(--gradient-primary) border-box;
+    color: hsl(44 100% 67%);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .btn-gradient-secondary:hover {
+    background: var(--gradient-primary);
+    color: white;
+    transform: translateY(-2px);
   }
 }

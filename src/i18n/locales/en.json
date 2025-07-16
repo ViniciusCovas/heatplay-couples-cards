@@ -1,7 +1,9 @@
 {
   "app": {
-    "title": "Connection Cards",
-    "subtitle": "Build deeper connections through meaningful conversations"
+    "title": "Let's Get Close",
+    "headline": "Skip small talk. Start real talk.",
+    "subtitle": "Conversation-first dating for people who crave real connection.",
+    "tagline": "AI cards that reveal how close you really are."
   },
   "navigation": {
     "home": "Home",
