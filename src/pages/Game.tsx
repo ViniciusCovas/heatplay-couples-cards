@@ -852,6 +852,18 @@ const Game = () => {
           isSubmitting={isSubmitting} // Añade esta línea
         />
 
+        {/* Response Evaluation Modal */}
+        {pendingEvaluation && (
+          <ResponseEvaluation
+            isVisible={gamePhase === 'evaluation'}
+            question={pendingEvaluation.question}
+            response={pendingEvaluation.response}
+            playerName={pendingEvaluation.playerName}
+            onSubmitEvaluation={handleEvaluationSubmit}
+            onCancel={handleEvaluationCancel}
+            isSubmitting={isSubmitting}
+          />
+        )}
 
         {/* Level Up Confirmation Modal */}
         <LevelUpConfirmation
