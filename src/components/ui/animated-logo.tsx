@@ -12,9 +12,9 @@ export const Logo = ({
   onClick
 }: LogoProps) => {
   const sizeClasses = {
-    small: "h-8 text-lg",
-    medium: "h-12 text-xl",
-    large: "h-16 text-2xl"
+    small: "h-8 w-auto",
+    medium: "h-12 w-auto",
+    large: "h-16 w-auto"
   }
 
   return (
@@ -26,9 +26,11 @@ export const Logo = ({
       )}
       onClick={onClick}
     >
-      <span className="font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-        let's get cl<span className="inline-block w-6 h-6 bg-gradient-to-r from-primary to-secondary rounded-full align-middle mx-1"></span>se
-      </span>
+      <img 
+        src="/lovable-uploads/84a7b7ec-c295-4c98-94f5-6f44f6684eee.png" 
+        alt="Let's Get Close - Dating App Logo"
+        className="w-auto h-full object-contain"
+      />
     </div>
   )
 }
