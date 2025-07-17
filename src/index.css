@@ -140,4 +140,37 @@
       opacity: 0.8;
     }
   }
+  
+  /* Logo animations */
+  .animate-logo-connect {
+    animation: logo-connect 3s ease-in-out infinite;
+  }
+  
+  @keyframes logo-connect {
+    0% {
+      transform: translateX(-4px);
+    }
+    50% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-4px);
+    }
+  }
+  
+  .animate-logo-disconnect {
+    animation: logo-disconnect 3s ease-in-out infinite;
+  }
+  
+  @keyframes logo-disconnect {
+    0% {
+      transform: translateX(4px);
+    }
+    50% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(4px);
+    }
+  }
 }

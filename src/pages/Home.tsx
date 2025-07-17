@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/ui/language-selector";
+import { AnimatedLogo } from "@/components/ui/animated-logo";
 const Home = () => {
   const navigate = useNavigate();
   const {
@@ -45,10 +46,11 @@ const Home = () => {
             {/* Brand */}
             <div className="space-y-6">
               <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
-                  <Heart className="w-7 h-7 text-white animate-heartbeat" />
-                </div>
-                <h1 className="text-3xl font-bold text-foreground">{t('app.title')}</h1>
+                <AnimatedLogo 
+                  variant="continuous"
+                  size="large"
+                  className="hover:scale-110 transition-transform duration-300"
+                />
               </div>
               
               {/* Main Headline */}

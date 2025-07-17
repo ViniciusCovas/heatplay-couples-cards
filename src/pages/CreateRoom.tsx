@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
+import { AnimatedLogo } from '@/components/ui/animated-logo';
 
 export default function CreateRoom() {
   const [level] = useState(1); // Default level
@@ -52,18 +53,29 @@ export default function CreateRoom() {
   }
 
   return (
-    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
+    <div className="min-h-screen romantic-background flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md mb-8">
+        <div className="flex items-center justify-between">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="hover:bg-primary/10"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <AnimatedLogo 
+            variant="hover"
+            size="medium"
+            className="hover:scale-105 transition-transform duration-300"
+          />
+          <div className="w-10" />
+        </div>
+      </div>
+      
       <Card className="w-full max-w-md romantic-card border-2 border-primary/20 shadow-2xl backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate('/')}
-              className="absolute left-4 top-4 hover:bg-primary/10"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('createRoom.title')}
             </CardTitle>
