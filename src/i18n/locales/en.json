@@ -312,12 +312,42 @@
     "yourResponse": "Your response",
     "responsePlaceholder": "Write your response here...",
     "submitShortcut": "Press Ctrl + Enter to submit",
-    "submitResponse": "Submit Response"
+    "submitResponse": "Submit Response",
+    "notifications": {
+      "partnerAnswered": "Your partner answered the proximity question",
+      "navigatingToLevelSelect": "Navigating to level selection...",
+      "newCardRevealed": "New card revealed",
+      "partnerSubmittedResponse": "Your partner submitted their response. It's your turn to evaluate.",
+      "evaluationCompleted": "Evaluation completed",
+      "newCardAvailable": "New card available",
+      "levelChanged": "Level changed to {{level}}",
+      "partnerWantsLevelChange": "Your partner wants to change levels",
+      "differentLevelsSelected": "You selected different levels. You must select the same level to play.",
+      "choosingNewLevel": "Your partner wants to change levels. Choosing new level...",
+      "actionSyncError": "Error synchronizing action"
+    }
   },
   "levels": {
     "level1Name": "Discovery",
     "level2Name": "Connection",
     "level3Name": "Hot",
     "level4Name": "No Filters"
+  },
+  "levelUp": {
+    "title": "Do you want to go deeper?",
+    "subtitle": "Level up to {{level}}: {{name}}",
+    "waitingForPartner": "Waiting for Player 2...",
+    "partnerMustConfirm": "Your partner must also confirm to move to the next level",
+    "nextLevel": "Next level",
+    "completed": "Completed",
+    "recommended": "Recommended",
+    "notYet": "Not yet",
+    "letsGo": "Yes, let's go!",
+    "level2Description": "Deeper questions about feelings and experiences",
+    "level3Description": "Intimate and daring questions for maximum connection",
+    "warning": {
+      "title": "⚠️ Recommendation",
+      "description": "Complete at least {{minimum}} cards for a better experience"
+    }
   }
 }

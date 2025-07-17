@@ -232,12 +232,42 @@
     "yourResponse": "Votre réponse",
     "responsePlaceholder": "Écrivez votre réponse ici...",
     "submitShortcut": "Appuyez sur Ctrl + Entrée pour envoyer",
-    "submitResponse": "Envoyer la Réponse"
+    "submitResponse": "Envoyer la Réponse",
+    "notifications": {
+      "partnerAnswered": "Votre partenaire a répondu à la question de proximité",
+      "navigatingToLevelSelect": "Navigation vers la sélection de niveau...",
+      "newCardRevealed": "Nouvelle carte révélée",
+      "partnerSubmittedResponse": "Votre partenaire a soumis sa réponse. C'est à votre tour d'évaluer.",
+      "evaluationCompleted": "Évaluation terminée",
+      "newCardAvailable": "Nouvelle carte disponible",
+      "levelChanged": "Niveau changé à {{level}}",
+      "partnerWantsLevelChange": "Votre partenaire veut changer de niveau",
+      "differentLevelsSelected": "Vous avez sélectionné des niveaux différents. Vous devez sélectionner le même niveau pour jouer.",
+      "choosingNewLevel": "Votre partenaire veut changer de niveau. Choix du nouveau niveau...",
+      "actionSyncError": "Erreur de synchronisation de l'action"
+    }
   },
   "levels": {
     "level1Name": "Découverte",
     "level2Name": "Connexion",
     "level3Name": "Chaud",
     "level4Name": "Sans Filtres"
+  },
+  "levelUp": {
+    "title": "Voulez-vous approfondir davantage?",
+    "subtitle": "Monter au niveau {{level}}: {{name}}",
+    "waitingForPartner": "En attente du Joueur 2...",
+    "partnerMustConfirm": "Votre partenaire doit également confirmer pour passer au niveau suivant",
+    "nextLevel": "Niveau suivant",
+    "completed": "Terminées",
+    "recommended": "Recommandées",
+    "notYet": "Pas encore",
+    "letsGo": "Allons-y!",
+    "level2Description": "Questions plus profondes sur les sentiments et les expériences",
+    "level3Description": "Questions intimes et audacieuses pour une connexion maximale",
+    "warning": {
+      "title": "⚠️ Recommandation",
+      "description": "Complétez au moins {{minimum}} cartes pour une meilleure expérience"
+    }
   }
 }

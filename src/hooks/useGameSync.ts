@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface GameSyncAction {
   id: string;
@@ -31,6 +32,10 @@ interface UseGameSyncReturn {
 export const useGameSync = (roomId: string | null, playerId: string): UseGameSyncReturn => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { t, i18n } = useTranslation();
+
+  // Debug language consistency
+  console.log('🌍 useGameSync language:', i18n.language);
 
   // Load initial game state
   useEffect(() => {
@@ -136,16 +141,16 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
 
     switch (action.action_type) {
       case 'proximity_answer':
-        showToast('Tu pareja respondió la pregunta de proximidad', 'success');
+        showToast(t('game.notifications.partnerAnswered'), 'success');
         break;
       case 'navigate_to_level_select':
-        showToast('Navegando a selección de niveles...', 'success');
+        showToast(t('game.notifications.navigatingToLevelSelect'), 'success');
         break;
       case 'card_reveal':
-        showToast('Nueva carta revelada');
+        showToast(t('game.notifications.newCardRevealed'));
         break;
       case 'response_submit':
-        showToast('Tu pareja envió su respuesta. Es tu turno evaluar.');
+        showToast(t('game.notifications.partnerSubmittedResponse'));
         if (action.action_data) {
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
@@ -158,16 +163,16 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }
         break;
       case 'evaluation_submit':
-        showToast('Evaluación completada');
+        showToast(t('game.notifications.evaluationCompleted'));
         if (action.action_data?.nextCard) {
-          setTimeout(() => showToast('Nueva carta disponible'), 500);
+          setTimeout(() => showToast(t('game.notifications.newCardAvailable')), 500);
         }
         break;
       case 'turn_advance':
         // Reduce frequency of turn advance notifications
         break;
       case 'level_change':
-        showToast(`Nivel cambiado a ${action.action_data.level}`, 'success');
+        showToast(t('game.notifications.levelChanged', { level: action.action_data.level }), 'success');
         break;
       case 'game_finish':
         window.dispatchEvent(new CustomEvent('gameFinish', {
@@ -175,16 +180,16 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }));
         break;
       case 'change_level_request':
-        showToast('Tu pareja quiere cambiar de nivel');
+        showToast(t('game.notifications.partnerWantsLevelChange'));
         window.dispatchEvent(new CustomEvent('changeLevelRequest', {
           detail: action.action_data
         }));
         break;
       case 'level_mismatch':
-        showToast('You selected different levels. You must select the same level to play.', 'error');
+        showToast(t('game.notifications.differentLevelsSelected'), 'error');
         break;
       case 'level_change_request':
-        showToast('Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...');
+        showToast(t('game.notifications.choosingNewLevel'));
         
         // Clear existing level selection votes for fresh start
         await supabase
@@ -227,7 +232,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         throw error;
       }
     } catch (error) {
-      toast.error('Error sincronizando la acción');
+      toast.error(t('game.notifications.actionSyncError'));
     } finally {
       setIsLoading(false);
     }

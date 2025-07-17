@@ -312,12 +312,42 @@
     "yourResponse": "Tu respuesta",
     "responsePlaceholder": "Escribe tu respuesta aquí...",
     "submitShortcut": "Presiona Ctrl + Enter para enviar",
-    "submitResponse": "Enviar Respuesta"
+    "submitResponse": "Enviar Respuesta",
+    "notifications": {
+      "partnerAnswered": "Tu pareja respondió la pregunta de proximidad",
+      "navigatingToLevelSelect": "Navegando a selección de niveles...",
+      "newCardRevealed": "Nueva carta revelada",
+      "partnerSubmittedResponse": "Tu pareja envió su respuesta. Es tu turno evaluar.",
+      "evaluationCompleted": "Evaluación completada",
+      "newCardAvailable": "Nueva carta disponible",
+      "levelChanged": "Nivel cambiado a {{level}}",
+      "partnerWantsLevelChange": "Tu pareja quiere cambiar de nivel",
+      "differentLevelsSelected": "Seleccionaron niveles diferentes. Deben seleccionar el mismo nivel para jugar.",
+      "choosingNewLevel": "Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...",
+      "actionSyncError": "Error sincronizando la acción"
+    }
   },
   "levels": {
     "level1Name": "Descubrimiento",
     "level2Name": "Conexión",
     "level3Name": "Caliente",
     "level4Name": "Sin Filtros"
+  },
+  "levelUp": {
+    "title": "¿Quieren profundizar más?",
+    "subtitle": "Subir al nivel {{level}}: {{name}}",
+    "waitingForPartner": "Esperando Player 2...",
+    "partnerMustConfirm": "Tu pareja también debe confirmar para subir al siguiente nivel",
+    "nextLevel": "Siguiente nivel",
+    "completed": "Completadas",
+    "recommended": "Recomendadas",
+    "notYet": "No aún",
+    "letsGo": "¡Sí, vamos!",
+    "level2Description": "Preguntas más profundas sobre sentimientos y experiencias",
+    "level3Description": "Preguntas íntimas y atrevidas para máxima conexión",
+    "warning": {
+      "title": "⚠️ Recomendación",
+      "description": "Completar al menos {{minimum}} cartas para una mejor experiencia"
+    }
   }
 }

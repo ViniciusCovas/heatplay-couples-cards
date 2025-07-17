@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Heart, Flame, Zap, Users, AlertTriangle, Gamepad2, Trophy } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 interface LevelUpConfirmationProps {
   isVisible: boolean;
@@ -14,16 +15,16 @@ interface LevelUpConfirmationProps {
 
 const LEVEL_INFO = {
   2: {
-    name: "Confianza",
+    nameKey: "levels.level2Name",
     icon: <Flame className="w-6 h-6" />,
     color: "orange",
-    description: "Preguntas más profundas sobre sentimientos y experiencias"
+    descriptionKey: "levelUp.level2Description"
   },
   3: {
-    name: "Sin filtros", 
+    nameKey: "levels.level3Name", 
     icon: <Zap className="w-6 h-6" />,
     color: "red",
-    description: "Preguntas íntimas y atrevidas para máxima conexión"
+    descriptionKey: "levelUp.level3Description"
   }
 };
 
@@ -36,6 +37,11 @@ export const LevelUpConfirmation = ({
   onCancel,
   waitingForPartner = false
 }: LevelUpConfirmationProps) => {
+  const { t, i18n } = useTranslation();
+  
+  // Debug language consistency
+  console.log('🌍 LevelUpConfirmation language:', i18n.language);
+  
   if (!isVisible) return null;
 
   const nextLevel = currentLevel + 1;
@@ -60,10 +66,10 @@ export const LevelUpConfirmation = ({
             
             <div>
               <h2 className="text-xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-                Esperando Player 2... 🎮
+                {t('levelUp.waitingForPartner')}
               </h2>
               <p className="text-muted-foreground">
-                Tu pareja también debe confirmar para subir al siguiente nivel
+                {t('levelUp.partnerMustConfirm')}
               </p>
             </div>
             
@@ -79,7 +85,7 @@ export const LevelUpConfirmation = ({
               onClick={onCancel} 
               className="w-full border-primary/30 hover:border-primary/50"
             >
-              Cancelar
+              {t('buttons.cancel')}
             </Button>
           </div>
         ) : (
@@ -101,10 +107,10 @@ export const LevelUpConfirmation = ({
               
               <div>
                 <h2 className="text-2xl font-heading bg-gradient-to-r from-orange-500 to-red-500 bg-clip-text text-transparent mb-2">
-                  ¿Quieren profundizar más? 🚀
+                  {t('levelUp.title')}
                 </h2>
                 <p className="text-muted-foreground">
-                  Subir al nivel {nextLevel}: {levelInfo.name}
+                  {t('levelUp.subtitle', { level: nextLevel, name: t(levelInfo.nameKey) })}
                 </p>
               </div>
             </div>
@@ -124,21 +130,21 @@ export const LevelUpConfirmation = ({
                 
                 <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
                   <Gamepad2 className="w-4 h-4" />
-                  Siguiente nivel:
+                  {t('levelUp.nextLevel')}:
                 </p>
-                <p className="font-medium text-lg">{levelInfo.description}</p>
+                <p className="font-medium text-lg">{t(levelInfo.descriptionKey)}</p>
               </div>
 
               {/* Progress Stats */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-4 bg-gradient-to-r from-background/50 to-muted/30 rounded-lg border border-primary/10 text-center">
                   <div className="text-2xl font-mono font-bold text-primary">{cardsCompleted}</div>
-                  <div className="text-xs text-muted-foreground">Completadas</div>
+                  <div className="text-xs text-muted-foreground">{t('levelUp.completed')}</div>
                 </div>
                 
                 <div className="p-4 bg-gradient-to-r from-background/50 to-muted/30 rounded-lg border border-secondary/10 text-center">
                   <div className="text-2xl font-mono font-bold text-secondary">{minimumRecommended}</div>
-                  <div className="text-xs text-muted-foreground">Recomendadas</div>
+                  <div className="text-xs text-muted-foreground">{t('levelUp.recommended')}</div>
                 </div>
               </div>
 
@@ -147,9 +153,9 @@ export const LevelUpConfirmation = ({
                 <div className="flex items-start gap-3 p-4 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border border-yellow-500/20 rounded-xl">
                   <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-yellow-800 mb-1">⚠️ Recomendación</p>
+                    <p className="text-sm font-medium text-yellow-800 mb-1">{t('levelUp.warning.title')}</p>
                     <p className="text-xs text-yellow-700">
-                      Completar al menos {minimumRecommended} cartas para una mejor experiencia
+                      {t('levelUp.warning.description', { minimum: minimumRecommended })}
                     </p>
                   </div>
                 </div>
@@ -163,14 +169,14 @@ export const LevelUpConfirmation = ({
                 onClick={onCancel}
                 className="h-12 border-primary/30 hover:border-primary/50"
               >
-                No aún
+                {t('levelUp.notYet')}
               </Button>
               <Button 
                 onClick={onConfirm} 
                 className="h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg hover:shadow-xl transition-all"
               >
                 <ArrowUp className="w-4 h-4 mr-2" />
-                ¡Sí, vamos! 🚀
+                {t('levelUp.letsGo')}
               </Button>
             </div>
           </>
