@@ -161,6 +161,40 @@ const Game = () => {
     gamePhase: gameState?.current_phase 
   });
   
+  // Helper function to derive local phase from database state
+  const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
+    // Check if room is finished first - this overrides any phase logic
+    if (room?.status === 'finished') {
+      console.log('🏁 Game is finished, showing final report');
+      return 'final-report';
+    }
+    
+    const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
+                         (dbState.current_turn === 'player2' && playerNum === 2);
+    
+    console.log('🎯 deriveLocalPhase:', { 
+      dbPhase: dbState.current_phase, 
+      dbTurn: dbState.current_turn, 
+      roomStatus: room?.status,
+      playerNum, 
+      isMyTurnInDB 
+    });
+    
+    switch (dbState.current_phase) {
+      case 'card-display':
+        return 'card-display';
+      case 'response-input':
+        return isMyTurnInDB ? 'response-input' : 'card-display';
+      case 'evaluation':
+        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
+        return isMyTurnInDB ? 'evaluation' : 'card-display';
+      case 'final-report':
+        return 'final-report';
+      default:
+        return 'card-display';
+    }
+  };
+  
   // Sync with game state - this is the single source of truth
   // Main sync useEffect - handles ALL phase transitions based on database state
   useEffect(() => {
@@ -199,14 +233,18 @@ const Game = () => {
     }
   }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
 
-  // Debug effect to track playerNumber changes
+  // Debug effect to track critical state changes
   useEffect(() => {
-    console.log('🔄 Player number changed in Game component:', { 
+    console.log('🔄 Critical state update:', { 
       playerNumber, 
+      gamePhase,
+      currentTurn: gameState?.current_turn,
+      currentPhase: gameState?.current_phase,
+      isMyTurn: gameState?.current_turn === `player${playerNumber}`,
       participants: participants.length,
       participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
     });
-  }, [playerNumber, participants]);
+  }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
@@ -259,40 +297,6 @@ const Game = () => {
 
     setupEvaluationData();
   }, [gamePhase, gameState, room, pendingEvaluation, playerId, playerNumber, t]);
-  
-  // Helper function to derive local phase from database state
-  const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
-    // Check if room is finished first - this overrides any phase logic
-    if (room?.status === 'finished') {
-      console.log('🏁 Game is finished, showing final report');
-      return 'final-report';
-    }
-    
-    const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
-                         (dbState.current_turn === 'player2' && playerNum === 2);
-    
-    console.log('🎯 deriveLocalPhase:', { 
-      dbPhase: dbState.current_phase, 
-      dbTurn: dbState.current_turn, 
-      roomStatus: room?.status,
-      playerNum, 
-      isMyTurnInDB 
-    });
-    
-    switch (dbState.current_phase) {
-      case 'card-display':
-        return 'card-display';
-      case 'response-input':
-        return isMyTurnInDB ? 'response-input' : 'card-display';
-      case 'evaluation':
-        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
-        return isMyTurnInDB ? 'evaluation' : 'card-display';
-      case 'final-report':
-        return 'final-report';
-      default:
-        return 'card-display';
-    }
-  };
   
   // No longer needed - we get response data from database via useResponseData hook
   
@@ -903,7 +907,7 @@ const Game = () => {
           onSubmitResponse={handleResponseSubmit}
           playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
           isCloseProximity={isCloseProximity}
-          isSubmitting={isSubmitting} // Añade esta línea
+          isSubmitting={isSubmitting}
         />
 
          {/* Response Evaluation Modal - Show only for evaluation phase */}
