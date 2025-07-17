@@ -12,9 +12,9 @@ export const Logo = ({
   onClick
 }: LogoProps) => {
   const sizeClasses = {
-    small: "h-8 w-auto",
-    medium: "h-12 w-auto",
-    large: "h-16 w-auto"
+    small: "h-16 w-auto",
+    medium: "h-24 w-auto", 
+    large: "h-40 w-auto"
   }
 
   return (
