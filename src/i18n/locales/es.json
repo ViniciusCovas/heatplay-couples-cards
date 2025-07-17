@@ -334,20 +334,47 @@
     "level4Name": "Sin Filtros"
   },
   "levelUp": {
-    "title": "¿Quieren profundizar más?",
+    "title": "¿Quieres ir más profundo?",
     "subtitle": "Subir al nivel {{level}}: {{name}}",
-    "waitingForPartner": "Esperando Player 2...",
-    "partnerMustConfirm": "Tu pareja también debe confirmar para subir al siguiente nivel",
+    "waitingForPartner": "Esperando al Jugador 2...",
+    "partnerMustConfirm": "Tu pareja también debe confirmar para pasar al siguiente nivel",
     "nextLevel": "Siguiente nivel",
-    "completed": "Completadas",
-    "recommended": "Recomendadas",
-    "notYet": "No aún",
+    "completed": "Completado",
+    "recommended": "Recomendado",
+    "notYet": "Aún no",
     "letsGo": "¡Sí, vamos!",
     "level2Description": "Preguntas más profundas sobre sentimientos y experiencias",
     "level3Description": "Preguntas íntimas y atrevidas para máxima conexión",
     "warning": {
       "title": "⚠️ Recomendación",
-      "description": "Completar al menos {{minimum}} cartas para una mejor experiencia"
+      "description": "Completa al menos {{minimum}} cartas para una mejor experiencia"
+    }
+  },
+  "connectionReport": {
+    "title": "Reporte de Conexión Íntima",
+    "overallScore": "Índice de Conexión Íntima",
+    "labels": {
+      "emotionalConnection": "Conexión emocional",
+      "attraction": "Atracción sentida",
+      "intimacy": "Intimidad",
+      "mutualCuriosity": "Curiosidad mutua",
+      "emotionalSync": "Sintonía emocional"
+    },
+    "stats": {
+      "totalResponses": "Respuestas totales",
+      "averageTime": "Tiempo promedio"
+    },
+    "buttons": {
+      "newGame": "Nuevo Juego",
+      "backHome": "Volver al Inicio"
+    },
+    "footer": "💜 El amor verdadero se construye con comunicación y respeto",
+    "feelings": {
+      "intense": "✨ ¡Conexión intensa y recíproca! ✨",
+      "high": "🔥 ¡Alta conexión y atracción! 🔥",
+      "curious": "💫 Curiosos pero pueden conectar más",
+      "potential": "💭 Hay potencial, sigan explorando",
+      "insufficient": "No hay datos suficientes"
     }
   }
 }

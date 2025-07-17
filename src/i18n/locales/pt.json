@@ -254,13 +254,13 @@
     "level4Name": "Sem Filtros"
   },
   "levelUp": {
-    "title": "Querem se aprofundar mais?",
+    "title": "Quer ir mais fundo?",
     "subtitle": "Subir para o nível {{level}}: {{name}}",
-    "waitingForPartner": "Aguardando Jogador 2...",
-    "partnerMustConfirm": "Seu parceiro também deve confirmar para avançar ao próximo nível",
+    "waitingForPartner": "Esperando o Jogador 2...",
+    "partnerMustConfirm": "Seu parceiro também deve confirmar para passar ao próximo nível",
     "nextLevel": "Próximo nível",
-    "completed": "Concluídas",
-    "recommended": "Recomendadas",
+    "completed": "Concluído",
+    "recommended": "Recomendado",
     "notYet": "Ainda não",
     "letsGo": "Sim, vamos!",
     "level2Description": "Perguntas mais profundas sobre sentimentos e experiências",
@@ -268,6 +268,33 @@
     "warning": {
       "title": "⚠️ Recomendação",
       "description": "Complete pelo menos {{minimum}} cartas para uma melhor experiência"
+    }
+  },
+  "connectionReport": {
+    "title": "Relatório de Conexão Íntima",
+    "overallScore": "Índice de Conexão Íntima",
+    "labels": {
+      "emotionalConnection": "Conexão emocional",
+      "attraction": "Atração sentida",
+      "intimacy": "Intimidade",
+      "mutualCuriosity": "Curiosidade mútua",
+      "emotionalSync": "Sincronia emocional"
+    },
+    "stats": {
+      "totalResponses": "Respostas totais",
+      "averageTime": "Tempo médio"
+    },
+    "buttons": {
+      "newGame": "Novo Jogo",
+      "backHome": "Voltar ao Início"
+    },
+    "footer": "💜 O amor verdadeiro é construído com comunicação e respeito",
+    "feelings": {
+      "intense": "✨ Conexão intensa e recíproca! ✨",
+      "high": "🔥 Alta conexão e atração! 🔥",
+      "curious": "💫 Curiosos mas vocês podem se conectar mais",
+      "potential": "💭 Há potencial, continuem explorando",
+      "insufficient": "Dados insuficientes"
     }
   }
 }

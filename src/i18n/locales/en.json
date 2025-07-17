@@ -349,5 +349,32 @@
       "title": "⚠️ Recommendation",
       "description": "Complete at least {{minimum}} cards for a better experience"
     }
+  },
+  "connectionReport": {
+    "title": "Intimate Connection Report",
+    "overallScore": "Intimate Connection Score",
+    "labels": {
+      "emotionalConnection": "Emotional connection",
+      "attraction": "Attraction felt",
+      "intimacy": "Intimacy",
+      "mutualCuriosity": "Mutual curiosity",
+      "emotionalSync": "Emotional sync"
+    },
+    "stats": {
+      "totalResponses": "Total responses",
+      "averageTime": "Average time"
+    },
+    "buttons": {
+      "newGame": "New Game",
+      "backHome": "Back to Home"
+    },
+    "footer": "💜 True love is built with communication and respect",
+    "feelings": {
+      "intense": "✨ Intense and reciprocal connection! ✨",
+      "high": "🔥 High connection and attraction! 🔥",
+      "curious": "💫 Curious but you can connect more",
+      "potential": "💭 There's potential, keep exploring",
+      "insufficient": "Insufficient data"
+    }
   }
 }

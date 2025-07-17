@@ -24,6 +24,15 @@ export interface ConnectionData {
   averageResponseTime: number;
 }
 
+// Translation keys for feelings - will be resolved in component
+const FEELING_KEYS = {
+  intense: 'connectionReport.feelings.intense',
+  high: 'connectionReport.feelings.high', 
+  curious: 'connectionReport.feelings.curious',
+  potential: 'connectionReport.feelings.potential',
+  insufficient: 'connectionReport.feelings.insufficient'
+};
+
 export const calculateConnectionScore = (responses: GameResponse[]): ConnectionData => {
   if (responses.length === 0) {
     return {
@@ -33,7 +42,7 @@ export const calculateConnectionScore = (responses: GameResponse[]): ConnectionD
       mutualCuriosity: 0,
       emotionalSync: 0,
       overallScore: 0,
-      feeling: "No hay datos suficientes",
+      feeling: FEELING_KEYS.insufficient,
       totalResponses: 0,
       averageResponseTime: 0
     };
@@ -60,13 +69,13 @@ export const calculateConnectionScore = (responses: GameResponse[]): ConnectionD
     // Determine feeling based on overall score
     let feeling: string;
     if (overallScore >= 4.5) {
-      feeling = "✨ ¡Conexión intensa y recíproca! ✨";
+      feeling = FEELING_KEYS.intense;
     } else if (overallScore >= 3.5) {
-      feeling = "🔥 ¡Alta conexión y atracción! 🔥";
+      feeling = FEELING_KEYS.high;
     } else if (overallScore >= 2.5) {
-      feeling = "💫 Curiosos pero pueden conectar más";
+      feeling = FEELING_KEYS.curious;
     } else {
-      feeling = "💭 Hay potencial, sigan explorando";
+      feeling = FEELING_KEYS.potential;
     }
     
     return {
@@ -88,13 +97,13 @@ export const calculateConnectionScore = (responses: GameResponse[]): ConnectionD
     
     let feeling: string;
     if (overallScore >= 4.5) {
-      feeling = "✨ ¡Conexión intensa y recíproca! ✨";
+      feeling = FEELING_KEYS.intense;
     } else if (overallScore >= 3.5) {
-      feeling = "🔥 ¡Alta conexión y atracción! 🔥";
+      feeling = FEELING_KEYS.high;
     } else if (overallScore >= 2.5) {
-      feeling = "💫 Curiosos pero pueden conectar más";
+      feeling = FEELING_KEYS.curious;
     } else {
-      feeling = "💭 Hay potencial, sigan explorando";
+      feeling = FEELING_KEYS.potential;
     }
     
     return {

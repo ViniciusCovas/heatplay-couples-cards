@@ -254,20 +254,47 @@
     "level4Name": "Sans Filtres"
   },
   "levelUp": {
-    "title": "Voulez-vous approfondir davantage?",
-    "subtitle": "Monter au niveau {{level}}: {{name}}",
+    "title": "Voulez-vous aller plus loin ?",
+    "subtitle": "Passer au niveau {{level}} : {{name}}",
     "waitingForPartner": "En attente du Joueur 2...",
-    "partnerMustConfirm": "Votre partenaire doit également confirmer pour passer au niveau suivant",
+    "partnerMustConfirm": "Votre partenaire doit aussi confirmer pour passer au niveau suivant",
     "nextLevel": "Niveau suivant",
-    "completed": "Terminées",
-    "recommended": "Recommandées",
+    "completed": "Terminé",
+    "recommended": "Recommandé",
     "notYet": "Pas encore",
-    "letsGo": "Allons-y!",
-    "level2Description": "Questions plus profondes sur les sentiments et les expériences",
+    "letsGo": "Oui, allons-y !",
+    "level2Description": "Questions plus profondes sur les sentiments et expériences",
     "level3Description": "Questions intimes et audacieuses pour une connexion maximale",
     "warning": {
       "title": "⚠️ Recommandation",
       "description": "Complétez au moins {{minimum}} cartes pour une meilleure expérience"
+    }
+  },
+  "connectionReport": {
+    "title": "Rapport de Connexion Intime",
+    "overallScore": "Score de Connexion Intime",
+    "labels": {
+      "emotionalConnection": "Connexion émotionnelle",
+      "attraction": "Attraction ressentie",
+      "intimacy": "Intimité",
+      "mutualCuriosity": "Curiosité mutuelle",
+      "emotionalSync": "Synchronisation émotionnelle"
+    },
+    "stats": {
+      "totalResponses": "Réponses totales",
+      "averageTime": "Temps moyen"
+    },
+    "buttons": {
+      "newGame": "Nouveau Jeu",
+      "backHome": "Retour à l'Accueil"
+    },
+    "footer": "💜 Le vrai amour se construit avec communication et respect",
+    "feelings": {
+      "intense": "✨ Connexion intense et réciproque ! ✨",
+      "high": "🔥 Haute connexion et attraction ! 🔥",
+      "curious": "💫 Curieux mais vous pouvez vous connecter davantage",
+      "potential": "💭 Il y a du potentiel, continuez à explorer",
+      "insufficient": "Données insuffisantes"
     }
   }
 }

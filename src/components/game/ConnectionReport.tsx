@@ -1,7 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Heart, Flame, Zap, Star, Eye, TrendingUp, Home, RotateCcw } from "lucide-react";
+import { Logo } from "@/components/ui/animated-logo";
+import { Heart, Flame, Zap, Star, Eye, Home, RotateCcw } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export interface ConnectionData {
   emotionalConnection: number; // 0-5
@@ -28,6 +30,11 @@ export const ConnectionReport = ({
   onPlayAgain,
   onGoHome
 }: ConnectionReportProps) => {
+  const { t, i18n } = useTranslation();
+  
+  // Debug language consistency
+  console.log('🌍 ConnectionReport language:', i18n.language);
+  
   if (!isVisible) return null;
 
   const getScoreColor = (score: number) => {
@@ -50,7 +57,7 @@ export const ConnectionReport = ({
     icon: React.ReactNode,
     maxScore: number = 5
   ) => (
-    <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-muted/30 rounded-lg">
+    <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-3 bg-gradient-to-r from-muted/50 via-muted/30 to-muted/40 rounded-lg border border-primary/10">
       <div className="flex items-center gap-1 sm:gap-2 flex-1 min-w-0">
         <div className="shrink-0">{icon}</div>
         <span className="font-medium text-sm sm:text-base truncate">{label}</span>
@@ -67,82 +74,85 @@ export const ConnectionReport = ({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <Card className="w-full max-w-sm sm:max-w-lg p-4 sm:p-6 space-y-4 sm:space-y-6 animate-scale-in my-4 sm:my-8 max-h-[95vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-gradient-to-br from-background via-background/95 to-primary/5 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <Card className="w-full max-w-sm sm:max-w-lg p-4 sm:p-6 space-y-4 sm:space-y-6 animate-scale-in my-2 sm:my-4 max-h-[98vh] overflow-y-auto bg-gradient-to-br from-card via-card to-card/95 border-2 border-primary/20 shadow-2xl shadow-primary/10">
         <div className="text-center space-y-3 sm:space-y-4">
+          <Logo size="small" className="mx-auto" />
           <div className="text-4xl sm:text-6xl">{getScoreEmoji(connectionData.overallScore)}</div>
           <div>
-            <h2 className="text-lg sm:text-2xl font-heading mb-1 sm:mb-2">Reporte de Conexión Íntima</h2>
-            <p className="text-base sm:text-lg font-semibold text-primary">{connectionData.feeling}</p>
+            <h2 className="text-lg sm:text-2xl font-heading mb-1 sm:mb-2 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              {t('connectionReport.title')}
+            </h2>
+            <p className="text-base sm:text-lg font-semibold text-primary">{t(connectionData.feeling)}</p>
           </div>
           
-          <div className="p-3 sm:p-4 bg-primary/10 rounded-lg">
+          <div className="p-3 sm:p-4 bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10 rounded-lg border border-primary/20">
             <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">
               {connectionData.overallScore.toFixed(1)}/5.0
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground">Índice de Conexión Íntima</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{t('connectionReport.overallScore')}</p>
           </div>
         </div>
 
         <div className="space-y-2 sm:space-y-3">
           {renderScoreRow(
-            "Conexión emocional",
+            t('connectionReport.labels.emotionalConnection'),
             connectionData.emotionalConnection,
             <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-red-500" />
           )}
           
           {renderScoreRow(
-            "Atracción sentida",
+            t('connectionReport.labels.attraction'),
             connectionData.attraction,
             <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
           )}
           
           {renderScoreRow(
-            "Intimidad",
+            t('connectionReport.labels.intimacy'),
             connectionData.intimacy,
             <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
           )}
           
           {renderScoreRow(
-            "Curiosidad mutua",
+            t('connectionReport.labels.mutualCuriosity'),
             connectionData.mutualCuriosity,
             <Star className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
           )}
           
           {renderScoreRow(
-            "Sintonía emocional",
+            t('connectionReport.labels.emotionalSync'),
             connectionData.emotionalSync,
             <Eye className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />,
             100
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/20 rounded-lg">
+        <div className="grid grid-cols-2 gap-2 sm:gap-4 p-3 sm:p-4 bg-gradient-to-r from-muted/20 via-muted/10 to-muted/20 rounded-lg border border-muted/30">
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-primary">{connectionData.totalResponses}</div>
-            <div className="text-xs text-muted-foreground">Respuestas totales</div>
+            <div className="text-xs text-muted-foreground">{t('connectionReport.stats.totalResponses')}</div>
           </div>
           <div className="text-center">
             <div className="text-xl sm:text-2xl font-bold text-primary">{Math.round(connectionData.averageResponseTime)}s</div>
-            <div className="text-xs text-muted-foreground">Tiempo promedio</div>
+            <div className="text-xs text-muted-foreground">{t('connectionReport.stats.averageTime')}</div>
           </div>
         </div>
 
         <div className="space-y-2 sm:space-y-3">
-          <Button onClick={onPlayAgain} className="w-full flex items-center justify-center gap-2 h-11 sm:h-12 text-sm sm:text-base">
+          <Button onClick={onPlayAgain} className="w-full flex items-center justify-center gap-2 h-11 sm:h-12 text-sm sm:text-base bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 transition-all duration-300">
             <RotateCcw className="w-4 h-4" />
-            Nuevo Juego
+            {t('connectionReport.buttons.newGame')}
           </Button>
           
-          <Button onClick={onGoHome} variant="outline" className="w-full flex items-center justify-center gap-2 h-11 sm:h-12 text-sm sm:text-base">
+          <Button onClick={onGoHome} variant="outline" className="w-full flex items-center justify-center gap-2 h-11 sm:h-12 text-sm sm:text-base border-primary/30 hover:bg-primary/5 transition-all duration-300">
             <Home className="w-4 h-4" />
-            Volver al Inicio
+            {t('connectionReport.buttons.backHome')}
           </Button>
         </div>
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
-            💜 El amor verdadero se construye con comunicación y respeto
+            {t('connectionReport.footer')}
           </p>
         </div>
       </Card>
