@@ -19,7 +19,6 @@ import { calculateConnectionScore, type GameResponse } from "@/utils/connectionA
 import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
-
 import { supabase } from "@/integrations/supabase/client";
 
 type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
@@ -30,9 +29,15 @@ const Game = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t, i18n } = useTranslation();
-  const { updateRoomStatus, room, joinRoom, isConnected, getPlayerNumber } = useRoomService();
+  const { 
+    room, 
+    participants, 
+    playerNumber,
+    updateRoomStatus,
+    joinRoom, 
+    isConnected 
+  } = useRoomService();
   const playerId = usePlayerId();
-  const playerNumber = getPlayerNumber(); // 1 o 2
   
   // Questions will be loaded from database
   const [levelCards, setLevelCards] = useState<string[]>([]);
@@ -193,6 +198,15 @@ const Game = () => {
       }
     }
   }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
+
+  // Debug effect to track playerNumber changes
+  useEffect(() => {
+    console.log('🔄 Player number changed in Game component:', { 
+      playerNumber, 
+      participants: participants.length,
+      participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
+    });
+  }, [playerNumber, participants]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {

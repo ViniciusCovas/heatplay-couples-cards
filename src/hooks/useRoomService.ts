@@ -29,12 +29,13 @@ interface UseRoomServiceReturn {
   room: GameRoom | null;
   participants: RoomParticipant[];
   isConnected: boolean;
+  playerNumber: 1 | 2 | null; // Added as stable state
   createRoom: (level: number) => Promise<string>;
   joinRoom: (roomCode: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
   startGame: () => Promise<void>;
   updateRoomStatus: (status: 'waiting' | 'playing' | 'finished') => Promise<void>;
-  getPlayerNumber: () => 1 | 2 | null; // Añadido para obtener el número del jugador actual
+  getPlayerNumber: () => 1 | 2 | null; // Keep for backwards compatibility
 }
 
 export const useRoomService = (): UseRoomServiceReturn => {
@@ -42,6 +43,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [participants, setParticipants] = useState<RoomParticipant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
   const playerId = usePlayerId();
 
   const generateRoomCode = (): string => {
@@ -203,6 +205,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       setRoom(null);
       setParticipants([]);
+      setPlayerNumber(null);
       setIsConnected(false);
     } catch (error) {
       // Silent error handling
@@ -265,6 +268,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
             .eq('room_id', room.id);
           
           if (data) {
+            console.log('🔄 Participants updated via realtime:', data);
             setParticipants(data as RoomParticipant[]);
           }
         }
@@ -305,6 +309,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .eq('room_id', room.id);
       
       if (data) {
+        console.log('🔄 Initial participants loaded:', data);
         setParticipants(data as RoomParticipant[]);
       }
     };
@@ -312,16 +317,39 @@ export const useRoomService = (): UseRoomServiceReturn => {
     loadParticipants();
   }, [room]);
 
-  const getPlayerNumber = useCallback((): 1 | 2 | null => {
-    if (!playerId || participants.length === 0) return null;
+  // Update playerNumber whenever participants change
+  useEffect(() => {
+    if (!playerId || participants.length === 0) {
+      setPlayerNumber(null);
+      return;
+    }
+    
     const participant = participants.find(p => p.player_id === playerId);
-    return participant?.player_number || null;
-  }, [playerId, participants]);
+    const newPlayerNumber = participant?.player_number || null;
+    
+    console.log('🎯 Player number calculation:', {
+      playerId,
+      participants: participants.map(p => ({ id: p.player_id, number: p.player_number })),
+      currentParticipant: participant,
+      newPlayerNumber,
+      oldPlayerNumber: playerNumber
+    });
+    
+    if (newPlayerNumber !== playerNumber) {
+      console.log('🔄 Player number updated:', { from: playerNumber, to: newPlayerNumber });
+      setPlayerNumber(newPlayerNumber);
+    }
+  }, [playerId, participants, playerNumber]);
+
+  const getPlayerNumber = useCallback((): 1 | 2 | null => {
+    return playerNumber;
+  }, [playerNumber]);
 
   return {
     room,
     participants,
     isConnected,
+    playerNumber,
     createRoom,
     joinRoom,
     leaveRoom,
