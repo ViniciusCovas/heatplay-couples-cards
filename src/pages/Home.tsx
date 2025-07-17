@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/ui/language-selector";
-import { AnimatedLogo } from "@/components/ui/animated-logo";
+import { Logo } from "@/components/ui/animated-logo";
 const Home = () => {
   const navigate = useNavigate();
   const {
@@ -46,11 +46,7 @@ const Home = () => {
             {/* Brand */}
             <div className="space-y-6">
               <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-                <AnimatedLogo 
-                  variant="continuous"
-                  size="large"
-                  className="hover:scale-110 transition-transform duration-300"
-                />
+                <Logo size="large" className="mb-8" />
               </div>
               
               {/* Main Headline */}

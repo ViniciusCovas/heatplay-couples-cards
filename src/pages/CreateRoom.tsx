@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
-import { AnimatedLogo } from '@/components/ui/animated-logo';
+import { Logo } from '@/components/ui/animated-logo';
 
 export default function CreateRoom() {
   const [level] = useState(1); // Default level
@@ -64,8 +64,7 @@ export default function CreateRoom() {
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <AnimatedLogo 
-            variant="hover"
+          <Logo 
             size="medium"
             className="hover:scale-105 transition-transform duration-300"
           />
