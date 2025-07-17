@@ -2,8 +2,9 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Heart, Flame, Zap, Star, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { Logo } from "@/components/ui/animated-logo";
 
 interface ResponseEvaluationProps {
   isVisible: boolean;
@@ -31,7 +32,7 @@ export const ResponseEvaluation = ({
   onCancel,
   isSubmitting = false
 }: ResponseEvaluationProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [evaluation, setEvaluation] = useState<EvaluationData>({
     honesty: 3,
     attraction: 3,
@@ -59,35 +60,38 @@ export const ResponseEvaluation = ({
     {
       key: "honesty" as keyof EvaluationData,
       label: t('game.evaluation.honesty'),
-      icon: <Heart className="w-5 h-5 text-red-500" />,
+      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
       description: t('game.evaluation.honestyDescription')
     },
     {
       key: "attraction" as keyof EvaluationData,
       label: t('game.evaluation.attraction'),
-      icon: <Flame className="w-5 h-5 text-orange-500" />,
+      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
       description: t('game.evaluation.attractionDescription')
     },
     {
       key: "intimacy" as keyof EvaluationData,
       label: t('game.evaluation.intimacy'),
-      icon: <Zap className="w-5 h-5 text-purple-500" />,
+      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
       description: t('game.evaluation.intimacyDescription')
     },
     {
       key: "surprise" as keyof EvaluationData,
       label: t('game.evaluation.surprise'),
-      icon: <Star className="w-5 h-5 text-yellow-500" />,
+      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
       description: t('game.evaluation.surpriseDescription')
     }
   ];
 
+  // Debug language consistency
+  console.log('🌍 ResponseEvaluation language:', i18n.language);
+  
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-lg p-6 space-y-6 animate-scale-in max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <Card className="w-full max-w-lg p-6 space-y-6 animate-scale-in max-h-[90vh] overflow-y-auto romantic-card">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-heading text-foreground">
+            <h2 className="text-xl font-brand font-semibold text-foreground">
               {t('game.evaluation.title')}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -105,7 +109,7 @@ export const ResponseEvaluation = ({
         </div>
 
         <div className="space-y-4">
-          <div className="p-4 bg-muted/30 rounded-lg">
+          <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
             <p className="text-sm font-medium text-foreground mb-2">
               {t('game.evaluation.question')}:
             </p>
@@ -113,20 +117,22 @@ export const ResponseEvaluation = ({
             <p className="text-sm font-medium text-foreground mb-2">
               {t('game.evaluation.response')}:
             </p>
-            <p className="text-sm text-primary italic">"{response}"</p>
+            <p className="text-sm text-primary italic font-medium">"{response}"</p>
           </div>
 
           <div className="space-y-6">
             {evaluationCriteria.map((criterion) => (
               <div key={criterion.key} className="space-y-3">
                 <div className="flex items-center gap-3">
-                  {criterion.icon}
+                  <div className="flex-shrink-0">
+                    {criterion.icon}
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">
+                      <span className="text-sm font-medium text-foreground font-brand">
                         {criterion.label}
                       </span>
-                      <span className="text-sm font-bold text-primary">
+                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">
                         {evaluation[criterion.key]}/5
                       </span>
                     </div>
@@ -151,7 +157,7 @@ export const ResponseEvaluation = ({
 
         <Button
           onClick={handleSubmit}
-          className="w-full"
+          className="w-full btn-gradient-primary text-white font-brand font-semibold"
           disabled={isSubmitting}
         >
           {isSubmitting ? t('common.submitting') : t('game.evaluation.submit')}
