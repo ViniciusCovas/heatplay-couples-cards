@@ -4,18 +4,21 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { LanguageSelector } from "@/components/ui/language-selector";
-
 const Home = () => {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
-  const { t } = useTranslation();
-
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+  const {
+    isAdmin
+  } = useAuth();
+  const {
+    t
+  } = useTranslation();
+  return <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{
+      animationDelay: '2s'
+    }}></div>
       
       {/* Language Selector */}
       <div className="absolute top-6 right-6 z-20">
@@ -64,16 +67,10 @@ const Home = () => {
               
               {/* Social Proof */}
               <div className="flex items-center justify-center lg:justify-start gap-4 pt-2">
-                <div className="flex -space-x-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary border-2 border-white"></div>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary border-2 border-white"></div>
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary via-secondary to-primary border-2 border-white"></div>
-                </div>
+                
                 <div className="flex items-center gap-1">
                   <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
+                    {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-primary text-primary" />)}
                   </div>
                   <span className="text-sm text-muted-foreground ml-2">{t('home.socialProof')}</span>
                 </div>
@@ -82,22 +79,13 @@ const Home = () => {
 
             {/* CTA Buttons */}
             <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-              <Button 
-                onClick={() => navigate('/create-room')}
-                className="w-full h-16 text-lg font-bold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group"
-                size="lg"
-              >
+              <Button onClick={() => navigate('/create-room')} className="w-full h-16 text-lg font-bold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group" size="lg">
                 <Users className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.startJourney')}
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
               
-              <Button 
-                onClick={() => navigate('/join-room')}
-                className="w-full h-16 text-lg font-bold btn-gradient-secondary group"
-                variant="outline"
-                size="lg"
-              >
+              <Button onClick={() => navigate('/join-room')} className="w-full h-16 text-lg font-bold btn-gradient-secondary group" variant="outline" size="lg">
                 <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.joinPartner')}
               </Button>
@@ -135,24 +123,12 @@ const Home = () => {
 
             {/* Admin & Auth Links */}
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-4">
-              {isAdmin && (
-                <Button 
-                  onClick={() => navigate('/admin-panel-secret')}
-                  variant="ghost"
-                  size="sm"
-                  className="text-muted-foreground hover:text-foreground"
-                >
+              {isAdmin && <Button onClick={() => navigate('/admin-panel-secret')} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                   <Settings className="w-4 h-4 mr-2" />
                   {t('navigation.admin')}
-                </Button>
-              )}
+                </Button>}
               
-              <Button 
-                onClick={() => navigate('/auth')}
-                variant="ghost"
-                size="sm"
-                className="text-muted-foreground hover:text-foreground"
-              >
+              <Button onClick={() => navigate('/auth')} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 {t('home.buttons.login')}
               </Button>
             </div>
@@ -168,16 +144,24 @@ const Home = () => {
                 <div className="absolute inset-0">
                   {/* Connection Lines */}
                   <div className="absolute top-1/3 left-1/4 w-32 h-px bg-gradient-to-r from-primary to-secondary opacity-60 animate-pulse"></div>
-                  <div className="absolute bottom-1/3 right-1/4 w-24 h-px bg-gradient-to-l from-secondary to-primary opacity-60 animate-pulse" style={{animationDelay: '1s'}}></div>
+                  <div className="absolute bottom-1/3 right-1/4 w-24 h-px bg-gradient-to-l from-secondary to-primary opacity-60 animate-pulse" style={{
+                  animationDelay: '1s'
+                }}></div>
                   
                   {/* Heart Icons */}
                   <Heart className="absolute top-8 left-8 w-6 h-6 text-primary animate-heartbeat" />
-                  <Heart className="absolute top-12 right-12 w-4 h-4 text-secondary animate-heartbeat" style={{animationDelay: '0.5s'}} />
-                  <Heart className="absolute bottom-12 left-12 w-5 h-5 text-primary animate-heartbeat" style={{animationDelay: '1s'}} />
+                  <Heart className="absolute top-12 right-12 w-4 h-4 text-secondary animate-heartbeat" style={{
+                  animationDelay: '0.5s'
+                }} />
+                  <Heart className="absolute bottom-12 left-12 w-5 h-5 text-primary animate-heartbeat" style={{
+                  animationDelay: '1s'
+                }} />
                   
                   {/* Sparkles */}
                   <Sparkles className="absolute top-20 right-8 w-5 h-5 text-secondary animate-pulse" />
-                  <Sparkles className="absolute bottom-20 left-8 w-4 h-4 text-primary animate-pulse" style={{animationDelay: '0.8s'}} />
+                  <Sparkles className="absolute bottom-20 left-8 w-4 h-4 text-primary animate-pulse" style={{
+                  animationDelay: '0.8s'
+                }} />
                 </div>
                 
                 {/* Central Content */}
@@ -196,11 +180,15 @@ const Home = () => {
                       <span>{t('home.visual.feature1')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                      <div className="w-2 h-2 rounded-full bg-secondary animate-pulse" style={{
+                      animationDelay: '0.3s'
+                    }}></div>
                       <span>{t('home.visual.feature2')}</span>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                      <div className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{
+                      animationDelay: '0.6s'
+                    }}></div>
                       <span>{t('home.visual.feature3')}</span>
                     </div>
                   </div>
@@ -272,8 +260,6 @@ const Home = () => {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
