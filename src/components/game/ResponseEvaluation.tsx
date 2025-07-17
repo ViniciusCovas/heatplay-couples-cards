@@ -149,23 +149,13 @@ export const ResponseEvaluation = ({
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            {t('common.cancel')}
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            className="flex-1"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? t('common.submitting') : t('game.evaluation.submit')}
-          </Button>
-        </div>
+        <Button
+          onClick={handleSubmit}
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? t('common.submitting') : t('game.evaluation.submit')}
+        </Button>
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
