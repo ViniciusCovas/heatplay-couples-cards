@@ -26,22 +26,22 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2">
+        <Button variant="ghost" size="sm" className="gap-2 min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto">
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
-          <span className="sm:hidden">{currentLanguage.flag}</span>
+          <span className="sm:hidden text-lg">{currentLanguage.flag}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-background border border-border">
+      <DropdownMenuContent align="end" className="bg-background border border-border min-w-[160px]">
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
-            className={`cursor-pointer hover:bg-accent ${
+            className={`cursor-pointer hover:bg-accent min-h-[44px] ${
               i18n.language === language.code ? 'bg-accent' : ''
             }`}
           >
-            <span className="mr-2">{language.flag}</span>
+            <span className="mr-2 text-lg">{language.flag}</span>
             {language.name}
           </DropdownMenuItem>
         ))}

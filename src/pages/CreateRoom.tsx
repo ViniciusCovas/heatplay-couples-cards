@@ -8,6 +8,7 @@ import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
+import { LanguageSelector } from '@/components/ui/language-selector';
 
 export default function CreateRoom() {
   const [level] = useState(1); // Default level
@@ -68,7 +69,7 @@ export default function CreateRoom() {
             size="medium"
             className="hover:scale-105 transition-transform duration-300"
           />
-          <div className="w-10" />
+          <LanguageSelector />
         </div>
       </div>
       
