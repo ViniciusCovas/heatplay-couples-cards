@@ -133,6 +133,7 @@ const Game = () => {
   
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
+  const [showResponseInput, setShowResponseInput] = useState(false);
   
   // Get proximity from game state
   const isCloseProximity = gameState?.proximity_response || false;
@@ -184,7 +185,7 @@ const Game = () => {
       case 'card-display':
         return 'card-display';
       case 'response-input':
-        return isMyTurnInDB ? 'response-input' : 'card-display';
+        return 'card-display'; // Always show card first, use local state for response input
       case 'evaluation':
         // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
         return isMyTurnInDB ? 'evaluation' : 'card-display';
@@ -428,6 +429,9 @@ const Game = () => {
 
 
   const handleStartResponse = async () => {
+    // Show the response input modal locally
+    setShowResponseInput(true);
+    
     // Update database phase to response-input
     await updateGameState({
       current_phase: 'response-input'
@@ -479,6 +483,9 @@ const Game = () => {
 
       console.log('✅ Response saved successfully');
 
+      // Hide the response input modal
+      setShowResponseInput(false);
+      
       // Transition to evaluation phase - other player evaluates
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       console.log('✅ Response submitted, moving to evaluation phase for other player');
@@ -912,7 +919,7 @@ const Game = () => {
 
         {/* Response Input Modal */}
         <ResponseInput
-          isVisible={gamePhase === 'response-input'}
+          isVisible={showResponseInput}
           question={currentCard}
           onSubmitResponse={handleResponseSubmit}
           playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
