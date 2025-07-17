@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "Cartas de Conexão",
-    "subtitle": "Construa conexões mais profundas através de conversas significativas"
+    "headline": "Chega de conversa fiada. Comece a falar de verdade.",
+    "subtitle": "Do doce ao provocante. Um só jogo.",
+    "tagline": "Cartas com IA feitas para aproximar vocês."
   },
   "home": {
     "trustBadge": {
@@ -9,12 +11,10 @@
       "couples": "50k+ Casais"
     },
     "headline": {
-      "transform": "Transforme Sua",
-      "connection": "Conexão",
-      "into": "Em Algo",
-      "extraordinary": "Extraordinário"
+      "main": "Chega de conversa fiada. Comece a falar de verdade.",
+      "sub": "Do doce ao provocante. Um só jogo."
     },
-    "subtitle": "Descubra o jogo que aproxima casais através de conversas significativas e intimidade mais profunda.",
+    "subtitle": "Descubra o jogo que aproxima casais através de conversas significativas e mais intimidade.",
     "socialProof": "Confiado por milhares",
     "buttons": {
       "startJourney": "Comece Sua Jornada",

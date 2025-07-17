@@ -2,8 +2,8 @@
   "app": {
     "title": "Let's Get Close",
     "headline": "Skip small talk. Start real talk.",
-    "subtitle": "Conversation-first dating for people who crave real connection.",
-    "tagline": "AI cards that reveal how close you really are."
+    "subtitle": "From sweet to wild. One game.",
+    "tagline": "AI-powered cards made to bring you closer."
   },
   "home": {
     "trustBadge": {
@@ -11,10 +11,8 @@
       "couples": "50k+ Couples"
     },
     "headline": {
-      "transform": "Transform Your",
-      "connection": "Connection",
-      "into": "Into Something",
-      "extraordinary": "Extraordinary"
+      "main": "Skip small talk. Start real talk.",
+      "sub": "From sweet to wild. One game."
     },
     "subtitle": "Discover the game that brings couples closer together through meaningful conversations and deeper intimacy.",
     "socialProof": "Trusted by thousands",

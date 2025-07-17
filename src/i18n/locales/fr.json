@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "Cartes de Connexion",
-    "subtitle": "Construisez des connexions plus profondes grâce à des conversations significatives"
+    "headline": "Assez de banalités. Commencez à parler pour de vrai.",
+    "subtitle": "De tendre à audacieux. Un seul jeu.",
+    "tagline": "Cartes IA créées pour vous rapprocher."
   },
   "home": {
     "trustBadge": {
@@ -9,12 +11,10 @@
       "couples": "50k+ Couples"
     },
     "headline": {
-      "transform": "Transformez Votre",
-      "connection": "Connexion",
-      "into": "En Quelque Chose",
-      "extraordinary": "Extraordinaire"
+      "main": "Assez de banalités. Commencez à parler pour de vrai.",
+      "sub": "De tendre à audacieux. Un seul jeu."
     },
-    "subtitle": "Découvrez le jeu qui rapproche les couples grâce à des conversations significatives et une intimité plus profonde.",
+    "subtitle": "Découvrez le jeu qui rapproche les couples à travers des conversations sincères et une intimité plus profonde.",
     "socialProof": "Fait confiance par des milliers",
     "buttons": {
       "startJourney": "Commencer Votre Voyage",

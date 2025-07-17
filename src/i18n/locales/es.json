@@ -1,7 +1,9 @@
 {
   "app": {
     "title": "Cartas de Conexión",
-    "subtitle": "Construye conexiones más profundas a través de conversaciones significativas"
+    "headline": "Evita las charlas vacías. Empieza a hablar de verdad.",
+    "subtitle": "De lo tierno a lo atrevido. Un solo juego.",
+    "tagline": "Cartas impulsadas por IA para acercarlos más."
   },
   "home": {
     "trustBadge": {
@@ -9,12 +11,10 @@
       "couples": "50k+ Parejas"
     },
     "headline": {
-      "transform": "Transforma Tu",
-      "connection": "Conexión",
-      "into": "En Algo",
-      "extraordinary": "Extraordinario"
+      "main": "Evita las charlas vacías. Empieza a hablar de verdad.",
+      "sub": "De lo tierno a lo atrevido. Un solo juego."
     },
-    "subtitle": "Descubre el juego que acerca a las parejas a través de conversaciones significativas e intimidad más profunda.",
+    "subtitle": "Descubre el juego que une a las parejas a través de conversaciones profundas e intimidad real.",
     "socialProof": "Confiado por miles",
     "buttons": {
       "startJourney": "Comenzar Tu Viaje",

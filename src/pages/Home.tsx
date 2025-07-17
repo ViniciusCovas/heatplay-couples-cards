@@ -30,9 +30,9 @@ const Home = () => {
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-screen">
           
           {/* Left Side - Hero Content */}
-          <div className="lg:col-span-7 space-y-8 text-center lg:text-left">
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             {/* Trust Indicators */}
-            <div className="flex items-center justify-center lg:justify-start gap-6 mb-6">
+            <div className="flex items-center justify-center lg:justify-start gap-6 mb-4">
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
                 <Shield className="w-4 h-4" />
                 <span>{t('home.trustBadge.private')}</span>
@@ -44,28 +44,33 @@ const Home = () => {
             </div>
             
             {/* Brand */}
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="flex items-center justify-center lg:justify-start gap-3 mb-2">
-                <Logo size="large" className="mb-8" />
+                <Logo size="large" className="mb-4" />
               </div>
               
+              {/* AI Tagline */}
+              <p className="text-sm text-muted-foreground font-medium">
+                {t('app.tagline')}
+              </p>
+              
               {/* Main Headline */}
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-brand font-black text-foreground leading-[1.1] tracking-tight">
-                {t('home.headline.transform')}
-                <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> {t('home.headline.connection')}</span>
-                <br />
-                {t('home.headline.into')}
-                <span className="bg-gradient-to-r from-secondary to-primary bg-clip-text text-transparent"> {t('home.headline.extraordinary')}</span>
-              </h2>
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-heading font-semibold text-foreground leading-tight">
+                {t('app.headline')}
+              </h1>
               
               {/* Sub-headline */}
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              <h2 className="text-xl md:text-2xl font-heading font-medium text-foreground">
+                {t('app.subtitle')}
+              </h2>
+              
+              {/* Description */}
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 {t('home.subtitle')}
               </p>
               
               {/* Social Proof */}
               <div className="flex items-center justify-center lg:justify-start gap-4 pt-2">
-                
                 <div className="flex items-center gap-1">
                   <div className="flex gap-1">
                     {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-primary text-primary" />)}
@@ -75,22 +80,22 @@ const Home = () => {
               </div>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="space-y-4 max-w-md mx-auto lg:mx-0">
-              <Button onClick={() => navigate('/create-room')} className="w-full h-16 text-lg font-bold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group" size="lg">
+            {/* CTA Buttons - Mobile First */}
+            <div className="space-y-4 max-w-md mx-auto lg:mx-0 pt-4">
+              <Button onClick={() => navigate('/create-room')} className="w-full h-16 text-lg font-semibold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group" size="lg">
                 <Users className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.startJourney')}
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
               
-              <Button onClick={() => navigate('/join-room')} className="w-full h-16 text-lg font-bold btn-gradient-secondary group" variant="outline" size="lg">
+              <Button onClick={() => navigate('/join-room')} className="w-full h-16 text-lg font-semibold btn-gradient-secondary group" variant="outline" size="lg">
                 <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.joinPartner')}
               </Button>
             </div>
 
-            {/* Value Props */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0 pt-8">
+            {/* Value Props - Compact for mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto lg:mx-0 pt-6">
               <div className="flex items-center gap-3 text-center sm:text-left">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                   <Clock className="w-5 h-5 text-primary" />
@@ -132,8 +137,8 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Right Side - Dynamic Visual */}
-          <div className="lg:col-span-5 relative">
+          {/* Right Side - Dynamic Visual - Hidden on Mobile */}
+          <div className="lg:col-span-5 relative hidden lg:block">
             <div className="relative w-full max-w-lg mx-auto">
               {/* Main Visual Container */}
               <div className="relative aspect-square bg-gradient-to-br from-primary/20 via-secondary/10 to-primary/20 rounded-[2rem] flex items-center justify-center overflow-hidden border border-white/20 shadow-2xl">
