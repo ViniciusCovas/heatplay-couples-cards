@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, MessageSquare, Mic, Gamepad2, Clock, Check } from "lucide-react";
+import { Logo } from "@/components/ui/animated-logo";
 import { useGameSync } from "@/hooks/useGameSync";
 import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
@@ -106,14 +107,14 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
         {/* Romantic Header */}
         <div className="text-center space-y-4">
           <div className="relative">
-            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
-              <Gamepad2 className="w-10 h-10 text-white" />
+            <div className="w-20 h-20 mx-auto rounded-full bg-white flex items-center justify-center shadow-lg shadow-primary/30 border-2 border-primary/20">
+              <Logo size="small" className="scale-75" />
             </div>
             <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full animate-pulse border-2 border-background"></div>
           </div>
           
           <div>
-            <h1 className="text-2xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+            <h1 className="text-2xl font-brand bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
               {t('proximitySelector.title')}
             </h1>
             <p className="text-muted-foreground mt-2">
@@ -128,7 +129,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-primary animate-pulse" />
             </div>
-            <h3 className="text-lg font-heading text-foreground mb-2">
+            <h3 className="text-lg font-brand text-foreground mb-2">
               {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -151,11 +152,11 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
                   <Mic className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-heading text-foreground group-hover:text-green-600 transition-colors">
+                  <h3 className="text-lg font-brand text-foreground group-hover:text-green-600 transition-colors">
                     {t('proximitySelector.together.title')} {t('proximitySelector.together.emoji')}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {t('proximitySelector.together.subtitle')}
+                    Together (spoken responses face to face)
                   </p>
                 </div>
                 <div className={`w-8 h-8 rounded-full border-2 transition-all ${
@@ -183,11 +184,11 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
                   <MessageSquare className="w-7 h-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-heading text-foreground group-hover:text-purple-600 transition-colors">
+                  <h3 className="text-lg font-brand text-foreground group-hover:text-purple-600 transition-colors">
                     {t('proximitySelector.apart.title')} {t('proximitySelector.apart.emoji')}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    {t('proximitySelector.apart.subtitle')}
+                    Apart (written responses via chat)
                   </p>
                 </div>
                 <div className={`w-8 h-8 rounded-full border-2 transition-all ${
@@ -206,7 +207,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               <div className="pt-4">
                 <Button 
                   onClick={handleConfirm}
-                  className="w-full h-14 text-lg font-heading btn-gradient-primary"
+                  className="w-full h-14 text-lg font-brand btn-gradient-primary"
                   size="lg"
                 >
                   <Check className="w-5 h-5 mr-2" />

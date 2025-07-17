@@ -75,7 +75,7 @@ export default function CreateRoom() {
       <Card className="w-full max-w-md romantic-card border-2 border-primary/20 shadow-2xl backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center gap-3">
-            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-brand font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               {t('createRoom.title')}
             </CardTitle>
           </div>
@@ -108,7 +108,7 @@ export default function CreateRoom() {
           </div>
 
           <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
-            <h3 className="font-semibold mb-2">{t('createRoom.howItWorks.title')}</h3>
+            <h3 className="font-brand font-semibold mb-2">{t('createRoom.howItWorks.title')}</h3>
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
               <li>{t('createRoom.howItWorks.step1')}</li>
               <li>{t('createRoom.howItWorks.step2')}</li>

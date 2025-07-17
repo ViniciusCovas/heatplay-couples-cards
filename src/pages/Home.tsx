@@ -50,7 +50,7 @@ const Home = () => {
               </div>
               
               {/* Main Headline */}
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground leading-[1.1] tracking-tight">
+              <h2 className="text-4xl md:text-5xl lg:text-6xl font-brand font-black text-foreground leading-[1.1] tracking-tight">
                 {t('home.headline.transform')}
                 <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"> {t('home.headline.connection')}</span>
                 <br />

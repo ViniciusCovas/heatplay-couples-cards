@@ -21,6 +21,7 @@ import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useLevelSelection } from "@/hooks/useLevelSelection";
 import { supabase } from "@/integrations/supabase/client";
+import { Logo } from "@/components/ui/animated-logo";
 
 const LevelSelect = () => {
   const navigate = useNavigate();
@@ -226,8 +227,7 @@ const LevelSelect = () => {
         {/* Header */}
         <div className="text-center space-y-2 pt-8">
           <div className="flex items-center justify-center mb-4">
-            <Heart className="w-6 h-6 text-secondary mr-2" />
-            <h1 className="text-2xl font-heading text-foreground">Cartas Íntimas</h1>
+            <Logo size="medium" className="scale-75" />
           </div>
           <div className="flex items-center justify-center space-x-4 mb-2">
             <p className="text-sm text-muted-foreground">

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { Logo } from "@/components/ui/animated-logo";
 
 interface GameCardProps {
   currentCard: string;
@@ -36,8 +37,9 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
           <div className="absolute inset-4 bg-white rounded-[24px] shadow-inner">
             {/* Card content */}
             <div className="relative z-10 h-full flex flex-col items-center justify-center text-center space-y-6 p-6">
-              {/* Level indicator at top */}
-              <div className="absolute top-6 left-6 flex items-center space-x-2">
+              {/* Logo and Level indicator at top */}
+              <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+                <Logo size="small" className="scale-50 opacity-60" />
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm
                   ${currentLevel === 1 ? 'bg-green-500' : ''}
                   ${currentLevel === 2 ? 'bg-purple-500' : ''}
@@ -59,13 +61,13 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
               </div>
               
               {/* Card text */}
-              <p className="text-lg text-gray-800 font-medium leading-relaxed max-w-60 px-2">
+              <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
                 {currentCard}
               </p>
               
               {/* Level name at bottom */}
               <div className="absolute bottom-6 left-6 right-6 text-center">
-                <p className={`text-sm font-semibold
+                <p className={`text-sm font-brand font-semibold
                   ${currentLevel === 1 ? 'text-green-600' : ''}
                   ${currentLevel === 2 ? 'text-purple-600' : ''}
                   ${currentLevel === 3 ? 'text-red-600' : ''}
