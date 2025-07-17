@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
@@ -52,24 +52,29 @@ export default function CreateRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
-        <CardHeader className="text-center space-y-2 pb-4">
+    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md romantic-card border-2 border-primary/20 shadow-2xl backdrop-blur-sm">
+        <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="absolute left-4 top-4"
+              className="absolute left-4 top-4 hover:bg-primary/10"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {t('buttons.createRoom')}
+              {t('createRoom.title')}
             </CardTitle>
           </div>
+          
+          <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/30 pulse-romantic">
+            <Users className="w-8 h-8 text-primary" />
+          </div>
+          
           <p className="text-muted-foreground text-center">
-            {t('app.subtitle')}
+            {t('createRoom.subtitle')}
           </p>
         </CardHeader>
         
@@ -77,7 +82,7 @@ export default function CreateRoom() {
           <div className="space-y-4">
             <Button 
               onClick={handleCreateRoom}
-              className="w-full h-12 text-lg font-semibold"
+              className="w-full h-12 text-lg font-semibold btn-gradient-primary"
               disabled={isCreating}
             >
               {isCreating ? (
@@ -91,13 +96,13 @@ export default function CreateRoom() {
             </Button>
           </div>
 
-          <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
-            <h3 className="font-semibold mb-2">¿Cómo funciona?</h3>
+          <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+            <h3 className="font-semibold mb-2">{t('createRoom.howItWorks.title')}</h3>
             <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Crea una sala y obtén tu código único</li>
-              <li>Comparte el código con tu pareja</li>
-              <li>Espera a que se conecte</li>
-              <li>¡El juego comenzará automáticamente!</li>
+              <li>{t('createRoom.howItWorks.step1')}</li>
+              <li>{t('createRoom.howItWorks.step2')}</li>
+              <li>{t('createRoom.howItWorks.step3')}</li>
+              <li>{t('createRoom.howItWorks.step4')}</li>
             </ol>
           </div>
         </CardContent>

@@ -4,31 +4,39 @@
 
 @layer base {
   :root {
-    /* Modern dating app color palette */
-    --background: 44 100% 98%; /* #FFF9F5 - Off-white */
-    --foreground: 218 11% 25%; /* #3B3C42 - Charcoal */
+    /* Modern romantic dating app color palette */
+    --background: 345 100% 98%; /* #FFF5F7 - Soft romantic white */
+    --foreground: 220 13% 18%; /* #2A2D3A - Deep charcoal */
     --card: 0 0% 100%; /* #FFFFFF - Pure white cards */
-    --card-foreground: 218 11% 25%;
+    --card-foreground: 220 13% 18%;
     --popover: 0 0% 100%;
-    --popover-foreground: 218 11% 25%;
-    --primary: 44 100% 67%; /* #FFC758 - Honey */
-    --primary-foreground: 218 11% 25%;
-    --secondary: 0 72% 69%; /* #FF6B6B - Coral */
+    --popover-foreground: 220 13% 18%;
+    --primary: 330 81% 60%; /* #E91E63 - Romantic pink */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 14 100% 57%; /* #FF5722 - Warm coral */
     --secondary-foreground: 0 0% 100%;
-    --muted: 44 70% 95%; /* Light honey tint */
-    --muted-foreground: 218 11% 40%;
-    --accent: 44 100% 67%;
-    --accent-foreground: 218 11% 25%;
-    --destructive: 0 72% 69%;
+    --muted: 330 40% 96%; /* Soft pink tint */
+    --muted-foreground: 220 13% 45%;
+    --accent: 280 100% 70%; /* #C466FF - Soft purple */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 44 50% 88%;
+    --border: 330 30% 90%;
     --input: 0 0% 100%;
-    --ring: 44 100% 67%;
-    --radius: 0.5rem;
+    --ring: 330 81% 60%;
+    --radius: 0.75rem;
     
-    /* Gradients for buttons */
-    --gradient-primary: linear-gradient(135deg, hsl(44 100% 67%), hsl(29 100% 68%)); /* Honey to Coral */
-    --gradient-secondary: linear-gradient(135deg, hsl(0 72% 69%), hsl(14 100% 65%));
+    /* Romantic gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(330 81% 60%), hsl(280 100% 70%)); /* Pink to purple */
+    --gradient-secondary: linear-gradient(135deg, hsl(14 100% 57%), hsl(330 81% 60%)); /* Coral to pink */
+    --gradient-romantic: linear-gradient(135deg, hsl(330 81% 60%), hsl(14 100% 57%)); /* Pink to coral */
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(330 40% 98%)); /* White to soft pink */
+    --gradient-background: linear-gradient(135deg, hsl(345 100% 98%), hsl(330 40% 96%)); /* Romantic background */
+    
+    /* Shadows for depth */
+    --shadow-romantic: 0 10px 30px -10px hsl(330 81% 60% / 0.2);
+    --shadow-card: 0 4px 20px -4px hsl(330 81% 60% / 0.1);
+    --shadow-button: 0 6px 25px -6px hsl(330 81% 60% / 0.3);
   }
 
   .dark {
@@ -82,17 +90,18 @@
   .btn-gradient-primary {
     background: var(--gradient-primary);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: var(--shadow-button);
   }
   
   .btn-gradient-primary:hover {
     transform: translateY(-4px);
-    box-shadow: 0 10px 25px -5px hsl(44 100% 67% / 0.3);
+    box-shadow: var(--shadow-romantic);
   }
   
   .btn-gradient-secondary {
     border: 2px solid transparent;
     background: linear-gradient(white, white) padding-box, var(--gradient-primary) border-box;
-    color: hsl(44 100% 67%);
+    color: hsl(var(--primary));
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
@@ -100,5 +109,35 @@
     background: var(--gradient-primary);
     color: white;
     transform: translateY(-2px);
+  }
+  
+  .romantic-card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    border-radius: var(--radius);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .romantic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-romantic);
+  }
+  
+  .romantic-background {
+    background: var(--gradient-background);
+  }
+  
+  .pulse-romantic {
+    animation: pulse-romantic 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  @keyframes pulse-romantic {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
   }
 }

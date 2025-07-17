@@ -18,12 +18,12 @@ export default function JoinRoom() {
 
   const handleJoinRoom = async (): Promise<void> => {
     if (!roomCode.trim()) {
-      toast.error('Por favor ingresa un código de sala');
+      toast.error(t('joinRoom.errors.enterCode'));
       return;
     }
 
     if (roomCode.length !== 6) {
-      toast.error('El código debe tener 6 caracteres');
+      toast.error(t('joinRoom.errors.invalidLength'));
       return;
     }
 
@@ -33,12 +33,12 @@ export default function JoinRoom() {
       const success = await joinRoom(roomCode.toUpperCase());
       
       if (success) {
-        toast.success('¡Conectado a la sala!');
+        toast.success(t('joinRoom.success.connected'));
       } else {
-        toast.error('Código no válido. Verifica el código e intenta nuevamente.');
+        toast.error(t('joinRoom.errors.invalidCode'));
       }
     } catch (error) {
-      toast.error('Error al conectar. Intenta nuevamente.');
+      toast.error(t('joinRoom.errors.connectionError'));
     } finally {
       setIsLoading(false);
     }
@@ -80,29 +80,29 @@ export default function JoinRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md romantic-card border-2 border-primary/20 shadow-2xl backdrop-blur-sm">
         <CardHeader className="text-center space-y-4 pb-6">
           <div className="flex items-center justify-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/')}
-              className="absolute left-4 top-4"
+              className="absolute left-4 top-4 hover:bg-primary/10"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Unirse a Sala
+              {t('joinRoom.title')}
             </CardTitle>
           </div>
           
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto border-2 border-primary/20">
+          <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto border-2 border-primary/30 pulse-romantic">
             <Users className="w-8 h-8 text-primary" />
           </div>
           
           <p className="text-muted-foreground">
-            Ingresa el código que te compartió tu pareja
+            {t('joinRoom.subtitle')}
           </p>
         </CardHeader>
         
@@ -111,51 +111,42 @@ export default function JoinRoom() {
             <div className="space-y-2">
               <Input
                 type="text"
-                placeholder="CÓDIGO"
+                placeholder={t('joinRoom.codePlaceholder')}
                 value={roomCode}
                 onChange={handleInputChange}
                 onKeyPress={handleKeyPress}
-                className="text-center text-2xl font-mono tracking-widest h-14 border-2 border-primary/30 focus:border-primary bg-muted/30"
+                className="text-center text-2xl font-mono tracking-widest h-14 border-2 border-primary/30 focus:border-primary bg-muted/30 rounded-xl"
                 maxLength={6}
                 autoFocus
               />
               <p className="text-xs text-muted-foreground text-center">
-                {roomCode.length}/6 caracteres
+                {t('joinRoom.charactersCount', { count: roomCode.length })}
               </p>
             </div>
 
             <Button 
               onClick={handleJoinRoom}
-              className="w-full h-12 text-lg font-semibold"
+              className="w-full h-12 text-lg font-semibold btn-gradient-primary"
               disabled={isLoading || roomCode.length !== 6}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Conectando...
+                  {t('joinRoom.connecting')}
                 </>
               ) : (
-                'Unirse a la sala'
+                t('joinRoom.joinButton')
               )}
             </Button>
           </div>
 
-          <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
-            <h3 className="font-semibold mb-2 text-center">Instrucciones</h3>
+          <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
+            <h3 className="font-semibold mb-2 text-center">{t('joinRoom.instructions.title')}</h3>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Pide a tu pareja el código de 6 caracteres</li>
-              <li>• El código contiene solo letras y números</li>
-              <li>• Una vez conectados, el juego iniciará automáticamente</li>
+              <li>• {t('joinRoom.instructions.step1')}</li>
+              <li>• {t('joinRoom.instructions.step2')}</li>
+              <li>• {t('joinRoom.instructions.step3')}</li>
             </ul>
-          </div>
-
-          <div className="p-3 bg-accent/10 rounded-lg border border-accent/20">
-            <p className="text-sm text-center">
-              <span className="font-semibold">💡 Código de prueba:</span> TEST123
-            </p>
-            <p className="text-xs text-muted-foreground text-center mt-1">
-              Úsalo para probar el juego sin pareja
-            </p>
           </div>
         </CardContent>
       </Card>

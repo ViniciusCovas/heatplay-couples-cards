@@ -79,6 +79,86 @@
     "no": "No",
     "close": "Close"
   },
+  "joinRoom": {
+    "title": "Join Your Partner",
+    "subtitle": "Enter the code your partner shared with you",
+    "codePlaceholder": "ENTER CODE",
+    "charactersCount": "{{count}}/6 characters",
+    "joinButton": "Join Room",
+    "connecting": "Connecting...",
+    "instructions": {
+      "title": "Instructions",
+      "step1": "Ask your partner for the 6-character code",
+      "step2": "Code contains only letters and numbers",
+      "step3": "Once connected, the game will start automatically"
+    },
+    "errors": {
+      "enterCode": "Please enter a room code",
+      "invalidLength": "Code must be 6 characters",
+      "invalidCode": "Invalid code. Please verify and try again.",
+      "connectionError": "Connection error. Please try again."
+    },
+    "success": {
+      "connected": "Connected to room!"
+    }
+  },
+  "createRoom": {
+    "title": "Create Room",
+    "subtitle": "Start your intimate conversation journey",
+    "howItWorks": {
+      "title": "How it works?",
+      "step1": "Create a room and get your unique code",
+      "step2": "Share the code with your partner",
+      "step3": "Wait for them to connect",
+      "step4": "The game will start automatically!"
+    }
+  },
+  "waitingRoom": {
+    "title": "Game Room",
+    "subtitle": "Waiting for players to connect",
+    "roomCode": "Room code",
+    "copyCode": "Copy code",
+    "codeCopied": "Code copied to clipboard",
+    "copyError": "Error copying code",
+    "startingIn": "Starting game in...",
+    "players": "Players",
+    "waitingPlayer": "Waiting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "shareInstruction": "Share the room code with your partner so they can join the game",
+    "leaveRoom": "Leave room"
+  },
+  "proximitySelector": {
+    "title": "How will you play?",
+    "subtitle": "Choose your game mode",
+    "together": {
+      "title": "Together",
+      "subtitle": "Spoken responses • More intimate • Face to face",
+      "emoji": "💕"
+    },
+    "apart": {
+      "title": "Apart",
+      "subtitle": "Written responses • Remote • Via chat",
+      "emoji": "📱"
+    },
+    "confirm": "Confirm selection",
+    "confirmed": "Confirmed! ✓",
+    "advancing": "Advancing...",
+    "preparing": "Preparing to connect..."
+  },
+  "levelSelect": {
+    "title": "Intimate Cards",
+    "subtitle": "Choose your intensity level",
+    "newLevel": "Choose the new intensity level",
+    "cards": "cards",
+    "selected": "You have chosen this level",
+    "waitingPartner": "Waiting for your partner to select the level...",
+    "differentLevels": "Different levels selected!",
+    "mustMatch": "You selected different levels. You must select the same level to play.",
+    "resetting": "Resetting automatically... You can select again in a moment.",
+    "connected": "You are connected. Let's play! Starting in {{countdown}}...",
+    "agreed": "Perfect! You both chose level {{level}}. Starting game..."
+  },
   "game": {
     "roomCode": "Room Code",
     "playerName": "Player Name",

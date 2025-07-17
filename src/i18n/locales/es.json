@@ -77,6 +77,86 @@
     "no": "No",
     "close": "Cerrar"
   },
+  "joinRoom": {
+    "title": "Únete a Tu Pareja",
+    "subtitle": "Ingresa el código que te compartió tu pareja",
+    "codePlaceholder": "CÓDIGO",
+    "charactersCount": "{{count}}/6 caracteres",
+    "joinButton": "Unirse a la sala",
+    "connecting": "Conectando...",
+    "instructions": {
+      "title": "Instrucciones",
+      "step1": "Pide a tu pareja el código de 6 caracteres",
+      "step2": "El código contiene solo letras y números",
+      "step3": "Una vez conectados, el juego iniciará automáticamente"
+    },
+    "errors": {
+      "enterCode": "Por favor ingresa un código de sala",
+      "invalidLength": "El código debe tener 6 caracteres",
+      "invalidCode": "Código no válido. Verifica el código e intenta nuevamente.",
+      "connectionError": "Error al conectar. Intenta nuevamente."
+    },
+    "success": {
+      "connected": "¡Conectado a la sala!"
+    }
+  },
+  "createRoom": {
+    "title": "Crear Sala",
+    "subtitle": "Inicia tu viaje de conversación íntima",
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "step1": "Crea una sala y obtén tu código único",
+      "step2": "Comparte el código con tu pareja",
+      "step3": "Espera a que se conecte",
+      "step4": "¡El juego comenzará automáticamente!"
+    }
+  },
+  "waitingRoom": {
+    "title": "Sala de Juego",
+    "subtitle": "Esperando a que se conecten los jugadores",
+    "roomCode": "Código de sala",
+    "copyCode": "Copiar código",
+    "codeCopied": "Código copiado al portapapeles",
+    "copyError": "Error al copiar el código",
+    "startingIn": "Iniciando juego en...",
+    "players": "Jugadores",
+    "waitingPlayer": "Esperando...",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "shareInstruction": "Comparte el código de sala con tu pareja para que pueda unirse al juego",
+    "leaveRoom": "Salir de la sala"
+  },
+  "proximitySelector": {
+    "title": "¿Cómo van a jugar?",
+    "subtitle": "Selecciona tu modalidad de juego",
+    "together": {
+      "title": "Están juntos",
+      "subtitle": "Respuestas habladas • Más íntimo • Cara a cara",
+      "emoji": "💕"
+    },
+    "apart": {
+      "title": "Están separados",
+      "subtitle": "Respuestas escritas • A distancia • Por chat",
+      "emoji": "📱"
+    },
+    "confirm": "Confirmar selección",
+    "confirmed": "¡Confirmado! ✓",
+    "advancing": "Avanzando...",
+    "preparing": "Preparándose para conectar..."
+  },
+  "levelSelect": {
+    "title": "Cartas Íntimas",
+    "subtitle": "Elige tu nivel de intensidad",
+    "newLevel": "Elige el nuevo nivel de intensidad",
+    "cards": "cartas",
+    "selected": "Has elegido este nivel",
+    "waitingPartner": "Esperando que tu pareja seleccione el nivel...",
+    "differentLevels": "¡Niveles diferentes seleccionados!",
+    "mustMatch": "Seleccionaron niveles diferentes. Deben seleccionar el mismo nivel para jugar.",
+    "resetting": "Reiniciando automáticamente... Pueden seleccionar nuevamente en un momento.",
+    "connected": "Están conectados. ¡Juguemos! Iniciando en {{countdown}}...",
+    "agreed": "¡Perfecto! Ambos eligieron el nivel {{level}}. Iniciando juego..."
+  },
   "game": {
     "roomCode": "Código de Sala",
     "playerName": "Nombre del Jugador",

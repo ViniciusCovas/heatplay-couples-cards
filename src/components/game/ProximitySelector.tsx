@@ -6,6 +6,7 @@ import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ProximitySelectorProps {
   isVisible: boolean;
@@ -21,6 +22,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const { t } = useTranslation();
 
   // Handle automatic navigation when someone has answered
   useEffect(() => {
@@ -99,12 +101,12 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
   if (!isVisible) return null;
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-6 p-4">{/* Removed fixed positioning and backdrop */}
-      <Card className="w-full p-8 space-y-8 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10">
-        {/* Gaming Header */}
+    <div className="w-full max-w-md mx-auto space-y-6 p-4">
+      <Card className="w-full p-8 space-y-8 animate-scale-in romantic-card border-2 border-primary/20 shadow-2xl shadow-primary/10">
+        {/* Romantic Header */}
         <div className="text-center space-y-4">
           <div className="relative">
-            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
+            <div className="w-20 h-20 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/30">
               <Gamepad2 className="w-10 h-10 text-white" />
             </div>
             <div className="absolute -top-2 -right-2 w-6 h-6 bg-accent rounded-full animate-pulse border-2 border-background"></div>
@@ -112,10 +114,10 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
           
           <div>
             <h1 className="text-2xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              ¿Cómo van a jugar?
+              {t('proximitySelector.title')}
             </h1>
             <p className="text-muted-foreground mt-2">
-              Selecciona tu modalidad de juego
+              {t('proximitySelector.subtitle')}
             </p>
           </div>
         </div>
@@ -127,15 +129,15 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               <Check className="w-8 h-8 text-primary animate-pulse" />
             </div>
             <h3 className="text-lg font-heading text-foreground mb-2">
-              ¡Confirmado! ✓
+              {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              Avanzando...
+              {t('proximitySelector.advancing')}
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Close Option */}
+            {/* Together Option */}
             <div 
               onClick={() => handleSelect(true)}
               className={`group relative p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20 ${
@@ -150,10 +152,10 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-heading text-foreground group-hover:text-green-600 transition-colors">
-                    Están juntos 💕
+                    {t('proximitySelector.together.title')} {t('proximitySelector.together.emoji')}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Respuestas habladas • Más íntimo • Cara a cara
+                    {t('proximitySelector.together.subtitle')}
                   </p>
                 </div>
                 <div className={`w-8 h-8 rounded-full border-2 transition-all ${
@@ -167,7 +169,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-green-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
 
-            {/* Far Option */}
+            {/* Apart Option */}
             <div 
               onClick={() => handleSelect(false)}
               className={`group relative p-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/20 ${
@@ -182,10 +184,10 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-heading text-foreground group-hover:text-purple-600 transition-colors">
-                    Están separados 📱
+                    {t('proximitySelector.apart.title')} {t('proximitySelector.apart.emoji')}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Respuestas escritas • A distancia • Por chat
+                    {t('proximitySelector.apart.subtitle')}
                   </p>
                 </div>
                 <div className={`w-8 h-8 rounded-full border-2 transition-all ${
@@ -204,22 +206,22 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               <div className="pt-4">
                 <Button 
                   onClick={handleConfirm}
-                  className="w-full h-14 text-lg font-heading bg-gradient-to-r from-primary to-primary-foreground hover:from-primary/90 hover:to-primary-foreground/90 shadow-lg"
+                  className="w-full h-14 text-lg font-heading btn-gradient-primary"
                   size="lg"
                 >
                   <Check className="w-5 h-5 mr-2" />
-                  Confirmar selección
+                  {t('proximitySelector.confirm')}
                 </Button>
               </div>
             )}
           </div>
         )}
 
-        {/* Gaming Footer */}
+        {/* Romantic Footer */}
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Users className="w-4 h-4" />
-            <span>Preparándose para conectar...</span>
+            <span>{t('proximitySelector.preparing')}</span>
           </div>
         </div>
       </Card>

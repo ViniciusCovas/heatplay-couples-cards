@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Copy, CheckCircle, Clock } from 'lucide-react';
 import { RoomParticipant } from '@/hooks/useRoomService';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface WaitingRoomProps {
   roomCode: string;
@@ -15,13 +16,14 @@ interface WaitingRoomProps {
 
 export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }: WaitingRoomProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
+  const { t } = useTranslation();
 
   const copyRoomCode = async () => {
     try {
       await navigator.clipboard.writeText(roomCode);
-      toast.success('Código copiado al portapapeles');
+      toast.success(t('waitingRoom.codeCopied'));
     } catch (err) {
-      toast.error('Error al copiar el código');
+      toast.error(t('waitingRoom.copyError'));
     }
   };
 
@@ -56,25 +58,25 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
   }, [countdown, onGameStart]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-accent/10 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border-2 border-primary/20 shadow-2xl backdrop-blur-sm bg-card/95">
+    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-md romantic-card border-2 border-primary/20 shadow-2xl backdrop-blur-sm">
         <CardContent className="p-8 text-center space-y-6">
           {/* Header */}
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2 text-primary">
               <Users className="w-6 h-6" />
-              <h1 className="text-2xl font-bold">Sala de Juego</h1>
+              <h1 className="text-2xl font-bold">{t('waitingRoom.title')}</h1>
             </div>
             <p className="text-muted-foreground">
-              Esperando a que se conecten los jugadores
+              {t('waitingRoom.subtitle')}
             </p>
           </div>
 
           {/* Room Code */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">Código de sala</p>
+            <p className="text-sm font-medium text-muted-foreground">{t('waitingRoom.roomCode')}</p>
             <div className="flex items-center gap-2">
-              <div className="flex-1 bg-muted/50 rounded-lg p-3 border-2 border-dashed border-primary/30">
+              <div className="flex-1 bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-3 border-2 border-dashed border-primary/30">
                 <span className="text-2xl font-mono font-bold text-primary tracking-wider">
                   {roomCode}
                 </span>
@@ -83,7 +85,8 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
                 onClick={copyRoomCode}
                 variant="outline"
                 size="icon"
-                className="shrink-0"
+                className="shrink-0 hover:bg-primary/10 border-primary/30"
+                title={t('waitingRoom.copyCode')}
               >
                 <Copy className="w-4 h-4" />
               </Button>
@@ -95,7 +98,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
             <div className="space-y-3">
               <div className="flex items-center justify-center gap-2 text-accent-foreground">
                 <Clock className="w-5 h-5" />
-                <span className="text-sm font-medium">Iniciando juego en...</span>
+                <span className="text-sm font-medium">{t('waitingRoom.startingIn')}</span>
               </div>
               <div className="text-6xl font-bold text-primary animate-pulse">
                 {countdown}
@@ -107,7 +110,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
           <div className="space-y-3">
             <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
-              Jugadores ({participants.length}/2)
+              {t('waitingRoom.players')} ({participants.length}/2)
             </h3>
             <div className="space-y-2">
               {[1, 2].map((playerNum) => {
@@ -115,25 +118,25 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
                 return (
                   <div
                     key={playerNum}
-                    className="flex items-center justify-between p-3 rounded-lg border bg-muted/30"
+                    className="flex items-center justify-between p-3 rounded-xl border bg-muted/30"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-medium">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center text-sm font-medium">
                         {playerNum}
                       </div>
                       <span className="font-medium">
-                        {participant ? `Jugador ${playerNum}` : 'Esperando...'}
+                        {participant ? `Jugador ${playerNum}` : t('waitingRoom.waitingPlayer')}
                       </span>
                     </div>
                     <div>
                       {participant ? (
-                        <Badge variant="secondary" className="gap-1">
+                        <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
                           <CheckCircle className="w-3 h-3" />
-                          Conectado
+                          {t('waitingRoom.connected')}
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="text-muted-foreground">
-                          Desconectado
+                          {t('waitingRoom.disconnected')}
                         </Badge>
                       )}
                     </div>
@@ -145,9 +148,9 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
 
           {/* Instructions */}
           {participants.length < 2 && (
-            <div className="p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/30">
+            <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
               <p className="text-sm text-muted-foreground">
-                Comparte el código de sala con tu pareja para que pueda unirse al juego
+                {t('waitingRoom.shareInstruction')}
               </p>
             </div>
           )}
@@ -156,9 +159,9 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
           <Button
             onClick={onLeaveRoom}
             variant="outline"
-            className="w-full"
+            className="w-full hover:bg-primary/10"
           >
-            Salir de la sala
+            {t('waitingRoom.leaveRoom')}
           </Button>
         </CardContent>
       </Card>
