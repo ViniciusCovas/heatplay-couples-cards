@@ -27,7 +27,7 @@ export const Logo = ({
       onClick={onClick}
     >
       <img 
-        src="/lovable-uploads/84a7b7ec-c295-4c98-94f5-6f44f6684eee.png" 
+        src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png" 
         alt="Let's Get Close - Dating App Logo"
         className="w-auto h-full object-contain"
       />
