@@ -157,6 +157,7 @@ const Game = () => {
   });
   
   // Sync with game state - this is the single source of truth
+  // Main sync useEffect - handles ALL phase transitions based on database state
   useEffect(() => {
     if (gameState) {
       console.log('🔄 Syncing with game state:', gameState);
@@ -177,21 +178,21 @@ const Game = () => {
         setUsedCards(gameState.used_cards);
       }
       
-      // Sync game phase based on database state and player logic
+      // Sync game phase based on database state and player logic - ONLY source of phase changes
       const newPhase = deriveLocalPhase(gameState, playerNumber);
       if (newPhase !== gamePhase) {
-        console.log('🎮 Phase changed:', { from: gamePhase, to: newPhase, reason: 'game state sync' });
-        
-        // Extra protection: don't change away from final-report if we're already there
-        if (gamePhase === 'final-report' && newPhase !== 'final-report' && room?.status !== 'finished') {
-          console.log('🛡️ Protecting final-report phase from unwanted changes');
-          return;
-        }
+        console.log('🎮 Phase changed via deriveLocalPhase:', { 
+          from: gamePhase, 
+          to: newPhase, 
+          dbPhase: gameState.current_phase,
+          dbTurn: gameState.current_turn,
+          roomStatus: room?.status
+        });
         
         setGamePhase(newPhase);
       }
     }
-  }, [gameState]);
+  }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
@@ -655,11 +656,8 @@ const Game = () => {
         message: 'Game finished'
       });
       
-      // Update room status to finished (this will trigger deriveLocalPhase to return 'final-report')
+      // Update room status to finished (deriveLocalPhase will handle phase transition)
       await updateRoomStatus('finished');
-      
-      // Set local phase after database updates
-      setGamePhase('final-report');
     } catch (error) {
       console.error('❌ Error generating final report:', error);
       toast({
@@ -706,7 +704,7 @@ const Game = () => {
       if (connectionData) {
         setConnectionData(connectionData);
       }
-      setGamePhase('final-report');
+      // deriveLocalPhase will handle phase transition based on room status
     };
 
     // Listen for level change requests from partner
