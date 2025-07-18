@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 interface LevelVote {
   id: string;
@@ -33,6 +34,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [countdown, setCountdown] = useState<number | null>(null);
   const [bothPlayersVoted, setBothPlayersVoted] = useState(false);
   const [levelsMismatch, setLevelsMismatch] = useState(false);
+  const { t } = useTranslation();
 
   // Helper function to check for matching votes
   const checkForMatchingVotes = useCallback(async (allVotes: LevelVote[]) => {
@@ -73,7 +75,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           
           if (!agreedLevel) { // Only start countdown if not already agreed
             setCountdown(10);
-            toast.success(`¡Perfecto! Ambos eligieron el nivel ${levels[0]}. Iniciando en 10 segundos...`);
+            toast.success(t('levelSelect.agreed', { level: levels[0], countdown: 10 }));
             
             // Start countdown
             let timeLeft = 10;
@@ -104,14 +106,14 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                       
                     if (updateError) {
                       console.error('❌ Error updating game room:', updateError);
-                      toast.error('Error al avanzar. Intenta nuevamente.');
+                      toast.error(t('game.errors.levelChangeFailed'));
                     } else {
                       console.log('✅ Game room successfully updated to card-display');
                       console.log('📊 Updated data:', updateData);
                     }
                   } catch (err) {
                     console.error('❌ Exception updating game room:', err);
-                    toast.error('Error al avanzar. Intenta nuevamente.');
+                    toast.error(t('game.errors.levelChangeFailed'));
                   }
                 };
                 
@@ -129,7 +131,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setIsWaitingForPartner(false);
           setBothPlayersVoted(true); // Keep this true to show mismatch UI
           
-          toast.error('You selected different levels. You must select the same level to play.');
+          toast.error(t('levelSelect.mustMatch'));
           
           // Use game_sync to coordinate mismatch state between players
           try {
@@ -183,7 +185,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
               setIsWaitingForPartner(false);
               setCountdown(null);
               
-              toast.info('Ready to select again!');
+              toast.info(t('levelSelect.readyToSelect'));
             } catch (error) {
               console.error('❌ Error in auto-reset:', error);
             }
@@ -200,7 +202,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     } else {
       console.log('🔄 Not enough votes yet:', allVotes.length);
     }
-  }, [roomId, playerId]);
+  }, [roomId, playerId, agreedLevel, t]);
 
   // Load existing votes
   useEffect(() => {
@@ -330,7 +332,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             
             // Only show toast if it's from partner to avoid duplicate notifications
             if (syncAction.triggered_by !== playerId) {
-              toast.error('You selected different levels. You must select the same level to play.');
+              toast.error(t('levelSelect.mustMatch'));
             }
           } else if (syncAction.action_type === 'reset_votes') {
             // Only process reset from partner to avoid double-resets
@@ -347,7 +349,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             setAgreedLevel(null);
             setIsWaitingForPartner(false);
             setCountdown(null);
-            toast.info('Ready to select again!');
+            toast.info(t('levelSelect.readyToSelect'));
           }
         }
       )
@@ -356,7 +358,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, playerId, checkForMatchingVotes]);
+  }, [roomId, playerId, checkForMatchingVotes, t]);
 
   // Enhanced periodic verification with state recovery
   useEffect(() => {
@@ -384,7 +386,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setAgreedLevel(room.level);
           setIsWaitingForPartner(false);
           setCountdown(null);
-          toast.success(`¡Recuperando estado! Iniciando nivel ${room.level}`);
+          toast.success(t('levelSelect.syncingGame', { level: room.level }));
           return;
         }
         
@@ -422,7 +424,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setAgreedLevel(levels[0]);
                 setIsWaitingForPartner(false);
                 setCountdown(null);
-                toast.success(`¡Niveles sincronizados! Iniciando nivel ${levels[0]}`);
+                toast.success(t('levelSelect.syncingGame', { level: levels[0] }));
               } else {
                 // THIS IS THE NEW LOGIC TO HANDLE MISMATCH IN PERIODIC CHECK
                 console.log('🔄 PERIODIC CHECK: Found mismatching votes, forcing reset');
@@ -430,11 +432,11 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setCountdown(null);
                 setIsWaitingForPartner(false);
                 setBothPlayersVoted(true);
-                toast.error('Han elegido niveles diferentes. Deben elegir el mismo para poder jugar.');
+                toast.error(t('levelSelect.mustMatch'));
                 
                 // Automatically reset after 3 seconds
                 setTimeout(async () => {
-                  console.log('🔄 Auto-resetting after level mismatch (from polling)');
+                  console.log(t('levelSelect.autoResetAfterMismatch'));
                   try {
                     await supabase.from('level_selection_votes').delete().eq('room_id', roomId);
                     setVotes([]);
@@ -445,7 +447,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                     setAgreedLevel(null);
                     setIsWaitingForPartner(false);
                     setCountdown(null);
-                    toast.info('¡Listos para elegir de nuevo!');
+                    toast.info(t('levelSelect.readyToSelect'));
                   } catch (error) {
                     console.error('❌ Error in auto-reset (from polling):', error);
                   }
@@ -463,20 +465,20 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     periodicCheck();
     const interval = setInterval(periodicCheck, 2000);
     return () => clearInterval(interval);
-  }, [roomId, agreedLevel, levelsMismatch]);
+  }, [roomId, agreedLevel, levelsMismatch, t]);
 
   const submitLevelVote = useCallback(async (level: number) => {
     console.log('🗳️ submitLevelVote called:', { level, roomId, playerId });
     
     if (!roomId) {
       console.error('❌ No roomId provided');
-      toast.error('Error: No hay sala activa');
+      toast.error(t('game.errors.connectionError'));
       return;
     }
 
     if (!playerId) {
       console.error('❌ No playerId provided');
-      toast.error('Error: No hay jugador identificado');
+      toast.error(t('game.errors.connectionError'));
       return;
     }
 
@@ -515,12 +517,12 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       setSelectedLevel(level);
       setIsWaitingForPartner(true);
       
-      toast.success(`Has elegido el nivel ${level}. Esperando a tu pareja...`);
+      toast.success(t('levelSelect.votesSubmitted', { level }));
     } catch (error) {
       console.error('❌ Error submitting vote:', error);
-      toast.error('Error al enviar tu voto');
+      toast.error(t('game.errors.levelChangeFailed'));
     }
-  }, [roomId, playerId]);
+  }, [roomId, playerId, t]);
 
   // Try again function - clears votes and resets state
   const tryAgain = useCallback(async () => {
@@ -528,7 +530,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     
     try {
       console.log('🔄 Try again triggered - clearing votes');
-      toast.info('Clearing votes...');
+      toast.info(t('levelSelect.votesCleared'));
       
       // Clear all votes for this room
       await supabase
@@ -546,12 +548,12 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       setIsWaitingForPartner(false);
       setCountdown(null);
       
-      toast.success('Ready to select again!');
+      toast.success(t('levelSelect.readyToSelect'));
     } catch (error) {
       console.error('❌ Error in try again:', error);
-      toast.error('Error clearing votes');
+      toast.error(t('game.errors.levelChangeFailed'));
     }
-  }, [roomId]);
+  }, [roomId, t]);
 
   // Manual sync function for stuck players
   const forceSync = useCallback(async () => {
@@ -559,7 +561,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     
     try {
       console.log('🔄 Force sync triggered');
-      toast.info('Sincronizando...');
+      toast.info(t('levelSelect.syncing'));
       
       // Check room state
       const { data: room } = await supabase
@@ -572,7 +574,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         setAgreedLevel(room.level);
         setIsWaitingForPartner(false);
         setCountdown(null);
-        toast.success(`¡Sincronizado! Iniciando nivel ${room.level}`);
+        toast.success(t('levelSelect.syncingGame', { level: room.level }));
         return;
       }
       
@@ -590,12 +592,12 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         await checkForMatchingVotes(allVotes);
       }
       
-      toast.success('Estado sincronizado');
+      toast.success(t('levelSelect.synchronized'));
     } catch (error) {
       console.error('❌ Error in force sync:', error);
-      toast.error('Error al sincronizar');
+      toast.error(t('game.errors.levelChangeFailed'));
     }
-  }, [roomId, playerId, checkForMatchingVotes]);
+  }, [roomId, playerId, checkForMatchingVotes, t]);
 
   return {
     submitLevelVote,

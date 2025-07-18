@@ -1,3 +1,4 @@
+
 {
   "app": {
     "title": "Let's Get Close",
@@ -120,6 +121,7 @@
     "copyError": "Error copying code",
     "startingIn": "Starting game in...",
     "players": "Players",
+    "player": "Player {{playerNum}}",
     "waitingPlayer": "Waiting...",
     "connected": "Connected",
     "disconnected": "Disconnected",
@@ -155,7 +157,15 @@
     "mustMatch": "You selected different levels. You must select the same level to play.",
     "resetting": "Resetting automatically... You can select again in a moment.",
     "connected": "You are connected. Let's play! Starting in {{countdown}}...",
-    "agreed": "Perfect! You both chose level {{level}}. Starting game..."
+    "agreed": "Perfect! You both chose level {{level}}. Starting in {{countdown}} seconds...",
+    "bothChose": "You both chose level {{level}}. Starting game...",
+    "readyToSelect": "Ready to select again!",
+    "syncingGame": "Levels synchronized! Starting level {{level}}",
+    "autoResetAfterMismatch": "Auto-resetting after level mismatch",
+    "votesCleared": "Clearing votes...",
+    "votesSubmitted": "You chose level {{level}}. Waiting for your partner...",
+    "syncing": "Synchronizing...",
+    "synchronized": "State synchronized"
   },
   "game": {
     "roomCode": "Room Code",
@@ -170,15 +180,29 @@
     "typeYourResponse": "Type your response...",
     "evaluateResponse": "Evaluate this response"
   },
+  "proximitySelection": {
+    "errors": {
+      "connectionError": "Connection Error",
+      "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
+      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "loadingRoom": "Loading room...",
+      "connectingAttempt": "Connecting to room... (Attempt {{current}}/{{max}})",
+      "backToHome": "Back to home"
+    }
+  },
   "levels": {
     "iceBreaker": "Ice Breaker",
     "gettingPersonal": "Getting Personal",
     "deepThoughts": "Deep Thoughts",
     "intimate": "Intimate",
     "level1": "Discovery",
+    "level1Name": "Discovery",
     "level2": "Connection",
+    "level2Name": "Connection",
     "level3": "Hot",
-    "level4": "No Filters"
+    "level3Name": "Hot",
+    "level4": "No Filters",
+    "level4Name": "No Filters"
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -326,12 +350,6 @@
       "choosingNewLevel": "Your partner wants to change levels. Choosing new level...",
       "actionSyncError": "Error synchronizing action"
     }
-  },
-  "levels": {
-    "level1Name": "Discovery",
-    "level2Name": "Connection",
-    "level3Name": "Hot",
-    "level4Name": "No Filters"
   },
   "levelUp": {
     "title": "Do you want to go deeper?",

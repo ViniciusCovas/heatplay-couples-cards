@@ -1,3 +1,4 @@
+
 {
   "app": {
     "title": "Cartes de Connexion",
@@ -77,6 +78,95 @@
     "no": "Non",
     "close": "Fermer"
   },
+  "joinRoom": {
+    "title": "Rejoindre Votre Partenaire",
+    "subtitle": "Entrez le code que votre partenaire a partagé avec vous",
+    "codePlaceholder": "ENTREZ LE CODE",
+    "charactersCount": "{{count}}/6 caractères",
+    "joinButton": "Rejoindre la Salle",
+    "connecting": "Connexion...",
+    "instructions": {
+      "title": "Instructions",
+      "step1": "Demandez à votre partenaire le code à 6 caractères",
+      "step2": "Le code contient uniquement des lettres et des chiffres",
+      "step3": "Une fois connectés, le jeu commencera automatiquement"
+    },
+    "errors": {
+      "enterCode": "Veuillez entrer un code de salle",
+      "invalidLength": "Le code doit contenir 6 caractères",
+      "invalidCode": "Code invalide. Veuillez vérifier et réessayer.",
+      "connectionError": "Erreur de connexion. Veuillez réessayer."
+    },
+    "success": {
+      "connected": "Connecté à la salle !"
+    }
+  },
+  "createRoom": {
+    "title": "Créer une Salle",
+    "subtitle": "Commencez votre voyage de conversation intime",
+    "howItWorks": {
+      "title": "Comment ça marche ?",
+      "step1": "Créez une salle et obtenez votre code unique",
+      "step2": "Partagez le code avec votre partenaire",
+      "step3": "Attendez qu'ils se connectent",
+      "step4": "Le jeu commencera automatiquement !"
+    }
+  },
+  "waitingRoom": {
+    "title": "Salle de Jeu",
+    "subtitle": "En attente de la connexion des joueurs",
+    "roomCode": "Code de la salle",
+    "copyCode": "Copier le code",
+    "codeCopied": "Code copié dans le presse-papiers",
+    "copyError": "Erreur lors de la copie du code",
+    "startingIn": "Début du jeu dans...",
+    "players": "Joueurs",
+    "player": "Joueur {{playerNum}}",
+    "waitingPlayer": "En attente...",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "shareInstruction": "Partagez le code de la salle avec votre partenaire pour qu'il puisse rejoindre le jeu",
+    "leaveRoom": "Quitter la salle"
+  },
+  "proximitySelector": {
+    "title": "Comment allez-vous jouer ?",
+    "subtitle": "Choisissez votre mode de jeu",
+    "together": {
+      "title": "Ensemble",
+      "subtitle": "Réponses parlées • Plus intime • Face à face",
+      "emoji": "💕"
+    },
+    "apart": {
+      "title": "Séparés",
+      "subtitle": "Réponses écrites • À distance • Par chat",
+      "emoji": "📱"
+    },
+    "confirm": "Confirmer la sélection",
+    "confirmed": "Confirmé ! ✓",
+    "advancing": "En cours...",
+    "preparing": "Préparation de la connexion..."
+  },
+  "levelSelect": {
+    "title": "Cartes Intimes",
+    "subtitle": "Choisissez votre niveau d'intensité",
+    "newLevel": "Choisissez le nouveau niveau d'intensité",
+    "cards": "cartes",
+    "selected": "Vous avez choisi ce niveau",
+    "waitingPartner": "En attente que votre partenaire sélectionne le niveau...",
+    "differentLevels": "Niveaux différents sélectionnés !",
+    "mustMatch": "Vous avez sélectionné des niveaux différents. Vous devez sélectionner le même niveau pour jouer.",
+    "resetting": "Réinitialisation automatique... Vous pouvez choisir à nouveau dans un moment.",
+    "connected": "Vous êtes connectés. Jouons ! Début dans {{countdown}}...",
+    "agreed": "Parfait ! Vous avez tous les deux choisi le niveau {{level}}. Début dans {{countdown}} secondes...",
+    "bothChose": "Vous avez tous les deux choisi le niveau {{level}}. Début du jeu...",
+    "readyToSelect": "Prêts à choisir à nouveau !",
+    "syncingGame": "Niveaux synchronisés ! Début du niveau {{level}}",
+    "autoResetAfterMismatch": "Réinitialisation automatique après niveaux différents",
+    "votesCleared": "Suppression des votes...",
+    "votesSubmitted": "Vous avez choisi le niveau {{level}}. En attente de votre partenaire...",
+    "syncing": "Synchronisation...",
+    "synchronized": "État synchronisé"
+  },
   "game": {
     "roomCode": "Code de Salle",
     "playerName": "Nom du Joueur",
@@ -90,15 +180,29 @@
     "typeYourResponse": "Tapez votre réponse...",
     "evaluateResponse": "Évaluez cette réponse"
   },
+  "proximitySelection": {
+    "errors": {
+      "connectionError": "Erreur de Connexion",
+      "connectionFailed": "Impossible de se connecter à la salle {{roomCode}} après {{maxRetries}} tentatives",
+      "verifyRoomCode": "Impossible de se connecter à la salle. Veuillez vérifier le code de la salle.",
+      "loadingRoom": "Chargement de la salle...",
+      "connectingAttempt": "Connexion à la salle... (Tentative {{current}}/{{max}})",
+      "backToHome": "Retour à l'accueil"
+    }
+  },
   "levels": {
     "iceBreaker": "Brise-glace",
     "gettingPersonal": "Devenir Personnel",
     "deepThoughts": "Pensées Profondes",
     "intimate": "Intime",
     "level1": "Découverte",
+    "level1Name": "Découverte",
     "level2": "Connexion",
+    "level2Name": "Connexion",
     "level3": "Chaud",
-    "level4": "Sans Filtres"
+    "level3Name": "Chaud",
+    "level4": "Sans Filtres",
+    "level4Name": "Sans Filtres"
   },
   "admin": {
     "dashboard": "Tableau de Bord Administrateur",
@@ -246,12 +350,6 @@
       "choosingNewLevel": "Votre partenaire veut changer de niveau. Choix du nouveau niveau...",
       "actionSyncError": "Erreur de synchronisation de l'action"
     }
-  },
-  "levels": {
-    "level1Name": "Découverte",
-    "level2Name": "Connexion",
-    "level3Name": "Chaud",
-    "level4Name": "Sans Filtres"
   },
   "levelUp": {
     "title": "Voulez-vous aller plus loin ?",

@@ -1,8 +1,9 @@
+
 {
   "app": {
     "title": "Cartas de Conexão",
-    "headline": "Chega de conversa fiada. Comece a falar de verdade.",
-    "subtitle": "Do doce ao provocante. Um só jogo.",
+    "headline": "Parem com papo furado. Comecem a conversar de verdade.",
+    "subtitle": "Do fofo ao selvagem. Um só jogo.",
     "tagline": "Cartas com IA feitas para aproximar vocês."
   },
   "home": {
@@ -11,14 +12,14 @@
       "couples": "50k+ Casais"
     },
     "headline": {
-      "main": "Chega de conversa fiada. Comece a falar de verdade.",
-      "sub": "Do doce ao provocante. Um só jogo."
+      "main": "Parem com papo furado. Comecem a conversar de verdade.",
+      "sub": "Do fofo ao selvagem. Um só jogo."
     },
-    "subtitle": "Descubra o jogo que aproxima casais através de conversas significativas e mais intimidade.",
-    "socialProof": "Confiado por milhares",
+    "subtitle": "Descubra o jogo que une casais através de conversas significativas e intimidade mais profunda.",
+    "socialProof": "Confiável por milhares",
     "buttons": {
-      "startJourney": "Comece Sua Jornada",
-      "joinPartner": "Junte-se ao Parceiro",
+      "startJourney": "Começar Sua Jornada",
+      "joinPartner": "Juntar-se ao Parceiro",
       "login": "Entrar"
     },
     "valueProps": {
@@ -26,12 +27,12 @@
       "private": "100% Privado",
       "instant": "Conexão instantânea"
     },
-    "ageNotice": "Apenas 18+ • Seguro e Protegido",
+    "ageNotice": "Apenas +18 • Seguro e Protegido",
     "visual": {
       "title": "Conexão Mais Profunda",
       "feature1": "Conversas significativas",
       "feature2": "Intimidade emocional",
-      "feature3": "Laços mais fortes"
+      "feature3": "Vínculos mais fortes"
     },
     "stats": {
       "successRate": "Taxa de Sucesso",
@@ -42,7 +43,7 @@
       "subtitle": "Aprofunde progressivamente seu vínculo através de níveis de conversa cuidadosamente elaborados",
       "level1": {
         "title": "Quebrar o Gelo",
-        "description": "Quebre o gelo com iniciadores de conversa divertidos e perguntas descontraídas"
+        "description": "Quebre o gelo com conversas divertidas e perguntas descontraídas"
       },
       "level2": {
         "title": "Ficando Pessoal",
@@ -56,14 +57,14 @@
   },
   "navigation": {
     "home": "Início",
-    "admin": "Painel Administrativo",
+    "admin": "Painel de Administração",
     "levels": "Níveis",
     "questions": "Perguntas"
   },
   "buttons": {
     "createRoom": "Criar Sala",
     "joinRoom": "Entrar na Sala",
-    "startGame": "Iniciar Jogo",
+    "startGame": "Começar Jogo",
     "nextCard": "Próxima Carta",
     "submit": "Enviar",
     "cancel": "Cancelar",
@@ -76,6 +77,95 @@
     "yes": "Sim",
     "no": "Não",
     "close": "Fechar"
+  },
+  "joinRoom": {
+    "title": "Junte-se ao Seu Parceiro",
+    "subtitle": "Digite o código que seu parceiro compartilhou com você",
+    "codePlaceholder": "DIGITE O CÓDIGO",
+    "charactersCount": "{{count}}/6 caracteres",
+    "joinButton": "Entrar na Sala",
+    "connecting": "Conectando...",
+    "instructions": {
+      "title": "Instruções",
+      "step1": "Peça ao seu parceiro o código de 6 caracteres",
+      "step2": "O código contém apenas letras e números",
+      "step3": "Uma vez conectados, o jogo começará automaticamente"
+    },
+    "errors": {
+      "enterCode": "Por favor digite um código de sala",
+      "invalidLength": "O código deve ter 6 caracteres",
+      "invalidCode": "Código inválido. Por favor verifique e tente novamente.",
+      "connectionError": "Erro de conexão. Por favor tente novamente."
+    },
+    "success": {
+      "connected": "Conectado à sala!"
+    }
+  },
+  "createRoom": {
+    "title": "Criar Sala",
+    "subtitle": "Comece sua jornada de conversa íntima",
+    "howItWorks": {
+      "title": "Como funciona?",
+      "step1": "Crie uma sala e obtenha seu código único",
+      "step2": "Compartilhe o código com seu parceiro",
+      "step3": "Aguarde eles se conectarem",
+      "step4": "O jogo começará automaticamente!"
+    }
+  },
+  "waitingRoom": {
+    "title": "Sala de Jogo",
+    "subtitle": "Aguardando jogadores se conectarem",
+    "roomCode": "Código da sala",
+    "copyCode": "Copiar código",
+    "codeCopied": "Código copiado para a área de transferência",
+    "copyError": "Erro ao copiar código",
+    "startingIn": "Iniciando jogo em...",
+    "players": "Jogadores",
+    "player": "Jogador {{playerNum}}",
+    "waitingPlayer": "Aguardando...",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "shareInstruction": "Compartilhe o código da sala com seu parceiro para que possam entrar no jogo",
+    "leaveRoom": "Sair da sala"
+  },
+  "proximitySelector": {
+    "title": "Como vocês vão jogar?",
+    "subtitle": "Escolha seu modo de jogo",
+    "together": {
+      "title": "Juntos",
+      "subtitle": "Respostas faladas • Mais íntimo • Cara a cara",
+      "emoji": "💕"
+    },
+    "apart": {
+      "title": "Separados",
+      "subtitle": "Respostas escritas • À distância • Por chat",
+      "emoji": "📱"
+    },
+    "confirm": "Confirmar seleção",
+    "confirmed": "Confirmado! ✓",
+    "advancing": "Avançando...",
+    "preparing": "Preparando para conectar..."
+  },
+  "levelSelect": {
+    "title": "Cartas Íntimas",
+    "subtitle": "Escolha seu nível de intensidade",
+    "newLevel": "Escolha o novo nível de intensidade",
+    "cards": "cartas",
+    "selected": "Você escolheu este nível",
+    "waitingPartner": "Aguardando seu parceiro selecionar o nível...",
+    "differentLevels": "Níveis diferentes selecionados!",
+    "mustMatch": "Vocês selecionaram níveis diferentes. Devem selecionar o mesmo nível para jogar.",
+    "resetting": "Reiniciando automaticamente... Vocês podem escolher novamente em um momento.",
+    "connected": "Vocês estão conectados. Vamos jogar! Iniciando em {{countdown}}...",
+    "agreed": "Perfeito! Ambos escolheram o nível {{level}}. Iniciando em {{countdown}} segundos...",
+    "bothChose": "Ambos escolheram o nível {{level}}. Iniciando jogo...",
+    "readyToSelect": "Prontos para escolher novamente!",
+    "syncingGame": "Níveis sincronizados! Iniciando nível {{level}}",
+    "autoResetAfterMismatch": "Auto-reiniciando após níveis diferentes",
+    "votesCleared": "Limpando votos...",
+    "votesSubmitted": "Você escolheu o nível {{level}}. Aguardando seu parceiro...",
+    "syncing": "Sincronizando...",
+    "synchronized": "Estado sincronizado"
   },
   "game": {
     "roomCode": "Código da Sala",
@@ -90,20 +180,34 @@
     "typeYourResponse": "Digite sua resposta...",
     "evaluateResponse": "Avalie esta resposta"
   },
+  "proximitySelection": {
+    "errors": {
+      "connectionError": "Erro de Conexão",
+      "connectionFailed": "Não foi possível conectar à sala {{roomCode}} após {{maxRetries}} tentativas",
+      "verifyRoomCode": "Não foi possível conectar à sala. Verifique o código da sala.",
+      "loadingRoom": "Carregando sala...",
+      "connectingAttempt": "Conectando à sala... (Tentativa {{current}}/{{max}})",
+      "backToHome": "Voltar ao início"
+    }
+  },
   "levels": {
     "iceBreaker": "Quebra-gelo",
     "gettingPersonal": "Ficando Pessoal",
     "deepThoughts": "Pensamentos Profundos",
     "intimate": "Íntimo",
     "level1": "Descoberta",
+    "level1Name": "Descoberta",
     "level2": "Conexão",
+    "level2Name": "Conexão",
     "level3": "Quente",
-    "level4": "Sem Filtros"
+    "level3Name": "Quente",
+    "level4": "Sem Filtros",
+    "level4Name": "Sem Filtros"
   },
   "admin": {
-    "dashboard": "Painel Administrativo",
+    "dashboard": "Painel de Administração",
     "manageQuestions": "Gerenciar Perguntas",
-    "manageLevels": "Gerenciar Níveis",
+    "manageLevels": "Gerenciar Níveis",          
     "bulkImport": "Importação em Lote",
     "manualEntry": "Entrada Manual",
     "questionText": "Texto da Pergunta",
@@ -129,13 +233,13 @@
     "accessDenied": "Acesso negado. Privilégios de administrador necessários."
   },
   "errors": {
-    "generic": "Ocorreu um erro. Tente novamente.",
-    "networkError": "Erro de rede. Verifique sua conexão.",
+    "generic": "Ocorreu um erro. Por favor tente novamente.",
+    "networkError": "Erro de rede. Por favor verifique sua conexão.",
     "roomCodeRequired": "Código da sala é obrigatório",
     "playerNameRequired": "Nome do jogador é obrigatório",
     "questionTextRequired": "Texto da pergunta é obrigatório",
-    "invalidRoomCode": "Código da sala inválido",
-    "roomFull": "Sala está cheia",
+    "invalidRoomCode": "Código de sala inválido",
+    "roomFull": "A sala está cheia",
     "gameAlreadyStarted": "O jogo já começou"
   },
   "placeholders": {
@@ -153,7 +257,7 @@
     "room": "Conectando à sala {{roomCode}}..."
   },
   "button": {
-    "back_home": "Voltar ao início"
+    "back_home": "Voltar ao Início"
   },
   "level": {
     "basic": {
@@ -163,46 +267,46 @@
   },
   "common": {
     "error": "Erro",
-    "backToHome": "Voltar ao início",
+    "backToHome": "Voltar ao Início",
     "submitting": "Enviando..."
   },
   "game": {
     "errors": {
       "connectionError": "Erro de Conexão",
       "connectionFailed": "Não foi possível conectar à sala {{roomCode}} após {{maxRetries}} tentativas",
-      "verifyRoomCode": "Não foi possível conectar à sala. Verifique o código da sala.",
-      "connectionLost": "Não foi possível estabelecer conexão com a sala. Tente novamente.",
-      "responseSaveFailed": "Não foi possível salvar a resposta. Tente novamente.",
-      "evaluationSaveFailed": "Não foi possível salvar a avaliação. Tente novamente.",
+      "verifyRoomCode": "Não foi possível conectar à sala. Por favor verifique o código da sala.",
+      "connectionLost": "Não foi possível estabelecer conexão com a sala. Por favor tente novamente.",
+      "responseSaveFailed": "Não foi possível salvar a resposta. Por favor tente novamente.",
+      "evaluationSaveFailed": "Não foi possível salvar a avaliação. Por favor tente novamente.",
       "insufficientData": "Dados Insuficientes",
       "insufficientDataDescription": "Não há dados suficientes para gerar o relatório de conexão",
       "finalReportFailed": "Não foi possível gerar o relatório final",
       "levelChangeFailed": "Não foi possível solicitar mudança de nível"
     },
     "noRoomCode": "Nenhum código de sala fornecido",
-    "retryingConnection": "Tentando conectar novamente...",
+    "retryingConnection": "Tentando conexão novamente...",
     "connectingToRoom": "Conectando à sala...",
     "room": "Sala",
     "attempt": "Tentativa {{current}} de {{max}}",
     "connectionFailed": "Não foi possível conectar à sala",
     "retrying": "Tentando novamente...",
-    "retryConnection": "Tentar Conectar Novamente",
+    "retryConnection": "Tentar Conexão Novamente",
     "levelTitle": "Nível {{level}}: {{name}}",
     "level": "Nível {{level}}",
     "cardsCompleted": "{{completed}} de {{total}} cartas completadas",
-    "turn": "Turno",
+    "turn": "Vez",
     "player1": "Jogador 1",
     "player2": "Jogador 2",
-    "yourTurn": " (Seu turno)",
-    "partnerTurn": " (Turno do parceiro)",
+    "yourTurn": " (Sua vez)",
+    "partnerTurn": " (Vez do parceiro)",
     "respond": "Responder",
     "changeLevel": "Mudar Nível",
-    "finish": "Finalizar",
-    "waitingForResponse": "Esperando {{player}} responder...",
-    "safetyNote": "Lembrem-se de se comunicar e respeitar seus limites",
+    "finish": "Terminar",
+    "waitingForResponse": "Aguardando {{player}} responder...",
+    "safetyNote": "Lembre-se de se comunicar e respeitar seus limites",
     "evaluation": {
       "title": "Avaliar Resposta",
-      "subtitle": "Como a resposta de {{player}} te fez sentir?",
+      "subtitle": "Como a resposta de {{player}} fez você se sentir?",
       "question": "Pergunta",
       "response": "Resposta",
       "submit": "Enviar Avaliação",
@@ -216,50 +320,44 @@
       "intimacyDescription": "Quão íntima e pessoal foi a resposta?",
       "surpriseDescription": "Quão surpreendente ou inesperada foi a resposta?"
     },
-    "waitingForEvaluation": "Esperando {{player}} avaliar sua resposta...",
+    "waitingForEvaluation": "Aguardando {{player}} avaliar sua resposta...",
     "fallbackQuestions": {
-      "question1": "Qual foi sua primeira impressão de mim?",
-      "question2": "O que você mais admira no nosso relacionamento?",
+      "question1": "Qual foi sua primeira impressão sobre mim?",
+      "question2": "O que você mais admira em nosso relacionamento?",
       "question3": "Qual é o seu maior sonho compartilhado?"
     },
     "spokenResponse": "Resposta falada",
     "yourTurnMessage": "{{playerName}}, sua vez",
     "question": "Pergunta",
     "spokenMode": "Modo Falado",
-    "spokenModeDescription": "Respondam verbalmente cara a cara. Quando terminarem, pressionem continuar.",
+    "spokenModeDescription": "Responda verbalmente cara a cara. Quando terminar, pressione continuar.",
     "submitting": "Enviando",
-    "weResponded": "Já Respondemos",
+    "weResponded": "Nós Respondemos",
     "yourResponse": "Sua resposta",
     "responsePlaceholder": "Escreva sua resposta aqui...",
     "submitShortcut": "Pressione Ctrl + Enter para enviar",
     "submitResponse": "Enviar Resposta",
     "notifications": {
-      "partnerAnswered": "Seu parceiro respondeu à pergunta de proximidade",
-      "navigatingToLevelSelect": "Navegando para seleção de níveis...",
+      "partnerAnswered": "Seu parceiro respondeu a pergunta de proximidade",
+      "navigatingToLevelSelect": "Navegando para seleção de nível...",
       "newCardRevealed": "Nova carta revelada",
       "partnerSubmittedResponse": "Seu parceiro enviou sua resposta. É sua vez de avaliar.",
-      "evaluationCompleted": "Avaliação concluída",
+      "evaluationCompleted": "Avaliação completada",
       "newCardAvailable": "Nova carta disponível",
-      "levelChanged": "Nível alterado para {{level}}",
+      "levelChanged": "Nível mudado para {{level}}",
       "partnerWantsLevelChange": "Seu parceiro quer mudar de nível",
       "differentLevelsSelected": "Vocês selecionaram níveis diferentes. Devem selecionar o mesmo nível para jogar.",
       "choosingNewLevel": "Seu parceiro quer mudar de nível. Escolhendo novo nível...",
-      "actionSyncError": "Erro ao sincronizar ação"
+      "actionSyncError": "Erro sincronizando ação"
     }
   },
-  "levels": {
-    "level1Name": "Descoberta",
-    "level2Name": "Conexão",
-    "level3Name": "Quente",
-    "level4Name": "Sem Filtros"
-  },
   "levelUp": {
-    "title": "Quer ir mais fundo?",
+    "title": "Vocês querem ir mais fundo?",
     "subtitle": "Subir para o nível {{level}}: {{name}}",
-    "waitingForPartner": "Esperando o Jogador 2...",
+    "waitingForPartner": "Aguardando Jogador 2...",
     "partnerMustConfirm": "Seu parceiro também deve confirmar para passar ao próximo nível",
     "nextLevel": "Próximo nível",
-    "completed": "Concluído",
+    "completed": "Completado",
     "recommended": "Recomendado",
     "notYet": "Ainda não",
     "letsGo": "Sim, vamos!",
@@ -272,7 +370,7 @@
   },
   "connectionReport": {
     "title": "Relatório de Conexão Íntima",
-    "overallScore": "Índice de Conexão Íntima",
+    "overallScore": "Pontuação de Conexão Íntima",
     "labels": {
       "emotionalConnection": "Conexão emocional",
       "attraction": "Atração sentida",

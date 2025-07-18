@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -125,7 +126,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
                         {playerNum}
                       </div>
                       <span className="font-medium">
-                        {participant ? `Jugador ${playerNum}` : t('waitingRoom.waitingPlayer')}
+                        {participant ? t('waitingRoom.player', { playerNum }) : t('waitingRoom.waitingPlayer')}
                       </span>
                     </div>
                     <div>

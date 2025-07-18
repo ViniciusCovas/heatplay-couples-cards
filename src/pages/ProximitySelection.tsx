@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useRoomService } from '@/hooks/useRoomService';
@@ -8,6 +9,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 const ProximitySelection = () => {
   const navigate = useNavigate();
@@ -17,6 +19,7 @@ const ProximitySelection = () => {
   const playerId = usePlayerId();
   const { gameState } = useGameSync(room?.id || null, playerId);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // Auto-join room state
   const [retryCount, setRetryCount] = useState(0);
@@ -57,8 +60,8 @@ const ProximitySelection = () => {
             } else {
               setIsRetrying(false);
               toast({
-                title: "Error de conexión",
-                description: `No se pudo conectar a la sala ${roomCode} después de ${maxRetries} intentos`,
+                title: t('proximitySelection.errors.connectionError'),
+                description: t('proximitySelection.errors.connectionFailed', { roomCode, maxRetries }),
                 variant: "destructive"
               });
             }
@@ -70,8 +73,8 @@ const ProximitySelection = () => {
           
           if (retryCount + 1 >= maxRetries) {
             toast({
-              title: "Error de conexión",
-              description: "No se pudo conectar a la sala. Verifica el código de la sala.",
+              title: t('proximitySelection.errors.connectionError'),
+              description: t('proximitySelection.errors.verifyRoomCode'),
               variant: "destructive"
             });
           }
@@ -84,7 +87,7 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -106,10 +109,15 @@ const ProximitySelection = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
-          <p>{isRetrying ? `Conectando a la sala... (Intento ${retryCount + 1}/${maxRetries})` : 'Cargando sala...'}</p>
+          <p>
+            {isRetrying 
+              ? t('proximitySelection.errors.connectingAttempt', { current: retryCount + 1, max: maxRetries })
+              : t('proximitySelection.errors.loadingRoom')
+            }
+          </p>
           {retryCount >= maxRetries && (
             <Button onClick={handleGoBack} variant="outline">
-              Volver al inicio
+              {t('proximitySelection.errors.backToHome')}
             </Button>
           )}
         </Card>
@@ -123,10 +131,10 @@ const ProximitySelection = () => {
       <div className="p-4 flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={handleGoBack}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver al inicio
+          {t('proximitySelection.errors.backToHome')}
         </Button>
         <div className="text-sm text-muted-foreground">
-          Sala: {room.room_code} | Jugadores: {participants.length}/2
+          {t('game.room')}: {room.room_code} | {t('waitingRoom.players')}: {participants.length}/2
         </div>
       </div>
 
