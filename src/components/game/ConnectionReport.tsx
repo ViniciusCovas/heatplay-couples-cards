@@ -44,13 +44,6 @@ export const ConnectionReport = ({
     return "text-destructive";
   };
 
-  const getScoreEmoji = (score: number) => {
-    if (score >= 4.5) return "🔥";
-    if (score >= 3.5) return "💫";
-    if (score >= 2.5) return "✨";
-    return "💭";
-  };
-
   const renderScoreRow = (
     label: string,
     score: number,
@@ -78,7 +71,11 @@ export const ConnectionReport = ({
       <Card className="w-full max-w-sm sm:max-w-lg p-4 sm:p-6 space-y-4 sm:space-y-6 animate-scale-in my-2 sm:my-4 max-h-[98vh] overflow-y-auto bg-gradient-to-br from-card via-card to-card/95 border-2 border-primary/20 shadow-2xl shadow-primary/10">
         <div className="text-center space-y-3 sm:space-y-4">
           <Logo size="small" className="mx-auto" />
-          <div className="text-4xl sm:text-6xl">{getScoreEmoji(connectionData.overallScore)}</div>
+          
+          <div className="flex justify-center my-4 sm:my-6">
+            <Logo size="medium" className="mx-auto" />
+          </div>
+          
           <div>
             <h2 className="text-lg sm:text-2xl font-heading mb-1 sm:mb-2 bg-gradient-to-r from-primary to-primary/80 bg-clip-text text-transparent">
               {t('connectionReport.title')}
