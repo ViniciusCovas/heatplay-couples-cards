@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
+import { AIInsightBadge } from "./AIInsightBadge";
 
 interface GameCardProps {
   currentCard: string;
@@ -9,9 +10,21 @@ interface GameCardProps {
   showCard: boolean;
   cardIndex: number;
   totalCards: number;
+  aiReasoning?: string;
+  aiTargetArea?: string;
+  selectionMethod?: string;
 }
 
-export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, totalCards }: GameCardProps) => {
+export const GameCard = ({ 
+  currentCard, 
+  currentLevel, 
+  showCard, 
+  cardIndex, 
+  totalCards, 
+  aiReasoning, 
+  aiTargetArea, 
+  selectionMethod 
+}: GameCardProps) => {
   const { t } = useTranslation();
   
   const getLevelName = (level: number) => {
@@ -64,6 +77,16 @@ export const GameCard = ({ currentCard, currentLevel, showCard, cardIndex, total
               <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
                 {currentCard}
               </p>
+              
+              {/* AI Insight Badge */}
+              {selectionMethod === 'ai_intelligent' && aiReasoning && (
+                <div className="mt-2">
+                  <AIInsightBadge 
+                    reasoning={aiReasoning}
+                    targetArea={aiTargetArea}
+                  />
+                </div>
+              )}
               
               {/* Level name at bottom */}
               <div className="absolute bottom-6 left-6 right-6 text-center">

@@ -394,5 +394,26 @@
       "potential": "💭 There's potential, keep exploring",
       "insufficient": "Insufficient data"
     }
+  },
+  "ai": {
+    "getcloseAI": "GetClose AI",
+    "intelligentSelection": "Intelligent Selection",
+    "targetArea": "Target area",
+    "getcloseAIAnalysis": "GetClose AI Analysis",
+    "analysisDescription": "Get personalized insights about your compatibility powered by advanced AI",
+    "generateAnalysis": "Generate Analysis",
+    "generatingAnalysis": "GetClose AI is analyzing your session...",
+    "analysisComplete": "Analysis Complete",
+    "analysisCompleteDescription": "Your compatibility analysis is ready",
+    "analysisError": "Analysis Error",
+    "analysisErrorDescription": "Could not generate analysis. Please try again.",
+    "compatibilityScore": "Compatibility Score",
+    "relationshipPhase": "Relationship Phase",
+    "strengthAreas": "Strengths",
+    "growthAreas": "Growth Areas",
+    "keyInsights": "Key Insights",
+    "personalizedTips": "Personalized Tips",
+    "culturalNotes": "Cultural Notes",
+    "nextSession": "Next Session"
   }
 }

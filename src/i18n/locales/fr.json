@@ -394,5 +394,26 @@
       "potential": "💭 Il y a du potentiel, continuez à explorer",
       "insufficient": "Données insuffisantes"
     }
+  },
+  "ai": {
+    "getcloseAI": "GetClose AI",
+    "intelligentSelection": "Sélection Intelligente",
+    "targetArea": "Zone cible",
+    "getcloseAIAnalysis": "Analyse GetClose AI",
+    "analysisDescription": "Obtenez des insights personnalisés sur votre compatibilité alimentés par une IA avancée",
+    "generateAnalysis": "Générer l'Analyse",
+    "generatingAnalysis": "GetClose AI analyse votre session...",
+    "analysisComplete": "Analyse Terminée",
+    "analysisCompleteDescription": "Votre analyse de compatibilité est prête",
+    "analysisError": "Erreur d'Analyse",
+    "analysisErrorDescription": "Impossible de générer l'analyse. Veuillez réessayer.",
+    "compatibilityScore": "Score de Compatibilité",
+    "relationshipPhase": "Phase de Relation",
+    "strengthAreas": "Forces",
+    "growthAreas": "Zones de Croissance",
+    "keyInsights": "Insights Clés",
+    "personalizedTips": "Conseils Personnalisés",
+    "culturalNotes": "Notes Culturelles",
+    "nextSession": "Prochaine Session"
   }
 }

@@ -384,31 +384,111 @@ const Game = () => {
     fetchQuestions();
   }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
-  // Initialize card only if not set by game state and it's my turn to generate
-  useEffect(() => {
-    if (levelCards.length > 0 && 
-        !gameState?.current_card && 
-        isMyTurn && 
-        gameState?.current_phase === 'card-display') {
+  // AI-powered card generation state
+  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
+  const [aiCardInfo, setAiCardInfo] = useState<{
+    reasoning?: string;
+    targetArea?: string;
+    selectionMethod?: string;
+  } | null>(null);
+
+  // Intelligent card selection using AI
+  const selectCardWithAI = async (roomId: string, levelId: string, language: string) => {
+    try {
+      console.log('🧠 Trying AI card selection...');
+      setIsGeneratingCard(true);
       
-      const usedCardsFromState = gameState?.used_cards || [];
-      const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
-      
-      if (availableCards.length > 0) {
-        const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-        console.log('🎲 Generating new card (my turn):', { 
-          randomCard, 
-          availableCards: availableCards.length,
-          usedCards: usedCardsFromState.length
+      const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
+        body: { 
+          roomId,
+          currentLevel: levelId,
+          language 
+        }
+      });
+
+      if (error) {
+        console.warn('⚠️ AI selection failed, falling back to random:', error);
+        return null;
+      }
+
+      if (data?.question && data?.reasoning) {
+        console.log('✅ AI selected card:', { 
+          question: data.question.text,
+          reasoning: data.reasoning,
+          targetArea: data.targetArea
         });
         
-        // Update database first, then local state will sync
-        updateGameState({
-          current_card: randomCard
+        setAiCardInfo({
+          reasoning: data.reasoning,
+          targetArea: data.targetArea,
+          selectionMethod: data.selectionMethod
         });
+        
+        return data.question.text;
       }
+      
+      return null;
+    } catch (error) {
+      console.warn('⚠️ AI selection error, falling back to random:', error);
+      return null;
+    } finally {
+      setIsGeneratingCard(false);
     }
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase]);
+  };
+
+  // Initialize card only if not set by game state and it's my turn to generate
+  useEffect(() => {
+    const generateCard = async () => {
+      if (levelCards.length > 0 && 
+          !gameState?.current_card && 
+          isMyTurn && 
+          gameState?.current_phase === 'card-display' &&
+          room && !isGeneratingCard) {
+        
+        const usedCardsFromState = gameState?.used_cards || [];
+        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
+        
+        if (availableCards.length > 0) {
+          // Try AI selection first if we have previous responses
+          const hasResponses = usedCardsFromState.length > 0;
+          let selectedCard = null;
+          
+          if (hasResponses) {
+            // Get current level data
+            const { data: levelData } = await supabase
+              .from('levels')
+              .select('id')
+              .eq('sort_order', currentLevel)
+              .eq('language', i18n.language)
+              .eq('is_active', true)
+              .single();
+              
+            if (levelData) {
+              selectedCard = await selectCardWithAI(room.id, levelData.id, i18n.language);
+            }
+          }
+          
+          // Fallback to random selection
+          if (!selectedCard) {
+            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            setAiCardInfo(null); // Clear AI info for random selection
+            console.log('🎲 Generating random card (my turn):', { 
+              selectedCard, 
+              availableCards: availableCards.length,
+              usedCards: usedCardsFromState.length
+            });
+          }
+          
+          // Update database first, then local state will sync
+          await updateGameState({
+            current_card: selectedCard
+          });
+        }
+      }
+    };
+
+    generateCard();
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
@@ -860,6 +940,9 @@ const Game = () => {
               showCard={showCard}
               cardIndex={usedCards.length}
               totalCards={totalCards}
+              aiReasoning={aiCardInfo?.reasoning}
+              aiTargetArea={aiCardInfo?.targetArea}
+              selectionMethod={aiCardInfo?.selectionMethod}
             />
 
             {/* Action Button - Only show if it's my turn and NOT in evaluation phase */}
@@ -953,12 +1036,14 @@ const Game = () => {
 
         {/* Final Connection Report Modal */}
         {connectionData && (
-          <ConnectionReport
-            isVisible={gamePhase === 'final-report'}
-            connectionData={connectionData}
-            onPlayAgain={handlePlayAgain}
-            onGoHome={handleGoHome}
-          />
+        <ConnectionReport
+          isVisible={gamePhase === 'final-report'}
+          connectionData={connectionData}
+          onPlayAgain={handlePlayAgain}
+          onGoHome={handleGoHome}
+          roomId={room?.id}
+          language={i18n.language}
+        />
         )}
 
         {/* Safety Note */}

@@ -4,6 +4,8 @@ import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/ui/animated-logo";
 import { Heart, Flame, Zap, Star, Eye, Home, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { GetCloseAnalysis } from "./GetCloseAnalysis";
+import { useSearchParams } from "react-router-dom";
 
 export interface ConnectionData {
   emotionalConnection: number; // 0-5
@@ -22,15 +24,23 @@ interface ConnectionReportProps {
   connectionData: ConnectionData;
   onPlayAgain: () => void;
   onGoHome: () => void;
+  roomId?: string;
+  language?: string;
 }
 
 export const ConnectionReport = ({
   isVisible,
   connectionData,
   onPlayAgain,
-  onGoHome
+  onGoHome,
+  roomId,
+  language = 'en'
 }: ConnectionReportProps) => {
   const { t, i18n } = useTranslation();
+  const [searchParams] = useSearchParams();
+  
+  // Get room ID from search params if not provided
+  const currentRoomId = roomId || searchParams.get('room');
   
   // Debug language consistency
   console.log('🌍 ConnectionReport language:', i18n.language);
@@ -146,6 +156,17 @@ export const ConnectionReport = ({
             {t('connectionReport.buttons.backHome')}
           </Button>
         </div>
+
+        {/* GetClose AI Analysis Section */}
+        {currentRoomId && (
+          <div className="mt-4">
+            <GetCloseAnalysis
+              roomId={currentRoomId}
+              language={language || i18n.language}
+              isVisible={true}
+            />
+          </div>
+        )}
 
         <div className="text-center">
           <p className="text-xs text-muted-foreground">
