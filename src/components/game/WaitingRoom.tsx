@@ -15,7 +15,7 @@ interface WaitingRoomProps {
   onLeaveRoom: () => void;
 }
 
-export function WaitingRoom({ roomCode, participants = [], onGameStart, onLeaveRoom }: WaitingRoomProps) {
+export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }: WaitingRoomProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
   const { t } = useTranslation();
 
@@ -30,7 +30,7 @@ export function WaitingRoom({ roomCode, participants = [], onGameStart, onLeaveR
 
   // Start countdown when both players are ready
   useEffect(() => {
-    if (participants?.length === 2 && participants.every(p => p.is_ready)) {
+    if (participants.length === 2 && participants.every(p => p.is_ready)) {
       if (countdown === null) {
         setCountdown(5);
       }
@@ -111,7 +111,7 @@ export function WaitingRoom({ roomCode, participants = [], onGameStart, onLeaveR
           <div className="space-y-3">
             <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
-              {t('waitingRoom.players')} ({participants?.length || 0}/2)
+              {t('waitingRoom.players')} ({participants.length}/2)
             </h3>
             <div className="space-y-2">
               {[1, 2].map((playerNum) => {
@@ -148,7 +148,7 @@ export function WaitingRoom({ roomCode, participants = [], onGameStart, onLeaveR
           </div>
 
           {/* Instructions */}
-          {(participants?.length || 0) < 2 && (
+          {participants.length < 2 && (
             <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
               <p className="text-sm text-muted-foreground">
                 {t('waitingRoom.shareInstruction')}
