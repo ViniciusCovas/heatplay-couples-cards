@@ -396,6 +396,14 @@ export type Database = {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      handle_level_selection: {
+        Args: {
+          room_id_param: string
+          player_id_param: string
+          selected_level_param: number
+        }
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
