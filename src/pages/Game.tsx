@@ -4,14 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { GameCard } from '@/components/game/GameCard';
-import { ProximityAnswer } from '@/components/game/ProximityAnswer';
 import { ResponseInput } from '@/components/game/ResponseInput';
-import { Evaluation } from '@/components/game/Evaluation';
-import { GameFinish } from '@/components/game/GameFinish';
+import { ResponseEvaluation } from '@/components/game/ResponseEvaluation';
 import { useQuestions } from '@/hooks/useQuestions';
 import { useGameSync } from '@/hooks/useGameSync';
-import { ProximitySelection } from './ProximitySelection';
-import { ProximityQuestion } from '@/components/game/ProximityQuestion';
+import ProximitySelection from './ProximitySelection';
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -289,9 +286,9 @@ export default function Game() {
     await syncAction('card_reveal', {});
   };
 
-  const handleResponseSubmit = async (response: string, responseTime: number, question: string, from: string) => {
+  const handleResponseSubmit = async (response: string, responseTime: number) => {
     await updateGameState({ current_phase: 'evaluation' });
-    await syncAction('response_submit', { response, responseTime, question, from });
+    await syncAction('response_submit', { response, responseTime, question: currentCard, from: playerId });
     setShowCard(false);
   };
 
@@ -367,15 +364,7 @@ export default function Game() {
         </div>
       )}
 
-      {showProximityQuestion && (
-        <ProximityQuestion onAnswer={handleProximityAnswer} />
-      )}
-
-      {showProximityAnswer && (
-        <ProximityAnswer proximityResponse={gameState?.proximity_response} />
-      )}
-
-      {currentPhase === 'card-display' && (
+      {gameState?.current_phase === 'card-display' && (
         <GameCard 
           currentCard={currentCard}
           currentLevel={currentLevel}
@@ -388,7 +377,7 @@ export default function Game() {
         />
       )}
 
-      {currentPhase === 'card-display' && !showCard && (
+      {gameState?.current_phase === 'card-display' && !showCard && (
         <div className="flex-1 flex items-center justify-center">
           <Button onClick={handleCardReveal} disabled={isCardLoading}>
             {isCardLoading ? t('game.loading') : t('game.revealCard')}
@@ -396,25 +385,22 @@ export default function Game() {
         </div>
       )}
 
-      {currentPhase === 'response-input' && currentCard && (
+      {gameState?.current_phase === 'response-input' && currentCard && (
         <ResponseInput
-          cardText={currentCard}
-          onResponseSubmit={handleResponseSubmit}
-          partnerResponse={partnerResponse}
+          isVisible={true}
+          question={currentCard}
+          onSubmitResponse={handleResponseSubmit}
         />
       )}
 
       {showEvaluation && (
-        <Evaluation
-          cardText={currentCard}
-          partnerResponse={partnerResponse}
-          onEvaluationSubmit={handleEvaluationSubmit}
-        />
-      )}
-
-      {showGameFinish && (
-        <GameFinish
-          gameResult={gameResult}
+        <ResponseEvaluation
+          isVisible={true}
+          question={currentCard || ''}
+          response={partnerResponse || ''}
+          playerName="Partner"
+          onSubmitEvaluation={handleEvaluationSubmit}
+          onCancel={() => setShowEvaluation(false)}
         />
       )}
     </div>
