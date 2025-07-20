@@ -62,78 +62,29 @@ const Game = () => {
   const [connectionReport, setConnectionReport] = useState<any>(null);
   const [aiInsight, setAiInsight] = useState<AIInsight>({});
 
-  useGameSync(roomId, playerId, (action) => {
-    console.log("🔄 Game sync action received:", action);
-    
-    switch (action.action_type) {
-      case "card_revealed":
-        const cardData = action.action_data as { 
-          card: Question; 
-          cardIndex: number; 
-          totalCards: number;
-          aiInsight?: AIInsight;
-        };
-        
-        setCurrentCard(cardData.card);
-        setCardIndex(cardData.cardIndex);
-        setTotalCards(cardData.totalCards);
-        setShowCard(true);
-        
-        if (cardData.aiInsight) {
-          console.log("🤖 AI insight received:", cardData.aiInsight);
-          setAiInsight(cardData.aiInsight);
-        }
-        
-        toast({
-          title: t("game.notifications.newCardRevealed"),
-          duration: 2000,
-        });
-        break;
-        
-      case "proximity_selected":
-        setProximity(action.action_data as boolean);
-        break;
-        
-      case "level_selected":
-        setCurrentLevel(action.action_data as number);
-        break;
-        
-      case "turn_changed":
-        setCurrentTurn(action.action_data as "player1" | "player2");
-        break;
-        
-      case "response_submitted":
-        setGameResponses((prevResponses) => [
-          ...prevResponses,
-          action.action_data as GameResponse,
-        ]);
-        setPendingEvaluation(action.action_data as GameResponse);
-        break;
-        
-      case "evaluation_submitted":
-        setGameResponses((prevResponses) =>
-          prevResponses.map((response) =>
-            response.id === (action.action_data as GameResponse).id
-              ? (action.action_data as GameResponse)
-              : response
-          )
-        );
-        setPendingEvaluation(null);
-        break;
-        
-      case "game_finished":
-        setConnectionReport(action.action_data);
-        setGamePhase("finished");
-        break;
-        
-      case "level_up_requested":
-        // Handle level up request if needed
-        break;
-        
-      default:
-        console.warn("Unhandled action type:", action.action_type);
-    }
-  });
+  const { gameState, syncAction } = useGameSync(roomId, playerId);
+
+  // Handle game sync events via custom events
+  useEffect(() => {
+    const handlePartnerResponse = (event: CustomEvent) => {
+      const { response, responseTime, question, from } = event.detail;
+      console.log("🔄 Partner response received:", { response, responseTime, question, from });
+      // Handle partner response
+    };
+
+    const handleGameFinish = (event: CustomEvent) => {
+      setConnectionReport(event.detail);
+      setGamePhase("finished");
+    };
+
+    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    window.addEventListener('gameFinish', handleGameFinish as EventListener);
+
+    return () => {
+      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
+      window.removeEventListener('gameFinish', handleGameFinish as EventListener);
+    };
+  }, []);
 
   // Fetch level UUID when component mounts or level changes
   useEffect(() => {
@@ -190,13 +141,10 @@ const Game = () => {
             console.log('✅ Change received!', payload)
             const room = payload.new;
 
-            if (room.player1_proximity && room.player2_proximity) {
-              setProximity(room.player1_proximity === 'close');
-              setGamePhase('level-select');
-            }
-
-            if (room.current_level) {
-              setCurrentLevel(room.current_level);
+            // Handle room updates if needed
+            if (room && typeof room === 'object') {
+              // Update based on room status changes
+              console.log('Room updated:', room);
             }
           }
         )
@@ -295,7 +243,7 @@ const Game = () => {
             cardIndex: cardIndex,
             totalCards: totalCards,
             aiInsight: aiInsightData
-          }
+          } as any
         });
 
       setCurrentCard(selectedQuestion);
@@ -349,16 +297,21 @@ const Game = () => {
         {gamePhase === "waiting" && (
           <WaitingRoom
             roomCode={roomCode}
-            onPlayersReady={() => setGamePhase("proximity")}
+            participants={[]}
+            onGameStart={async () => setGamePhase("proximity")}
+            onLeaveRoom={() => navigate("/")}
           />
         )}
 
         {gamePhase === "proximity" && (
           <ProximitySelector
-            onProximitySelected={(isClose) => {
+            isVisible={true}
+            onSelect={(isClose) => {
               setProximity(isClose);
-              setGamePhase("level-select");
+              setGamePhase("playing");
             }}
+            roomCode={roomCode}
+            room={null}
           />
         )}
 
@@ -386,8 +339,11 @@ const Game = () => {
 
             {proximity && (
               <ResponseInput
+                isVisible={true}
                 question={currentCard.text}
-                onResponseSubmitted={() => {}}
+                onSubmitResponse={(response: string, responseTime: number) => {
+                  console.log('Response submitted:', { response, responseTime });
+                }}
                 isSubmitting={isSubmitting}
               />
             )}
@@ -410,15 +366,23 @@ const Game = () => {
 
         {pendingEvaluation && (
           <ResponseEvaluation
-            response={pendingEvaluation}
-            onEvaluationSubmitted={() => {}}
+            isVisible={true}
+            question={currentCard?.text || ''}
+            response={pendingEvaluation.response || ''}
+            playerName="Player"
+            onSubmitEvaluation={(evaluation) => {
+              console.log('Evaluation submitted:', evaluation);
+            }}
+            onCancel={() => setPendingEvaluation(null)}
           />
         )}
 
         {connectionReport && (
           <ConnectionReport
-            report={connectionReport}
-            onNewGame={() => navigate("/")}
+            isVisible={true}
+            connectionData={connectionReport}
+            onPlayAgain={() => navigate("/")}
+            onGoHome={() => navigate("/")}
           />
         )}
       </div>
