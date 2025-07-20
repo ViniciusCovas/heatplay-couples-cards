@@ -405,17 +405,18 @@ const Game = () => {
     selectionMethod?: string;
   } | null>(null);
 
-  // Intelligent card selection using AI
-  const selectCardWithAI = async (roomId: string, levelId: string, language: string) => {
+  // Enhanced intelligent card selection using AI - now works from first question
+  const selectCardWithAI = async (roomId: string, levelId: string, language: string, isFirstQuestion: boolean = false) => {
     try {
-      console.log('🧠 Trying AI card selection...');
+      console.log('🧠 Trying AI card selection...', { isFirstQuestion });
       setIsGeneratingCard(true);
       
       const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
         body: { 
           roomId,
           currentLevel: levelId,
-          language 
+          language,
+          isFirstQuestion
         }
       });
 
@@ -428,7 +429,8 @@ const Game = () => {
         console.log('✅ AI selected card:', { 
           question: data.question.text,
           reasoning: data.reasoning,
-          targetArea: data.targetArea
+          targetArea: data.targetArea,
+          isFirstQuestion
         });
         
         setAiCardInfo({
@@ -462,33 +464,32 @@ const Game = () => {
         const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
         
         if (availableCards.length > 0) {
-          // Try AI selection first if we have previous responses
-          const hasResponses = usedCardsFromState.length > 0;
+          // Always try AI selection first - now includes first question
+          const isFirstQuestion = usedCardsFromState.length === 0;
           let selectedCard = null;
           
-          if (hasResponses) {
-            // Get current level data
-            const { data: levelData } = await supabase
-              .from('levels')
-              .select('id')
-              .eq('sort_order', currentLevel)
-              .eq('language', i18n.language)
-              .eq('is_active', true)
-              .single();
-              
-            if (levelData) {
-              selectedCard = await selectCardWithAI(room.id, levelData.id, i18n.language);
-            }
+          // Get current level data for AI selection
+          const { data: levelData } = await supabase
+            .from('levels')
+            .select('id')
+            .eq('sort_order', currentLevel)
+            .eq('language', i18n.language)
+            .eq('is_active', true)
+            .single();
+            
+          if (levelData) {
+            selectedCard = await selectCardWithAI(room.id, levelData.id, i18n.language, isFirstQuestion);
           }
           
-          // Fallback to random selection
+          // Fallback to random selection if AI fails
           if (!selectedCard) {
             selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
             setAiCardInfo(null); // Clear AI info for random selection
-            console.log('🎲 Generating random card (my turn):', { 
+            console.log('🎲 Using random card fallback:', { 
               selectedCard, 
               availableCards: availableCards.length,
-              usedCards: usedCardsFromState.length
+              usedCards: usedCardsFromState.length,
+              isFirstQuestion
             });
           }
           
@@ -941,7 +942,6 @@ const Game = () => {
           </div>
         </div>
 
-
         {/* Game Content based on current phase */}
         {gamePhase === 'card-display' && (
           <>
@@ -977,7 +977,6 @@ const Game = () => {
                     {t('game.changeLevel')}
                   </Button>
                   
-                  
                   <Button 
                     onClick={() => generateFinalReport()}
                     variant="destructive"
@@ -990,7 +989,7 @@ const Game = () => {
               </div>
             )}
 
-            {/* Mensaje para jugador que espera - también puede cambiar nivel */}
+            {/* Message for waiting player */}
             {!isMyTurn && (
               <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">

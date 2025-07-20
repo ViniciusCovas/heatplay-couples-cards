@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -17,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { roomId, currentLevel, language = 'en' } = await req.json();
+    const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
 
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
@@ -67,7 +68,7 @@ serve(async (req) => {
       throw new Error('No available questions for this level');
     }
 
-    // Analyze evaluation patterns
+    // Analyze evaluation patterns (if any exist)
     const evaluationStats = responses.reduce((acc: any, response: any) => {
       if (response.evaluation) {
         const eval = JSON.parse(response.evaluation);
@@ -80,11 +81,13 @@ serve(async (req) => {
       return acc;
     }, { count: 0 });
 
+    // Enhanced prompt that works for both first questions and subsequent ones
     let prompt = `You are GetClose AI, an expert relationship coach that helps couples connect deeper through strategic question selection.
 
 Context:
 - Relationship Level: ${currentLevel}
 - Language: ${language}
+- Is First Question: ${isFirstQuestion}
 - Previous Responses: ${responses.length}
 - Session Statistics: ${JSON.stringify(evaluationStats)}
 
@@ -93,13 +96,22 @@ ${availableQuestions.map((q: any, i: number) => `${i + 1}. [${q.category}] ${q.t
 
 Your mission: Select the ONE question that will create the deepest connection right now.
 
-Analysis Guidelines:
+${isFirstQuestion ? `
+FIRST QUESTION Strategy:
+- Start with an engaging, welcoming question that sets a positive tone
+- Choose something that invites vulnerability without being too intense
+- Consider the relationship level - higher levels can start with more depth
+- Focus on creating comfort and encouraging open sharing
+- Target area should be based on what typically creates the best foundation for connection
+` : `
+FOLLOW-UP Strategy:
+- Analyze previous responses and evaluations to identify growth areas
 - If honesty scores are low: Choose questions that encourage vulnerability
 - If attraction scores are low: Select questions about desires and chemistry  
 - If intimacy scores are low: Pick questions about emotions and closeness
 - If surprise scores are low: Choose unexpected or playful questions
-- For early questions: Start gentle but meaningful
-- For later questions: Increase intensity gradually
+- Build on previous conversations and deepen the connection
+`}
 
 Respond with ONLY a JSON object:
 {
@@ -140,13 +152,21 @@ Respond with ONLY a JSON object:
         input_data: {
           available_questions: availableQuestions.length,
           evaluation_stats: evaluationStats,
-          session_responses: responses.length
+          session_responses: responses.length,
+          is_first_question: isFirstQuestion
         },
         ai_response: {
           ...aiResponse,
           selected_question: selectedQuestion
         }
       });
+
+    console.log('✅ AI question selection successful:', {
+      isFirstQuestion,
+      selectedQuestion: selectedQuestion.text,
+      reasoning: aiResponse.reasoning,
+      targetArea: aiResponse.targetArea
+    });
 
     return new Response(JSON.stringify({
       question: selectedQuestion,
