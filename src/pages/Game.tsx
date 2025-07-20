@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +11,7 @@ import { GetCloseAnalysis } from '@/components/game/GetCloseAnalysis';
 import { LevelUpConfirmation } from '@/components/game/LevelUpConfirmation';
 import { useGameSync } from '@/hooks/useGameSync';
 import { useQuestions } from '@/hooks/useQuestions';
+import { useRoomService } from '@/hooks/useRoomService';
 import { usePlayerId } from '@/hooks/usePlayerId';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -27,29 +27,10 @@ const Game = () => {
   const currentLevel = parseInt(searchParams.get('level') || '1');
   const playerId = usePlayerId();
 
-  console.log('🌍 useGameSync language:', i18n.language);
-
-  // Game state
-  const {
-    room,
-    gameState,
-    participants,
-    playerNumber,
-    isMyTurn,
-    gamePhase,
-    connectionReport,
-    analysisData,
-    levelUpData
-  } = useGameSync(roomCode, playerId, currentLevel);
-
-  console.log('🎮 Game component initialized:', {
-    roomCode,
-    currentLevel,
-    room,
-    gamePhase,
-    playerId,
-    playerNumber
-  });
+  // Game state from hooks
+  const { gameState, syncAction, updateGameState, isLoading } = useGameSync(roomCode, playerId);
+  const { questions, levels, getQuestionsForLevel } = useQuestions();
+  const { room, participants, isConnected, playerNumber, joinRoom, leaveRoom } = useRoomService();
 
   const [currentCard, setCurrentCard] = useState<string>('');
   const [aiCardInfo, setAiCardInfo] = useState<{
@@ -65,24 +46,27 @@ const Game = () => {
     surprise: 0
   });
 
-  // Load questions for the current level
-  const { questions, levelData } = useQuestions(currentLevel, i18n.language);
-
-  console.log('🎯 Turn logic:', {
-    currentTurn: gameState?.current_turn,
-    playerNumber,
-    isMyTurn,
-    gamePhase
-  });
-
   // Get next question with AI assistance
   const getNextQuestion = async () => {
-    if (!room || !questions.length || !levelData) {
-      console.log('⚠️ Missing requirements for question selection:', { room, questionsCount: questions.length, levelData });
+    if (!roomCode || !questions.length) {
+      console.log('⚠️ Missing requirements for question selection');
       return;
     }
 
     try {
+      // Get level data for the current level
+      const levelData = levels.find(l => l.sort_order === currentLevel);
+      if (!levelData) {
+        console.log('⚠️ Level data not found for level:', currentLevel);
+        // Fallback to random selection
+        const availableQuestions = getQuestionsForLevel(currentLevel.toString(), 1);
+        if (availableQuestions.length > 0) {
+          setCurrentCard(availableQuestions[0].text);
+          console.log('📝 Using fallback random question');
+        }
+        return;
+      }
+
       console.log('🤖 Attempting AI question selection with:', {
         levelId: levelData.id,
         language: i18n.language,
@@ -97,330 +81,262 @@ const Game = () => {
             level_id: levelData.id,
             language: i18n.language,
             used_cards: gameState?.used_cards || [],
-            room_id: room
+            room_id: roomCode
           }
         }
       );
 
-      console.log('🤖 AI Selection Result:', { aiResult, aiError });
+      console.log('🤖 AI selection result:', { aiResult, aiError });
 
-      if (aiResult?.question && !aiError) {
-        console.log('✨ AI selected question:', aiResult.question);
+      if (aiResult && !aiError && aiResult.question) {
+        console.log('✅ AI selection successful! Question:', aiResult.question);
         setCurrentCard(aiResult.question);
         setAiCardInfo({
-          reasoning: aiResult.reasoning,
+          reasoning: aiResult.ai_reasoning || '',
+          targetArea: aiResult.target_area || '',
+          selectionMethod: 'ai_intelligent'
+        });
+        console.log('🎯 AI badge info set:', {
+          reasoning: aiResult.ai_reasoning,
           targetArea: aiResult.target_area,
           selectionMethod: 'ai_intelligent'
         });
-        await updateGameState(aiResult.question);
-      } else {
-        console.log('🎲 Falling back to random selection due to AI error:', aiError);
-        // Fallback to random selection
-        const availableQuestions = questions.filter(q => 
-          !gameState?.used_cards?.includes(q.text)
-        );
         
-        if (availableQuestions.length > 0) {
-          const randomQuestion = availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
-          console.log('🎲 Random selected question:', randomQuestion.text);
-          setCurrentCard(randomQuestion.text);
-          setAiCardInfo({
-            selectionMethod: 'random'
-          });
-          await updateGameState(randomQuestion.text);
-        }
+        // Update game state with AI-selected card
+        await updateGameState({
+          current_card: aiResult.question,
+          used_cards: [...(gameState?.used_cards || []), aiResult.question]
+        });
+        return;
+      }
+
+      console.log('⚠️ AI selection failed, falling back to random');
+      // Fallback to random selection
+      const availableQuestions = getQuestionsForLevel(currentLevel.toString(), 1);
+      if (availableQuestions.length > 0) {
+        const selectedQuestion = availableQuestions[0].text;
+        setCurrentCard(selectedQuestion);
+        setAiCardInfo(null); // Clear AI info for random selection
+        console.log('📝 Using random fallback question');
+        
+        await updateGameState({
+          current_card: selectedQuestion,
+          used_cards: [...(gameState?.used_cards || []), selectedQuestion]
+        });
       }
     } catch (error) {
-      console.error('❌ Error selecting question:', error);
-      // Ultimate fallback
-      if (questions.length > 0) {
-        const fallbackQuestion = questions[0];
-        console.log('🆘 Using fallback question:', fallbackQuestion.text);
-        setCurrentCard(fallbackQuestion.text);
-        setAiCardInfo({
-          selectionMethod: 'fallback'
-        });
-        await updateGameState(fallbackQuestion.text);
+      console.error('❌ Error in question selection:', error);
+      // Final fallback
+      const availableQuestions = getQuestionsForLevel(currentLevel.toString(), 1);
+      if (availableQuestions.length > 0) {
+        setCurrentCard(availableQuestions[0].text);
+        setAiCardInfo(null);
       }
     }
   };
 
-  const updateGameState = async (questionText: string) => {
-    if (!room) return;
-
-    const usedCards = gameState?.used_cards || [];
-    const newUsedCards = [...usedCards, questionText];
-
-    const { error } = await supabase
-      .from('game_rooms')
-      .update({
-        current_card: questionText,
-        used_cards: newUsedCards,
-        current_card_index: (gameState?.current_card_index || 0) + 1
-      })
-      .eq('id', room);
-
-    if (error) {
-      console.error('Error updating game state:', error);
-    }
-  };
-
-  // Sync current card from game state
-  useEffect(() => {
-    if (gameState?.current_card && gameState.current_card !== currentCard) {
-      console.log('📄 Card updated from game state:', gameState.current_card);
-      setCurrentCard(gameState.current_card);
-    }
-  }, [gameState?.current_card]);
-
-  // Load first card when game starts
-  useEffect(() => {
-    if (gamePhase === 'card-display' && !currentCard && questions.length > 0 && isMyTurn) {
-      console.log('🚀 Loading first card for game start');
-      getNextQuestion();
-    }
-  }, [gamePhase, currentCard, questions.length, isMyTurn]);
-
-  // Handle response submission
-  const handleResponseSubmit = async () => {
-    if (!room || !response.trim()) return;
-
-    console.log('📝 Submitting response:', response);
+  // Submit response
+  const handleSubmitResponse = async () => {
+    if (!response.trim() || !roomCode) return;
 
     try {
+      // Save response to database
       const { error } = await supabase
         .from('game_responses')
         .insert({
-          room_id: room,
           player_id: playerId,
-          question: currentCard,
+          room_id: roomCode,
+          card_id: currentCard,
           response: response.trim(),
-          player_number: playerNumber
+          round_number: gameState?.current_card_index || 0,
+          selection_method: aiCardInfo?.selectionMethod || 'random',
+          ai_reasoning: aiCardInfo?.reasoning
         });
 
       if (error) throw error;
 
-      // Update game state to evaluation phase
-      await supabase
-        .from('game_rooms')
-        .update({
-          current_phase: 'evaluation',
-          current_turn: playerNumber === 1 ? 'player2' : 'player1'
-        })
-        .eq('id', room);
+      // Sync action to notify other player
+      await syncAction('response_submit', {
+        response: response.trim(),
+        question: currentCard,
+        from: playerId
+      });
 
-      setResponse('');
-      toast.success(t('messages.responseSubmitted'));
+      // Update game phase to evaluation
+      await updateGameState({
+        current_phase: 'evaluation'
+      });
+
+      toast.success(t('game.responseSubmitted'));
     } catch (error) {
       console.error('Error submitting response:', error);
-      toast.error(t('game.errors.responseSaveFailed'));
+      toast.error(t('game.submitError'));
     }
   };
 
-  // Handle evaluation submission
-  const handleEvaluationSubmit = async () => {
-    if (!room) return;
-
-    console.log('⭐ Submitting evaluation:', evaluation);
+  // Submit evaluation
+  const handleSubmitEvaluation = async () => {
+    if (!roomCode) return;
 
     try {
+      // Save evaluation
       const { error } = await supabase
-        .from('game_evaluations')
-        .insert({
-          room_id: room,
-          evaluator_id: playerId,
-          question: currentCard,
-          honesty: evaluation.honesty,
-          attraction: evaluation.attraction,
-          intimacy: evaluation.intimacy,
-          surprise: evaluation.surprise,
-          evaluator_number: playerNumber
-        });
+        .from('game_responses')
+        .update({
+          evaluation: `honesty:${evaluation.honesty},attraction:${evaluation.attraction},intimacy:${evaluation.intimacy},surprise:${evaluation.surprise}`,
+          evaluation_by: playerId
+        })
+        .eq('room_id', roomCode)
+        .eq('card_id', currentCard);
 
       if (error) throw error;
 
-      // Reset evaluation
-      setEvaluation({
-        honesty: 0,
-        attraction: 0,
-        intimacy: 0,
-        surprise: 0
+      await syncAction('evaluation_submit', {
+        evaluation,
+        nextCard: true
       });
 
       // Move to next card
       await getNextQuestion();
-      
-      // Update game state back to card display
-      await supabase
-        .from('game_rooms')
-        .update({
-          current_phase: 'card-display',
-          current_turn: 'player1' // Reset to player 1 for next card
-        })
-        .eq('id', room);
+      await updateGameState({
+        current_phase: 'card-display',
+        current_card_index: (gameState?.current_card_index || 0) + 1
+      });
 
-      toast.success(t('messages.evaluationSubmitted'));
+      setResponse('');
+      setEvaluation({ honesty: 0, attraction: 0, intimacy: 0, surprise: 0 });
+      toast.success(t('game.evaluationSubmitted'));
     } catch (error) {
       console.error('Error submitting evaluation:', error);
-      toast.error(t('game.errors.evaluationSaveFailed'));
+      toast.error(t('game.submitError'));
     }
   };
 
-  const handleLevelChange = async () => {
-    if (!room) return;
-    
-    navigate(`/level-select?room=${roomCode}`);
-  };
-
-  const handleFinishGame = async () => {
-    if (!room) return;
-
-    try {
-      await supabase
-        .from('game_rooms')
-        .update({ 
-          status: 'completed',
-          current_phase: 'final-report'
-        })
-        .eq('id', room);
-    } catch (error) {
-      console.error('Error finishing game:', error);
+  // Join room on component mount
+  useEffect(() => {
+    if (roomCode && !isConnected) {
+      joinRoom(roomCode);
     }
+  }, [roomCode, isConnected, joinRoom]);
+
+  // Get initial question when game starts
+  useEffect(() => {
+    if (gameState?.current_phase === 'card-display' && !currentCard) {
+      getNextQuestion();
+    }
+  }, [gameState?.current_phase, currentCard]);
+
+  const handleBackHome = () => {
+    leaveRoom();
+    navigate('/');
   };
 
-  // Early returns for loading states
-  if (!room) {
+  const handleLeaveRoom = () => {
+    leaveRoom();
+    navigate('/');
+  };
+
+  const handleGameStart = async () => {
+    await updateGameState({
+      current_phase: 'card-display'
+    });
+  };
+
+  if (!roomCode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
-          <CardContent className="p-6 text-center">
-            <div className="text-lg font-medium text-muted-foreground">
-              {roomCode ? t('game.connectingToRoom') : t('game.noRoomCode')}
-            </div>
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-4">{t('game.roomNotFound')}</h2>
+            <Button onClick={handleBackHome} className="w-full">
+              {t('common.backHome')}
+            </Button>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Show connection report if game is completed
-  if (gameState?.current_phase === 'final-report' || connectionReport) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-        <ConnectionReport 
-          report={connectionReport}
-          analysisData={analysisData}
-          onNewGame={() => navigate('/')}
-          onBackHome={() => navigate('/')}
-        />
-      </div>
-    );
-  }
-
-  // Show level up confirmation when needed
-  if (levelUpData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-        <LevelUpConfirmation
-          currentLevel={currentLevel}
-          levelUpData={levelUpData}
-          onConfirm={handleLevelChange}
-          onBackHome={() => navigate('/')}
-        />
-      </div>
-    );
-  }
-
-  // Show waiting room if not enough players
-  if (participants.length < 2) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50">
-        <WaitingRoom 
-          roomCode={roomCode!}
-          participants={participants}
-          onLeaveRoom={() => navigate('/')}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card border-b px-4 py-3">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <Button
             variant="ghost"
-            onClick={() => navigate('/')}
+            size="sm"
+            onClick={handleBackHome}
             className="flex items-center gap-2"
           >
-            <ArrowLeft className="w-4 h-4" />
-            {t('button.back_home')}
+            <ArrowLeft className="h-4 w-4" />
+            {t('common.backHome')}
           </Button>
           
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+              <Users className="h-3 w-3" />
               {roomCode}
             </Badge>
             <Badge variant="outline" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              {t('game.level')} {currentLevel}
+              <Heart className="h-3 w-3" />
+              {t('levels.level')} {currentLevel}
             </Badge>
           </div>
         </div>
+      </div>
 
-        {/* Game Content */}
-        <div className="space-y-6">
-          {gamePhase === 'card-display' && currentCard && (
-            <GameCard
-              question={currentCard}
-              aiCardInfo={aiCardInfo}
-              level={currentLevel}
-              onLevelChange={handleLevelChange}
-              onFinish={handleFinishGame}
-            />
-          )}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {gameState?.current_phase === 'proximity-selection' && (
+          <WaitingRoom
+            roomCode={roomCode}
+            participants={participants}
+            onLeaveRoom={handleLeaveRoom}
+            onGameStart={handleGameStart}
+          />
+        )}
 
-          {gamePhase === 'response' && isMyTurn && (
-            <ResponseInput
-              question={currentCard}
-              response={response}
-              onResponseChange={setResponse}
-              onSubmit={handleResponseSubmit}
-              isSubmitting={false}
-              gameMode={gameState?.proximity_response ? 'together' : 'apart'}
-            />
-          )}
+        {gameState?.current_phase === 'card-display' && currentCard && (
+          <GameCard
+            currentCard={currentCard}
+            currentLevel={currentLevel}
+            showCard={true}
+            cardIndex={gameState?.current_card_index || 0}
+            totalCards={10}
+            aiReasoning={aiCardInfo?.reasoning}
+            aiTargetArea={aiCardInfo?.targetArea}
+            selectionMethod={aiCardInfo?.selectionMethod}
+          />
+        )}
 
-          {gamePhase === 'evaluation' && isMyTurn && (
-            <ResponseEvaluation
-              question={currentCard}
-              response={""} // You'll need to fetch the actual response
-              evaluation={evaluation}
-              onEvaluationChange={setEvaluation}
-              onSubmit={handleEvaluationSubmit}
-              isSubmitting={false}
-              evaluatingPlayer={playerNumber === 1 ? 2 : 1}
-            />
-          )}
+        {gameState?.current_phase === 'response-input' && (
+          <ResponseInput
+            isVisible={true}
+            question={currentCard}
+            onSubmitResponse={(response, responseTime) => {
+              setResponse(response);
+              handleSubmitResponse();
+            }}
+            isSubmitting={isLoading}
+          />
+        )}
 
-          {/* Waiting state */}
-          {!isMyTurn && (
-            <Card className="w-full">
-              <CardContent className="p-8 text-center">
-                <div className="text-lg font-medium text-muted-foreground mb-2">
-                  {t('game.waitingForResponse', { 
-                    player: playerNumber === 1 ? t('game.player2') : t('game.player1') 
-                  })}
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {t('game.safetyNote')}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {gameState?.current_phase === 'evaluation' && (
+          <ResponseEvaluation
+            isVisible={true}
+            question={currentCard}
+            response={response}
+            playerName={t('game.you')}
+            onSubmitEvaluation={(evaluationData) => {
+              setEvaluation(evaluationData);
+              handleSubmitEvaluation();
+            }}
+            onCancel={() => {
+              navigate('/');
+            }}
+            isSubmitting={isLoading}
+          />
+        )}
       </div>
     </div>
   );
