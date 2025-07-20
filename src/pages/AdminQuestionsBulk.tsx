@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 interface Level {
   id: string;
@@ -20,18 +22,27 @@ interface Question {
   category: string;
 }
 
+const languageOptions = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
+  { code: 'fr', name: 'Français', flag: '🇫🇷' },
+];
+
 export default function AdminQuestionsBulk() {
   const [levels, setLevels] = useState<Level[]>([]);
   const [selectedLevelId, setSelectedLevelId] = useState<string>("");
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("en");
   const [textInput, setTextInput] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     fetchLevels();
-  }, []);
+  }, [selectedLanguage]);
 
   const fetchLevels = async () => {
     try {
@@ -39,15 +50,21 @@ export default function AdminQuestionsBulk() {
         .from('levels')
         .select('id, name')
         .eq('is_active', true)
+        .eq('language', selectedLanguage)
         .order('sort_order');
 
       if (error) throw error;
       setLevels(data || []);
+      
+      // Reset selected level if it's not available in the new language
+      if (selectedLevelId && !data?.find(level => level.id === selectedLevelId)) {
+        setSelectedLevelId("");
+      }
     } catch (error) {
       console.error('Error fetching levels:', error);
       toast({
         title: "Error",
-        description: "No se pudieron cargar los niveles",
+        description: "Could not load levels",
         variant: "destructive",
       });
     }
@@ -113,7 +130,16 @@ export default function AdminQuestionsBulk() {
     if (!selectedLevelId) {
       toast({
         title: "Error",
-        description: "Selecciona un nivel",
+        description: t('admin.bulkUpload.selectLevel'),
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!selectedLanguage) {
+      toast({
+        title: "Error",
+        description: t('admin.bulkUpload.selectLanguage'),
         variant: "destructive",
       });
       return;
@@ -122,7 +148,7 @@ export default function AdminQuestionsBulk() {
     if (previewQuestions.length === 0) {
       toast({
         title: "Error",
-        description: "No hay preguntas para subir",
+        description: "No questions to upload",
         variant: "destructive",
       });
       return;
@@ -134,7 +160,8 @@ export default function AdminQuestionsBulk() {
       const questionsToInsert = previewQuestions.map(q => ({
         level_id: selectedLevelId,
         text: q.text.trim(),
-        category: q.category.trim() || 'general'
+        category: q.category.trim() || 'general',
+        language: selectedLanguage
       }));
 
       const { error } = await supabase
@@ -144,8 +171,8 @@ export default function AdminQuestionsBulk() {
       if (error) throw error;
 
       toast({
-        title: "Preguntas subidas",
-        description: `Se han subido ${previewQuestions.length} preguntas correctamente`,
+        title: "Questions uploaded",
+        description: `Successfully uploaded ${previewQuestions.length} questions`,
       });
 
       // Reset form
@@ -162,7 +189,7 @@ export default function AdminQuestionsBulk() {
       console.error('Error uploading questions:', error);
       toast({
         title: "Error",
-        description: "No se pudieron subir las preguntas",
+        description: "Could not upload questions",
         variant: "destructive",
       });
     } finally {
@@ -174,10 +201,9 @@ export default function AdminQuestionsBulk() {
     <AdminLayout>
       <div className="space-y-6">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Subir Preguntas en Lote</h2>
+          <h2 className="text-2xl font-bold mb-2">{t('admin.bulkUpload.title')}</h2>
           <p className="text-muted-foreground">
-            Sube múltiples preguntas usando CSV o texto con formato. 
-            Formato esperado: "texto,categoría" (una pregunta por línea)
+            {t('admin.bulkUpload.subtitle')}
           </p>
         </div>
 
@@ -185,14 +211,33 @@ export default function AdminQuestionsBulk() {
           {/* Input Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Datos de Entrada</CardTitle>
+              <CardTitle>{t('admin.bulkUpload.inputSection')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="level-select">Nivel de destino</Label>
+                <Label htmlFor="language-select">{t('admin.bulkUpload.language')}</Label>
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('admin.bulkUpload.selectLanguage')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languageOptions.map((lang) => (
+                      <SelectItem key={lang.code} value={lang.code}>
+                        <span className="flex items-center gap-2">
+                          <span>{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="level-select">{t('admin.bulkUpload.targetLevel')}</Label>
                 <Select value={selectedLevelId} onValueChange={setSelectedLevelId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona un nivel" />
+                    <SelectValue placeholder={t('admin.bulkUpload.selectLevel')} />
                   </SelectTrigger>
                   <SelectContent>
                     {levels.map((level) => (
@@ -205,7 +250,7 @@ export default function AdminQuestionsBulk() {
               </div>
 
               <div>
-                <Label htmlFor="csv-file">Archivo CSV</Label>
+                <Label htmlFor="csv-file">{t('admin.bulkUpload.csvFile')}</Label>
                 <input
                   id="csv-file"
                   type="file"
@@ -215,10 +260,10 @@ export default function AdminQuestionsBulk() {
                 />
               </div>
 
-              <div className="text-center text-muted-foreground">o</div>
+              <div className="text-center text-muted-foreground">{t('admin.bulkUpload.or')}</div>
 
               <div>
-                <Label htmlFor="text-input">Texto directo</Label>
+                <Label htmlFor="text-input">{t('admin.bulkUpload.directText')}</Label>
                 <Textarea
                   id="text-input"
                   placeholder="¿Cuál fue tu primera impresión de mí?,reflexion
@@ -231,11 +276,11 @@ export default function AdminQuestionsBulk() {
 
               <Button 
                 onClick={handleUpload} 
-                disabled={loading || !selectedLevelId || previewQuestions.length === 0}
+                disabled={loading || !selectedLevelId || !selectedLanguage || previewQuestions.length === 0}
                 className="w-full"
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {loading ? "Subiendo..." : `Subir ${previewQuestions.length} Preguntas`}
+                {loading ? t('admin.bulkUpload.uploading') : t('admin.bulkUpload.uploadQuestions', { count: previewQuestions.length })}
               </Button>
             </CardContent>
           </Card>
@@ -245,7 +290,7 @@ export default function AdminQuestionsBulk() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <FileText className="w-5 h-5" />
-                Vista Previa ({previewQuestions.length} preguntas)
+                {t('admin.bulkUpload.preview', { count: previewQuestions.length })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -254,16 +299,21 @@ export default function AdminQuestionsBulk() {
                   {previewQuestions.map((question, index) => (
                     <div key={index} className="p-3 border rounded-lg">
                       <p className="text-sm font-medium">{question.text}</p>
-                      <Badge variant="secondary" className="mt-2 text-xs">
-                        {question.category}
-                      </Badge>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {question.category}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {languageOptions.find(lang => lang.code === selectedLanguage)?.flag} {languageOptions.find(lang => lang.code === selectedLanguage)?.name}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
                   <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Las preguntas aparecerán aquí mientras escribes</p>
+                  <p>Questions will appear here as you type</p>
                 </div>
               )}
             </CardContent>
@@ -273,23 +323,19 @@ export default function AdminQuestionsBulk() {
         {/* Format Help */}
         <Card>
           <CardHeader>
-            <CardTitle>Formato de Datos</CardTitle>
+            <CardTitle>{t('admin.bulkUpload.formatHelp')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2 text-sm">
-              <p><strong>Formato CSV esperado:</strong></p>
+              <p><strong>CSV format expected:</strong></p>
               <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
 {`"¿Cuál fue tu primera impresión de mí?","reflexion"
 "¿Qué canción te recuerda a nosotros?","dinamica"
 "¿Cuál es tu recuerdo favorito juntos?","dinamica"`}
               </pre>
-              <p className="text-muted-foreground">
-                • Primera columna: texto de la pregunta (obligatorio)
-                <br />
-                • Segunda columna: categoría (opcional, por defecto "general")
-                <br />
-                • Usa comillas para textos que contengan comas
-              </p>
+              <div className="text-muted-foreground whitespace-pre-line">
+                {t('admin.bulkUpload.formatDescription')}
+              </div>
             </div>
           </CardContent>
         </Card>
