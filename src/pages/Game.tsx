@@ -64,6 +64,103 @@ const Game = () => {
 
   const { gameState, syncAction } = useGameSync(roomId, playerId);
 
+  // Sync gamePhase with gameState.current_phase
+  useEffect(() => {
+    if (!gameState) return;
+    
+    console.log('🔄 Syncing game phase:', { 
+      current_phase: gameState.current_phase, 
+      proximity_answered: gameState.proximity_question_answered,
+      current_card: gameState.current_card 
+    });
+
+    // Map database phases to local phases
+    switch (gameState.current_phase) {
+      case 'proximity-selection':
+        if (!gameState.proximity_question_answered) {
+          setGamePhase("proximity");
+        } else {
+          // If proximity already answered, should be moving to next phase
+          setGamePhase("playing");
+        }
+        break;
+      case 'card-display':
+        setGamePhase("playing");
+        // If there's a current card, load it
+        if (gameState.current_card && !currentCard) {
+          setCurrentCard({
+            id: 'current',
+            text: gameState.current_card,
+            category: 'current'
+          });
+        }
+        // If no current card, get the first one
+        if (!gameState.current_card) {
+          getNextCard();
+        }
+        break;
+      case 'level-select':
+        // This shouldn't happen in Game component, but handle gracefully
+        navigate(`/level-select?room=${roomCode}`);
+        break;
+      case 'waiting-for-evaluation':
+        setGamePhase("playing");
+        break;
+      default:
+        // Keep current phase or default to waiting
+        break;
+    }
+  }, [gameState, currentCard, roomCode, navigate]);
+
+  // Load room data and detect game state on mount
+  useEffect(() => {
+    const loadRoomData = async () => {
+      if (!roomCode) return;
+      
+      try {
+        // Get room data
+        const { data: room, error } = await supabase
+          .from('game_rooms')
+          .select('*')
+          .eq('room_code', roomCode)
+          .single();
+
+        if (error || !room) {
+          console.error('Room not found:', error);
+          return;
+        }
+
+        setRoomId(room.id);
+        
+        console.log('🏠 Room loaded:', {
+          phase: room.current_phase,
+          proximity_answered: room.proximity_question_answered,
+          proximity_response: room.proximity_response,
+          current_card: room.current_card
+        });
+
+        // Set proximity response if available
+        if (room.proximity_response !== null) {
+          setProximity(room.proximity_response);
+        }
+
+        // Load current card if exists
+        if (room.current_card) {
+          setCurrentCard({
+            id: 'current',
+            text: room.current_card,
+            category: 'current'
+          });
+        }
+
+      } catch (error) {
+        console.error('Error loading room data:', error);
+      }
+    };
+
+    loadRoomData();
+  }, [roomCode]);
+
   // Handle game sync events via custom events
   useEffect(() => {
     const handlePartnerResponse = (event: CustomEvent) => {
@@ -115,12 +212,6 @@ const Game = () => {
     
     fetchLevelData();
   }, [levelParam]);
-
-  useEffect(() => {
-    if (roomCode) {
-      setRoomId(roomCode);
-    }
-  }, [roomCode]);
 
   useEffect(() => {
     if (levelParam) {
@@ -236,7 +327,7 @@ const Game = () => {
         .from('game_sync')
         .insert({
           room_id: roomId,
-          action_type: 'card_revealed',
+          action_type: 'card_reveal',
           triggered_by: playerId,
           action_data: {
             card: selectedQuestion,
@@ -311,7 +402,7 @@ const Game = () => {
               setGamePhase("playing");
             }}
             roomCode={roomCode}
-            room={null}
+            room={{ id: roomId }}
           />
         )}
 
@@ -361,6 +452,20 @@ const Game = () => {
                 </Button>
               </div>
             )}
+          </div>
+        )}
+
+        {gamePhase === "playing" && !currentCard && (
+          <div className="text-center space-y-4">
+            <p className="text-lg text-gray-700">Loading first card...</p>
+            <Button
+              onClick={getNextCard}
+              disabled={isSubmitting}
+              size="lg"
+              className="px-8"
+            >
+              {isSubmitting ? t("game.submitting") : "Start Game"}
+            </Button>
           </div>
         )}
 
