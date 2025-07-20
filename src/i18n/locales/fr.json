@@ -396,7 +396,7 @@
     }
   },
   "ai": {
-    "getcloseAI": "✨ Carte-IA | Selon votre interaction 🪄",
+    "getcloseAI": "GetClose AI",
     "intelligentSelection": "Sélection Intelligente",
     "targetArea": "Zone cible",
     "getcloseAIAnalysis": "Analyse GetClose AI",
