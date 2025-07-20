@@ -1,1070 +1,422 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { GameCard } from "@/components/game/GameCard";
-import { ResponseInput } from "@/components/game/ResponseInput";
+import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { GameCard } from '@/components/game/GameCard';
+import { ProximityAnswer } from '@/components/game/ProximityAnswer';
+import { ResponseInput } from '@/components/game/ResponseInput';
+import { Evaluation } from '@/components/game/Evaluation';
+import { GameFinish } from '@/components/game/GameFinish';
+import { useQuestions } from '@/hooks/useQuestions';
+import { useGameSync } from '@/hooks/useGameSync';
+import { ProximitySelection } from './ProximitySelection';
+import { ProximityQuestion } from '@/components/game/ProximityQuestion';
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
+interface AICardInfo {
+  reasoning?: string;
+  targetArea?: string;
+  selectionMethod?: string;
+}
 
-import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
-import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
-import { ResponseEvaluation, type EvaluationData } from "@/components/game/ResponseEvaluation";
-import { LanguageIndicator } from "@/components/ui/language-indicator";
-
-import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
-import { useRoomService } from "@/hooks/useRoomService";
-import { useGameSync } from "@/hooks/useGameSync";
-import { usePlayerId } from "@/hooks/usePlayerId";
-import { supabase } from "@/integrations/supabase/client";
-
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
-type PlayerTurn = 'player1' | 'player2';
-
-const Game = () => {
-  const navigate = useNavigate();
+export default function Game() {
   const [searchParams] = useSearchParams();
-  const { toast } = useToast();
-  const { t, i18n } = useTranslation();
-  const { 
-    room, 
-    participants, 
-    playerNumber,
-    updateRoomStatus,
-    joinRoom, 
-    isConnected 
-  } = useRoomService();
-  const playerId = usePlayerId();
-  
-  // Questions will be loaded from database
-  const [levelCards, setLevelCards] = useState<string[]>([]);
-  const [levelNames, setLevelNames] = useState<Record<number, string>>({});
-  
-  // Get game sync data
-  const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
-  
-  const roomCode = searchParams.get('room');
-  const currentLevel = parseInt(searchParams.get('level') || '1');
-  
-  // Auto-join room state
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const maxRetries = 3;
-
-  // Game state
-  const [currentCard, setCurrentCard] = useState('');
-  const [usedCards, setUsedCards] = useState<string[]>([]);
-  const [progress, setProgress] = useState(0);
-  const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
-  
-  console.log('🎮 Game component initialized:', { 
-    roomCode, 
-    currentLevel, 
-    room: room?.id,
-    gamePhase,
-    playerId,
-    playerNumber
-  });
-
-  // RESET GAME STATE WHEN LEVEL CHANGES
-  useEffect(() => {
-    console.log('🔄 Level changed - resetting local game state:', { currentLevel });
-    
-    // Reset all local game state when level changes
-    setCurrentCard('');
-    setUsedCards([]);
-    setProgress(0);
-    setGamePhase('card-display');
-    
-    // Clear any pending evaluation data
-    setPendingEvaluation(null);
-    
-    console.log('✅ Local game state reset for new level:', currentLevel);
-  }, [currentLevel]);
-
-  // Auto-join room if we have a roomCode but aren't connected
-  useEffect(() => {
-    let retryTimeout: NodeJS.Timeout;
-    
-    const autoJoinRoom = async () => {
-      if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        console.log(`🔗 Auto-joining room attempt ${retryCount + 1}:`, roomCode);
-        setIsRetrying(true);
-        
-        try {
-          const success = await joinRoom(roomCode);
-          if (success) {
-            console.log('✅ Successfully joined room');
-            setRetryCount(0);
-            setIsRetrying(false);
-          } else {
-            console.log(`❌ Failed to join room (attempt ${retryCount + 1})`);
-            setRetryCount(prev => prev + 1);
-            
-            // Retry after 2 seconds
-            if (retryCount + 1 < maxRetries) {
-              retryTimeout = setTimeout(() => {
-                setIsRetrying(false);
-              }, 2000);
-            } else {
-              setIsRetrying(false);
-            toast({
-              title: t('game.errors.connectionError'),
-              description: t('game.errors.connectionFailed', { roomCode, maxRetries }),
-              variant: "destructive"
-            });
-            }
-          }
-        } catch (error) {
-          console.error(`❌ Auto-join error (attempt ${retryCount + 1}):`, error);
-          setRetryCount(prev => prev + 1);
-          setIsRetrying(false);
-          
-          if (retryCount + 1 >= maxRetries) {
-            toast({
-              title: t('game.errors.connectionError'),
-              description: t('game.errors.verifyRoomCode'),
-              variant: "destructive"
-            });
-          }
-        }
-      }
-    };
-    
-    autoJoinRoom();
-    
-    return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
-    };
-  }, [roomCode, isConnected, room, joinRoom, retryCount]);
-
-  // Manual retry function
-  const handleRetryConnection = () => {
-    setRetryCount(0);
-    setIsRetrying(true);
-  };
-  
-  const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
+  const navigate = useNavigate();
+  const roomId = searchParams.get('room');
+  const playerId = localStorage.getItem('player_id') || '';
+  const [currentCard, setCurrentCard] = useState<string | null>(null);
+  const [cardIndex, setCardIndex] = useState<number>(0);
   const [showCard, setShowCard] = useState(false);
-  const [showResponseInput, setShowResponseInput] = useState(false);
-  
-  // Get proximity from game state
-  const isCloseProximity = gameState?.proximity_response || false;
-  
-  // Response data
-  const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
-  
-  // Evaluation state
-  const [pendingEvaluation, setPendingEvaluation] = useState<{
-    question: string;
-    response: string;
-    responseId: string;
-    playerName: string;
-  } | null>(null);
-  
+  const [isCardLoading, setIsCardLoading] = useState(false);
+  const [aiCardInfo, setAiCardInfo] = useState<AICardInfo | null>(null);
+  const [partnerResponse, setPartnerResponse] = useState<any | null>(null);
+  const [currentLevel, setCurrentLevel] = useState<number | null>(null);
+  const [showEvaluation, setShowEvaluation] = useState(false);
+  const [evaluationScores, setEvaluationScores] = useState<any | null>(null);
+  const [showGameFinish, setShowGameFinish] = useState(false);
+  const [gameResult, setGameResult] = useState<any | null>(null);
+  const [showProximityQuestion, setShowProximityQuestion] = useState(false);
+  const [showProximityAnswer, setShowProximityAnswer] = useState(false);
+  const [showLevelMismatchAlert, setShowLevelMismatchAlert] = useState(false);
+  const { t, i18n } = useTranslation();
+  const { questions, getQuestionsForLevel, markQuestionAsUsed } = useQuestions();
+  const { gameState, syncAction, updateGameState, isLoading } = useGameSync(roomId, playerId);
 
-  // Determine if it's my turn based on player number and current turn
-  const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
-                   (currentTurn === 'player2' && playerNumber === 2);
-  
-  
-  console.log('🎯 Turn logic:', { 
-    currentTurn, 
-    playerNumber, 
-    isMyTurn, 
-    gamePhase: gameState?.current_phase 
-  });
-  
-  // Helper function to derive local phase from database state
-  const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
-    // Check if room is finished first - this overrides any phase logic
-    if (room?.status === 'finished') {
-      console.log('🏁 Game is finished, showing final report');
-      return 'final-report';
-    }
-    
-    const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
-                         (dbState.current_turn === 'player2' && playerNum === 2);
-    
-    console.log('🎯 deriveLocalPhase:', { 
-      dbPhase: dbState.current_phase, 
-      dbTurn: dbState.current_turn, 
-      roomStatus: room?.status,
-      playerNum, 
-      isMyTurnInDB 
-    });
-    
-    switch (dbState.current_phase) {
-      case 'card-display':
-        return 'card-display';
-      case 'response-input':
-        return 'card-display'; // Always show card first, use local state for response input
-      case 'evaluation':
-        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
-        return isMyTurnInDB ? 'evaluation' : 'card-display';
-      case 'final-report':
-        return 'final-report';
-      default:
-        return 'card-display';
-    }
-  };
-  
-  // Main sync useEffect - handles ALL phase transitions based on database state
+  // Debug language consistency
+  console.log('🌍 Game page language:', i18n.language);
+
+  // Event listener for partner responses
   useEffect(() => {
-    if (gameState) {
-      console.log('🔄 Syncing with game state:', gameState);
-      
-      // Update turn
-      setCurrentTurn(gameState.current_turn);
-      
-      // Update card only if it exists in game state
-      if (gameState.current_card && gameState.current_card !== currentCard) {
-        console.log('📄 Card updated from game state:', gameState.current_card);
-        setCurrentCard(gameState.current_card);
-        setShowCard(false);
-        setTimeout(() => setShowCard(true), 300);
-      }
-      
-      // Update used cards
-      if (gameState.used_cards) {
-        setUsedCards(gameState.used_cards);
-      }
-      
-      // Sync game phase based on database state and player logic - ONLY source of phase changes
-      const newPhase = deriveLocalPhase(gameState, playerNumber);
-      if (newPhase !== gamePhase) {
-        console.log('🎮 Phase changed via deriveLocalPhase:', { 
-          from: gamePhase, 
-          to: newPhase, 
-          dbPhase: gameState.current_phase,
-          dbTurn: gameState.current_turn,
-          roomStatus: room?.status
-        });
-        
-        setGamePhase(newPhase);
-      }
-    }
-  }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
-
-  // Debug effect to track critical state changes
-  useEffect(() => {
-    console.log('🔄 Critical state update:', { 
-      playerNumber, 
-      gamePhase,
-      currentTurn: gameState?.current_turn,
-      currentPhase: gameState?.current_phase,
-      isMyTurn: gameState?.current_turn === `player${playerNumber}`,
-      participants: participants.length,
-      participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
-    });
-  }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
-
-  // Set up evaluation data when entering evaluation phase
-  useEffect(() => {
-    const setupEvaluationData = async () => {
-      if (gamePhase === 'evaluation' && gameState && room && !pendingEvaluation) {
-        console.log('🔄 Setting up evaluation data for evaluator');
-        
-        try {
-          // Get the current round number
-          const currentRound = (gameState.used_cards?.length || 0) + 1;
-          const currentCardFromState = gameState.current_card;
-          
-          // Fetch the latest response that needs evaluation for the current card/round
-          const { data: responseData, error } = await supabase
-            .from('game_responses')
-            .select('*')
-            .eq('room_id', room.id)
-            .eq('card_id', currentCardFromState)
-            .eq('round_number', currentRound)
-            .is('evaluation', null)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-          if (error) {
-            console.error('❌ Error fetching response for evaluation:', error);
-            return;
-          }
-
-          if (responseData) {
-            // Get partner's name based on their player ID
-            const partnerName = responseData.player_id !== playerId ? 
-              (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
-              t('game.yourResponse');
-
-            setPendingEvaluation({
-              question: responseData.card_id,
-              response: responseData.response || '',
-              responseId: responseData.id,
-              playerName: partnerName
-            });
-
-            console.log('✅ Evaluation data set up successfully for partner response');
-          }
-        } catch (error) {
-          console.error('❌ Error setting up evaluation data:', error);
-        }
-      }
+    const handlePartnerResponse = (event: any) => {
+      setPartnerResponse(event.detail);
     };
 
-    setupEvaluationData();
-  }, [gamePhase, gameState, room, pendingEvaluation, playerId, playerNumber, t]);
-  
-  // Level up confirmation
-  const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [waitingForPartner, setWaitingForPartner] = useState(false);
-  
-  // Final report
-  const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
-  
-  const totalCards = levelCards.length;
-  const minimumRecommended = 6;
+    window.addEventListener('partnerResponse', handlePartnerResponse);
 
-  // Track previous language to detect changes
-  const [prevLanguage, setPrevLanguage] = useState(i18n.language);
-  
-  // Fetch questions from database
+    return () => {
+      window.removeEventListener('partnerResponse', handlePartnerResponse);
+    };
+  }, []);
+
+  // Event listener for level change requests
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
-        
-        // Get level information
-        const { data: levelData, error: levelError } = await supabase
-          .from('levels')
-          .select('*')
-          .eq('sort_order', currentLevel)
-          .eq('language', i18n.language)
-          .eq('is_active', true)
-          .single();
-
-        if (levelError) throw levelError;
-
-        // Get questions for this level
-        const { data: questionsData, error: questionsError } = await supabase
-          .from('questions')
-          .select('text')
-          .eq('level_id', levelData.id)
-          .eq('language', i18n.language)
-          .eq('is_active', true);
-
-        if (questionsError) throw questionsError;
-
-        const questions = questionsData.map(q => q.text);
-        setLevelCards(questions);
-        setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
-
-        console.log('📚 Loaded questions:', { 
-          level: currentLevel, 
-          levelName: levelData.name, 
-          questionCount: questions.length,
-          language: i18n.language
-        });
-        
-        // If language changed, reset the game state for new language
-        if (prevLanguage !== i18n.language) {
-          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
-          
-          // Clear current card and used cards to start fresh with new language
-          if (gameState?.current_card) {
-            await updateGameState({
-              current_card: null,
-              used_cards: []
-            });
-          }
-          
-          setPrevLanguage(i18n.language);
-        }
-        
-      } catch (error) {
-        console.error('Error fetching questions:', error);
-        // Fallback to sample data
-        const fallbackQuestions = [
-          t('game.fallbackQuestions.question1'),
-          t('game.fallbackQuestions.question2'),
-          t('game.fallbackQuestions.question3')
-        ];
-        setLevelCards(fallbackQuestions);
-        setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
-      }
+    const handleChangeLevelRequest = (event: any) => {
+      setCurrentLevel(event.detail.level);
     };
 
-    fetchQuestions();
-  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
+    window.addEventListener('changeLevelRequest', handleChangeLevelRequest);
 
-  // AI-powered card generation state
-  const [isGeneratingCard, setIsGeneratingCard] = useState(false);
-  const [aiCardInfo, setAiCardInfo] = useState<{
-    reasoning?: string;
-    targetArea?: string;
-    selectionMethod?: string;
-  } | null>(null);
+    return () => {
+      window.removeEventListener('changeLevelRequest', handleChangeLevelRequest);
+    };
+  }, []);
 
-  // Enhanced intelligent card selection using AI - now works from first question
-  const selectCardWithAI = async (roomId: string, levelId: string, language: string, isFirstQuestion: boolean = false) => {
-    try {
-      console.log('🧠 Trying AI card selection...', { isFirstQuestion });
-      setIsGeneratingCard(true);
-      
-      const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
-        body: { 
-          roomId,
-          currentLevel: levelId,
-          language,
-          isFirstQuestion
-        }
-      });
-
-      if (error) {
-        console.warn('⚠️ AI selection failed, falling back to random:', error);
-        return null;
-      }
-
-      if (data?.question && data?.reasoning) {
-        console.log('✅ AI selected card:', { 
-          question: data.question.text,
-          reasoning: data.reasoning,
-          targetArea: data.targetArea,
-          isFirstQuestion
-        });
-        
-        setAiCardInfo({
-          reasoning: data.reasoning,
-          targetArea: data.targetArea,
-          selectionMethod: data.selectionMethod
-        });
-        
-        return data.question.text;
-      }
-      
-      return null;
-    } catch (error) {
-      console.warn('⚠️ AI selection error, falling back to random:', error);
-      return null;
-    } finally {
-      setIsGeneratingCard(false);
-    }
-  };
-
-  // Initialize card only if not set by game state and it's my turn to generate
+  // Event listener for game finish
   useEffect(() => {
-    const generateCard = async () => {
-      if (levelCards.length > 0 && 
-          !gameState?.current_card && 
-          isMyTurn && 
-          gameState?.current_phase === 'card-display' &&
-          room && !isGeneratingCard) {
-        
-        const usedCardsFromState = gameState?.used_cards || [];
-        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
-        
-        if (availableCards.length > 0) {
-          // Always try AI selection first - now includes first question
-          const isFirstQuestion = usedCardsFromState.length === 0;
-          let selectedCard = null;
-          
-          // Get current level data for AI selection
-          const { data: levelData } = await supabase
-            .from('levels')
-            .select('id')
-            .eq('sort_order', currentLevel)
-            .eq('language', i18n.language)
-            .eq('is_active', true)
-            .single();
-            
-          if (levelData) {
-            selectedCard = await selectCardWithAI(room.id, levelData.id, i18n.language, isFirstQuestion);
-          }
-          
-          // Fallback to random selection if AI fails
-          if (!selectedCard) {
-            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-            setAiCardInfo(null); // Clear AI info for random selection
-            console.log('🎲 Using random card fallback:', { 
-              selectedCard, 
-              availableCards: availableCards.length,
-              usedCards: usedCardsFromState.length,
-              isFirstQuestion
-            });
-          }
-          
-          // Update database first, then local state will sync
-          await updateGameState({
-            current_card: selectedCard
-          });
-        }
-      }
+    const handleGameFinish = (event: any) => {
+      setShowGameFinish(true);
+      setGameResult(event.detail);
     };
 
-    generateCard();
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
+    window.addEventListener('gameFinish', handleGameFinish);
 
+    return () => {
+      window.removeEventListener('gameFinish', handleGameFinish);
+    };
+  }, []);
+
+  // Initial load: Check URL params and game state
   useEffect(() => {
-    setProgress((usedCards.length / totalCards) * 100);
-  }, [usedCards, totalCards]);
-
-  // Deterministic card selection based on database state
-  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: string[], roundNumber: number) => {
-    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card));
-    if (availableCards.length === 0) {
-      return null;
-    }
-    
-    // Use round number as seed for deterministic selection
-    // This ensures all players get the same card based on the same database state
-    const deterministicIndex = roundNumber % availableCards.length;
-    return availableCards[deterministicIndex];
-  };
-
-  const handleStartResponse = async () => {
-    // Show the response input modal locally
-    setShowResponseInput(true);
-    
-    // Update database phase to response-input
-    await updateGameState({
-      current_phase: 'response-input'
-    });
-  };
-
-  const handleResponseSubmit = async (response: string, responseTime: number) => {
-    if (isSubmitting || !room) {
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.connectionLost'),
-        variant: "destructive",
-      });
+    if (!roomId) {
+      toast.error(t('game.missingRoomCode'));
       return;
     }
-    
-    setIsSubmitting(true);
 
-    try {
-      // Use current game state for accurate round number
-      const currentRound = (gameState?.used_cards?.length || 0) + 1;
-      const currentCardFromState = gameState?.current_card || currentCard;
-      
-      console.log('📝 Submitting response:', { 
-        response, 
-        responseTime, 
-        currentCardFromState, 
-        currentRound,
-        playerId,
-        currentTurn 
-      });
-
-      // Save response to database
-      const { error: responseError } = await supabase
-        .from('game_responses')
-        .insert({
-          room_id: room.id,
-          player_id: playerId,
-          card_id: currentCardFromState,
-          response: response,
-          response_time: Math.round(responseTime),
-          round_number: currentRound
-        });
-
-      if (responseError) {
-        console.error('❌ Error saving response:', responseError);
-        throw responseError;
-      }
-
-      console.log('✅ Response saved successfully');
-
-      // Hide the response input modal
-      setShowResponseInput(false);
-      
-      // Transition to evaluation phase - other player evaluates
-      const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-      console.log('✅ Response submitted, moving to evaluation phase for other player');
-      await updateGameState({
-        current_turn: nextTurn,
-        current_phase: 'evaluation'
-      });
-      
-    } catch (error) {
-      console.error('❌ Error submitting response:', error);
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.responseSaveFailed'),
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Centralized function to advance to the next round
-  const advanceToNextRound = async (completedQuestion: string) => {
-    if (!room || !gameState) return;
-
-    console.log('🎯 Advancing to next round after completing:', completedQuestion);
-
-    // Calculate the round number based on current used cards + the completed question
-    const currentUsedCards = gameState.used_cards || [];
-    const nextRoundNumber = currentUsedCards.length + 1;
-    
-    // Use deterministic card selection based on database state
-    const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
-    
-    // FIX: Determine who should answer next based on who answered the previous question
-    // currentTurn is the evaluator, so the answerer was the other player
-    // The next answerer should be the current evaluator (who just finished evaluating)
-    const nextTurn = currentTurn; // The evaluator becomes the next answerer
-    
-    console.log('🔄 Turn switching logic:', {
-      currentTurn: currentTurn,
-      nextTurn: nextTurn,
-      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
-    });
-    
-    if (nextCard) {
-      // Continue with next question
-      const newUsedCards = [...currentUsedCards, completedQuestion];
-      
-      console.log('🎯 Moving to next card (deterministic):', {
-        nextCard,
-        nextTurn,
-        newUsedCards: newUsedCards.length,
-        currentLevel,
-        roundNumber: nextRoundNumber
-      });
-      
-      await updateGameState({
-        current_card: nextCard,
-        used_cards: newUsedCards,
-        current_turn: nextTurn,
-        current_phase: 'response-input'
-      });
-      
-      return { nextCard, nextTurn };
-    } else {
-      // No more cards, finish level
-      console.log('🏁 No more cards available - finishing level:', currentLevel);
-      
-      if (currentLevel >= 4) {
-        generateFinalReport();
-      } else {
-        navigate(`/level-select?room=${roomCode}`);
-      }
-      return null;
-    }
-  };
-
-  const handleEvaluationSubmit = async (evaluation: EvaluationData) => {
-    if (!pendingEvaluation || !room) {
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.connectionLost'),
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setIsSubmitting(true);
-
-    try {
-      console.log('📊 Submitting evaluation:', { evaluation, responseId: pendingEvaluation.responseId });
-
-      // Save evaluation to database
-      const { error: evaluationError } = await supabase
-        .from('game_responses')
-        .update({
-          evaluation: JSON.stringify(evaluation),
-          evaluation_by: playerId
-        })
-        .eq('id', pendingEvaluation.responseId);
-
-      if (evaluationError) {
-        console.error('❌ Error saving evaluation:', evaluationError);
-        throw evaluationError;
-      }
-
-      console.log('✅ Evaluation saved successfully');
-
-      // Call centralized function to advance to next round
-      await advanceToNextRound(pendingEvaluation.question);
-      
-      setPendingEvaluation(null);
-    } catch (error) {
-      console.error('❌ Error submitting evaluation:', error);
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.evaluationSaveFailed'),
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleEvaluationCancel = () => {
-    setPendingEvaluation(null);
-    // Database state will trigger phase update via useEffect
-  };
-
-  const handleLevelUpConfirm = () => {
-    // Simulate waiting for partner confirmation
-    setWaitingForPartner(true);
-    
-    // Auto-confirm after 2 seconds for demo purposes
-    setTimeout(() => {
-      setWaitingForPartner(false);
-      setShowLevelUpConfirmation(false);
-      navigate(`/level-select?room=${roomCode}`);
-    }, 2000);
-  };
-
-  const handleLevelUpCancel = () => {
-    setShowLevelUpConfirmation(false);
-    setWaitingForPartner(false);
-  };
-
-  const generateFinalReport = async () => {
-    try {
-      console.log('📊 Generating final report - fetching all game data from database');
-      
-      // Fetch all responses and evaluations from database for complete analysis
-      const { data: allResponses, error } = await supabase
-        .from('game_responses')
-        .select('*')
-        .eq('room_id', room?.id || '')
-        .not('response', 'is', null)
-        .not('evaluation', 'is', null)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('❌ Error fetching game responses:', error);
-        throw error;
-      }
-
-      console.log('📊 Retrieved responses for analysis:', allResponses);
-
-      if (!allResponses || allResponses.length === 0) {
-        console.log('⚠️ No responses found for analysis');
-        toast({
-          title: t('game.errors.insufficientData'),
-          description: t('game.errors.insufficientDataDescription'),
-          variant: "destructive"
-        });
+    const initialLoad = async () => {
+      // Check if level is already selected in game state
+      if (gameState?.current_phase === 'level-select') {
+        console.log('📍 Game state is level-select - navigating to level selection');
+        navigate(`/level-select?room=${roomId}`);
         return;
       }
 
-      // Convert database responses to GameResponse format
-      const formattedResponses: GameResponse[] = allResponses.map(response => ({
-        question: response.card_id,
-        response: response.response || '',
-        responseTime: response.response_time || 0,
-        evaluation: response.evaluation ? JSON.parse(response.evaluation) : {
-          honesty: 0,
-          attraction: 0,
-          intimacy: 0,
-          surprise: 0
-        },
-        level: currentLevel,
-        playerId: response.player_id
-      }));
-
-      console.log('📊 Formatted responses for connection analysis:', formattedResponses);
-
-      const connectionData = calculateConnectionScore(formattedResponses);
-      setConnectionData(connectionData);
-      
-      console.log('🏁 Setting game to finished state');
-      
-      // Sync the final report to both players
-      await syncAction('game_finish', {
-        connectionData: connectionData,
-        message: 'Game finished'
-      });
-      
-      // Update room status to finished (deriveLocalPhase will handle phase transition)
-      await updateRoomStatus('finished');
-    } catch (error) {
-      console.error('❌ Error generating final report:', error);
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.finalReportFailed'),
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handlePlayAgain = () => {
-    navigate('/');
-  };
-
-  const handleGoHome = () => {
-    navigate('/');
-  };
-
-  const handleChangeLevel = async () => {
-    try {
-      await syncAction('level_change_request', {
-        roomCode,
-        currentLevel,
-        message: 'Player wants to change level'
-      });
-      navigate(`/level-select?room=${roomCode}`);
-    } catch (error) {
-      console.error('❌ Error requesting level change:', error);
-      toast({
-        title: t('common.error'),
-        description: t('game.errors.levelChangeFailed'),
-        variant: "destructive"
-      });
-    }
-  };
-
-  useEffect(() => {
-    setShowCard(true);
-    
-    // Listen for game finish events from partner
-    const handleGameFinish = (event: CustomEvent) => {
-      console.log('🏁 Received game finish event from partner');
-      const { connectionData } = event.detail;
-      if (connectionData) {
-        setConnectionData(connectionData);
+      // If we have a card, show it immediately
+      if (gameState?.current_card) {
+        setCurrentCard(gameState.current_card);
+        setCardIndex(gameState.current_card_index);
+        setShowCard(true);
       }
-      // deriveLocalPhase will handle phase transition based on room status
     };
 
-    // Listen for level change requests from partner
-    const handleChangeLevelRequest = (event: CustomEvent) => {
-      console.log('🎯 Received level change request from partner');
-      navigate(`/level-select?room=${roomCode}`);
+    initialLoad();
+  }, [roomId, navigate, gameState?.current_phase, gameState?.current_card, gameState?.current_card_index, t]);
+
+  // Level change handling
+  useEffect(() => {
+    const urlLevel = parseInt(searchParams.get('level') || '');
+
+    const handleLevelChange = async () => {
+      if (urlLevel) {
+        // Check for level mismatch
+        if (currentLevel !== null && urlLevel !== currentLevel) {
+          console.warn('⚠️ Level mismatch detected:', { urlLevel, currentLevel });
+          setShowLevelMismatchAlert(true);
+          await syncAction('level_mismatch', { urlLevel, currentLevel });
+          return;
+        }
+
+        // Set the level and fetch a new card
+        console.log('🚀 Setting level from URL:', urlLevel);
+        setCurrentLevel(urlLevel);
+      }
     };
 
-    window.addEventListener('gameFinish', handleGameFinish as EventListener);
-    window.addEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
+    handleLevelChange();
+  }, [searchParams, currentLevel, syncAction]);
 
-    return () => {
-      window.removeEventListener('gameFinish', handleGameFinish as EventListener);
-      window.removeEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
-    };
-  }, [roomCode, navigate]);
+  // Fetch new card when level is set
+  useEffect(() => {
+    if (currentLevel !== null) {
+      fetchNewCard();
+    }
+  }, [currentLevel]);
 
-  // Redirect to home if no room code
-  if (!roomCode) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
-        <Card className="p-6 text-center space-y-4">
-          <p className="text-muted-foreground">{t('game.noRoomCode')}</p>
-          <Button onClick={() => navigate('/')}>
-            {t('common.backToHome')}
-          </Button>
-        </Card>
-      </div>
-    );
-  }
-  
-  // Show loading if we're trying to connect to a room
-  if (roomCode && !isConnected && !room) {
-    return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center space-y-6 max-w-md">
-          <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-            <Users className="w-10 h-10 text-primary animate-pulse" />
-          </div>
-          <div className="space-y-2">
-            <h2 className="text-xl font-heading text-foreground">
-              {isRetrying ? t('game.retryingConnection') : t('game.connectingToRoom')}
-            </h2>
-            <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>
-            {retryCount > 0 && (
-              <p className="text-xs text-orange-500">
-                {t('game.attempt', { current: retryCount, max: maxRetries })}
-              </p>
-            )}
-          </div>
+  // Sync UI with game state
+  useEffect(() => {
+    if (!gameState) return;
+
+    // Sync card display
+    if (gameState.current_card) {
+      setCurrentCard(gameState.current_card);
+      setCardIndex(gameState.current_card_index);
+      setShowCard(true);
+    }
+
+    // Sync proximity question state
+    setShowProximityQuestion(!gameState.proximity_question_answered);
+    setShowProximityAnswer(gameState.proximity_question_answered);
+
+    // Handle phase transitions
+    if (gameState.current_phase === 'response-input') {
+      setShowCard(false);
+    } else if (gameState.current_phase === 'evaluation') {
+      setShowCard(false);
+      setShowEvaluation(true);
+    } else if (gameState.current_phase === 'card-display') {
+      setShowEvaluation(false);
+      setShowCard(true);
+    }
+  }, [gameState]);
+
+  const fetchNewCard = useCallback(async () => {
+    if (!roomId || currentLevel === null) return;
+
+    try {
+      setIsCardLoading(true);
+      console.log('🎯 Fetching new card - attempting AI selection first...');
+
+      // Try AI intelligent selection first
+      try {
+        console.log('🤖 Calling AI question selector...');
+        const { data: aiResult, error: aiError } = await supabase.functions.invoke(
+          'intelligent-question-selector',
+          {
+            body: {
+              roomId,
+              currentLevel,
+              language: i18n.language,
+              isFirstQuestion: gameState?.used_cards?.length === 0
+            }
+          }
+        );
+
+        console.log('🔍 AI selector response:', { aiResult, aiError });
+
+        if (aiError) {
+          console.warn('⚠️ AI selection failed, falling back to random:', aiError);
+          throw new Error(`AI selection failed: ${aiError.message}`);
+        }
+
+        if (aiResult?.question) {
+          console.log('✨ AI selected question successfully:', aiResult.question.text);
+          console.log('🎯 AI reasoning:', aiResult.reasoning);
+          console.log('📊 Target area:', aiResult.targetArea);
           
-          {retryCount >= maxRetries && (
-            <div className="space-y-4">
-              <p className="text-sm text-destructive">
-                {t('game.connectionFailed')}
-              </p>
-              <div className="space-y-2">
-                <Button 
-                  onClick={handleRetryConnection}
-                  className="w-full"
-                  disabled={isRetrying}
-                >
-                  {isRetrying ? t('game.retrying') : t('game.retryConnection')}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/')}
-                  className="w-full"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  {t('common.backToHome')}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+          setAiCardInfo({
+            reasoning: aiResult.reasoning,
+            targetArea: aiResult.targetArea,
+            selectionMethod: 'ai_intelligent'
+          });
+
+          const selectedQuestion = aiResult.question;
+
+          // Update game state
+          const newUsedCards = [...(gameState?.used_cards || []), selectedQuestion.id];
+          await updateGameState({
+            current_card: selectedQuestion.text,
+            used_cards: newUsedCards,
+            current_card_index: newUsedCards.length - 1
+          });
+
+          setCurrentCard(selectedQuestion.text);
+          setCardIndex(newUsedCards.length - 1);
+          console.log('🎮 Game state updated with AI-selected card');
+          return;
+        } else {
+          console.warn('⚠️ AI response missing question, falling back to random');
+          throw new Error('AI response missing question data');
+        }
+      } catch (aiError) {
+        console.error('❌ AI selection failed:', aiError);
+        console.log('🔄 Falling back to random selection...');
+        
+        // Clear AI info since we're falling back
+        setAiCardInfo(null);
+      }
+
+      // Fallback to random selection
+      console.log('🎲 Using random question selection as fallback');
+      const questions = getQuestionsForLevel(currentLevel.toString(), 1);
+      
+      if (questions.length === 0) {
+        toast.error(t('game.noQuestionsAvailable'));
+        return;
+      }
+
+      const randomQuestion = questions[0];
+      markQuestionAsUsed(randomQuestion.id);
+
+      const newUsedCards = [...(gameState?.used_cards || []), randomQuestion.id];
+      await updateGameState({
+        current_card: randomQuestion.text,
+        used_cards: newUsedCards,
+        current_card_index: newUsedCards.length - 1
+      });
+
+      setCurrentCard(randomQuestion.text);
+      setCardIndex(newUsedCards.length - 1);
+      console.log('🎮 Game state updated with random card');
+
+    } catch (error) {
+      console.error('💥 Error fetching new card:', error);
+      toast.error(t('game.errorFetchingCard'));
+    } finally {
+      setIsCardLoading(false);
+    }
+  }, [roomId, currentLevel, gameState?.used_cards, updateGameState, getQuestionsForLevel, markQuestionAsUsed, t, i18n.language]);
+
+  const handleProximityAnswer = async (answer: boolean) => {
+    await updateGameState({ proximity_question_answered: true, proximity_response: answer });
+    await syncAction('proximity_answer', { answer });
+    setShowProximityQuestion(false);
+    setShowProximityAnswer(true);
+  };
+
+  const handleCardReveal = async () => {
+    setShowCard(true);
+    await syncAction('card_reveal', {});
+  };
+
+  const handleResponseSubmit = async (response: string, responseTime: number, question: string, from: string) => {
+    await updateGameState({ current_phase: 'evaluation' });
+    await syncAction('response_submit', { response, responseTime, question, from });
+    setShowCard(false);
+  };
+
+  const handleEvaluationSubmit = async (scores: any) => {
+    setEvaluationScores(scores);
+    setShowEvaluation(false);
+
+    const nextCard = true; // For now, always request next card
+    await syncAction('evaluation_submit', { scores, nextCard });
+
+    // Fetch the next card
+    await fetchNewCard();
+    await updateGameState({ current_phase: 'card-display' });
+  };
+
+  const handleGameFinish = async (result: any) => {
+    setShowGameFinish(true);
+    setGameResult(result);
+    await syncAction('game_finish', result);
+  };
+
+  const handleNavigateToLevelSelect = async () => {
+    await syncAction('navigate_to_level_select', {});
+    navigate(`/level-select?room=${roomId}`);
+  };
 
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col">
-      <div className="w-full max-w-md mx-auto space-y-6 flex-1">
-        {/* Header */}
-        <div className="text-center space-y-2 pt-4">
-          <div className="flex items-center justify-between">
-            <LanguageIndicator />
-            <div className="flex items-center">
-              <Users className="w-4 h-4 text-muted-foreground mr-1" />
-              <span className="text-xs font-mono text-muted-foreground">{roomCode}</span>
-            </div>
-          </div>
-          
-          <div className="space-y-1">
-            <h1 className="text-xl font-heading text-foreground">
-              {t('game.levelTitle', { level: currentLevel, name: levelNames[currentLevel] || t('game.level', { level: currentLevel }) })}
-            </h1>
-            <div className="space-y-2">
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
-                {t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
-              </p>
-               <p className="text-sm text-primary font-medium">
-                 {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')} 
-                 {isMyTurn ? t('game.yourTurn') : t('game.partnerTurn')}
-               </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Game Content based on current phase */}
-        {gamePhase === 'card-display' && (
-          <>
-            <GameCard
-              currentCard={currentCard}
-              currentLevel={currentLevel}
-              showCard={showCard}
-              cardIndex={usedCards.length}
-              totalCards={totalCards}
-              aiReasoning={aiCardInfo?.reasoning}
-              aiTargetArea={aiCardInfo?.targetArea}
-              selectionMethod={aiCardInfo?.selectionMethod}
-            />
-
-            {/* Action Button - Only show if it's my turn and NOT in evaluation phase */}
-            {isMyTurn && gameState?.current_phase !== 'evaluation' && (
-              <div className="space-y-3 pb-8">
-                <Button 
-                  onClick={handleStartResponse}
-                  className="w-full h-12 text-base font-heading bg-primary hover:bg-primary/90"
-                  size="lg"
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  {t('game.respond')}
-                </Button>
-                
-                <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    onClick={handleChangeLevel}
-                    variant="outline"
-                    className="h-10 text-sm"
-                  >
-                    {t('game.changeLevel')}
-                  </Button>
-                  
-                  <Button 
-                    onClick={() => generateFinalReport()}
-                    variant="destructive"
-                    className="h-10 text-sm flex items-center gap-1"
-                  >
-                    <BarChart3 className="w-4 h-4" />
-                    {t('game.finish')}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Message for waiting player */}
-            {!isMyTurn && (
-              <div className="text-center py-8 space-y-4">
-                <p className="text-muted-foreground">
-                  {gameState?.current_phase === 'evaluation' 
-                    ? t('game.waitingForEvaluation', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })
-                    : t('game.waitingForResponse', { player: currentTurn === 'player1' ? t('game.player1') : t('game.player2') })
-                  }
-                </p>
-                <Button 
-                  onClick={handleChangeLevel}
-                  variant="outline"
-                  className="h-10 text-sm"
-                >
-                  {t('game.changeLevel')}
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Response Input Modal */}
-        <ResponseInput
-          isVisible={showResponseInput}
-          question={currentCard}
-          onSubmitResponse={handleResponseSubmit}
-          playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
-          isCloseProximity={isCloseProximity}
-          isSubmitting={isSubmitting}
-        />
-
-         {/* Response Evaluation Modal - Show only for evaluation phase */}
-         {pendingEvaluation && gamePhase === 'evaluation' && (
-           <ResponseEvaluation
-             isVisible={true}
-             question={pendingEvaluation.question}
-             response={pendingEvaluation.response}
-             playerName={pendingEvaluation.playerName}
-             onSubmitEvaluation={handleEvaluationSubmit}
-             onCancel={handleEvaluationCancel}
-             isSubmitting={isSubmitting}
-           />
-         )}
-
-        {/* Level Up Confirmation Modal */}
-        <LevelUpConfirmation
-          isVisible={showLevelUpConfirmation}
-          currentLevel={currentLevel}
-          cardsCompleted={usedCards.length}
-          minimumRecommended={minimumRecommended}
-          onConfirm={handleLevelUpConfirm}
-          onCancel={handleLevelUpCancel}
-          waitingForPartner={waitingForPartner}
-        />
-
-        {/* Final Connection Report Modal */}
-        {connectionData && (
-        <ConnectionReport
-          isVisible={gamePhase === 'final-report'}
-          connectionData={connectionData}
-          onPlayAgain={handlePlayAgain}
-          onGoHome={handleGoHome}
-          roomId={room?.id}
-          language={i18n.language}
-        />
-        )}
-
-        {/* Safety Note */}
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            💜 {t('game.safetyNote')}
-          </p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex flex-col">
+      <div className="container mx-auto p-4 flex items-center justify-between">
+        <h1 className="text-2xl font-semibold text-gray-800">
+          {t('game.title')}
+        </h1>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={handleNavigateToLevelSelect}>
+            {t('game.changeLevel')}
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">{t('game.endGame')}</Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('game.endGameConfirmation')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('game.endGameWarning')}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t('game.cancel')}</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleGameFinish({
+                  winner: 'no one',
+                  reason: 'game ended early'
+                })}>{t('game.confirm')}</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
+
+      {isLoading && (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-gray-600">{t('game.loading')}</p>
+        </div>
+      )}
+
+      {showLevelMismatchAlert && (
+        <div className="absolute top-0 left-0 w-full h-full bg-black/50 z-50 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-md shadow-lg">
+            <h2 className="text-lg font-semibold text-gray-800 mb-2">{t('game.levelMismatchTitle')}</h2>
+            <p className="text-gray-700 mb-4">{t('game.levelMismatchDescription')}</p>
+            <Button onClick={() => setShowLevelMismatchAlert(false)}>{t('game.ok')}</Button>
+          </div>
+        </div>
+      )}
+
+      {showProximityQuestion && (
+        <ProximityQuestion onAnswer={handleProximityAnswer} />
+      )}
+
+      {showProximityAnswer && (
+        <ProximityAnswer proximityResponse={gameState?.proximity_response} />
+      )}
+
+      {currentPhase === 'card-display' && (
+        <GameCard 
+          currentCard={currentCard}
+          currentLevel={currentLevel}
+          showCard={showCard}
+          cardIndex={cardIndex}
+          totalCards={cardIndex + 1}
+          aiReasoning={aiCardInfo?.reasoning}
+          aiTargetArea={aiCardInfo?.targetArea}
+          selectionMethod={aiCardInfo?.selectionMethod}
+        />
+      )}
+
+      {currentPhase === 'card-display' && !showCard && (
+        <div className="flex-1 flex items-center justify-center">
+          <Button onClick={handleCardReveal} disabled={isCardLoading}>
+            {isCardLoading ? t('game.loading') : t('game.revealCard')}
+          </Button>
+        </div>
+      )}
+
+      {currentPhase === 'response-input' && currentCard && (
+        <ResponseInput
+          cardText={currentCard}
+          onResponseSubmit={handleResponseSubmit}
+          partnerResponse={partnerResponse}
+        />
+      )}
+
+      {showEvaluation && (
+        <Evaluation
+          cardText={currentCard}
+          partnerResponse={partnerResponse}
+          onEvaluationSubmit={handleEvaluationSubmit}
+        />
+      )}
+
+      {showGameFinish && (
+        <GameFinish
+          gameResult={gameResult}
+        />
+      )}
     </div>
   );
-};
-
-export default Game;
+}
