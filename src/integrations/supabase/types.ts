@@ -14,8 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analyses: {
+        Row: {
+          ai_response: Json
+          analysis_type: string
+          created_at: string
+          id: string
+          input_data: Json
+          room_id: string
+        }
+        Insert: {
+          ai_response: Json
+          analysis_type: string
+          created_at?: string
+          id?: string
+          input_data: Json
+          room_id: string
+        }
+        Update: {
+          ai_response?: Json
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          input_data?: Json
+          room_id?: string
+        }
+        Relationships: []
+      }
       game_responses: {
         Row: {
+          ai_reasoning: string | null
           card_id: string
           created_at: string
           evaluation: string | null
@@ -26,8 +54,10 @@ export type Database = {
           response_time: number | null
           room_id: string
           round_number: number
+          selection_method: string | null
         }
         Insert: {
+          ai_reasoning?: string | null
           card_id: string
           created_at?: string
           evaluation?: string | null
@@ -38,8 +68,10 @@ export type Database = {
           response_time?: number | null
           room_id: string
           round_number: number
+          selection_method?: string | null
         }
         Update: {
+          ai_reasoning?: string | null
           card_id?: string
           created_at?: string
           evaluation?: string | null
@@ -50,6 +82,7 @@ export type Database = {
           response_time?: number | null
           room_id?: string
           round_number?: number
+          selection_method?: string | null
         }
         Relationships: [
           {
