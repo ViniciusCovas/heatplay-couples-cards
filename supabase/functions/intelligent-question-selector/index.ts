@@ -18,13 +18,9 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🚀 AI Question Selector starting...');
-    
     const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
-    console.log('📝 Request params:', { roomId, currentLevel, language, isFirstQuestion });
 
     if (!openAIApiKey) {
-      console.error('❌ OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
@@ -38,11 +34,8 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     if (responsesError) {
-      console.error('❌ Failed to fetch responses:', responsesError);
       throw new Error(`Failed to fetch game responses: ${responsesError.message}`);
     }
-
-    console.log('📊 Found', responses?.length || 0, 'previous responses');
 
     // Get used cards to avoid repetition
     const { data: room, error: roomError } = await supabase
@@ -52,7 +45,6 @@ serve(async (req) => {
       .single();
 
     if (roomError) {
-      console.error('❌ Failed to fetch room:', roomError);
       throw new Error(`Failed to fetch room data: ${roomError.message}`);
     }
 
@@ -65,24 +57,18 @@ serve(async (req) => {
       });
 
     if (questionsError) {
-      console.error('❌ Failed to fetch questions:', questionsError);
       throw new Error(`Failed to fetch questions: ${questionsError.message}`);
     }
-
-    console.log('❓ Found', questions?.length || 0, 'questions for level', currentLevel);
 
     // Filter out already used questions
     const usedCards = room.used_cards || [];
     const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.id));
 
     if (availableQuestions.length === 0) {
-      console.error('❌ No available questions');
       throw new Error('No available questions for this level');
     }
 
-    console.log('✅ Available questions after filtering:', availableQuestions.length);
-
-    // Analyze evaluation patterns
+    // Analyze evaluation patterns (if any exist)
     const evaluationStats = responses.reduce((acc: any, response: any) => {
       if (response.evaluation) {
         const eval = JSON.parse(response.evaluation);
@@ -95,10 +81,8 @@ serve(async (req) => {
       return acc;
     }, { count: 0 });
 
-    console.log('📈 Evaluation stats:', evaluationStats);
-
-    // Create AI prompt
-    const prompt = `You are GetClose AI, an expert relationship coach that helps couples connect deeper through strategic question selection.
+    // Enhanced prompt that works for both first questions and subsequent ones
+    let prompt = `You are GetClose AI, an expert relationship coach that helps couples connect deeper through strategic question selection.
 
 Context:
 - Relationship Level: ${currentLevel}
@@ -136,8 +120,6 @@ Respond with ONLY a JSON object:
   "targetArea": "[honesty|attraction|intimacy|surprise]"
 }`;
 
-    console.log('🤖 Calling OpenAI API...');
-
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -145,7 +127,7 @@ Respond with ONLY a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4.1-2025-04-14',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 300,
@@ -153,19 +135,13 @@ Respond with ONLY a JSON object:
     });
 
     if (!response.ok) {
-      console.error('❌ OpenAI API error:', response.status, response.statusText);
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('🤖 OpenAI response received');
-    
     const aiResponse = JSON.parse(data.choices[0].message.content);
+    
     const selectedQuestion = availableQuestions[aiResponse.selectedQuestionIndex];
-
-    console.log('✨ AI selected question:', selectedQuestion.text);
-    console.log('🎯 Target area:', aiResponse.targetArea);
-    console.log('💭 Reasoning:', aiResponse.reasoning);
 
     // Store AI analysis
     await supabase
@@ -185,7 +161,12 @@ Respond with ONLY a JSON object:
         }
       });
 
-    console.log('✅ AI question selection successful');
+    console.log('✅ AI question selection successful:', {
+      isFirstQuestion,
+      selectedQuestion: selectedQuestion.text,
+      reasoning: aiResponse.reasoning,
+      targetArea: aiResponse.targetArea
+    });
 
     return new Response(JSON.stringify({
       question: selectedQuestion,
@@ -197,7 +178,7 @@ Respond with ONLY a JSON object:
     });
 
   } catch (error) {
-    console.error('💥 Error in intelligent-question-selector:', error);
+    console.error('Error in intelligent-question-selector:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
       fallbackToRandom: true
