@@ -20,6 +20,13 @@ serve(async (req) => {
   try {
     const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
 
+    console.log('🤖 AI Question Selector called:', {
+      roomId,
+      currentLevel,
+      language,
+      isFirstQuestion
+    });
+
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');
     }
@@ -34,6 +41,7 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     if (responsesError) {
+      console.error('Error fetching responses:', responsesError);
       throw new Error(`Failed to fetch game responses: ${responsesError.message}`);
     }
 
@@ -45,6 +53,7 @@ serve(async (req) => {
       .single();
 
     if (roomError) {
+      console.error('Error fetching room:', roomError);
       throw new Error(`Failed to fetch room data: ${roomError.message}`);
     }
 
@@ -57,6 +66,7 @@ serve(async (req) => {
       });
 
     if (questionsError) {
+      console.error('Error fetching questions:', questionsError);
       throw new Error(`Failed to fetch questions: ${questionsError.message}`);
     }
 
@@ -71,12 +81,16 @@ serve(async (req) => {
     // Analyze evaluation patterns (if any exist)
     const evaluationStats = responses.reduce((acc: any, response: any) => {
       if (response.evaluation) {
-        const eval = JSON.parse(response.evaluation);
-        acc.honesty = (acc.honesty || 0) + (eval.honesty || 0);
-        acc.attraction = (acc.attraction || 0) + (eval.attraction || 0);
-        acc.intimacy = (acc.intimacy || 0) + (eval.intimacy || 0);
-        acc.surprise = (acc.surprise || 0) + (eval.surprise || 0);
-        acc.count++;
+        try {
+          const evalData = JSON.parse(response.evaluation);
+          acc.honesty = (acc.honesty || 0) + (evalData.honesty || 0);
+          acc.attraction = (acc.attraction || 0) + (evalData.attraction || 0);
+          acc.intimacy = (acc.intimacy || 0) + (evalData.intimacy || 0);
+          acc.surprise = (acc.surprise || 0) + (evalData.surprise || 0);
+          acc.count++;
+        } catch (e) {
+          console.warn('Failed to parse evaluation:', response.evaluation);
+        }
       }
       return acc;
     }, { count: 0 });
@@ -127,7 +141,7 @@ Respond with ONLY a JSON object:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-2025-04-14',
+        model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.7,
         max_tokens: 300,

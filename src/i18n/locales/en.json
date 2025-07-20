@@ -1,4 +1,3 @@
-
 {
   "app": {
     "title": "Let's Get Close",
@@ -396,7 +395,7 @@
     }
   },
   "ai": {
-    "getcloseAI": "GetClose AI",
+    "getcloseAI": "✨ AI-Card Based on Last Interaction 🪄",
     "intelligentSelection": "Intelligent Selection",
     "targetArea": "Target area",
     "getcloseAIAnalysis": "GetClose AI Analysis",

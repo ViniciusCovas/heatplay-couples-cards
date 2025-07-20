@@ -1,4 +1,3 @@
-
 {
   "app": {
     "title": "Cartes de Connexion",
@@ -396,7 +395,7 @@
     }
   },
   "ai": {
-    "getcloseAI": "GetClose AI",
+    "getcloseAI": "✨ Carte-IA | Selon votre interaction 🪄",
     "intelligentSelection": "Sélection Intelligente",
     "targetArea": "Zone cible",
     "getcloseAIAnalysis": "Analyse GetClose AI",
