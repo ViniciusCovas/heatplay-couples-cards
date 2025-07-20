@@ -69,6 +69,22 @@ const Game = () => {
     playerNumber
   });
 
+  // RESET GAME STATE WHEN LEVEL CHANGES
+  useEffect(() => {
+    console.log('🔄 Level changed - resetting local game state:', { currentLevel });
+    
+    // Reset all local game state when level changes
+    setCurrentCard('');
+    setUsedCards([]);
+    setProgress(0);
+    setGamePhase('card-display');
+    
+    // Clear any pending evaluation data
+    setPendingEvaluation(null);
+    
+    console.log('✅ Local game state reset for new level:', currentLevel);
+  }, [currentLevel]);
+
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
@@ -196,7 +212,6 @@ const Game = () => {
     }
   };
   
-  // Sync with game state - this is the single source of truth
   // Main sync useEffect - handles ALL phase transitions based on database state
   useEffect(() => {
     if (gameState) {
@@ -298,8 +313,6 @@ const Game = () => {
 
     setupEvaluationData();
   }, [gamePhase, gameState, room, pendingEvaluation, playerId, playerNumber, t]);
-  
-  // No longer needed - we get response data from database via useResponseData hook
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
@@ -507,7 +520,6 @@ const Game = () => {
     return availableCards[deterministicIndex];
   };
 
-
   const handleStartResponse = async () => {
     // Show the response input modal locally
     setShowResponseInput(true);
@@ -694,7 +706,6 @@ const Game = () => {
     setPendingEvaluation(null);
     // Database state will trigger phase update via useEffect
   };
-
 
   const handleLevelUpConfirm = () => {
     // Simulate waiting for partner confirmation

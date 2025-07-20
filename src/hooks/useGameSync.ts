@@ -191,19 +191,26 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       case 'level_change_request':
         showToast(t('game.notifications.choosingNewLevel'));
         
+        console.log('🔄 Level change request - resetting game state');
+        
         // Clear existing level selection votes for fresh start
         await supabase
           .from('level_selection_votes')
           .delete()
           .eq('room_id', action.room_id);
         
-        // Reset room phase to level selection
+        // Reset room phase to level selection AND clear card state
         await supabase
           .from('game_rooms')
           .update({ 
-            current_phase: 'level-select'
+            current_phase: 'level-select',
+            current_card: null,
+            used_cards: [],
+            current_card_index: 0
           })
           .eq('id', action.room_id);
+        
+        console.log('✅ Game state reset: current_card=null, used_cards=[]');
         
         // Navigate both players to level selection
         window.location.href = `/level-select?room=${action.action_data.roomCode}`;

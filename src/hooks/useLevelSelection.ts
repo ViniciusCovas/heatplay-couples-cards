@@ -89,15 +89,18 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setIsWaitingForPartner(false);
                 setCountdown(null);
                 
-                // Force update game room
+                // Force update game room with clean state
                 const updateRoom = async () => {
                   try {
-                    console.log('🔄 Starting game room update...');
+                    console.log('🔄 Starting game room update with clean state...');
                     const { data: updateData, error: updateError } = await supabase
                       .from('game_rooms')
                       .update({ 
                         level: levels[0],
-                        current_phase: 'card-display' 
+                        current_phase: 'card-display',
+                        current_card: null,
+                        used_cards: [],
+                        current_card_index: 0
                       })
                       .eq('id', roomId)
                       .select();
@@ -108,7 +111,8 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                       console.error('❌ Error updating game room:', updateError);
                       toast.error(t('game.errors.levelChangeFailed'));
                     } else {
-                      console.log('✅ Game room successfully updated to card-display');
+                      console.log('✅ Game room successfully updated with clean state');
+                      console.log('🎯 Clean state: current_card=null, used_cards=[], level=', levels[0]);
                       console.log('📊 Updated data:', updateData);
                     }
                   } catch (err) {
@@ -410,14 +414,17 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
             if (latestVotes.length === 2) {
               const levels = latestVotes.map(v => v.selected_level);
               if (levels[0] === levels[1]) {
-                console.log('🔄 PERIODIC CHECK: Found matching votes, forcing room update');
+                console.log('🔄 PERIODIC CHECK: Found matching votes, forcing room update with clean state');
                 
-                // Force update the room
+                // Force update the room with clean state
                 await supabase
                   .from('game_rooms')
                   .update({ 
                     level: levels[0],
-                    current_phase: 'card-display' 
+                    current_phase: 'card-display',
+                    current_card: null,
+                    used_cards: [],
+                    current_card_index: 0
                   })
                   .eq('id', roomId);
                 
@@ -426,7 +433,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
                 setCountdown(null);
                 toast.success(t('levelSelect.syncingGame', { level: levels[0] }));
               } else {
-                // THIS IS THE NEW LOGIC TO HANDLE MISMATCH IN PERIODIC CHECK
+                // Handle mismatch in periodic check
                 console.log('🔄 PERIODIC CHECK: Found mismatching votes, forcing reset');
                 setLevelsMismatch(true);
                 setCountdown(null);
