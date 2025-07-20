@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Level {
   id: string;
   name: string;
+  language: string;
 }
 
 interface Question {
@@ -23,6 +24,7 @@ interface Question {
 export default function AdminQuestionsBulk() {
   const [levels, setLevels] = useState<Level[]>([]);
   const [selectedLevelId, setSelectedLevelId] = useState<string>("");
+  const [selectedLevelLanguage, setSelectedLevelLanguage] = useState<string>("");
   const [textInput, setTextInput] = useState("");
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
@@ -37,7 +39,7 @@ export default function AdminQuestionsBulk() {
     try {
       const { data, error } = await supabase
         .from('levels')
-        .select('id, name')
+        .select('id, name, language')
         .eq('is_active', true)
         .order('sort_order');
 
@@ -51,6 +53,12 @@ export default function AdminQuestionsBulk() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleLevelChange = (levelId: string) => {
+    setSelectedLevelId(levelId);
+    const selectedLevel = levels.find(level => level.id === levelId);
+    setSelectedLevelLanguage(selectedLevel?.language || 'en');
   };
 
   const parseCSV = (text: string): Question[] => {
@@ -134,7 +142,8 @@ export default function AdminQuestionsBulk() {
       const questionsToInsert = previewQuestions.map(q => ({
         level_id: selectedLevelId,
         text: q.text.trim(),
-        category: q.category.trim() || 'general'
+        category: q.category.trim() || 'general',
+        language: selectedLevelLanguage || 'en'
       }));
 
       const { error } = await supabase
@@ -153,6 +162,7 @@ export default function AdminQuestionsBulk() {
       setCsvFile(null);
       setPreviewQuestions([]);
       setSelectedLevelId("");
+      setSelectedLevelLanguage("");
       
       // Reset file input
       const fileInput = document.getElementById('csv-file') as HTMLInputElement;
@@ -190,18 +200,23 @@ export default function AdminQuestionsBulk() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="level-select">Nivel de destino</Label>
-                <Select value={selectedLevelId} onValueChange={setSelectedLevelId}>
+                <Select value={selectedLevelId} onValueChange={handleLevelChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona un nivel" />
                   </SelectTrigger>
                   <SelectContent>
                     {levels.map((level) => (
                       <SelectItem key={level.id} value={level.id}>
-                        {level.name}
+                        {level.name} ({level.language.toUpperCase()})
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {selectedLevelLanguage && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Las preguntas se subirán en idioma: <strong>{selectedLevelLanguage.toUpperCase()}</strong>
+                  </p>
+                )}
               </div>
 
               <div>
@@ -240,7 +255,6 @@ export default function AdminQuestionsBulk() {
             </CardContent>
           </Card>
 
-          {/* Preview Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -289,6 +303,8 @@ export default function AdminQuestionsBulk() {
                 • Segunda columna: categoría (opcional, por defecto "general")
                 <br />
                 • Usa comillas para textos que contengan comas
+                <br />
+                • El idioma se asigna automáticamente según el nivel seleccionado
               </p>
             </div>
           </CardContent>
