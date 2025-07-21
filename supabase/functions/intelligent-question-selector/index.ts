@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -109,7 +108,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
+          model: 'gpt-4.1-2025-04-14',
           messages: [{ role: 'user', content: promptContent }],
           temperature: 0.7,
           max_tokens: 300,
@@ -147,7 +146,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
 }
 
 // Smart fallback function that considers context
-function getSmartRandomFallback(availableQuestions: any[], responseAnalysis: any, isFirstQuestion: boolean): any {
+function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean): any {
   console.log('🎲 Using smart random fallback with context');
   
   if (isFirstQuestion) {
@@ -160,23 +159,18 @@ function getSmartRandomFallback(availableQuestions: any[], responseAnalysis: any
     }
   }
 
-  // If we have response analysis, try to balance areas
-  if (responseAnalysis.count > 0) {
-    const avgHonesty = responseAnalysis.honesty / responseAnalysis.count;
-    const avgAttraction = responseAnalysis.attraction / responseAnalysis.count;
-    const avgIntimacy = responseAnalysis.intimacy / responseAnalysis.count;
-    const avgSurprise = responseAnalysis.surprise / responseAnalysis.count;
-    
-    // Find the lowest scoring area
+  // If we have last response analysis, try to balance areas
+  if (lastResponseAnalysis.honesty !== undefined) {
+    // Find the lowest scoring area from the last response
     const scores = [
-      { area: 'honesty', score: avgHonesty },
-      { area: 'attraction', score: avgAttraction },
-      { area: 'intimacy', score: avgIntimacy },
-      { area: 'surprise', score: avgSurprise }
+      { area: 'honesty', score: lastResponseAnalysis.honesty },
+      { area: 'attraction', score: lastResponseAnalysis.attraction },
+      { area: 'intimacy', score: lastResponseAnalysis.intimacy },
+      { area: 'surprise', score: lastResponseAnalysis.surprise }
     ];
     
     const lowestArea = scores.reduce((min, current) => current.score < min.score ? current : min);
-    console.log(`🎯 Targeting lowest area: ${lowestArea.area} (score: ${lowestArea.score})`);
+    console.log(`🎯 Targeting lowest area from last response: ${lowestArea.area} (score: ${lowestArea.score})`);
     
     // Try to find questions that might improve this area
     const targetQuestions = availableQuestions.filter(q => 
@@ -221,18 +215,20 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     // Parallel data fetching with individual error handling
-    const [responses, room, levelId] = await Promise.allSettled([
-      // Get previous game responses
+    const [recentResponses, room, levelId] = await Promise.allSettled([
+      // Get only the most recent response pair (last 2 responses) for analysis
       retryWithBackoff(async () => {
         const { data, error } = await supabase
           .from('game_responses')
           .select('*')
           .eq('room_id', roomId)
-          .order('created_at', { ascending: true });
+          .not('evaluation', 'is', null) // Only get evaluated responses
+          .order('created_at', { ascending: false })
+          .limit(2); // Only get the last 2 responses (most recent turn)
 
-        if (error) throw new Error(`Failed to fetch game responses: ${error.message}`);
+        if (error) throw new Error(`Failed to fetch recent responses: ${error.message}`);
         return data || [];
-      }, 1, 'game responses fetch'),
+      }, 1, 'recent responses fetch'),
 
       // Get room data
       retryWithBackoff(async () => {
@@ -251,9 +247,9 @@ serve(async (req) => {
     ]);
 
     // Handle individual failures
-    if (responses.status === 'rejected') {
-      failureReason = `Database error: ${responses.reason.message}`;
-      throw responses.reason;
+    if (recentResponses.status === 'rejected') {
+      failureReason = `Database error: ${recentResponses.reason.message}`;
+      throw recentResponses.reason;
     }
     if (room.status === 'rejected') {
       failureReason = `Room fetch error: ${room.reason.message}`;
@@ -264,7 +260,7 @@ serve(async (req) => {
       throw levelId.reason;
     }
 
-    const responseData = responses.value;
+    const recentResponseData = recentResponses.value;
     const roomData = room.value;
     const levelIdValue = levelId.value;
 
@@ -294,60 +290,57 @@ serve(async (req) => {
     console.log('📊 Data fetched successfully:', {
       availableQuestions: availableQuestions.length,
       usedCards: usedCards.length,
-      previousResponses: responseData.length
+      recentResponses: recentResponseData.length
     });
 
-    // Analyze responses for patterns
-    const responseAnalysis = responseData.reduce((acc: any, response: any) => {
-      if (response.evaluation) {
+    // Analyze only the most recent response for context (keep prompt short)
+    let lastResponseAnalysis = { hasData: false };
+    if (recentResponseData.length > 0) {
+      const lastResponse = recentResponseData[0];
+      if (lastResponse.evaluation) {
         try {
-          const evaluation = JSON.parse(response.evaluation);
-          acc.honesty = (acc.honesty || 0) + (evaluation.honesty || 0);
-          acc.attraction = (acc.attraction || 0) + (evaluation.attraction || 0);
-          acc.intimacy = (acc.intimacy || 0) + (evaluation.intimacy || 0);
-          acc.surprise = (acc.surprise || 0) + (evaluation.surprise || 0);
-          acc.count++;
+          const evaluation = JSON.parse(lastResponse.evaluation);
+          lastResponseAnalysis = {
+            hasData: true,
+            honesty: evaluation.honesty || 0,
+            attraction: evaluation.attraction || 0,
+            intimacy: evaluation.intimacy || 0,
+            surprise: evaluation.surprise || 0,
+            response_time: lastResponse.response_time || 0
+          };
         } catch (e) {
-          console.warn('⚠️ Failed to parse evaluation:', e);
+          console.warn('⚠️ Failed to parse last evaluation:', e);
         }
       }
-      return acc;
-    }, { count: 0 });
+    }
 
-    console.log('📈 Response analysis:', responseAnalysis);
+    console.log('📈 Last response analysis:', lastResponseAnalysis);
 
-    // Enhanced prompt for AI selection
-    const promptContent = `You are GetClose AI, an expert relationship coach helping couples connect deeper through strategic question selection.
+    // Compact AI prompt focusing only on the immediate emotional state
+    const promptContent = `You are GetClose AI, selecting the next question to deepen this couple's connection.
 
 Context:
-- Relationship Level: ${currentLevel}
-- Language: ${language}
+- Level: ${currentLevel} (${language})
 - Is First Question: ${isFirstQuestion}
-- Previous Responses: ${responseData.length}
-- Response Analysis: ${JSON.stringify(responseAnalysis)}
 - Available Questions: ${availableQuestions.length}
+
+${lastResponseAnalysis.hasData ? `
+Most Recent Response Analysis:
+- Honesty: ${lastResponseAnalysis.honesty}/10
+- Attraction: ${lastResponseAnalysis.attraction}/10
+- Intimacy: ${lastResponseAnalysis.intimacy}/10
+- Surprise: ${lastResponseAnalysis.surprise}/10
+- Response Time: ${lastResponseAnalysis.response_time}ms
+
+Strategy: Based on their most recent emotional state, what question would create the deepest connection right now?
+` : `
+First Question Strategy: Choose an engaging opener that creates comfort and encourages vulnerability.
+`}
 
 Available Questions:
 ${availableQuestions.map((q: any, i: number) => `${i + 1}. [${q.category || 'general'}] ${q.text}`).join('\n')}
 
-Your mission: Select the ONE question that will create the deepest connection right now.
-
-${isFirstQuestion ? `
-FIRST QUESTION Strategy:
-- Start with an engaging, welcoming question that sets a positive tone
-- Choose something that invites vulnerability without being too intense
-- Consider the relationship level - higher levels can start with more depth
-- Focus on creating comfort and encouraging open sharing
-- Target area should be based on what typically creates the best foundation for connection
-` : `
-FOLLOW-UP Strategy:
-- Analyze previous responses and evaluations to identify growth areas
-- If honesty scores are low: Choose questions that encourage vulnerability
-- If attraction scores are low: Select questions about desires and chemistry  
-- If intimacy scores are low: Pick questions about emotions and closeness
-- If surprise scores are low: Choose unexpected or playful questions
-- Build on previous conversations and deepen the connection
-`}
+Select the ONE question that will create the deepest connection based on their current emotional state.
 
 Respond with ONLY a JSON object:
 {
@@ -372,8 +365,8 @@ Respond with ONLY a JSON object:
       failureReason = `OpenAI API failed: ${apiError.message}`;
       console.error('❌ OpenAI API error:', apiError);
       
-      // Use smart fallback
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, responseAnalysis, isFirstQuestion);
+      // Use smart fallback based on last response
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
       
       // Store fallback analysis
       try {
@@ -384,8 +377,7 @@ Respond with ONLY a JSON object:
             analysis_type: 'question_selection_fallback',
             input_data: {
               available_questions: availableQuestions.length,
-              response_analysis: responseAnalysis,
-              session_responses: responseData.length,
+              last_response_analysis: lastResponseAnalysis,
               is_first_question: isFirstQuestion,
               level: currentLevel,
               language: language,
@@ -428,7 +420,7 @@ Respond with ONLY a JSON object:
       console.error('❌ Invalid question index:', aiResponse.selectedQuestionIndex);
       
       // Use smart fallback
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, responseAnalysis, isFirstQuestion);
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
       
       return new Response(JSON.stringify({
         question: fallbackQuestion,
@@ -450,8 +442,7 @@ Respond with ONLY a JSON object:
           analysis_type: 'question_selection',
           input_data: {
             available_questions: availableQuestions.length,
-            response_analysis: responseAnalysis,
-            session_responses: responseData.length,
+            last_response_analysis: lastResponseAnalysis,
             is_first_question: isFirstQuestion,
             level: currentLevel,
             language: language,
