@@ -1,8 +1,8 @@
+
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
-import { AIInsightBadge } from "./AIInsightBadge";
 
 interface GameCardProps {
   currentCard: string;
@@ -30,6 +30,10 @@ export const GameCard = ({
   const getLevelName = (level: number) => {
     return t(`levels.level${level}Name`);
   };
+
+  // Check if this is an AI-selected card
+  const isAICard = selectionMethod === 'ai_intelligent' || Boolean(aiReasoning);
+  
   return (
     <div className="flex-1 flex items-center justify-center px-4">
       <div className="relative perspective-1000">
@@ -63,6 +67,15 @@ export const GameCard = ({
                 </div>
               </div>
               
+              {/* AI Card indicator - positioned near the top */}
+              {isAICard && (
+                <div className="absolute top-12 left-4 right-4 flex justify-center">
+                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg animate-pulse">
+                    {t('game.aiCardText')}
+                  </div>
+                </div>
+              )}
+              
               {/* Card suit icon */}
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg
                 ${currentLevel === 1 ? 'bg-gradient-to-br from-green-400 to-green-600' : ''}
@@ -74,19 +87,9 @@ export const GameCard = ({
               </div>
               
               {/* Card text */}
-              <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
+              <p className={`text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2 ${isAICard ? 'mt-2' : ''}`}>
                 {currentCard}
               </p>
-              
-              {/* AI Insight Badge */}
-              {selectionMethod === 'ai_intelligent' && aiReasoning && (
-                <div className="mt-2">
-                  <AIInsightBadge 
-                    reasoning={aiReasoning}
-                    targetArea={aiTargetArea}
-                  />
-                </div>
-              )}
               
               {/* Level name at bottom */}
               <div className="absolute bottom-6 left-6 right-6 text-center">

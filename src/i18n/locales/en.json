@@ -1,10 +1,10 @@
 
 {
   "app": {
-    "title": "Let's Get Close",
-    "headline": "Skip small talk. Start real talk.",
-    "subtitle": "From sweet to wild. One game.",
-    "tagline": "AI-powered cards made to bring you closer."
+    "title": "Connection Cards",
+    "headline": "Stop the small talk. Start talking for real.",
+    "subtitle": "From cute to wild. One game.",
+    "tagline": "AI cards designed to bring you closer."
   },
   "home": {
     "trustBadge": {
@@ -12,13 +12,13 @@
       "couples": "50k+ Couples"
     },
     "headline": {
-      "main": "Skip small talk. Start real talk.",
-      "sub": "From sweet to wild. One game."
+      "main": "Stop the small talk. Start talking for real.",
+      "sub": "From cute to wild. One game."
     },
-    "subtitle": "Discover the game that brings couples closer together through meaningful conversations and deeper intimacy.",
+    "subtitle": "Discover the game that brings couples together through meaningful conversations and deeper intimacy.",
     "socialProof": "Trusted by thousands",
     "buttons": {
-      "startJourney": "Create a Room",
+      "startJourney": "Start Your Journey",
       "joinPartner": "Join Partner",
       "login": "Login"
     },
@@ -42,8 +42,8 @@
       "title": "Three Levels of Connection",
       "subtitle": "Progressively deepen your bond through carefully crafted conversation levels",
       "level1": {
-        "title": "Break the Ice",
-        "description": "Break the ice with fun conversation starters and lighthearted questions"
+        "title": "Ice Breaking",
+        "description": "Break the ice with fun conversation starters and light questions"
       },
       "level2": {
         "title": "Getting Personal",
@@ -51,13 +51,13 @@
       },
       "level3": {
         "title": "Deep Intimacy",
-        "description": "Connect on the deepest level with intimate and vulnerable conversations"
+        "description": "Connect at the deepest level with intimate and vulnerable conversations"
       }
     }
   },
   "navigation": {
     "home": "Home",
-    "admin": "Admin Panel",
+    "admin": "Admin Dashboard",
     "levels": "Levels",
     "questions": "Questions"
   },
@@ -88,13 +88,13 @@
     "instructions": {
       "title": "Instructions",
       "step1": "Ask your partner for the 6-character code",
-      "step2": "Code contains only letters and numbers",
+      "step2": "The code contains only letters and numbers",
       "step3": "Once connected, the game will start automatically"
     },
     "errors": {
       "enterCode": "Please enter a room code",
       "invalidLength": "Code must be 6 characters",
-      "invalidCode": "Invalid code. Please verify and try again.",
+      "invalidCode": "Invalid code. Please check and try again.",
       "connectionError": "Connection error. Please try again."
     },
     "success": {
@@ -138,7 +138,7 @@
     },
     "apart": {
       "title": "Apart",
-      "subtitle": "Written responses • Remote • Via chat",
+      "subtitle": "Written responses • Long distance • Over chat",
       "emoji": "📱"
     },
     "confirm": "Confirm selection",
@@ -149,22 +149,22 @@
   "levelSelect": {
     "title": "Intimate Cards",
     "subtitle": "Choose your intensity level",
-    "newLevel": "Choose the new intensity level",
+    "newLevel": "Choose new intensity level",
     "cards": "cards",
-    "selected": "You have chosen this level",
-    "waitingPartner": "Waiting for your partner to select the level...",
+    "selected": "You chose this level",
+    "waitingPartner": "Waiting for your partner to select level...",
     "differentLevels": "Different levels selected!",
-    "mustMatch": "You selected different levels. You must select the same level to play.",
-    "resetting": "Resetting automatically... You can select again in a moment.",
-    "connected": "You are connected. Let's play! Starting in {{countdown}}...",
+    "mustMatch": "You've selected different levels. You must select the same level to play.",
+    "resetting": "Auto-resetting... You can choose again in a moment.",
+    "connected": "You're connected. Let's play! Starting in {{countdown}}...",
     "agreed": "Perfect! You both chose level {{level}}. Starting in {{countdown}} seconds...",
     "bothChose": "You both chose level {{level}}. Starting game...",
     "readyToSelect": "Ready to select again!",
-    "syncingGame": "Levels synchronized! Starting level {{level}}",
-    "autoResetAfterMismatch": "Auto-resetting after level mismatch",
+    "syncingGame": "Levels synced! Starting level {{level}}",
+    "autoResetAfterMismatch": "Auto-resetting after different levels",
     "votesCleared": "Clearing votes...",
     "votesSubmitted": "You chose level {{level}}. Waiting for your partner...",
-    "syncing": "Synchronizing...",
+    "syncing": "Syncing...",
     "synchronized": "State synchronized"
   },
   "game": {
@@ -178,108 +178,17 @@
     "proximityQuestion": "How close are you?",
     "responseTime": "Response time: {{time}}s",
     "typeYourResponse": "Type your response...",
-    "evaluateResponse": "Evaluate this response"
-  },
-  "proximitySelection": {
+    "evaluateResponse": "Evaluate this response",
+    "aiCardText": "✨ AI-Card Based on Last Interaction 🪄",
     "errors": {
       "connectionError": "Connection Error",
       "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
       "verifyRoomCode": "Could not connect to room. Please verify the room code.",
-      "loadingRoom": "Loading room...",
-      "connectingAttempt": "Connecting to room... (Attempt {{current}}/{{max}})",
-      "backToHome": "Back to home"
-    }
-  },
-  "levels": {
-    "iceBreaker": "Ice Breaker",
-    "gettingPersonal": "Getting Personal",
-    "deepThoughts": "Deep Thoughts",
-    "intimate": "Intimate",
-    "level1": "Discovery",
-    "level1Name": "Discovery",
-    "level2": "Connection",
-    "level2Name": "Connection",
-    "level3": "Hot",
-    "level3Name": "Hot",
-    "level4": "No Filters",
-    "level4Name": "No Filters"
-  },
-  "admin": {
-    "dashboard": "Admin Dashboard",
-    "manageQuestions": "Manage Questions",
-    "manageLevels": "Manage Levels",
-    "bulkImport": "Bulk Import",
-    "manualEntry": "Manual Entry",
-    "questionText": "Question Text",
-    "category": "Category",
-    "level": "Level",
-    "language": "Language",
-    "active": "Active",
-    "inactive": "Inactive"
-  },
-  "messages": {
-    "roomCreated": "Room created successfully!",
-    "joinedRoom": "Joined room successfully!",
-    "roomNotFound": "Room not found",
-    "gameStarted": "Game started!",
-    "gameEnded": "Game ended!",
-    "responseSubmitted": "Response submitted!",
-    "evaluationSubmitted": "Evaluation submitted!",
-    "questionAdded": "Question added successfully!",
-    "questionUpdated": "Question updated successfully!",
-    "questionDeleted": "Question deleted successfully!",
-    "levelUpdated": "Level updated successfully!",
-    "connectionEstablished": "Connection established!",
-    "accessDenied": "Access denied. Admin privileges required."
-  },
-  "errors": {
-    "generic": "An error occurred. Please try again.",
-    "networkError": "Network error. Please check your connection.",
-    "roomCodeRequired": "Room code is required",
-    "playerNameRequired": "Player name is required",
-    "questionTextRequired": "Question text is required",
-    "invalidRoomCode": "Invalid room code",
-    "roomFull": "Room is full",
-    "gameAlreadyStarted": "Game has already started"
-  },
-  "placeholders": {
-    "enterRoomCode": "Enter room code",
-    "enterPlayerName": "Enter your name",
-    "enterQuestionText": "Enter question text",
-    "searchQuestions": "Search questions...",
-    "selectCategory": "Select category",
-    "selectLevel": "Select level"
-  },
-  "loading": {
-    "levels": "Loading levels..."
-  },
-  "connecting": {
-    "room": "Connecting to room {{roomCode}}..."
-  },
-  "button": {
-    "back_home": "Back to Home"
-  },
-  "level": {
-    "basic": {
-      "title": "Basic",
-      "description": "Simple questions to get to know each other better"
-    }
-  },
-  "common": {
-    "error": "Error",
-    "backToHome": "Back to Home",
-    "submitting": "Submitting..."
-  },
-  "game": {
-    "errors": {
-      "connectionError": "Connection Error",
-      "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
-      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
-      "connectionLost": "Connection to room could not be established. Please try again.",
+      "connectionLost": "Could not establish connection to room. Please try again.",
       "responseSaveFailed": "Could not save response. Please try again.",
       "evaluationSaveFailed": "Could not save evaluation. Please try again.",
       "insufficientData": "Insufficient Data",
-      "insufficientDataDescription": "Not enough data to generate the connection report",
+      "insufficientDataDescription": "Not enough data to generate connection report",
       "finalReportFailed": "Could not generate final report",
       "levelChangeFailed": "Could not request level change"
     },
@@ -323,14 +232,14 @@
     "waitingForEvaluation": "Waiting for {{player}} to evaluate your response...",
     "fallbackQuestions": {
       "question1": "What was your first impression of me?",
-      "question2": "What do you admire most about our relationship?",
+      "question2": "What do you most admire about our relationship?",
       "question3": "What is your biggest shared dream?"
     },
     "spokenResponse": "Spoken response",
     "yourTurnMessage": "{{playerName}}, your turn",
     "question": "Question",
     "spokenMode": "Spoken Mode",
-    "spokenModeDescription": "Respond verbally face to face. When finished, press continue.",
+    "spokenModeDescription": "Respond verbally face-to-face. When finished, press continue.",
     "submitting": "Submitting",
     "weResponded": "We Responded",
     "yourResponse": "Your response",
@@ -339,21 +248,111 @@
     "submitResponse": "Submit Response",
     "notifications": {
       "partnerAnswered": "Your partner answered the proximity question",
-      "navigatingToLevelSelect": "Navigating to level selection...",
+      "navigatingToLevelSelect": "Navigating to level select...",
       "newCardRevealed": "New card revealed",
       "partnerSubmittedResponse": "Your partner submitted their response. It's your turn to evaluate.",
       "evaluationCompleted": "Evaluation completed",
       "newCardAvailable": "New card available",
       "levelChanged": "Level changed to {{level}}",
-      "partnerWantsLevelChange": "Your partner wants to change levels",
+      "partnerWantsLevelChange": "Your partner wants to change level",
       "differentLevelsSelected": "You selected different levels. You must select the same level to play.",
-      "choosingNewLevel": "Your partner wants to change levels. Choosing new level...",
-      "actionSyncError": "Error synchronizing action"
+      "choosingNewLevel": "Your partner wants to change level. Choosing new level...",
+      "actionSyncError": "Error syncing action"
     }
+  },
+  "proximitySelection": {
+    "errors": {
+      "connectionError": "Connection Error",
+      "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
+      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "loadingRoom": "Loading room...",
+      "connectingAttempt": "Connecting to room... (Attempt {{current}}/{{max}})",
+      "backToHome": "Back to home"
+    }
+  },
+  "levels": {
+    "iceBreaker": "Ice Breaker",
+    "gettingPersonal": "Getting Personal",
+    "deepThoughts": "Deep Thoughts",
+    "intimate": "Intimate",
+    "level1": "Discovery",
+    "level1Name": "Discovery",
+    "level2": "Connection",
+    "level2Name": "Connection",
+    "level3": "Hot",
+    "level3Name": "Hot",
+    "level4": "No Filter",
+    "level4Name": "No Filter"
+  },
+  "admin": {
+    "dashboard": "Admin Dashboard",
+    "manageQuestions": "Manage Questions",
+    "manageLevels": "Manage Levels",
+    "bulkImport": "Bulk Import",
+    "manualEntry": "Manual Entry",
+    "questionText": "Question Text",
+    "category": "Category",
+    "level": "Level",
+    "language": "Language",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "messages": {
+    "roomCreated": "Room created successfully!",
+    "joinedRoom": "Joined room successfully!",
+    "roomNotFound": "Room not found",
+    "gameStarted": "Game started!",
+    "gameEnded": "Game ended!",
+    "responseSubmitted": "Response submitted!",
+    "evaluationSubmitted": "Evaluation submitted!",
+    "questionAdded": "Question added successfully!",
+    "questionUpdated": "Question updated successfully!",
+    "questionDeleted": "Question deleted successfully!",
+    "levelUpdated": "Level updated successfully!",
+    "connectionEstablished": "Connection established!",
+    "accessDenied": "Access denied. Administrator privileges required."
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "roomCodeRequired": "Room code is required",
+    "playerNameRequired": "Player name is required",
+    "questionTextRequired": "Question text is required",
+    "invalidRoomCode": "Invalid room code",
+    "roomFull": "Room is full",
+    "gameAlreadyStarted": "Game has already started"
+  },
+  "placeholders": {
+    "enterRoomCode": "Enter room code",
+    "enterPlayerName": "Enter your name",
+    "enterQuestionText": "Enter question text",
+    "searchQuestions": "Search questions...",
+    "selectCategory": "Select category",
+    "selectLevel": "Select level"
+  },
+  "loading": {
+    "levels": "Loading levels..."
+  },
+  "connecting": {
+    "room": "Connecting to room {{roomCode}}..."
+  },
+  "button": {
+    "back_home": "Back to Home"
+  },
+  "level": {
+    "basic": {
+      "title": "Basic",
+      "description": "Simple questions to get to know each other better"
+    }
+  },
+  "common": {
+    "error": "Error",
+    "backToHome": "Back to Home",
+    "submitting": "Submitting..."
   },
   "levelUp": {
     "title": "Do you want to go deeper?",
-    "subtitle": "Level up to {{level}}: {{name}}",
+    "subtitle": "Move up to level {{level}}: {{name}}",
     "waitingForPartner": "Waiting for Player 2...",
     "partnerMustConfirm": "Your partner must also confirm to move to the next level",
     "nextLevel": "Next level",
@@ -384,11 +383,11 @@
     },
     "buttons": {
       "newGame": "New Game",
-      "backHome": "Back to Home"
+      "backHome": "Back Home"
     },
     "footer": "💜 True love is built with communication and respect",
     "feelings": {
-      "intense": "✨ Intense and reciprocal connection! ✨",
+      "intense": "✨ Intense and mutual connection! ✨",
       "high": "🔥 High connection and attraction! 🔥",
       "curious": "💫 Curious but you can connect more",
       "potential": "💭 There's potential, keep exploring",
@@ -400,7 +399,7 @@
     "intelligentSelection": "Intelligent Selection",
     "targetArea": "Target area",
     "getcloseAIAnalysis": "GetClose AI Analysis",
-    "analysisDescription": "Get personalized insights about your compatibility powered by advanced AI",
+    "analysisDescription": "Get personalized compatibility insights powered by advanced AI",
     "generateAnalysis": "Generate Analysis",
     "generatingAnalysis": "GetClose AI is analyzing your session...",
     "analysisComplete": "Analysis Complete",
