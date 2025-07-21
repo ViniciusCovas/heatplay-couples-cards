@@ -553,7 +553,17 @@ const Game = () => {
   };
 
   const handleStartResponse = async () => {
-    // Show the response input modal directly - timer already started with card display
+    // For spoken mode (close proximity), submit response directly without showing modal
+    if (isCloseProximity) {
+      const responseTime = cardDisplayStartTime > 0 
+        ? (Date.now() - cardDisplayStartTime) / 1000 
+        : 0;
+      
+      await handleResponseSubmit(t('game.spokenResponse'), responseTime);
+      return;
+    }
+    
+    // For written mode, show the response input modal - timer already started with card display
     setShowResponseInput(true);
     
     // Update database phase to response-input
@@ -864,6 +874,9 @@ const Game = () => {
     }
   };
 
+  // Add state for real-time timer update
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
   useEffect(() => {
     setShowCard(true);
     
@@ -896,6 +909,17 @@ const Game = () => {
       window.removeEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
     };
   }, [roomCode, navigate, gamePhase, currentCard, isMyTurn]);
+
+  // Timer update effect for real-time display
+  useEffect(() => {
+    if (gamePhase === 'card-display' && cardDisplayStartTime > 0) {
+      const interval = setInterval(() => {
+        setCurrentTime(Date.now());
+      }, 1000); // Update every second
+
+      return () => clearInterval(interval);
+    }
+  }, [gamePhase, cardDisplayStartTime]);
 
   // Redirect to home if no room code
   if (!roomCode) {
@@ -1011,7 +1035,7 @@ const Game = () => {
               <div className="text-center py-2">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-mono">
                   <Timer className="w-4 h-4" />
-                  {Math.floor((Date.now() - cardDisplayStartTime) / 1000)}s
+                  {Math.floor((currentTime - cardDisplayStartTime) / 1000)}s
                 </div>
               </div>
             )}
