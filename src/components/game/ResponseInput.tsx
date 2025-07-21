@@ -13,8 +13,6 @@ interface ResponseInputProps {
   isCloseProximity?: boolean;
   isSubmitting?: boolean;
   startTime?: number; // Optional: when card display started (for accurate timing)
-  pausedTime?: number;
-  isPaused?: boolean;
 }
 
 export const ResponseInput = ({ 
@@ -24,9 +22,7 @@ export const ResponseInput = ({
   playerName = "Tú",
   isCloseProximity = false,
   isSubmitting = false,
-  startTime = 0,
-  pausedTime = 0,
-  isPaused = false
+  startTime = 0
 }: ResponseInputProps) => {
   const { t } = useTranslation();
   const [response, setResponse] = useState("");

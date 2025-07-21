@@ -59,12 +59,6 @@ const Game = () => {
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
   
-  // Timer state - Enhanced for proper pause/resume functionality
-  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
-  const [timerPaused, setTimerPaused] = useState<boolean>(false);
-  const [pausedTime, setPausedTime] = useState<number>(0);
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
-  
   console.log('🎮 Game component initialized:', { 
     roomCode, 
     currentLevel, 
@@ -159,6 +153,9 @@ const Game = () => {
   const [showCard, setShowCard] = useState(false);
   const [showResponseInput, setShowResponseInput] = useState(false);
   
+  // Card display timer
+  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
+  
   // Evaluation state
   const [pendingEvaluation, setPendingEvaluation] = useState<{
     question: string;
@@ -172,6 +169,7 @@ const Game = () => {
   
   // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
+  
 
   // Determine if it's my turn based on player number and current turn
   const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
@@ -325,6 +323,8 @@ const Game = () => {
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
+  
+  // These state variables are now declared at the top
   
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -552,60 +552,18 @@ const Game = () => {
     return availableCards[deterministicIndex];
   };
 
-  const startTimer = () => {
-    console.log('⏱️ Starting timer');
-    setCardDisplayStartTime(Date.now());
-    setTimerPaused(false);
-    setPausedTime(0);
-  };
-
-  const pauseTimer = () => {
-    if (!timerPaused && cardDisplayStartTime > 0) {
-      console.log('⏸️ Pausing timer');
-      const elapsedTime = Date.now() - cardDisplayStartTime;
-      setPausedTime(elapsedTime);
-      setTimerPaused(true);
-    }
-  };
-
-  const resumeTimer = () => {
-    if (timerPaused) {
-      console.log('▶️ Resuming timer');
-      setCardDisplayStartTime(Date.now() - pausedTime);
-      setTimerPaused(false);
-    }
-  };
-
-  const resetTimer = () => {
-    console.log('🔄 Resetting timer');
-    setCardDisplayStartTime(0);
-    setTimerPaused(false);
-    setPausedTime(0);
-  };
-
-  // Calculate actual response time including paused time
-  const getActualResponseTime = (): number => {
-    if (cardDisplayStartTime === 0) return 0;
-    
-    if (timerPaused) {
-      return pausedTime / 1000; // Convert to seconds
-    } else {
-      return (Date.now() - cardDisplayStartTime) / 1000; // Convert to seconds
-    }
-  };
-
   const handleStartResponse = async () => {
-    // Pause timer when response starts
-    pauseTimer();
-    
     // For spoken mode (close proximity), submit response directly without showing modal
     if (isCloseProximity) {
-      const responseTime = getActualResponseTime();
+      const responseTime = cardDisplayStartTime > 0 
+        ? (Date.now() - cardDisplayStartTime) / 1000 
+        : 0;
+      
       await handleResponseSubmit(t('game.spokenResponse'), responseTime);
       return;
     }
     
-    // For written mode, show the response input modal
+    // For written mode, show the response input modal - timer already started with card display
     setShowResponseInput(true);
     
     // Update database phase to response-input
@@ -615,9 +573,10 @@ const Game = () => {
   };
 
   const handleResponseSubmit = async (response: string, responseTimeFromModal: number) => {
-    // Use the actual response time from timer, not from modal
-    const actualResponseTime = getActualResponseTime();
-    
+    // Calculate actual response time from when card was displayed
+    const actualResponseTime = cardDisplayStartTime > 0 
+      ? (Date.now() - cardDisplayStartTime) / 1000 
+      : responseTimeFromModal;
     if (isSubmitting || !room) {
       toast({
         title: t('common.error'),
@@ -634,10 +593,10 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      console.log('📝 Submitting response with timer data:', { 
-        response, 
-        actualResponseTime, 
-        currentCardFromState,
+      console.log('📝 Submitting response with PERSISTENT AI info:', { 
+           response, 
+           actualResponseTime, 
+           currentCardFromState,
         currentRound,
         playerId,
         currentTurn,
@@ -646,7 +605,7 @@ const Game = () => {
         aiReasoning: aiCardInfo?.reasoning || null
       });
 
-      // Save response to database WITH timing information
+      // Save response to database WITH AI information - PERSIST AI DATA
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
@@ -654,7 +613,7 @@ const Game = () => {
           player_id: playerId,
           card_id: currentCardFromState,
           response: response,
-          response_time: Math.round(actualResponseTime), // Store actual timer-based response time
+          response_time: Math.round(actualResponseTime),
           round_number: currentRound,
           selection_method: aiCardInfo?.selectionMethod || 'random',
           ai_reasoning: aiCardInfo?.reasoning || null
@@ -665,10 +624,7 @@ const Game = () => {
         throw responseError;
       }
 
-      console.log('✅ Response saved successfully with accurate timing data');
-
-      // Reset timer after successful submission
-      resetTimer();
+      console.log('✅ Response saved successfully with AI info preserved and persisted');
 
       // Hide the response input modal
       setShowResponseInput(false);
@@ -766,24 +722,13 @@ const Game = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('📊 Submitting evaluation with timing context:', { 
-        evaluation, 
-        responseId: pendingEvaluation.responseId 
-      });
-
-      // Enhanced evaluation data to include timing insights
-      const enhancedEvaluation = {
-        ...evaluation,
-        timing_context: {
-          evaluation_timestamp: Date.now()
-        }
-      };
+      console.log('📊 Submitting evaluation:', { evaluation, responseId: pendingEvaluation.responseId });
 
       // Save evaluation to database
       const { error: evaluationError } = await supabase
         .from('game_responses')
         .update({
-          evaluation: JSON.stringify(enhancedEvaluation),
+          evaluation: JSON.stringify(evaluation),
           evaluation_by: playerId
         })
         .eq('id', pendingEvaluation.responseId);
@@ -793,7 +738,7 @@ const Game = () => {
         throw evaluationError;
       }
 
-      console.log('✅ Evaluation saved successfully with timing context');
+      console.log('✅ Evaluation saved successfully');
 
       // Call centralized function to advance to next round
       await advanceToNextRound(pendingEvaluation.question);
@@ -929,17 +874,15 @@ const Game = () => {
     }
   };
 
+  // Add state for real-time timer update
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+
   useEffect(() => {
     setShowCard(true);
     
     // Start timer when card is displayed in card-display phase
     if (gamePhase === 'card-display' && currentCard && isMyTurn) {
-      startTimer();
-    }
-    
-    // Reset timer when it's not my turn
-    if (!isMyTurn) {
-      resetTimer();
+      setCardDisplayStartTime(Date.now());
     }
     
     // Listen for game finish events from partner
@@ -967,16 +910,16 @@ const Game = () => {
     };
   }, [roomCode, navigate, gamePhase, currentCard, isMyTurn]);
 
-  // Timer update effect for real-time display - Enhanced with pause support
+  // Timer update effect for real-time display
   useEffect(() => {
-    if (gamePhase === 'card-display' && cardDisplayStartTime > 0 && !timerPaused) {
+    if (gamePhase === 'card-display' && cardDisplayStartTime > 0) {
       const interval = setInterval(() => {
         setCurrentTime(Date.now());
       }, 1000); // Update every second
 
       return () => clearInterval(interval);
     }
-  }, [gamePhase, cardDisplayStartTime, timerPaused]);
+  }, [gamePhase, cardDisplayStartTime]);
 
   // Redirect to home if no room code
   if (!roomCode) {
@@ -1087,18 +1030,12 @@ const Game = () => {
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />
 
-            {/* Enhanced timer display with pause state */}
-            {currentCard && cardDisplayStartTime > 0 && isMyTurn && (
+            {/* Timer starts immediately when card is displayed */}
+            {currentCard && cardDisplayStartTime > 0 && (
               <div className="text-center py-2">
-                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-mono ${
-                  timerPaused ? 'bg-orange-500/10 text-orange-600' : 'bg-primary/10 text-primary'
-                }`}>
-                  <Timer className={`w-4 h-4 ${timerPaused ? 'text-orange-500' : ''}`} />
-                  {timerPaused ? (
-                    <span>{Math.floor(pausedTime / 1000)}s (paused)</span>
-                  ) : (
-                    <span>{Math.floor((currentTime - cardDisplayStartTime) / 1000)}s</span>
-                  )}
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-mono">
+                  <Timer className="w-4 h-4" />
+                  {Math.floor((currentTime - cardDisplayStartTime) / 1000)}s
                 </div>
               </div>
             )}
@@ -1157,7 +1094,7 @@ const Game = () => {
           </>
         )}
 
-        {/* Response Input Modal - Enhanced with timer pause functionality */}
+        {/* Response Input Modal */}
         <ResponseInput
           isVisible={showResponseInput}
           question={currentCard}
@@ -1166,8 +1103,6 @@ const Game = () => {
           isCloseProximity={isCloseProximity}
           isSubmitting={isSubmitting}
           startTime={cardDisplayStartTime}
-          pausedTime={pausedTime}
-          isPaused={timerPaused}
         />
 
          {/* Response Evaluation Modal - Show only for evaluation phase */}
