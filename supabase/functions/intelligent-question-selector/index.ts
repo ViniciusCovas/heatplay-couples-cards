@@ -99,7 +99,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
     console.log('🤖 Calling OpenAI API...');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // Reduced to 25 seconds
+    const timeoutId = setTimeout(() => controller.abort(), 20000); // Reduced to 20 seconds for lightweight prompt
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -109,10 +109,10 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14', // Updated to latest model
+          model: 'gpt-4.1-2025-04-14',
           messages: [{ role: 'user', content: promptContent }],
           temperature: 0.7,
-          max_tokens: 200, // Reduced from 300 for faster response
+          max_tokens: 150, // Reduced for faster response
         }),
         signal: controller.signal,
       });
@@ -139,7 +139,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
       clearTimeout(timeoutId);
       
       if (error.name === 'AbortError') {
-        throw new Error('OpenAI API call timed out after 25 seconds');
+        throw new Error('OpenAI API call timed out after 20 seconds');
       }
       throw error;
     }
@@ -308,54 +308,48 @@ serve(async (req) => {
           acc.intimacy = (acc.intimacy || 0) + (evaluation.intimacy || 0);
           acc.surprise = (acc.surprise || 0) + (evaluation.surprise || 0);
           acc.count++;
-          acc.responses.push({
-            player: response.player_id,
-            response: response.response?.substring(0, 100) + '...',
-            evaluation: evaluation
-          });
         } catch (e) {
           console.warn('⚠️ Failed to parse evaluation:', e);
         }
       }
       return acc;
-    }, { count: 0, responses: [] });
+    }, { count: 0 });
 
     console.log('📈 Last turn analysis:', lastTurnAnalysis);
 
-    // Streamlined prompt focusing ONLY on the last turn
-    const promptContent = `You are GetClose AI, an expert relationship coach helping couples connect deeper through strategic question selection.
+    // --- INICIO DE LA SOLUCIÓN RECOMENDADA ---
 
-CURRENT CONTEXT:
+    // 1. Crear perfiles de preguntas (solo metadatos, sin el texto completo)
+    const availableQuestionProfiles = availableQuestions.slice(0, 50).map((q: any, i: number) => 
+      `${i}. [category: ${q.category || 'general'}, intensity: ${q.intensity || 3}, type: ${q.question_type || 'open'}]`
+    ).join('\n');
+
+    // 2. Crear un resumen muy corto del último turno
+    const lastTurnSummary = lastTurnAnalysis.count > 0
+      ? `The last turn's average scores were: Honesty ${(lastTurnAnalysis.honesty/lastTurnAnalysis.count).toFixed(1)}, Attraction ${(lastTurnAnalysis.attraction/lastTurnAnalysis.count).toFixed(1)}, Intimacy ${(lastTurnAnalysis.intimacy/lastTurnAnalysis.count).toFixed(1)}, Surprise ${(lastTurnAnalysis.surprise/lastTurnAnalysis.count).toFixed(1)}.`
+      : "This is the first question of the game.";
+
+    // 3. Construir el prompt final: ligero, rápido y estratégico
+    const promptContent = `You are GetClose AI, an expert relationship coach. Your mission is to select the best question index to create a meaningful emotional arc for the couple.
+
+**Current State:**
 - Relationship Level: ${currentLevel}
-- Language: ${language}
-- Is First Question: ${isFirstQuestion}
-- Available Questions: ${availableQuestions.length}
+- Last Interaction Summary: ${lastTurnSummary}
 
-${isFirstQuestion ? 'FIRST QUESTION - Set a welcoming, engaging tone that invites vulnerability.' : 
-`LAST TURN ANALYSIS:
-${lastTurnAnalysis.count > 0 ? 
-`Recent Responses (${lastTurnAnalysis.count}):
-${lastTurnAnalysis.responses.map((r: any, i: number) => 
-  `${i+1}. ${r.player}: "${r.response}"
-     Scores - Honesty: ${r.evaluation.honesty}, Attraction: ${r.evaluation.attraction}, Intimacy: ${r.evaluation.intimacy}, Surprise: ${r.evaluation.surprise}`
-).join('\n')}
+**Available Question Profiles (Index and Profile):**
+${availableQuestionProfiles}
 
-Average Scores: H:${(lastTurnAnalysis.honesty/lastTurnAnalysis.count).toFixed(1)} A:${(lastTurnAnalysis.attraction/lastTurnAnalysis.count).toFixed(1)} I:${(lastTurnAnalysis.intimacy/lastTurnAnalysis.count).toFixed(1)} S:${(lastTurnAnalysis.surprise/lastTurnAnalysis.count).toFixed(1)}` 
-: 'No recent evaluations available'}`}
+**Your Task:**
+Based on the last interaction, select the 0-based index of the ONE question from the list that is the best strategic fit for this moment.
 
-STRATEGY: ${isFirstQuestion ? 'Create foundation for connection' : 'Build on the immediate emotional state from the last responses'}
-
-AVAILABLE QUESTIONS:
-${availableQuestions.slice(0, 15).map((q: any, i: number) => `${i + 1}. [${q.category || 'general'}] ${q.text}`).join('\n')}
-
-Select the BEST question for RIGHT NOW. Focus on the immediate emotional context.
-
-Respond with ONLY:
+Respond in JSON format ONLY:
 {
-  "selectedQuestionIndex": [0-based index],
-  "reasoning": "[2 sentences max]",
-  "targetArea": "[honesty|attraction|intimacy|surprise]"
+  "selectedQuestionIndex": [index],
+  "reasoning": "[Your concise, 2-sentence reasoning for choosing this profile]",
+  "targetArea": "[honesty|attraction|intimacy|surprise|general]"
 }`;
+
+    // --- FIN DE LA SOLUCIÓN RECOMENDADA ---
 
     // Call OpenAI with enhanced error handling
     let aiResponse;
@@ -456,7 +450,8 @@ Respond with ONLY:
             is_first_question: isFirstQuestion,
             level: currentLevel,
             language: language,
-            processing_time: Date.now() - startTime
+            processing_time: Date.now() - startTime,
+            prompt_size_tokens: Math.ceil(promptContent.length / 4) // Estimate tokens
           },
           ai_response: {
             ...aiResponse,
@@ -474,7 +469,8 @@ Respond with ONLY:
       selectedQuestion: selectedQuestion.text.substring(0, 50) + '...',
       reasoning: aiResponse.reasoning,
       targetArea: aiResponse.targetArea,
-      processingTime: Date.now() - startTime
+      processingTime: Date.now() - startTime,
+      promptSize: promptContent.length
     });
 
     return new Response(JSON.stringify({
