@@ -21,6 +21,7 @@ export interface EvaluationData {
   attraction: number;
   intimacy: number;
   surprise: number;
+  response_time?: number;
 }
 
 export const ResponseEvaluation = ({

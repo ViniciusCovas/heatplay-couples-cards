@@ -159,9 +159,6 @@ const Game = () => {
   const [showCard, setShowCard] = useState(false);
   const [showResponseInput, setShowResponseInput] = useState(false);
   
-  // Card display timer
-  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
-  
   // Evaluation state
   const [pendingEvaluation, setPendingEvaluation] = useState<{
     question: string;
@@ -328,8 +325,6 @@ const Game = () => {
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
-  
-  // These state variables are now declared at the top
   
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -780,8 +775,6 @@ const Game = () => {
       const enhancedEvaluation = {
         ...evaluation,
         timing_context: {
-          response_time_category: evaluation.response_time < 30 ? 'quick' : 
-                                 evaluation.response_time < 60 ? 'moderate' : 'thoughtful',
           evaluation_timestamp: Date.now()
         }
       };
@@ -935,9 +928,6 @@ const Game = () => {
       });
     }
   };
-
-  // Add state for real-time timer update
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
 
   useEffect(() => {
     setShowCard(true);
