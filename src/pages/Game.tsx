@@ -36,6 +36,7 @@ const Game = () => {
     isConnected 
   } = useRoomService();
   const playerId = usePlayerId();
+  const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
   const [levelCards, setLevelCards] = useState<string[]>([]);
