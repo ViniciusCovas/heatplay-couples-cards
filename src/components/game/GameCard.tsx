@@ -14,6 +14,8 @@ interface GameCardProps {
   aiReasoning?: string;
   aiTargetArea?: string;
   selectionMethod?: string;
+  isGeneratingCard?: boolean;
+  aiFailureReason?: string;
 }
 
 export const GameCard = ({ 
@@ -21,10 +23,12 @@ export const GameCard = ({
   currentLevel, 
   showCard, 
   cardIndex, 
-  totalCards, 
-  aiReasoning, 
-  aiTargetArea, 
-  selectionMethod 
+  totalCards,
+  aiReasoning,
+  aiTargetArea,
+  selectionMethod,
+  isGeneratingCard = false,
+  aiFailureReason
 }: GameCardProps) => {
   const { t } = useTranslation();
   
@@ -70,14 +74,14 @@ export const GameCard = ({
                 <div className="flex items-center gap-2">
                   <Logo size="small" className="scale-50 opacity-60" />
                   
-                  {/* AI Badge - Positioned next to logo, smaller size */}
-                  {isAICard && (
-                    <AIInsightBadge 
-                      reasoning={aiReasoning}
-                      targetArea={aiTargetArea}
-                      className="text-xs px-1.5 py-0.5 shadow-sm scale-75 origin-left"
-                    />
-                  )}
+                   {/* AI Badge - Show loading, success, or failure states */}
+                   <AIInsightBadge 
+                     reasoning={aiReasoning}
+                     targetArea={aiTargetArea}
+                     className="text-xs px-1.5 py-0.5 shadow-sm scale-75 origin-left"
+                     isGenerating={isGeneratingCard}
+                     failureReason={aiFailureReason}
+                   />
                 </div>
                 
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm

@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowUp, Home, Users, Play, BarChart3 } from "lucide-react";
+import { ArrowUp, Home, Users, Play, BarChart3, Timer } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
@@ -153,11 +153,8 @@ const Game = () => {
   const [showCard, setShowCard] = useState(false);
   const [showResponseInput, setShowResponseInput] = useState(false);
   
-  // Get proximity from game state
-  const isCloseProximity = gameState?.proximity_response || false;
-  
-  // Response data
-  const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
+  // Card display timer
+  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
   
   // Evaluation state
   const [pendingEvaluation, setPendingEvaluation] = useState<{
@@ -166,6 +163,12 @@ const Game = () => {
     responseId: string;
     playerName: string;
   } | null>(null);
+  
+  // Get proximity from game state
+  const isCloseProximity = gameState?.proximity_response || false;
+  
+  // Response data
+  const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
   
 
   // Determine if it's my turn based on player number and current turn
@@ -320,6 +323,8 @@ const Game = () => {
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
+  
+  // These state variables are now declared at the top
   
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
@@ -548,7 +553,7 @@ const Game = () => {
   };
 
   const handleStartResponse = async () => {
-    // Show the response input modal locally
+    // Show the response input modal directly - timer already started with card display
     setShowResponseInput(true);
     
     // Update database phase to response-input
@@ -557,7 +562,11 @@ const Game = () => {
     });
   };
 
-  const handleResponseSubmit = async (response: string, responseTime: number) => {
+  const handleResponseSubmit = async (response: string, responseTimeFromModal: number) => {
+    // Calculate actual response time from when card was displayed
+    const actualResponseTime = cardDisplayStartTime > 0 
+      ? (Date.now() - cardDisplayStartTime) / 1000 
+      : responseTimeFromModal;
     if (isSubmitting || !room) {
       toast({
         title: t('common.error'),
@@ -575,9 +584,9 @@ const Game = () => {
       const currentCardFromState = gameState?.current_card || currentCard;
       
       console.log('📝 Submitting response with PERSISTENT AI info:', { 
-        response, 
-        responseTime, 
-        currentCardFromState, 
+           response, 
+           actualResponseTime, 
+           currentCardFromState,
         currentRound,
         playerId,
         currentTurn,
@@ -594,7 +603,7 @@ const Game = () => {
           player_id: playerId,
           card_id: currentCardFromState,
           response: response,
-          response_time: Math.round(responseTime),
+          response_time: Math.round(actualResponseTime),
           round_number: currentRound,
           selection_method: aiCardInfo?.selectionMethod || 'random',
           ai_reasoning: aiCardInfo?.reasoning || null
@@ -858,6 +867,11 @@ const Game = () => {
   useEffect(() => {
     setShowCard(true);
     
+    // Start timer when card is displayed in card-display phase
+    if (gamePhase === 'card-display' && currentCard && isMyTurn) {
+      setCardDisplayStartTime(Date.now());
+    }
+    
     // Listen for game finish events from partner
     const handleGameFinish = (event: CustomEvent) => {
       console.log('🏁 Received game finish event from partner');
@@ -881,7 +895,7 @@ const Game = () => {
       window.removeEventListener('gameFinish', handleGameFinish as EventListener);
       window.removeEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
     };
-  }, [roomCode, navigate]);
+  }, [roomCode, navigate, gamePhase, currentCard, isMyTurn]);
 
   // Redirect to home if no room code
   if (!roomCode) {
@@ -988,7 +1002,19 @@ const Game = () => {
               aiReasoning={aiCardInfo?.reasoning}
               aiTargetArea={aiCardInfo?.targetArea}
               selectionMethod={aiCardInfo?.selectionMethod}
+              isGeneratingCard={isGeneratingCard}
+              aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />
+
+            {/* Timer starts immediately when card is displayed */}
+            {currentCard && cardDisplayStartTime > 0 && (
+              <div className="text-center py-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-mono">
+                  <Timer className="w-4 h-4" />
+                  {Math.floor((Date.now() - cardDisplayStartTime) / 1000)}s
+                </div>
+              </div>
+            )}
 
             {/* Action Button - Only show if it's my turn and NOT in evaluation phase */}
             {isMyTurn && gameState?.current_phase !== 'evaluation' && (
@@ -1052,6 +1078,7 @@ const Game = () => {
           playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
           isCloseProximity={isCloseProximity}
           isSubmitting={isSubmitting}
+          startTime={cardDisplayStartTime}
         />
 
          {/* Response Evaluation Modal - Show only for evaluation phase */}

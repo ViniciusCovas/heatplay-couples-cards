@@ -11,7 +11,8 @@ interface ResponseInputProps {
   onSubmitResponse: (response: string, responseTime: number) => void;
   playerName?: string;
   isCloseProximity?: boolean;
-  isSubmitting?: boolean; // Añade esta línea
+  isSubmitting?: boolean;
+  startTime?: number; // Optional: when card display started (for accurate timing)
 }
 
 export const ResponseInput = ({ 
@@ -20,18 +21,20 @@ export const ResponseInput = ({
   onSubmitResponse,
   playerName = "Tú",
   isCloseProximity = false,
-  isSubmitting = false // Añade esta línea
+  isSubmitting = false,
+  startTime = 0
 }: ResponseInputProps) => {
   const { t } = useTranslation();
   const [response, setResponse] = useState("");
-  const [startTime, setStartTime] = useState<number>(0);
+  const [localStartTime, setLocalStartTime] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
 
   useEffect(() => {
     if (isVisible) {
-      const start = Date.now();
-      setStartTime(start);
-      setCurrentTime(start);
+      // Use provided start time if available, otherwise start now
+      const actualStartTime = startTime > 0 ? startTime : Date.now();
+      setLocalStartTime(actualStartTime);
+      setCurrentTime(Date.now());
       setResponse("");
       
       const interval = setInterval(() => {
@@ -40,11 +43,11 @@ export const ResponseInput = ({
 
       return () => clearInterval(interval);
     }
-  }, [isVisible]);
+  }, [isVisible, startTime]);
 
   if (!isVisible) return null;
 
-  const elapsedTime = (currentTime - startTime) / 1000;
+  const elapsedTime = (currentTime - localStartTime) / 1000;
 
   const handleSubmit = () => {
     if (response.trim()) {
