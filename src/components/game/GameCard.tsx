@@ -67,7 +67,19 @@ export const GameCard = ({
             <div className="relative z-10 h-full flex flex-col items-center justify-center text-center space-y-6 p-6">
               {/* Logo and Level indicator at top */}
               <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                <Logo size="small" className="scale-50 opacity-60" />
+                <div className="flex items-center gap-2">
+                  <Logo size="small" className="scale-50 opacity-60" />
+                  
+                  {/* AI Badge - Positioned next to logo, smaller size */}
+                  {isAICard && (
+                    <AIInsightBadge 
+                      reasoning={aiReasoning}
+                      targetArea={aiTargetArea}
+                      className="text-xs px-1.5 py-0.5 shadow-sm scale-75 origin-left"
+                    />
+                  )}
+                </div>
+                
                 <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white font-bold text-sm
                   ${currentLevel === 1 ? 'bg-green-500' : ''}
                   ${currentLevel === 2 ? 'bg-purple-500' : ''}
@@ -77,17 +89,6 @@ export const GameCard = ({
                   {currentLevel}
                 </div>
               </div>
-              
-              {/* AI Badge - Enhanced positioning and visibility */}
-              {isAICard && (
-                <div className="absolute top-14 left-4 right-4 flex justify-center z-20">
-                  <AIInsightBadge 
-                    reasoning={aiReasoning}
-                    targetArea={aiTargetArea}
-                    className="animate-pulse shadow-lg"
-                  />
-                </div>
-              )}
               
               {/* Card suit icon */}
               <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg
@@ -99,8 +100,8 @@ export const GameCard = ({
                 <Heart className="w-6 h-6 text-white" />
               </div>
               
-              {/* Card text - Adjust spacing when AI badge is present */}
-              <p className={`text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2 ${isAICard ? 'mt-6' : ''}`}>
+              {/* Card text - No extra margin needed since badge is repositioned */}
+              <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
                 {currentCard}
               </p>
               

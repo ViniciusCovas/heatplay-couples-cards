@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Lightbulb } from 'lucide-react';
@@ -42,18 +43,18 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
             variant="outline" 
             className={`
               ${getTargetAreaColor(targetArea)} 
-              gap-1.5 px-2 py-1 text-xs font-medium
-              hover:scale-105 transition-transform cursor-help
+              gap-1 px-2 py-0.5 text-xs font-medium
+              hover:scale-110 transition-transform cursor-help
               ${className}
             `}
           >
-            <Brain className="w-3 h-3" />
+            <Brain className="w-2.5 h-2.5" />
             {t('ai.getcloseAI')}
-            <Lightbulb className="w-3 h-3 opacity-70" />
+            <Lightbulb className="w-2.5 h-2.5 opacity-70" />
           </Badge>
         </TooltipTrigger>
         <TooltipContent 
-          side="top" 
+          side="bottom" 
           className="max-w-sm p-3 bg-card border shadow-lg"
         >
           <div className="space-y-2">
