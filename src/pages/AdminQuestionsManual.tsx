@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Search, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Globe, Target, Zap, MessageCircle, FileText } from "lucide-react";
+import { QuestionFormFields } from "@/components/admin/QuestionFormFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,6 +28,8 @@ interface Question {
   language: string;
   is_active: boolean;
   created_at: string;
+  intensity: number;
+  question_type: string;
 }
 
 interface QuestionFormData {
@@ -35,6 +37,8 @@ interface QuestionFormData {
   category: string;
   level_id: string;
   language: string;
+  intensity: number;
+  question_type: string;
 }
 
 const languages = [
@@ -43,6 +47,21 @@ const languages = [
   { code: 'pt', name: 'Português', flag: '🇧🇷' },
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
 ];
+
+const intensityConfig = {
+  1: { label: 'Muy Suave', color: 'bg-green-100 text-green-800', icon: '🌱' },
+  2: { label: 'Suave', color: 'bg-blue-100 text-blue-800', icon: '💧' },
+  3: { label: 'Moderada', color: 'bg-yellow-100 text-yellow-800', icon: '⚡' },
+  4: { label: 'Intensa', color: 'bg-orange-100 text-orange-800', icon: '🔥' },
+  5: { label: 'Muy Intensa', color: 'bg-red-100 text-red-800', icon: '💥' }
+};
+
+const typeConfig = {
+  open_ended: { label: 'Abierta', icon: MessageCircle, color: 'bg-blue-100 text-blue-800' },
+  choice_based: { label: 'Elección', icon: Target, color: 'bg-green-100 text-green-800' },
+  scenario: { label: 'Escenario', icon: FileText, color: 'bg-purple-100 text-purple-800' },
+  reflection: { label: 'Reflexión', icon: Zap, color: 'bg-orange-100 text-orange-800' }
+};
 
 export default function AdminQuestionsManual() {
   const [levels, setLevels] = useState<Level[]>([]);
@@ -59,6 +78,8 @@ export default function AdminQuestionsManual() {
     category: "",
     level_id: "",
     language: "es",
+    intensity: 3,
+    question_type: "open_ended",
   });
   const { toast } = useToast();
 
@@ -97,6 +118,8 @@ export default function AdminQuestionsManual() {
           language,
           is_active,
           created_at,
+          intensity,
+          question_type,
           levels!inner(name, language)
         `)
         .eq('language', selectedLanguage)
@@ -106,7 +129,9 @@ export default function AdminQuestionsManual() {
 
       const questionsWithLevelNames = questionsData.map(q => ({
         ...q,
-        level_name: q.levels.name
+        level_name: q.levels.name,
+        intensity: q.intensity || 3,
+        question_type: q.question_type || 'open_ended'
       }));
 
       setLevels(levelsData || []);
@@ -163,7 +188,9 @@ export default function AdminQuestionsManual() {
             text: formData.text.trim(),
             category: formData.category.trim() || 'general',
             level_id: formData.level_id,
-            language: formData.language
+            language: formData.language,
+            intensity: formData.intensity,
+            question_type: formData.question_type
           })
           .eq('id', editingQuestion.id);
 
@@ -181,7 +208,9 @@ export default function AdminQuestionsManual() {
             text: formData.text.trim(),
             category: formData.category.trim() || 'general',
             level_id: formData.level_id,
-            language: formData.language
+            language: formData.language,
+            intensity: formData.intensity,
+            question_type: formData.question_type
           }]);
 
         if (error) throw error;
@@ -194,7 +223,7 @@ export default function AdminQuestionsManual() {
 
       setIsDialogOpen(false);
       setEditingQuestion(null);
-      setFormData({ text: "", category: "", level_id: "", language: selectedLanguage });
+      setFormData({ text: "", category: "", level_id: "", language: selectedLanguage, intensity: 3, question_type: "open_ended" });
       fetchData();
     } catch (error) {
       console.error('Error saving question:', error);
@@ -213,6 +242,8 @@ export default function AdminQuestionsManual() {
       category: question.category,
       level_id: question.level_id,
       language: question.language,
+      intensity: question.intensity || 3,
+      question_type: question.question_type || 'open_ended',
     });
     setIsDialogOpen(true);
   };
@@ -243,7 +274,7 @@ export default function AdminQuestionsManual() {
   };
 
   const resetForm = () => {
-    setFormData({ text: "", category: "", level_id: "", language: selectedLanguage });
+    setFormData({ text: "", category: "", level_id: "", language: selectedLanguage, intensity: 3, question_type: "open_ended" });
     setEditingQuestion(null);
   };
 
@@ -287,68 +318,19 @@ export default function AdminQuestionsManual() {
                 Nueva Pregunta
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
                   {editingQuestion ? "Editar Pregunta" : "Crear Nueva Pregunta"}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="language">Idioma *</Label>
-                  <Select 
-                    value={formData.language} 
-                    onValueChange={(value) => setFormData({ ...formData, language: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un idioma" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {languages.map((lang) => (
-                        <SelectItem key={lang.code} value={lang.code}>
-                          {lang.flag} {lang.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="level_id">Nivel *</Label>
-                  <Select 
-                    value={formData.level_id} 
-                    onValueChange={(value) => setFormData({ ...formData, level_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecciona un nivel" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {levels.map((level) => (
-                        <SelectItem key={level.id} value={level.id}>
-                          {level.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="text">Texto de la pregunta *</Label>
-                  <Textarea
-                    id="text"
-                    value={formData.text}
-                    onChange={(e) => setFormData({ ...formData, text: e.target.value })}
-                    required
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category">Categoría</Label>
-                  <Input
-                    id="category"
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    placeholder="general"
-                  />
-                </div>
+                <QuestionFormFields
+                  formData={formData}
+                  setFormData={setFormData}
+                  levels={levels}
+                  languages={languages}
+                />
                 <div className="flex gap-2 pt-4">
                   <Button type="submit" className="flex-1">
                     {editingQuestion ? "Actualizar" : "Crear"}
@@ -416,59 +398,72 @@ export default function AdminQuestionsManual() {
           
           {filteredQuestions.length > 0 ? (
             <div className="space-y-3">
-              {filteredQuestions.map((question) => (
-                <Card key={question.id} className="p-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <p className="font-medium mb-2">{question.text}</p>
+              {filteredQuestions.map((question) => {
+                const intensityInfo = intensityConfig[question.intensity as keyof typeof intensityConfig];
+                const typeInfo = typeConfig[question.question_type as keyof typeof typeConfig];
+                const TypeIcon = typeInfo.icon;
+
+                return (
+                  <Card key={question.id} className="p-4">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <p className="font-medium mb-2">{question.text}</p>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">
+                            {question.level_name}
+                          </Badge>
+                          <Badge variant="secondary">
+                            {question.category}
+                          </Badge>
+                          <Badge className={intensityInfo.color}>
+                            {intensityInfo.icon} {intensityInfo.label}
+                          </Badge>
+                          <Badge className={typeInfo.color}>
+                            <TypeIcon className="w-3 h-3 mr-1" />
+                            {typeInfo.label}
+                          </Badge>
+                          <Badge variant="outline">
+                            {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
+                          </Badge>
+                          <Badge variant={question.is_active ? "default" : "secondary"}>
+                            {question.is_active ? "Activa" : "Inactiva"}
+                          </Badge>
+                        </div>
+                      </div>
                       <div className="flex gap-2">
-                        <Badge variant="outline">
-                          {question.level_name}
-                        </Badge>
-                        <Badge variant="secondary">
-                          {question.category}
-                        </Badge>
-                        <Badge variant="outline">
-                          {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
-                        </Badge>
-                        <Badge variant={question.is_active ? "default" : "secondary"}>
-                          {question.is_active ? "Activa" : "Inactiva"}
-                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(question)}
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="outline">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(question)}>
+                                Eliminar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(question)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(question)}>
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <Card className="p-8 text-center">

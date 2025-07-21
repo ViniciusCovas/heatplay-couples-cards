@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -5,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, AlertCircle } from "lucide-react";
+import { QuestionPreview } from "@/components/admin/QuestionPreview";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,6 +20,8 @@ interface Level {
 interface Question {
   text: string;
   category: string;
+  intensity: number;
+  question_type: string;
 }
 
 export default function AdminQuestionsBulk() {
@@ -86,9 +89,21 @@ export default function AdminQuestionsBulk() {
       }
 
       if (matches.length >= 1) {
+        const intensity = parseInt(matches[2]) || 3;
+        const questionType = matches[3] || 'open_ended';
+        
+        // Validate intensity range
+        const validIntensity = Math.max(1, Math.min(5, intensity));
+        
+        // Validate question type
+        const validTypes = ['open_ended', 'choice_based', 'scenario', 'reflection'];
+        const validQuestionType = validTypes.includes(questionType) ? questionType : 'open_ended';
+
         questions.push({
           text: matches[0] || '',
-          category: matches[1] || 'general'
+          category: matches[1] || 'general',
+          intensity: validIntensity,
+          question_type: validQuestionType
         });
       }
     }
@@ -143,7 +158,9 @@ export default function AdminQuestionsBulk() {
         level_id: selectedLevelId,
         text: q.text.trim(),
         category: q.category.trim() || 'general',
-        language: selectedLevelLanguage || 'en'
+        language: selectedLevelLanguage || 'en',
+        intensity: q.intensity,
+        question_type: q.question_type
       }));
 
       const { error } = await supabase
@@ -187,7 +204,7 @@ export default function AdminQuestionsBulk() {
           <h2 className="text-2xl font-bold mb-2">Subir Preguntas en Lote</h2>
           <p className="text-muted-foreground">
             Sube múltiples preguntas usando CSV o texto con formato. 
-            Formato esperado: "texto,categoría" (una pregunta por línea)
+            Formato: "texto,categoría,intensidad,tipo"
           </p>
         </div>
 
@@ -236,8 +253,8 @@ export default function AdminQuestionsBulk() {
                 <Label htmlFor="text-input">Texto directo</Label>
                 <Textarea
                   id="text-input"
-                  placeholder="¿Cuál fue tu primera impresión de mí?,reflexion
-¿Qué canción te recuerda a nosotros?,dinamica"
+                  placeholder="¿Cuál fue tu primera impresión de mí?,reflexion,3,open_ended
+¿Qué canción te recuerda a nosotros?,dinamica,2,reflection"
                   value={textInput}
                   onChange={(e) => handleTextInputChange(e.target.value)}
                   rows={8}
@@ -255,6 +272,7 @@ export default function AdminQuestionsBulk() {
             </CardContent>
           </Card>
 
+          {/* Preview Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -263,23 +281,7 @@ export default function AdminQuestionsBulk() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {previewQuestions.length > 0 ? (
-                <div className="space-y-3 max-h-96 overflow-y-auto">
-                  {previewQuestions.map((question, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
-                      <p className="text-sm font-medium">{question.text}</p>
-                      <Badge variant="secondary" className="mt-2 text-xs">
-                        {question.category}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center text-muted-foreground py-8">
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Las preguntas aparecerán aquí mientras escribes</p>
-                </div>
-              )}
+              <QuestionPreview questions={previewQuestions} />
             </CardContent>
           </Card>
         </div>
@@ -287,24 +289,51 @@ export default function AdminQuestionsBulk() {
         {/* Format Help */}
         <Card>
           <CardHeader>
-            <CardTitle>Formato de Datos</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              Formato de Datos Mejorado
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2 text-sm">
-              <p><strong>Formato CSV esperado:</strong></p>
-              <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`"¿Cuál fue tu primera impresión de mí?","reflexion"
-"¿Qué canción te recuerda a nosotros?","dinamica"
-"¿Cuál es tu recuerdo favorito juntos?","dinamica"`}
-              </pre>
-              <p className="text-muted-foreground">
-                • Primera columna: texto de la pregunta (obligatorio)
-                <br />
-                • Segunda columna: categoría (opcional, por defecto "general")
-                <br />
-                • Usa comillas para textos que contengan comas
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="font-semibold mb-2">Formato CSV esperado (5 columnas):</p>
+                <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
+{`"¿Cuál fue tu primera impresión de mí?","reflexion","3","open_ended"
+"¿Qué canción te recuerda a nosotros?","dinamica","2","reflection"
+"¿Cuál es tu mayor miedo?","profunda","4","scenario"`}
+                </pre>
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <p className="font-semibold">Intensidad (1-5):</p>
+                  <ul className="text-xs space-y-1 mt-1">
+                    <li>• 1 = Muy Suave 🌱</li>
+                    <li>• 2 = Suave 💧</li>
+                    <li>• 3 = Moderada ⚡</li>
+                    <li>• 4 = Intensa 🔥</li>
+                    <li>• 5 = Muy Intensa 💥</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <p className="font-semibold">Tipos de Pregunta:</p>
+                  <ul className="text-xs space-y-1 mt-1">
+                    <li>• open_ended = Abierta</li>
+                    <li>• choice_based = Elección</li>
+                    <li>• scenario = Escenario</li>
+                    <li>• reflection = Reflexión</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <p className="text-muted-foreground text-xs">
+                • Valores por defecto: intensidad = 3, tipo = open_ended
                 <br />
                 • El idioma se asigna automáticamente según el nivel seleccionado
+                <br />
+                • Usa comillas para textos que contengan comas
               </p>
             </div>
           </CardContent>
