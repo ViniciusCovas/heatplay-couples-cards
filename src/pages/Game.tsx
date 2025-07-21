@@ -406,15 +406,15 @@ const Game = () => {
   } | null>(null);
 
   // Enhanced intelligent card selection using AI - now works from first question
-  const selectCardWithAI = async (roomId: string, levelId: string, language: string, isFirstQuestion: boolean = false) => {
+  const selectCardWithAI = async (roomId: string, currentLevel: number, language: string, isFirstQuestion: boolean = false) => {
     try {
-      console.log('🧠 Trying AI card selection...', { isFirstQuestion });
+      console.log('🧠 Trying AI card selection...', { roomId, currentLevel, language, isFirstQuestion });
       setIsGeneratingCard(true);
       
       const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
         body: { 
           roomId,
-          currentLevel: levelId,
+          currentLevel,
           language,
           isFirstQuestion
         }
@@ -468,18 +468,8 @@ const Game = () => {
           const isFirstQuestion = usedCardsFromState.length === 0;
           let selectedCard = null;
           
-          // Get current level data for AI selection
-          const { data: levelData } = await supabase
-            .from('levels')
-            .select('id')
-            .eq('sort_order', currentLevel)
-            .eq('language', i18n.language)
-            .eq('is_active', true)
-            .single();
-            
-          if (levelData) {
-            selectedCard = await selectCardWithAI(room.id, levelData.id, i18n.language, isFirstQuestion);
-          }
+          // Try AI selection with current level number
+          selectedCard = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
