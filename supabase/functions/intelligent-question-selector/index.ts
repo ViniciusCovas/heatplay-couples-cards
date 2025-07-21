@@ -269,22 +269,22 @@ serve(async (req) => {
     const roomData = room.value;
     const levelIdValue = levelId.value;
 
-    // Get available questions with retry
+    // Get available questions with metadata
     const questions = await retryWithBackoff(async () => {
       const { data, error } = await supabase
-        .rpc('get_random_questions_for_level', {
-          level_id_param: levelIdValue,
-          language_param: language,
-          limit_param: 30 // Reduced from 50 for faster processing
-        });
+        .from('questions')
+        .select('id, text, category, intensity, question_type')
+        .eq('level_id', levelIdValue)
+        .eq('language', language)
+        .eq('is_active', true);
 
       if (error) throw new Error(`Failed to fetch questions: ${error.message}`);
       return data || [];
     }, 1, 'questions fetch');
 
-    // Filter out already used questions
+    // Filter out already used questions (compare by ID, not text)
     const usedCards = roomData.used_cards || [];
-    const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.text));
+    const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.id));
 
     if (availableQuestions.length === 0) {
       failureReason = 'No available questions for this level and language';

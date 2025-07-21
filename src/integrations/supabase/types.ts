@@ -289,9 +289,11 @@ export type Database = {
           category: string | null
           created_at: string
           id: string
+          intensity: number | null
           is_active: boolean
           language: string
           level_id: string
+          question_type: string | null
           text: string
           updated_at: string
         }
@@ -299,9 +301,11 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          intensity?: number | null
           is_active?: boolean
           language?: string
           level_id: string
+          question_type?: string | null
           text: string
           updated_at?: string
         }
@@ -309,9 +313,11 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          intensity?: number | null
           is_active?: boolean
           language?: string
           level_id?: string
+          question_type?: string | null
           text?: string
           updated_at?: string
         }
