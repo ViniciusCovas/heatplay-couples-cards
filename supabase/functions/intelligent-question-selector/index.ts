@@ -91,15 +91,15 @@ serve(async (req) => {
 
     console.log('📊 Available questions:', availableQuestions.length);
 
-    // Analyze evaluation patterns (if any exist)
-    const evaluationStats = responses.reduce((acc: any, response: any) => {
+    // Analyze responses for patterns
+    const responseAnalysis = responses.reduce((acc: any, response: any) => {
       if (response.evaluation) {
         try {
-          const eval = JSON.parse(response.evaluation);
-          acc.honesty = (acc.honesty || 0) + (eval.honesty || 0);
-          acc.attraction = (acc.attraction || 0) + (eval.attraction || 0);
-          acc.intimacy = (acc.intimacy || 0) + (eval.intimacy || 0);
-          acc.surprise = (acc.surprise || 0) + (eval.surprise || 0);
+          const evaluation = JSON.parse(response.evaluation);
+          acc.honesty = (acc.honesty || 0) + (evaluation.honesty || 0);
+          acc.attraction = (acc.attraction || 0) + (evaluation.attraction || 0);
+          acc.intimacy = (acc.intimacy || 0) + (evaluation.intimacy || 0);
+          acc.surprise = (acc.surprise || 0) + (evaluation.surprise || 0);
           acc.count++;
         } catch (e) {
           console.warn('⚠️ Failed to parse evaluation:', e);
@@ -108,17 +108,17 @@ serve(async (req) => {
       return acc;
     }, { count: 0 });
 
-    console.log('📈 Evaluation stats:', evaluationStats);
+    console.log('📈 Response analysis:', responseAnalysis);
 
-    // Enhanced prompt that works for both first questions and subsequent ones
-    let prompt = `You are GetClose AI, an expert relationship coach that helps couples connect deeper through strategic question selection.
+    // Enhanced prompt for AI selection
+    const promptContent = `You are GetClose AI, an expert relationship coach helping couples connect deeper through strategic question selection.
 
 Context:
 - Relationship Level: ${currentLevel}
 - Language: ${language}
 - Is First Question: ${isFirstQuestion}
 - Previous Responses: ${responses.length}
-- Session Statistics: ${JSON.stringify(evaluationStats)}
+- Response Analysis: ${JSON.stringify(responseAnalysis)}
 
 Available Questions:
 ${availableQuestions.map((q: any, i: number) => `${i + 1}. [${q.category || 'general'}] ${q.text}`).join('\n')}
@@ -149,7 +149,7 @@ Respond with ONLY a JSON object:
   "targetArea": "[honesty|attraction|intimacy|surprise]"
 }`;
 
-    console.log('🤖 Calling OpenAI with prompt length:', prompt.length);
+    console.log('🤖 Calling OpenAI with prompt length:', promptContent.length);
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -159,7 +159,7 @@ Respond with ONLY a JSON object:
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user', content: promptContent }],
         temperature: 0.7,
         max_tokens: 300,
       }),
@@ -198,7 +198,7 @@ Respond with ONLY a JSON object:
           analysis_type: 'question_selection',
           input_data: {
             available_questions: availableQuestions.length,
-            evaluation_stats: evaluationStats,
+            response_analysis: responseAnalysis,
             session_responses: responses.length,
             is_first_question: isFirstQuestion,
             level: currentLevel,

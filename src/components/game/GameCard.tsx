@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
+import { AIInsightBadge } from "@/components/game/AIInsightBadge";
 
 interface GameCardProps {
   currentCard: string;
@@ -31,8 +32,18 @@ export const GameCard = ({
     return t(`levels.level${level}Name`);
   };
 
-  // Check if this is an AI-selected card
+  // Check if this is an AI-selected card - Enhanced detection
   const isAICard = selectionMethod === 'ai_intelligent' || Boolean(aiReasoning);
+  
+  // Debug logging for AI badge display
+  console.log('🎴 GameCard render:', {
+    currentCard: currentCard?.substring(0, 50) + '...',
+    isAICard,
+    hasReasoning: Boolean(aiReasoning),
+    selectionMethod,
+    targetArea: aiTargetArea,
+    reasoning: aiReasoning?.substring(0, 100) + '...'
+  });
   
   return (
     <div className="flex-1 flex items-center justify-center px-4">
@@ -67,12 +78,14 @@ export const GameCard = ({
                 </div>
               </div>
               
-              {/* AI Card indicator - positioned near the top */}
+              {/* AI Badge - Enhanced positioning and visibility */}
               {isAICard && (
-                <div className="absolute top-12 left-4 right-4 flex justify-center">
-                  <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white text-xs font-medium px-3 py-1 rounded-full shadow-lg animate-pulse">
-                    {t('game.aiCardText')}
-                  </div>
+                <div className="absolute top-14 left-4 right-4 flex justify-center z-20">
+                  <AIInsightBadge 
+                    reasoning={aiReasoning}
+                    targetArea={aiTargetArea}
+                    className="animate-pulse shadow-lg"
+                  />
                 </div>
               )}
               
@@ -86,8 +99,8 @@ export const GameCard = ({
                 <Heart className="w-6 h-6 text-white" />
               </div>
               
-              {/* Card text */}
-              <p className={`text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2 ${isAICard ? 'mt-2' : ''}`}>
+              {/* Card text - Adjust spacing when AI badge is present */}
+              <p className={`text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2 ${isAICard ? 'mt-6' : ''}`}>
                 {currentCard}
               </p>
               

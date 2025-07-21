@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
@@ -8,7 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
 import { useTranslation } from 'react-i18next';
-
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
@@ -81,6 +81,9 @@ const Game = () => {
     
     // Clear any pending evaluation data
     setPendingEvaluation(null);
+    
+    // IMPORTANT: Clear AI info when level changes
+    setAiCardInfo(null);
     
     console.log('✅ Local game state reset for new level:', currentLevel);
   }, [currentLevel]);
@@ -397,7 +400,7 @@ const Game = () => {
     fetchQuestions();
   }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
-  // AI-powered card generation state
+  // AI-powered card generation state - ENHANCED with debugging
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   const [aiCardInfo, setAiCardInfo] = useState<{
     reasoning?: string;
@@ -405,10 +408,21 @@ const Game = () => {
     selectionMethod?: string;
   } | null>(null);
 
+  // Enhanced AI card info debugging
+  useEffect(() => {
+    console.log('🤖 AI Card Info state changed:', { 
+      aiCardInfo, 
+      currentCard,
+      hasReasoning: Boolean(aiCardInfo?.reasoning),
+      hasTargetArea: Boolean(aiCardInfo?.targetArea),
+      selectionMethod: aiCardInfo?.selectionMethod
+    });
+  }, [aiCardInfo, currentCard]);
+
   // Enhanced intelligent card selection using AI - now works from first question
   const selectCardWithAI = async (roomId: string, currentLevel: number, language: string, isFirstQuestion: boolean = false) => {
     try {
-      console.log('🧠 Trying AI card selection...', { roomId, currentLevel, language, isFirstQuestion });
+      console.log('🧠 Starting AI card selection...', { roomId, currentLevel, language, isFirstQuestion });
       setIsGeneratingCard(true);
       
       const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
@@ -422,29 +436,39 @@ const Game = () => {
 
       if (error) {
         console.warn('⚠️ AI selection failed, falling back to random:', error);
+        // Clear AI info on failure
+        setAiCardInfo(null);
         return null;
       }
 
       if (data?.question && data?.reasoning) {
-        console.log('✅ AI selected card:', { 
+        console.log('✅ AI selected card successfully:', { 
           question: data.question.text,
           reasoning: data.reasoning,
           targetArea: data.targetArea,
+          selectionMethod: data.selectionMethod,
           isFirstQuestion
         });
         
-        setAiCardInfo({
+        // CRITICAL: Set AI info immediately when AI selection succeeds
+        const aiInfo = {
           reasoning: data.reasoning,
           targetArea: data.targetArea,
-          selectionMethod: data.selectionMethod
-        });
+          selectionMethod: data.selectionMethod || 'ai_intelligent'
+        };
+        
+        setAiCardInfo(aiInfo);
+        console.log('🎯 AI Card Info set successfully:', aiInfo);
         
         return data.question.text;
       }
       
+      console.log('⚠️ AI selection returned invalid data, falling back to random');
+      setAiCardInfo(null);
       return null;
     } catch (error) {
       console.warn('⚠️ AI selection error, falling back to random:', error);
+      setAiCardInfo(null);
       return null;
     } finally {
       setIsGeneratingCard(false);
@@ -468,6 +492,13 @@ const Game = () => {
           const isFirstQuestion = usedCardsFromState.length === 0;
           let selectedCard = null;
           
+          console.log('🎯 Attempting card generation:', { 
+            isFirstQuestion, 
+            availableCards: availableCards.length,
+            currentLevel,
+            language: i18n.language
+          });
+          
           // Try AI selection with current level number
           selectedCard = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
           
@@ -486,6 +517,12 @@ const Game = () => {
           // Update database first, then local state will sync
           await updateGameState({
             current_card: selectedCard
+          });
+          
+          console.log('✅ Card generation completed:', { 
+            selectedCard, 
+            aiCardInfo: aiCardInfo,
+            willShowAIBadge: Boolean(aiCardInfo?.reasoning)
           });
         }
       }
@@ -538,16 +575,19 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      console.log('📝 Submitting response:', { 
+      console.log('📝 Submitting response with AI info:', { 
         response, 
         responseTime, 
         currentCardFromState, 
         currentRound,
         playerId,
-        currentTurn 
+        currentTurn,
+        aiCardInfo: aiCardInfo,
+        selectionMethod: aiCardInfo?.selectionMethod || 'random',
+        aiReasoning: aiCardInfo?.reasoning || null
       });
 
-      // Save response to database
+      // Save response to database WITH AI information
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
@@ -556,7 +596,9 @@ const Game = () => {
           card_id: currentCardFromState,
           response: response,
           response_time: Math.round(responseTime),
-          round_number: currentRound
+          round_number: currentRound,
+          selection_method: aiCardInfo?.selectionMethod || 'random',
+          ai_reasoning: aiCardInfo?.reasoning || null
         });
 
       if (responseError) {
@@ -564,7 +606,7 @@ const Game = () => {
         throw responseError;
       }
 
-      console.log('✅ Response saved successfully');
+      console.log('✅ Response saved successfully with AI info preserved');
 
       // Hide the response input modal
       setShowResponseInput(false);
@@ -616,6 +658,9 @@ const Game = () => {
     if (nextCard) {
       // Continue with next question
       const newUsedCards = [...currentUsedCards, completedQuestion];
+      
+      // IMPORTANT: Clear AI info when advancing to next round
+      setAiCardInfo(null);
       
       console.log('🎯 Moving to next card (deterministic):', {
         nextCard,
