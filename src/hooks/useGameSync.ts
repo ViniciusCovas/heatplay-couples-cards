@@ -20,6 +20,10 @@ interface GameState {
   current_card: string | null;
   current_card_index: number;
   used_cards: string[];
+  // ADDED: AI metadata for card selection synchronization
+  current_card_ai_reasoning?: string | null;
+  current_card_ai_target_area?: string | null;
+  current_card_selection_method?: string | null;
 }
 
 interface UseGameSyncReturn {
@@ -45,7 +49,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       try {
         const { data: room, error } = await supabase
           .from('game_rooms')
-          .select('current_phase, proximity_question_answered, proximity_response, current_turn, current_card, current_card_index, used_cards')
+          .select('current_phase, proximity_question_answered, proximity_response, current_turn, current_card, current_card_index, used_cards, current_card_ai_reasoning, current_card_ai_target_area, current_card_selection_method')
           .eq('id', roomId)
           .single();
 
@@ -59,7 +63,11 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_turn: (room.current_turn as GameState['current_turn']) || 'player1',
             current_card: room.current_card,
             current_card_index: room.current_card_index || 0,
-            used_cards: room.used_cards || []
+            used_cards: room.used_cards || [],
+            // ADDED: Include AI metadata in game state
+            current_card_ai_reasoning: room.current_card_ai_reasoning,
+            current_card_ai_target_area: room.current_card_ai_target_area,
+            current_card_selection_method: room.current_card_selection_method
           });
         }
       } catch (error) {
@@ -110,7 +118,11 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_turn: (updatedRoom.current_turn as GameState['current_turn']) || 'player1',
             current_card: updatedRoom.current_card,
             current_card_index: updatedRoom.current_card_index || 0,
-            used_cards: updatedRoom.used_cards || []
+            used_cards: updatedRoom.used_cards || [],
+            // ADDED: Include AI metadata in realtime updates
+            current_card_ai_reasoning: updatedRoom.current_card_ai_reasoning,
+            current_card_ai_target_area: updatedRoom.current_card_ai_target_area,
+            current_card_selection_method: updatedRoom.current_card_selection_method
           });
         }
       )
@@ -262,6 +274,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       if (updates.current_card !== undefined) updateData.current_card = updates.current_card;
       if (updates.current_card_index !== undefined) updateData.current_card_index = updates.current_card_index;
       if (updates.used_cards !== undefined) updateData.used_cards = updates.used_cards;
+      // ADDED: Include AI metadata in updates
+      if (updates.current_card_ai_reasoning !== undefined) updateData.current_card_ai_reasoning = updates.current_card_ai_reasoning;
+      if (updates.current_card_ai_target_area !== undefined) updateData.current_card_ai_target_area = updates.current_card_ai_target_area;
+      if (updates.current_card_selection_method !== undefined) updateData.current_card_selection_method = updates.current_card_selection_method;
 
       const { error } = await supabase
         .from('game_rooms')
