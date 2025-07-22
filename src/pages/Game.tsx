@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
@@ -539,19 +540,6 @@ const Game = () => {
     setProgress((usedCards.length / totalCards) * 100);
   }, [usedCards, totalCards]);
 
-  // Deterministic card selection based on database state
-  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: string[], roundNumber: number) => {
-    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card));
-    if (availableCards.length === 0) {
-      return null;
-    }
-    
-    // Use round number as seed for deterministic selection
-    // This ensures all players get the same card based on the same database state
-    const deterministicIndex = roundNumber % availableCards.length;
-    return availableCards[deterministicIndex];
-  };
-
   const handleStartResponse = async () => {
     // For spoken mode (close proximity), submit response directly without showing modal
     if (isCloseProximity) {
@@ -649,7 +637,7 @@ const Game = () => {
     }
   };
 
-  // Centralized function to advance to the next round
+  // FIXED: Centralized function to advance to the next round - NOW USES AI FOR ALL CARDS
   const advanceToNextRound = async (completedQuestion: string) => {
     if (!room || !gameState) return;
 
@@ -659,8 +647,9 @@ const Game = () => {
     const currentUsedCards = gameState.used_cards || [];
     const nextRoundNumber = currentUsedCards.length + 1;
     
-    // Use deterministic card selection based on database state
-    const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
+    // FIXED: Use AI selection instead of deterministic selection for ALL subsequent cards
+    const usedCardsAfterCurrent = [...currentUsedCards, completedQuestion];
+    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card));
     
     // FIX: Determine who should answer next based on who answered the previous question
     // currentTurn is the evaluator, so the answerer was the other player
@@ -673,24 +662,38 @@ const Game = () => {
       explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
     });
     
-    if (nextCard) {
-      // Continue with next question
-      const newUsedCards = [...currentUsedCards, completedQuestion];
+    if (availableCards.length > 0) {
+      // CRITICAL FIX: Use AI selection for ALL subsequent cards, not just first
+      console.log('🧠 Attempting AI selection for next card (round', nextRoundNumber, ')');
       
-      // IMPORTANT: Clear AI info when advancing to next round for NEW card generation
+      // Clear previous AI info before generating new card
       setAiCardInfo(null);
       
-      console.log('🎯 Moving to next card (deterministic):', {
+      let nextCard = null;
+      
+      // Try AI selection first for ALL cards
+      if (room?.id) {
+        nextCard = await selectCardWithAI(room.id, currentLevel, i18n.language, false);
+      }
+      
+      // Fallback to random if AI fails
+      if (!nextCard) {
+        nextCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+        console.log('🎲 AI failed, using random fallback for next card');
+      }
+      
+      console.log('🎯 Moving to next card with AI selection:', {
         nextCard,
         nextTurn,
-        newUsedCards: newUsedCards.length,
+        newUsedCards: usedCardsAfterCurrent.length,
         currentLevel,
-        roundNumber: nextRoundNumber
+        roundNumber: nextRoundNumber,
+        aiSelected: Boolean(aiCardInfo?.reasoning)
       });
       
       await updateGameState({
         current_card: nextCard,
-        used_cards: newUsedCards,
+        used_cards: usedCardsAfterCurrent,
         current_turn: nextTurn,
         current_phase: 'response-input'
       });
@@ -740,7 +743,7 @@ const Game = () => {
 
       console.log('✅ Evaluation saved successfully');
 
-      // Call centralized function to advance to next round
+      // Call centralized function to advance to next round (NOW WITH AI!)
       await advanceToNextRound(pendingEvaluation.question);
       
       setPendingEvaluation(null);
