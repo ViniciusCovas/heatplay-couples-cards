@@ -109,7 +109,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
+          model: 'gpt-4o',
           messages: [{ role: 'user', content: promptContent }],
           temperature: 0.7,
           max_tokens: 150, // Reduced for faster response
@@ -321,22 +321,22 @@ serve(async (req) => {
 
     // 1. Crear perfiles de preguntas (solo metadatos, sin el texto completo)
     const availableQuestionProfiles = availableQuestions.slice(0, 50).map((q: any, i: number) => 
-      `${i}. [category: ${q.category || 'general'}, intensity: ${q.intensity || 3}, type: ${q.question_type || 'open'}]`
+      `${i}. [category: ${q.category || 'general'}, intensity: ${q.intensity || 3}, type: ${q.question_type || 'open_ended'}]`
     ).join('\n');
 
-    // 2. Crear un resumen muy corto del último turno
+    // 2. Crear un resumen muy corto y numérico del último turno.
     const lastTurnSummary = lastTurnAnalysis.count > 0
       ? `The last turn's average scores were: Honesty ${(lastTurnAnalysis.honesty/lastTurnAnalysis.count).toFixed(1)}, Attraction ${(lastTurnAnalysis.attraction/lastTurnAnalysis.count).toFixed(1)}, Intimacy ${(lastTurnAnalysis.intimacy/lastTurnAnalysis.count).toFixed(1)}, Surprise ${(lastTurnAnalysis.surprise/lastTurnAnalysis.count).toFixed(1)}.`
       : "This is the first question of the game.";
 
-    // 3. Construir el prompt final: ligero, rápido y estratégico
+    // 3. Construir el prompt final: ligero, rápido y estratégico.
     const promptContent = `You are GetClose AI, an expert relationship coach. Your mission is to select the best question index to create a meaningful emotional arc for the couple.
 
 **Current State:**
 - Relationship Level: ${currentLevel}
 - Last Interaction Summary: ${lastTurnSummary}
 
-**Available Question Profiles (Index and Profile):**
+**Available Question Profiles (0-based index and Profile):**
 ${availableQuestionProfiles}
 
 **Your Task:**
