@@ -36,17 +36,19 @@ export const GameCard = ({
     return t(`levels.level${level}Name`);
   };
 
-  // Check if this is an AI-selected card - Enhanced detection
+  // Check if this is an AI-selected card
   const isAICard = selectionMethod === 'ai_intelligent' || Boolean(aiReasoning);
   
-  // Debug logging for AI badge display
-  console.log('🎴 GameCard render:', {
+  // FIXED: Enhanced debugging for AI card info from database
+  console.log('🎴 GameCard render with database AI info:', {
     currentCard: currentCard?.substring(0, 50) + '...',
     isAICard,
     hasReasoning: Boolean(aiReasoning),
     selectionMethod,
     targetArea: aiTargetArea,
-    reasoning: aiReasoning?.substring(0, 100) + '...'
+    reasoning: aiReasoning?.substring(0, 100) + '...',
+    isGeneratingCard,
+    aiFailureReason
   });
   
   return (
@@ -74,7 +76,7 @@ export const GameCard = ({
                 <div className="flex items-center gap-2">
                   <Logo size="small" className="scale-50 opacity-60" />
                   
-                   {/* AI Badge - Show loading, success, or failure states */}
+                   {/* FIXED: AI Badge now gets data from database via props */}
                    <AIInsightBadge 
                      reasoning={aiReasoning}
                      targetArea={aiTargetArea}
@@ -104,7 +106,7 @@ export const GameCard = ({
                 <Heart className="w-6 h-6 text-white" />
               </div>
               
-              {/* Card text - No extra margin needed since badge is repositioned */}
+              {/* Card text */}
               <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
                 {currentCard}
               </p>
