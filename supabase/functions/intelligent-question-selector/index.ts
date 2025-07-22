@@ -1,4 +1,5 @@
 
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -23,6 +24,29 @@ const MAX_DELAY = 10000; // 10 seconds
 
 // Utility function for exponential backoff delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Helper function to extract JSON from markdown code blocks
+function extractJSONFromMarkdown(text: string): string {
+  console.log('🔍 Extracting JSON from text:', text.substring(0, 100) + '...');
+  
+  // Remove markdown JSON code block wrapper if present
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+  if (jsonMatch) {
+    console.log('✅ Found JSON in markdown code block');
+    return jsonMatch[1].trim();
+  }
+  
+  // Remove generic code block wrapper if present
+  const codeMatch = text.match(/```\s*([\s\S]*?)\s*```/);
+  if (codeMatch) {
+    console.log('✅ Found content in generic code block');
+    return codeMatch[1].trim();
+  }
+  
+  // Return original text if no code blocks found
+  console.log('📝 No code blocks found, using original text');
+  return text.trim();
+}
 
 // Enhanced retry function with exponential backoff
 async function retryWithBackoff<T>(
@@ -356,11 +380,24 @@ Respond in JSON format ONLY:
     try {
       const data = await callOpenAIWithRetry(promptContent);
       
+      // Get the raw response content
+      const rawContent = data.choices[0].message.content;
+      console.log('🔍 Raw OpenAI response:', rawContent);
+      
+      // Extract JSON from markdown code blocks if present
+      const extractedJSON = extractJSONFromMarkdown(rawContent);
+      console.log('📝 Extracted JSON:', extractedJSON);
+      
       try {
-        aiResponse = JSON.parse(data.choices[0].message.content);
+        aiResponse = JSON.parse(extractedJSON);
+        console.log('✅ Successfully parsed AI response:', aiResponse);
       } catch (parseError) {
-        failureReason = `AI returned invalid JSON format: ${data.choices[0].message.content}`;
-        console.error('❌ Failed to parse OpenAI response:', data.choices[0].message.content);
+        failureReason = `AI returned invalid JSON format. Raw response: ${rawContent}. Extracted: ${extractedJSON}. Parse error: ${parseError.message}`;
+        console.error('❌ Failed to parse extracted JSON:', {
+          rawContent,
+          extractedJSON,
+          parseError: parseError.message
+        });
         throw new Error(failureReason);
       }
     } catch (apiError) {
@@ -501,3 +538,4 @@ Respond in JSON format ONLY:
     });
   }
 });
+
