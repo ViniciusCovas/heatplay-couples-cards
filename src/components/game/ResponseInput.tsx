@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ interface ResponseInputProps {
   playerName?: string;
   isCloseProximity?: boolean;
   isSubmitting?: boolean;
-  startTime?: number; // When card display started (for accurate timing)
+  startTime?: number; // Optional: when card display started (for accurate timing)
 }
 
 export const ResponseInput = ({ 
@@ -27,31 +26,31 @@ export const ResponseInput = ({
 }: ResponseInputProps) => {
   const { t } = useTranslation();
   const [response, setResponse] = useState("");
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
+  const [localStartTime, setLocalStartTime] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
 
-  // FIXED: Don't create separate timer, use the card display start time
   useEffect(() => {
     if (isVisible) {
-      setResponse("");
+      // Use provided start time if available, otherwise start now
+      const actualStartTime = startTime > 0 ? startTime : Date.now();
+      setLocalStartTime(actualStartTime);
       setCurrentTime(Date.now());
+      setResponse("");
       
-      // Update timer display every second
       const interval = setInterval(() => {
         setCurrentTime(Date.now());
       }, 100);
 
       return () => clearInterval(interval);
     }
-  }, [isVisible]);
+  }, [isVisible, startTime]);
 
   if (!isVisible) return null;
 
-  // FIXED: Calculate elapsed time from card display start, not modal open
-  const elapsedTime = startTime > 0 ? (currentTime - startTime) / 1000 : 0;
+  const elapsedTime = (currentTime - localStartTime) / 1000;
 
   const handleSubmit = () => {
     if (response.trim()) {
-      // FIXED: Pass the actual elapsed time since card display
       onSubmitResponse(response.trim(), elapsedTime);
       setResponse("");
     }
@@ -64,7 +63,7 @@ export const ResponseInput = ({
   };
 
   const handleSpokenResponse = () => {
-    // FIXED: For spoken mode, also use elapsed time since card display
+    // Para modo hablado, enviamos respuesta sin texto
     onSubmitResponse(t('game.spokenResponse'), elapsedTime);
   };
 
@@ -124,7 +123,7 @@ export const ResponseInput = ({
               onClick={handleSpokenResponse}
               className="w-full h-12 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
               size="lg"
-              disabled={isSubmitting}
+              disabled={isSubmitting} // Añade esta línea
             >
               {isSubmitting ? (
                 <>
@@ -164,7 +163,7 @@ export const ResponseInput = ({
             <Button 
               onClick={handleSubmit}
               className="w-full h-12 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
-              disabled={!response.trim() || isSubmitting}
+              disabled={!response.trim() || isSubmitting} // Modifica esta línea
               size="lg"
             >
               {isSubmitting ? (

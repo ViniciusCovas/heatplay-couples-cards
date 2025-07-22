@@ -40,7 +40,7 @@ const Game = () => {
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
-  const [levelCards, setLevelCards] = useState<{id: string, text: string}[]>([]);
+  const [levelCards, setLevelCards] = useState<string[]>([]);
   const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
@@ -56,7 +56,7 @@ const Game = () => {
 
   // Game state
   const [currentCard, setCurrentCard] = useState('');
-  const [usedCardIds, setUsedCardIds] = useState<string[]>([]); // Changed to store IDs
+  const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
   
@@ -75,14 +75,17 @@ const Game = () => {
     
     // Reset all local game state when level changes
     setCurrentCard('');
-    setUsedCardIds([]); // Changed to IDs
+    setUsedCards([]);
     setProgress(0);
     setGamePhase('card-display');
     
     // Clear any pending evaluation data
     setPendingEvaluation(null);
     
-    console.log('✅ Local game state reset for new level:', currentLevel);
+    // DON'T clear AI info immediately - let it persist through level changes
+    // Only clear it when we actually generate a new card
+    
+    console.log('✅ Local game state reset for new level (AI info preserved):', currentLevel);
   }, [currentLevel]);
 
   // Auto-join room if we have a roomCode but aren't connected
@@ -231,14 +234,9 @@ const Game = () => {
         setTimeout(() => setShowCard(true), 300);
       }
       
-      // Update used cards - IMPORTANT: Now store IDs instead of text
+      // Update used cards
       if (gameState.used_cards) {
-        // Convert text to IDs if needed (for backward compatibility)
-        const cardIds = gameState.used_cards.map(cardText => {
-          const foundCard = levelCards.find(card => card.text === cardText);
-          return foundCard ? foundCard.id : cardText; // Fallback to text if ID not found
-        });
-        setUsedCardIds(cardIds);
+        setUsedCards(gameState.used_cards);
       }
       
       // Sync game phase based on database state and player logic - ONLY source of phase changes
@@ -255,7 +253,7 @@ const Game = () => {
         setGamePhase(newPhase);
       }
     }
-  }, [gameState, gamePhase, playerNumber, room?.status, currentCard, levelCards]);
+  }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
 
   // Debug effect to track critical state changes
   useEffect(() => {
@@ -327,6 +325,8 @@ const Game = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   
+  // These state variables are now declared at the top
+  
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   
@@ -336,7 +336,7 @@ const Game = () => {
   // Track previous language to detect changes
   const [prevLanguage, setPrevLanguage] = useState(i18n.language);
   
-  // Fetch questions from database - MODIFIED to return IDs and text
+  // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
@@ -353,23 +353,24 @@ const Game = () => {
 
         if (levelError) throw levelError;
 
-        // Get questions for this level - RETURN BOTH ID AND TEXT
+        // Get questions for this level
         const { data: questionsData, error: questionsError } = await supabase
           .from('questions')
-          .select('id, text')
+          .select('text')
           .eq('level_id', levelData.id)
           .eq('language', i18n.language)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
 
-        setLevelCards(questionsData || []);
+        const questions = questionsData.map(q => q.text);
+        setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
 
         console.log('📚 Loaded questions:', { 
           level: currentLevel, 
           levelName: levelData.name, 
-          questionCount: questionsData?.length || 0,
+          questionCount: questions.length,
           language: i18n.language
         });
         
@@ -392,9 +393,9 @@ const Game = () => {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          { id: 'fallback-1', text: t('game.fallbackQuestions.question1') },
-          { id: 'fallback-2', text: t('game.fallbackQuestions.question2') },
-          { id: 'fallback-3', text: t('game.fallbackQuestions.question3') }
+          t('game.fallbackQuestions.question1'),
+          t('game.fallbackQuestions.question2'),
+          t('game.fallbackQuestions.question3')
         ];
         setLevelCards(fallbackQuestions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
@@ -404,8 +405,24 @@ const Game = () => {
     fetchQuestions();
   }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
-  // AI-powered card generation state
+  // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
+  const [aiCardInfo, setAiCardInfo] = useState<{
+    reasoning?: string;
+    targetArea?: string;
+    selectionMethod?: string;
+  } | null>(null);
+
+  // Enhanced AI card info debugging
+  useEffect(() => {
+    console.log('🤖 AI Card Info state changed:', { 
+      aiCardInfo, 
+      currentCard,
+      hasReasoning: Boolean(aiCardInfo?.reasoning),
+      hasTargetArea: Boolean(aiCardInfo?.targetArea),
+      selectionMethod: aiCardInfo?.selectionMethod
+    });
+  }, [aiCardInfo, currentCard]);
 
   // Enhanced intelligent card selection using AI - ALWAYS TRY AI FIRST
   const selectCardWithAI = async (roomId: string, currentLevel: number, language: string, isFirstQuestion: boolean = false) => {
@@ -424,6 +441,8 @@ const Game = () => {
 
       if (error) {
         console.warn('⚠️ AI selection failed, falling back to random:', error);
+        // Clear AI info on failure
+        setAiCardInfo(null);
         return null;
       }
 
@@ -436,21 +455,25 @@ const Game = () => {
           isFirstQuestion
         });
         
-        // Update database with AI metadata
-        await updateGameState({
-          current_card: data.question.text,
-          current_card_ai_reasoning: data.reasoning,
-          current_card_ai_target_area: data.targetArea,
-          current_card_selection_method: data.selectionMethod || 'ai_intelligent'
-        });
+        // CRITICAL: Set AI info immediately when AI selection succeeds
+        const aiInfo = {
+          reasoning: data.reasoning,
+          targetArea: data.targetArea,
+          selectionMethod: data.selectionMethod || 'ai_intelligent'
+        };
+        
+        setAiCardInfo(aiInfo);
+        console.log('🎯 AI Card Info set successfully:', aiInfo);
         
         return data.question.text;
       }
       
       console.log('⚠️ AI selection returned invalid data, falling back to random');
+      setAiCardInfo(null);
       return null;
     } catch (error) {
       console.warn('⚠️ AI selection error, falling back to random:', error);
+      setAiCardInfo(null);
       return null;
     } finally {
       setIsGeneratingCard(false);
@@ -467,7 +490,7 @@ const Game = () => {
           room && !isGeneratingCard) {
         
         const usedCardsFromState = gameState?.used_cards || [];
-        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card.text));
+        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
         
         if (availableCards.length > 0) {
           // ALWAYS try AI selection first - for ALL cards, not just first
@@ -486,15 +509,8 @@ const Game = () => {
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
-            const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-            selectedCard = randomCard.text;
-            
-            // Update database without AI metadata for random selection
-            await updateGameState({
-              current_card: selectedCard,
-              current_card_selection_method: 'random'
-            });
-            
+            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            setAiCardInfo(null); // Clear AI info for random selection
             console.log('🎲 Using random card fallback:', { 
               selectedCard, 
               availableCards: availableCards.length,
@@ -503,7 +519,16 @@ const Game = () => {
             });
           }
           
-          console.log('✅ Card generation completed:', { selectedCard });
+          // Update database first, then local state will sync
+          await updateGameState({
+            current_card: selectedCard
+          });
+          
+          console.log('✅ Card generation completed:', { 
+            selectedCard, 
+            aiCardInfo: aiCardInfo,
+            willShowAIBadge: Boolean(aiCardInfo?.reasoning)
+          });
         }
       }
     };
@@ -512,8 +537,8 @@ const Game = () => {
   }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
 
   useEffect(() => {
-    setProgress((usedCardIds.length / totalCards) * 100);
-  }, [usedCardIds, totalCards]);
+    setProgress((usedCards.length / totalCards) * 100);
+  }, [usedCards, totalCards]);
 
   const handleStartResponse = async () => {
     // For spoken mode (close proximity), submit response directly without showing modal
@@ -556,18 +581,19 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      console.log('📝 Submitting response:', { 
-        response, 
-        actualResponseTime, 
-        currentCardFromState,
+      console.log('📝 Submitting response with PERSISTENT AI info:', { 
+           response, 
+           actualResponseTime, 
+           currentCardFromState,
         currentRound,
         playerId,
         currentTurn,
-        aiReasoning: gameState?.current_card_ai_reasoning,
-        selectionMethod: gameState?.current_card_selection_method || 'random'
+        aiCardInfo: aiCardInfo,
+        selectionMethod: aiCardInfo?.selectionMethod || 'random',
+        aiReasoning: aiCardInfo?.reasoning || null
       });
 
-      // Save response to database WITH AI information from database
+      // Save response to database WITH AI information - PERSIST AI DATA
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
@@ -577,8 +603,8 @@ const Game = () => {
           response: response,
           response_time: Math.round(actualResponseTime),
           round_number: currentRound,
-          selection_method: gameState?.current_card_selection_method || 'random',
-          ai_reasoning: gameState?.current_card_ai_reasoning || null
+          selection_method: aiCardInfo?.selectionMethod || 'random',
+          ai_reasoning: aiCardInfo?.reasoning || null
         });
 
       if (responseError) {
@@ -586,7 +612,7 @@ const Game = () => {
         throw responseError;
       }
 
-      console.log('✅ Response saved successfully with AI info from database');
+      console.log('✅ Response saved successfully with AI info preserved and persisted');
 
       // Hide the response input modal
       setShowResponseInput(false);
@@ -617,17 +643,18 @@ const Game = () => {
 
     console.log('🎯 Advancing to next round after completing:', completedQuestion);
 
-    // Calculate the round number based on used cards + completed question
+    // Calculate the round number based on current used cards + the completed question
     const currentUsedCards = gameState.used_cards || [];
     const nextRoundNumber = currentUsedCards.length + 1;
     
-    // Store question ID instead of text in used_cards
-    const completedQuestionId = levelCards.find(card => card.text === completedQuestion)?.id || completedQuestion;
-    const usedCardsAfterCurrent = [...currentUsedCards, completedQuestion]; // Keep text for now for compatibility
-    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card.text));
+    // FIXED: Use AI selection instead of deterministic selection for ALL subsequent cards
+    const usedCardsAfterCurrent = [...currentUsedCards, completedQuestion];
+    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card));
     
-    // Determine who should answer next - current evaluator becomes next answerer
-    const nextTurn = currentTurn;
+    // FIX: Determine who should answer next based on who answered the previous question
+    // currentTurn is the evaluator, so the answerer was the other player
+    // The next answerer should be the current evaluator (who just finished evaluating)
+    const nextTurn = currentTurn; // The evaluator becomes the next answerer
     
     console.log('🔄 Turn switching logic:', {
       currentTurn: currentTurn,
@@ -636,8 +663,11 @@ const Game = () => {
     });
     
     if (availableCards.length > 0) {
-      // Use AI selection for ALL subsequent cards
+      // CRITICAL FIX: Use AI selection for ALL subsequent cards, not just first
       console.log('🧠 Attempting AI selection for next card (round', nextRoundNumber, ')');
+      
+      // Clear previous AI info before generating new card
+      setAiCardInfo(null);
       
       let nextCard = null;
       
@@ -648,36 +678,24 @@ const Game = () => {
       
       // Fallback to random if AI fails
       if (!nextCard) {
-        const randomCard = availableCards[Math.floor(Math.random() * availableCards.length)];
-        nextCard = randomCard.text;
-        
-        // Update without AI metadata for random selection
-        await updateGameState({
-          current_card: nextCard,
-          used_cards: usedCardsAfterCurrent,
-          current_turn: nextTurn,
-          current_phase: 'response-input',
-          current_card_selection_method: 'random',
-          current_card_ai_reasoning: null,
-          current_card_ai_target_area: null
-        });
-        
+        nextCard = availableCards[Math.floor(Math.random() * availableCards.length)];
         console.log('🎲 AI failed, using random fallback for next card');
-      } else {
-        // AI selection already updated the database, just update other fields
-        await updateGameState({
-          used_cards: usedCardsAfterCurrent,
-          current_turn: nextTurn,
-          current_phase: 'response-input'
-        });
       }
       
-      console.log('🎯 Moving to next card:', {
+      console.log('🎯 Moving to next card with AI selection:', {
         nextCard,
         nextTurn,
         newUsedCards: usedCardsAfterCurrent.length,
         currentLevel,
-        roundNumber: nextRoundNumber
+        roundNumber: nextRoundNumber,
+        aiSelected: Boolean(aiCardInfo?.reasoning)
+      });
+      
+      await updateGameState({
+        current_card: nextCard,
+        used_cards: usedCardsAfterCurrent,
+        current_turn: nextTurn,
+        current_phase: 'response-input'
       });
       
       return { nextCard, nextTurn };
@@ -989,7 +1007,7 @@ const Game = () => {
             <div className="space-y-2">
               <Progress value={progress} className="h-2" />
               <p className="text-xs text-muted-foreground">
-                {t('game.cardsCompleted', { completed: usedCardIds.length, total: totalCards })}
+                {t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
               </p>
                <p className="text-sm text-primary font-medium">
                  {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')} 
@@ -1006,13 +1024,13 @@ const Game = () => {
               currentCard={currentCard}
               currentLevel={currentLevel}
               showCard={showCard}
-              cardIndex={usedCardIds.length}
+              cardIndex={usedCards.length}
               totalCards={totalCards}
-              aiReasoning={gameState?.current_card_ai_reasoning}
-              aiTargetArea={gameState?.current_card_ai_target_area}
-              selectionMethod={gameState?.current_card_selection_method}
+              aiReasoning={aiCardInfo?.reasoning}
+              aiTargetArea={aiCardInfo?.targetArea}
+              selectionMethod={aiCardInfo?.selectionMethod}
               isGeneratingCard={isGeneratingCard}
-              aiFailureReason={isGeneratingCard ? undefined : (!gameState?.current_card_ai_reasoning ? "Insufficient game history" : undefined)}
+              aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />
 
             {/* Timer starts immediately when card is displayed */}
@@ -1107,7 +1125,7 @@ const Game = () => {
         <LevelUpConfirmation
           isVisible={showLevelUpConfirmation}
           currentLevel={currentLevel}
-          cardsCompleted={usedCardIds.length}
+          cardsCompleted={usedCards.length}
           minimumRecommended={minimumRecommended}
           onConfirm={handleLevelUpConfirm}
           onCancel={handleLevelUpCancel}
