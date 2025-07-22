@@ -37,16 +37,13 @@ export const ResponseInput = ({
       setCurrentTime(Date.now());
       setResponse("");
       
-      // FIXED: Timer stops when submission starts (isSubmitting = true)
       const interval = setInterval(() => {
-        if (!isSubmitting) {
-          setCurrentTime(Date.now());
-        }
+        setCurrentTime(Date.now());
       }, 100);
 
       return () => clearInterval(interval);
     }
-  }, [isVisible, startTime, isSubmitting]);
+  }, [isVisible, startTime]);
 
   if (!isVisible) return null;
 
@@ -54,9 +51,7 @@ export const ResponseInput = ({
 
   const handleSubmit = () => {
     if (response.trim()) {
-      // FIXED: Calculate precise response time at moment of submission
-      const finalResponseTime = (Date.now() - localStartTime) / 1000;
-      onSubmitResponse(response.trim(), finalResponseTime);
+      onSubmitResponse(response.trim(), elapsedTime);
       setResponse("");
     }
   };
@@ -68,9 +63,8 @@ export const ResponseInput = ({
   };
 
   const handleSpokenResponse = () => {
-    // FIXED: Calculate precise response time for spoken mode too
-    const finalResponseTime = (Date.now() - localStartTime) / 1000;
-    onSubmitResponse(t('game.spokenResponse'), finalResponseTime);
+    // Para modo hablado, enviamos respuesta sin texto
+    onSubmitResponse(t('game.spokenResponse'), elapsedTime);
   };
 
   return (

@@ -695,11 +695,7 @@ const Game = () => {
         current_card: nextCard,
         used_cards: usedCardsAfterCurrent,
         current_turn: nextTurn,
-        current_phase: 'card-display',
-        // FIXED: Sync AI metadata to database so both players see AI badge
-        current_card_ai_reasoning: aiCardInfo?.reasoning || null,
-        current_card_ai_target_area: aiCardInfo?.targetArea || null,
-        current_card_selection_method: aiCardInfo?.reasoning ? 'ai_intelligent' : 'random'
+        current_phase: 'response-input'
       });
       
       return { nextCard, nextTurn };
@@ -1030,12 +1026,11 @@ const Game = () => {
               showCard={showCard}
               cardIndex={usedCards.length}
               totalCards={totalCards}
-              // FIXED: Use AI info from gameState (database) so both players see same badge
-              aiReasoning={gameState?.current_card_ai_reasoning || aiCardInfo?.reasoning}
-              aiTargetArea={gameState?.current_card_ai_target_area || aiCardInfo?.targetArea}
-              selectionMethod={gameState?.current_card_selection_method || aiCardInfo?.selectionMethod}
+              aiReasoning={aiCardInfo?.reasoning}
+              aiTargetArea={aiCardInfo?.targetArea}
+              selectionMethod={aiCardInfo?.selectionMethod}
               isGeneratingCard={isGeneratingCard}
-              aiFailureReason={isGeneratingCard ? undefined : (!gameState?.current_card_ai_reasoning && !aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
+              aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />
 
             {/* Timer starts immediately when card is displayed */}
