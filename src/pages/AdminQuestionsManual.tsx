@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Search, Globe, Target, Zap, MessageCircle, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Globe, Target, Zap, MessageCircle, FileText, List, Grid, CheckSquare, Square } from "lucide-react";
 import { QuestionFormFields } from "@/components/admin/QuestionFormFields";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -73,6 +75,9 @@ export default function AdminQuestionsManual() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState<string>("all");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("es");
+  const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
+  const [selectedQuestions, setSelectedQuestions] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [formData, setFormData] = useState<QuestionFormData>({
     text: "",
     category: "",
@@ -278,6 +283,58 @@ export default function AdminQuestionsManual() {
     setEditingQuestion(null);
   };
 
+  const handleSelectQuestion = (questionId: string, checked: boolean) => {
+    const newSelected = new Set(selectedQuestions);
+    if (checked) {
+      newSelected.add(questionId);
+    } else {
+      newSelected.delete(questionId);
+    }
+    setSelectedQuestions(newSelected);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedQuestions(new Set(filteredQuestions.map(q => q.id)));
+    } else {
+      setSelectedQuestions(new Set());
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedQuestions.size === 0) return;
+
+    setBulkDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .in('id', Array.from(selectedQuestions));
+
+      if (error) throw error;
+
+      toast({
+        title: "Preguntas eliminadas",
+        description: `Se eliminaron ${selectedQuestions.size} preguntas correctamente`,
+      });
+      
+      setSelectedQuestions(new Set());
+      fetchData();
+    } catch (error) {
+      console.error('Error deleting questions:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron eliminar todas las preguntas",
+        variant: "destructive",
+      });
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  const isAllSelected = filteredQuestions.length > 0 && selectedQuestions.size === filteredQuestions.length;
+  const isPartiallySelected = selectedQuestions.size > 0 && selectedQuestions.size < filteredQuestions.length;
+
   if (loading) {
     return (
       <AdminLayout>
@@ -388,83 +445,246 @@ export default function AdminQuestionsManual() {
           </CardContent>
         </Card>
 
-        {/* Questions List */}
+        {/* View Controls and Bulk Actions */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-muted-foreground">
-              Mostrando {filteredQuestions.length} de {questions.length} preguntas
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-muted-foreground">
+                Mostrando {filteredQuestions.length} de {questions.length} preguntas
+              </p>
+              {selectedQuestions.size > 0 && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">
+                    {selectedQuestions.size} seleccionadas
+                  </Badge>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="destructive" size="sm" disabled={bulkDeleting}>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar Seleccionadas ({selectedQuestions.size})
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar {selectedQuestions.size} preguntas?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Esta acción no se puede deshacer. Las preguntas seleccionadas serán eliminadas permanentemente.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBulkDelete}>
+                          Eliminar {selectedQuestions.size} preguntas
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={viewMode === 'cards' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('cards')}
+              >
+                <Grid className="w-4 h-4 mr-2" />
+                Tarjetas
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+              >
+                <List className="w-4 h-4 mr-2" />
+                Tabla
+              </Button>
+            </div>
           </div>
           
           {filteredQuestions.length > 0 ? (
-            <div className="space-y-3">
-              {filteredQuestions.map((question) => {
-                const intensityInfo = intensityConfig[question.intensity as keyof typeof intensityConfig];
-                const typeInfo = typeConfig[question.question_type as keyof typeof typeConfig];
-                const TypeIcon = typeInfo.icon;
+            viewMode === 'cards' ? (
+              <div className="space-y-3">
+                {filteredQuestions.map((question) => {
+                  const intensityInfo = intensityConfig[question.intensity as keyof typeof intensityConfig];
+                  const typeInfo = typeConfig[question.question_type as keyof typeof typeConfig];
+                  const TypeIcon = typeInfo.icon;
+                  const isSelected = selectedQuestions.has(question.id);
 
-                return (
-                  <Card key={question.id} className="p-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1">
-                        <p className="font-medium mb-2">{question.text}</p>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">
-                            {question.level_name}
-                          </Badge>
-                          <Badge variant="secondary">
-                            {question.category}
-                          </Badge>
-                          <Badge className={intensityInfo.color}>
-                            {intensityInfo.icon} {intensityInfo.label}
-                          </Badge>
-                          <Badge className={typeInfo.color}>
-                            <TypeIcon className="w-3 h-3 mr-1" />
-                            {typeInfo.label}
-                          </Badge>
-                          <Badge variant="outline">
-                            {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
-                          </Badge>
-                          <Badge variant={question.is_active ? "default" : "secondary"}>
-                            {question.is_active ? "Activa" : "Inactiva"}
-                          </Badge>
+                  return (
+                    <Card key={question.id} className={`p-4 ${isSelected ? 'ring-2 ring-primary' : ''}`}>
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectQuestion(question.id, checked as boolean)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <p className="font-medium mb-2">{question.text}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <Badge variant="outline">
+                                {question.level_name}
+                              </Badge>
+                              <Badge variant="secondary">
+                                {question.category}
+                              </Badge>
+                              <Badge className={intensityInfo.color}>
+                                {intensityInfo.icon} {intensityInfo.label}
+                              </Badge>
+                              <Badge className={typeInfo.color}>
+                                <TypeIcon className="w-3 h-3 mr-1" />
+                                {typeInfo.label}
+                              </Badge>
+                              <Badge variant="outline">
+                                {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
+                              </Badge>
+                              <Badge variant={question.is_active ? "default" : "secondary"}>
+                                {question.is_active ? "Activa" : "Inactiva"}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(question)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(question)}>
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEdit(question)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(question)}>
-                                Eliminar
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            ) : (
+              <Card>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">
+                        <Checkbox
+                          checked={isAllSelected}
+                          ref={(el) => {
+                            if (el) {
+                              const checkbox = el.querySelector('button[role="checkbox"]') as HTMLInputElement;
+                              if (checkbox) checkbox.indeterminate = isPartiallySelected;
+                            }
+                          }}
+                          onCheckedChange={handleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead>Pregunta</TableHead>
+                      <TableHead>Nivel</TableHead>
+                      <TableHead>Categoría</TableHead>
+                      <TableHead>Intensidad</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredQuestions.map((question) => {
+                      const intensityInfo = intensityConfig[question.intensity as keyof typeof intensityConfig];
+                      const typeInfo = typeConfig[question.question_type as keyof typeof typeConfig];
+                      const TypeIcon = typeInfo.icon;
+                      const isSelected = selectedQuestions.has(question.id);
+
+                      return (
+                        <TableRow key={question.id} className={isSelected ? 'bg-muted/50' : ''}>
+                          <TableCell>
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={(checked) => handleSelectQuestion(question.id, checked as boolean)}
+                            />
+                          </TableCell>
+                          <TableCell className="max-w-md">
+                            <p className="truncate">{question.text}</p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{question.level_name}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{question.category}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={intensityInfo.color}>
+                              {intensityInfo.icon} {intensityInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={typeInfo.color}>
+                              <TypeIcon className="w-3 h-3 mr-1" />
+                              {typeInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={question.is_active ? "default" : "secondary"}>
+                              {question.is_active ? "Activa" : "Inactiva"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex gap-2 justify-end">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEdit(question)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="outline">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(question)}>
+                                      Eliminar
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </Card>
+            )
           ) : (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">No se encontraron preguntas</p>
