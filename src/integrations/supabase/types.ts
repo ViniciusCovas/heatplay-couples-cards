@@ -438,6 +438,13 @@ export type Database = {
         Args: { user_email: string }
         Returns: boolean
       }
+      repair_stuck_evaluations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          room_id: string
+          action_taken: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
