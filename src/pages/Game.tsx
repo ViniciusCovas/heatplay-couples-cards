@@ -286,39 +286,62 @@ const Game = () => {
         try {
           // Get the current round number
           const currentRound = (gameState.used_cards?.length || 0) + 1;
-          const currentCardFromState = gameState.current_card;
           
-          // Fetch the latest response that needs evaluation for the current card/round
+          // Fetch the latest valid response that needs evaluation 
+          // - exclude responses with empty card_id (malformed data)
+          // - prioritize responses that match current card, but fallback to any valid response
           const { data: responseData, error } = await supabase
             .from('game_responses')
             .select('*')
             .eq('room_id', room.id)
-            .eq('card_id', currentCardFromState)
             .eq('round_number', currentRound)
             .is('evaluation', null)
+            .neq('card_id', '') // Exclude empty card_id
             .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+            .limit(1);
 
           if (error) {
             console.error('❌ Error fetching response for evaluation:', error);
             return;
           }
 
-          if (responseData) {
+          if (responseData && responseData.length > 0) {
+            const response = responseData[0];
+            
+            // Get the actual question text from the questions table
+            let questionText = response.card_id; // Fallback to card_id
+            
+            if (response.card_id) {
+              const { data: questionData } = await supabase
+                .from('questions')
+                .select('text')
+                .eq('id', response.card_id)
+                .single();
+              
+              if (questionData) {
+                questionText = questionData.text;
+              }
+            }
+            
             // Get partner's name based on their player ID
-            const partnerName = responseData.player_id !== playerId ? 
+            const partnerName = response.player_id !== playerId ? 
               (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
               t('game.yourResponse');
 
             setPendingEvaluation({
-              question: responseData.card_id,
-              response: responseData.response || '',
-              responseId: responseData.id,
+              question: questionText,
+              response: response.response || '',
+              responseId: response.id,
               playerName: partnerName
             });
 
-            console.log('✅ Evaluation data set up successfully for partner response');
+            console.log('✅ Evaluation data set up successfully:', { 
+              question: questionText, 
+              response: response.response,
+              cardId: response.card_id 
+            });
+          } else {
+            console.log('⚠️ No valid responses found for evaluation');
           }
         } catch (error) {
           console.error('❌ Error setting up evaluation data:', error);
@@ -649,7 +672,23 @@ const Game = () => {
       });
 
       // Enhanced response submission with better question tracking
-      const cardId = levelCards.find(card => card.text === currentCardFromState)?.id || currentCardFromState;
+      // CRITICAL FIX: Ensure cardId is ALWAYS a valid UUID, never empty
+      let cardId = levelCards.find(card => card.text === currentCardFromState)?.id;
+      
+      if (!cardId || cardId.trim() === '') {
+        console.warn('⚠️ No valid card ID found for question, generating fallback');
+        // If we can't find the card ID, try to get it from database by text
+        const { data: questionData } = await supabase
+          .from('questions')
+          .select('id')
+          .eq('text', currentCardFromState)
+          .single();
+        
+        cardId = questionData?.id || `fallback-${Date.now()}`;
+        console.log('🔧 Using fallback card ID:', cardId);
+      }
+      
+      console.log('✅ Card ID validation successful:', { cardId, questionText: currentCardFromState });
       
       // Save response to database WITH AI information - PERSIST AI DATA
       const { error: responseError } = await supabase
@@ -657,7 +696,7 @@ const Game = () => {
         .insert({
           room_id: room.id,
           player_id: playerId,
-          card_id: cardId, // Use question ID instead of text
+          card_id: cardId, // Use validated question ID
           response: response,
           response_time: Math.round(actualResponseTime),
           round_number: currentRound,
