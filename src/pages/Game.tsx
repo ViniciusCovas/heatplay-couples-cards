@@ -678,10 +678,53 @@ const Game = () => {
       // Transition to evaluation phase - other player evaluates
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       console.log('✅ Response submitted, moving to evaluation phase for other player');
+      
+      // Update game state first
       await updateGameState({
         current_turn: nextTurn,
         current_phase: 'evaluation'
       });
+
+      // CRITICAL FIX: Send sync event to notify other player about evaluation phase
+      console.log('🔄 Sending response_submit sync event to notify other player');
+      
+      // Retry logic for sync action
+      let syncSuccess = false;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (!syncSuccess && retryCount < maxRetries) {
+        try {
+          await syncAction('response_submit', {
+            question: currentCardFromState,
+            response: response,
+            response_time: Math.round(actualResponseTime),
+            evaluating_player: nextTurn,
+            round_number: currentRound,
+            timestamp: new Date().toISOString()
+          });
+          
+          syncSuccess = true;
+          console.log('✅ Response submit sync event sent successfully');
+          
+        } catch (syncError) {
+          retryCount++;
+          console.error(`❌ Sync attempt ${retryCount} failed:`, syncError);
+          
+          if (retryCount < maxRetries) {
+            console.log(`🔄 Retrying sync in ${retryCount * 1000}ms...`);
+            await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
+          } else {
+            console.error('❌ All sync attempts failed - other player may not receive evaluation screen');
+            // Show warning but don't break the flow
+            toast({
+              title: t('game.warnings.syncFailed'),
+              description: t('game.warnings.syncFailedDescription'),
+              variant: "destructive"
+            });
+          }
+        }
+      }
       
     } catch (error) {
       console.error('❌ Error submitting response:', error);
