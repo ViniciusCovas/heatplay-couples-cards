@@ -40,7 +40,7 @@ const Game = () => {
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
-  const [levelCards, setLevelCards] = useState<string[]>([]);
+  const [levelCards, setLevelCards] = useState<{id: string, text: string}[]>([]);
   const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
@@ -399,14 +399,14 @@ const Game = () => {
         // Get questions for this level
         const { data: questionsData, error: questionsError } = await supabase
           .from('questions')
-          .select('text')
+          .select('id, text')
           .eq('level_id', levelData.id)
           .eq('language', roomLanguage)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
 
-        const questions = questionsData.map(q => q.text);
+        const questions = questionsData.map(q => ({id: q.id, text: q.text}));
         setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
 
@@ -436,9 +436,9 @@ const Game = () => {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          t('game.fallbackQuestions.question1'),
-          t('game.fallbackQuestions.question2'),
-          t('game.fallbackQuestions.question3')
+          {id: 'fallback-1', text: t('game.fallbackQuestions.question1')},
+          {id: 'fallback-2', text: t('game.fallbackQuestions.question2')},
+          {id: 'fallback-3', text: t('game.fallbackQuestions.question3')}
         ];
         setLevelCards(fallbackQuestions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
@@ -533,11 +533,9 @@ const Game = () => {
           room && !isGeneratingCard) {
         
         const usedCardsFromState = gameState?.used_cards || [];
-        // FIXED: Used cards now store question IDs, so we need to compare against question text
-        // For compatibility, we'll filter out both question text and IDs
+        // FIXED: Used cards now store question IDs, so we filter by IDs
         const availableCards = levelCards.filter(card => 
-          !usedCardsFromState.includes(card) && 
-          !usedCardsFromState.some(usedCard => typeof usedCard === 'string' && usedCard.length > 50 ? usedCard === card : false)
+          !usedCardsFromState.includes(card.id)
         );
         
         if (availableCards.length > 0) {
@@ -557,7 +555,7 @@ const Game = () => {
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
-            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)]?.text;
             setAiCardInfo(null); // Clear AI info for random selection
             console.log('🎲 Using random card fallback:', { 
               selectedCard, 
@@ -699,7 +697,7 @@ const Game = () => {
     // CRITICAL FIX: Store question ID instead of text to prevent massive repetitions
     const currentQuestionId = await getQuestionIdFromText(completedQuestion, roomLanguage, currentLevel);
     const usedCardsAfterCurrent = [...currentUsedCards, currentQuestionId];
-    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card));
+    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card.id));
     
     // FIX: Determine who should answer next based on who answered the previous question
     // currentTurn is the evaluator, so the answerer was the other player
@@ -728,7 +726,7 @@ const Game = () => {
       
       // Fallback to random if AI fails
       if (!nextCard) {
-        nextCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+        nextCard = availableCards[Math.floor(Math.random() * availableCards.length)]?.text;
         console.log('🎲 AI failed, using random fallback for next card');
       }
       
