@@ -671,22 +671,27 @@ const Game = () => {
         aiReasoning: aiCardInfo?.reasoning || null
       });
 
-      // Enhanced response submission with better question tracking
-      // CRITICAL FIX: Ensure cardId is ALWAYS a valid UUID, never empty
-      let cardId = levelCards.find(card => card.text === currentCardFromState)?.id;
-      
-      if (!cardId || cardId.trim() === '') {
-        console.warn('⚠️ No valid card ID found for question, generating fallback');
-        // If we can't find the card ID, try to get it from database by text
-        const { data: questionData } = await supabase
-          .from('questions')
-          .select('id')
-          .eq('text', currentCardFromState)
-          .single();
-        
-        cardId = questionData?.id || `fallback-${Date.now()}`;
-        console.log('🔧 Using fallback card ID:', cardId);
-      }
+  // Enhanced response submission with better question tracking
+  // CRITICAL FIX: Ensure cardId is ALWAYS a valid UUID, never empty
+  let cardId = levelCards.find(card => card.text === currentCardFromState)?.id;
+  
+  if (!cardId || cardId.trim() === '') {
+    console.warn('⚠️ No valid card ID found for question, searching in database');
+    // If we can't find the card ID, try to get it from database by text
+    const { data: questionData } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('text', currentCardFromState)
+      .single();
+    
+    if (questionData?.id) {
+      cardId = questionData.id;
+      console.log('✅ Found card ID in database:', cardId);
+    } else {
+      console.error('❌ Could not find valid UUID for question, skipping response');
+      throw new Error('Cannot submit response - invalid question ID');
+    }
+  }
       
       console.log('✅ Card ID validation successful:', { cardId, questionText: currentCardFromState });
       
@@ -794,14 +799,14 @@ const Game = () => {
     const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card.id));
     
     // FIX: Determine who should answer next based on who answered the previous question
-    // currentTurn is the evaluator, so the answerer was the other player
-    // The next answerer should be the current evaluator (who just finished evaluating)
-    const nextTurn = currentTurn; // The evaluator becomes the next answerer
+    // currentTurn is the evaluator, so the next answerer should be the opposite player
+    // Switch turns after evaluation is complete
+    const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
     
     console.log('🔄 Turn switching logic:', {
       currentTurn: currentTurn,
       nextTurn: nextTurn,
-      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
+      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next (alternating turns)`
     });
     
     if (availableCards.length > 0) {
