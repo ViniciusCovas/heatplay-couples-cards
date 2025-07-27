@@ -410,6 +410,10 @@ export type Database = {
           is_active: boolean
         }[]
       }
+      get_used_question_ids: {
+        Args: { room_id_param: string }
+        Returns: string[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -425,6 +429,10 @@ export type Database = {
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      normalize_used_cards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       promote_to_admin: {
         Args: { user_email: string }

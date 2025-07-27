@@ -170,6 +170,60 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
   }, 1, 'OpenAI API call');
 }
 
+// Enhanced sampling function for better diversity and deduplication
+function getSmartSample<T extends { id: string; category?: string; question_type?: string }>(
+  array: T[], 
+  size: number, 
+  usedIds: string[]
+): T[] {
+  // First, ensure complete deduplication
+  const uniqueQuestions = array.filter(q => !usedIds.includes(q.id));
+  
+  if (uniqueQuestions.length <= size) {
+    return shuffleArray(uniqueQuestions);
+  }
+
+  // Group by category for balanced selection
+  const categoryGroups = uniqueQuestions.reduce((groups, question) => {
+    const category = question.category || 'default';
+    if (!groups[category]) groups[category] = [];
+    groups[category].push(question);
+    return groups;
+  }, {} as Record<string, T[]>);
+
+  const categories = Object.keys(categoryGroups);
+  const questionsPerCategory = Math.floor(size / categories.length);
+  const remainder = size % categories.length;
+
+  let result: T[] = [];
+
+  // Take equal amounts from each category
+  categories.forEach((category, index) => {
+    const categoryQuestions = shuffleArray(categoryGroups[category]);
+    const takeCount = questionsPerCategory + (index < remainder ? 1 : 0);
+    result.push(...categoryQuestions.slice(0, takeCount));
+  });
+
+  // Fill any remaining slots with random questions
+  if (result.length < size) {
+    const remaining = uniqueQuestions.filter(q => !result.some(r => r.id === q.id));
+    const additionalNeeded = size - result.length;
+    result.push(...shuffleArray(remaining).slice(0, additionalNeeded));
+  }
+
+  return shuffleArray(result.slice(0, size));
+}
+
+// Fisher-Yates shuffle for true randomization
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Smart fallback function that considers context
 function getSmartRandomFallback(availableQuestions: any[], lastTurnAnalysis: any, isFirstQuestion: boolean): any {
   console.log('🎲 Using smart random fallback with context');
@@ -306,10 +360,27 @@ serve(async (req) => {
       return data || [];
     }, 1, 'questions fetch');
 
-    // Filter out already used questions (compare by ID, not text)
+    // Get comprehensive list of used question IDs from both sources
+    const { data: usedQuestionIds, error: usedIdsError } = await supabase
+      .rpc('get_used_question_ids', { room_id_param: roomId });
+
+    if (usedIdsError) {
+      console.error('❌ Error fetching used question IDs:', usedIdsError);
+    }
+
+    // Use comprehensive deduplication
     const usedCards = roomData.used_cards || [];
-    console.log('🔍 Filtering questions by used IDs:', { usedCards, totalQuestions: questions.length });
-    const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.id));
+    const allUsedIds = usedQuestionIds || usedCards;
+    
+    console.log('🔍 Comprehensive used question tracking:', { 
+      fromRoomUsedCards: usedCards.length, 
+      fromDatabase: usedQuestionIds?.length || 0,
+      totalUsedIds: allUsedIds.length,
+      totalQuestions: questions.length 
+    });
+    
+    // Filter out already used questions with enhanced deduplication
+    const availableQuestions = questions.filter((q: any) => !allUsedIds.includes(q.id));
 
     if (availableQuestions.length === 0) {
       failureReason = 'No available questions for this level and language';
@@ -344,8 +415,11 @@ serve(async (req) => {
 
     // --- INICIO DE LA SOLUCIÓN RECOMENDADA ---
 
-    // 1. Crear perfiles de preguntas (solo metadatos, sin el texto completo)
-    const availableQuestionProfiles = availableQuestions.slice(0, 50).map((q: any, i: number) => 
+    // 1. Enhanced question sampling for better diversity (increased from 50 to 100)
+    const sampleSize = Math.min(100, availableQuestions.length);
+    const questionSample = getSmartSample(availableQuestions, sampleSize, allUsedIds);
+    
+    const availableQuestionProfiles = questionSample.map((q: any, i: number) => 
       `${i}. [category: ${q.category || 'general'}, intensity: ${q.intensity || 3}, type: ${q.question_type || 'open_ended'}]`
     ).join('\n');
 

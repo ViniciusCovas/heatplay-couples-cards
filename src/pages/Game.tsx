@@ -82,11 +82,20 @@ const Game = () => {
     // Clear any pending evaluation data
     setPendingEvaluation(null);
     
-    // DON'T clear AI info immediately - let it persist through level changes
-    // Only clear it when we actually generate a new card
+    // CRITICAL: Maintain language consistency across level changes
+    if (room?.selected_language && i18n.language !== room.selected_language) {
+      console.log('🌐 Restoring language consistency:', { 
+        currentLang: i18n.language, 
+        roomLang: room.selected_language 
+      });
+      i18n.changeLanguage(room.selected_language);
+    }
     
-    console.log('✅ Local game state reset for new level (AI info preserved):', currentLevel);
-  }, [currentLevel]);
+    console.log('✅ Local game state reset for new level (language preserved):', {
+      level: currentLevel,
+      language: room?.selected_language
+    });
+  }, [currentLevel, room?.selected_language, i18n]);
 
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
@@ -639,13 +648,16 @@ const Game = () => {
         aiReasoning: aiCardInfo?.reasoning || null
       });
 
+      // Enhanced response submission with better question tracking
+      const cardId = levelCards.find(card => card.text === currentCardFromState)?.id || currentCardFromState;
+      
       // Save response to database WITH AI information - PERSIST AI DATA
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
           room_id: room.id,
           player_id: playerId,
-          card_id: currentCardFromState,
+          card_id: cardId, // Use question ID instead of text
           response: response,
           response_time: Math.round(actualResponseTime),
           round_number: currentRound,
