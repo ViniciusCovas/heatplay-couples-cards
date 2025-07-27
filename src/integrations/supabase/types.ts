@@ -99,7 +99,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           current_card: string | null
+          current_card_ai_reasoning: string | null
+          current_card_ai_target_area: string | null
           current_card_index: number | null
+          current_card_selection_method: string | null
           current_phase: string | null
           current_turn: string | null
           finished_at: string | null
@@ -108,6 +111,7 @@ export type Database = {
           proximity_question_answered: boolean | null
           proximity_response: boolean | null
           room_code: string
+          selected_language: string | null
           started_at: string | null
           status: string
           used_cards: string[] | null
@@ -116,7 +120,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_card?: string | null
+          current_card_ai_reasoning?: string | null
+          current_card_ai_target_area?: string | null
           current_card_index?: number | null
+          current_card_selection_method?: string | null
           current_phase?: string | null
           current_turn?: string | null
           finished_at?: string | null
@@ -125,6 +132,7 @@ export type Database = {
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code: string
+          selected_language?: string | null
           started_at?: string | null
           status?: string
           used_cards?: string[] | null
@@ -133,7 +141,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_card?: string | null
+          current_card_ai_reasoning?: string | null
+          current_card_ai_target_area?: string | null
           current_card_index?: number | null
+          current_card_selection_method?: string | null
           current_phase?: string | null
           current_turn?: string | null
           finished_at?: string | null
@@ -142,6 +153,7 @@ export type Database = {
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code?: string
+          selected_language?: string | null
           started_at?: string | null
           status?: string
           used_cards?: string[] | null

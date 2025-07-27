@@ -12,6 +12,7 @@ export interface GameRoom {
   created_at: string;
   started_at?: string;
   finished_at?: string;
+  selected_language?: string;
 }
 
 export interface RoomParticipant {
@@ -30,7 +31,7 @@ interface UseRoomServiceReturn {
   participants: RoomParticipant[];
   isConnected: boolean;
   playerNumber: 1 | 2 | null; // Added as stable state
-  createRoom: (level: number) => Promise<string>;
+  createRoom: (level: number, selectedLanguage?: string) => Promise<string>;
   joinRoom: (roomCode: string) => Promise<boolean>;
   leaveRoom: () => Promise<void>;
   startGame: () => Promise<void>;
@@ -55,7 +56,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     return result;
   };
 
-  const createRoom = useCallback(async (level: number): Promise<string> => {
+  const createRoom = useCallback(async (level: number, selectedLanguage: string = 'es'): Promise<string> => {
     try {
       const roomCode = generateRoomCode();
       
@@ -65,7 +66,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
           room_code: roomCode,
           level,
           status: 'waiting',
-          created_by: playerId
+          created_by: playerId,
+          selected_language: selectedLanguage
         })
         .select()
         .single();

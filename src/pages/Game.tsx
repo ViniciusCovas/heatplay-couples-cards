@@ -333,21 +333,64 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Helper function to get question ID from text (critical for fixing used_cards)
+  const getQuestionIdFromText = async (questionText: string, language: string, level: number): Promise<string> => {
+    try {
+      // Get level data first
+      const { data: levelData, error: levelError } = await supabase
+        .from('levels')
+        .select('id')
+        .eq('sort_order', level)
+        .eq('language', language)
+        .eq('is_active', true)
+        .single();
+
+      if (levelError || !levelData) {
+        console.warn('⚠️ Could not find level data for question ID lookup, using question text as fallback');
+        return questionText;
+      }
+
+      // Find the question by text and level
+      const { data: questionData, error: questionError } = await supabase
+        .from('questions')
+        .select('id')
+        .eq('text', questionText)
+        .eq('level_id', levelData.id)
+        .eq('language', language)
+        .eq('is_active', true)
+        .single();
+
+      if (questionError || !questionData) {
+        console.warn('⚠️ Could not find question ID for text, using text as fallback:', questionText.substring(0, 50));
+        return questionText;
+      }
+
+      console.log('✅ Successfully found question ID for text:', questionData.id);
+      return questionData.id;
+    } catch (error) {
+      console.warn('⚠️ Error getting question ID, using text as fallback:', error);
+      return questionText;
+    }
+  };
+
+  // Get the room's selected language, fallback to current i18n if not available
+  const roomLanguage = room?.selected_language || i18n.language;
+  
   // Track previous language to detect changes
-  const [prevLanguage, setPrevLanguage] = useState(i18n.language);
+  const [prevLanguage, setPrevLanguage] = useState(roomLanguage);
   
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
+        console.log('🌍 Fetching questions for room language:', roomLanguage, 'level:', currentLevel);
         
         // Get level information
         const { data: levelData, error: levelError } = await supabase
           .from('levels')
           .select('*')
           .eq('sort_order', currentLevel)
-          .eq('language', i18n.language)
+          .eq('language', roomLanguage)
           .eq('is_active', true)
           .single();
 
@@ -358,7 +401,7 @@ const Game = () => {
           .from('questions')
           .select('text')
           .eq('level_id', levelData.id)
-          .eq('language', i18n.language)
+          .eq('language', roomLanguage)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
@@ -371,12 +414,12 @@ const Game = () => {
           level: currentLevel, 
           levelName: levelData.name, 
           questionCount: questions.length,
-          language: i18n.language
+          language: roomLanguage
         });
         
         // If language changed, reset the game state for new language
-        if (prevLanguage !== i18n.language) {
-          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
+        if (prevLanguage !== roomLanguage) {
+          console.log('🔄 Language changed from', prevLanguage, 'to', roomLanguage, '- resetting game state');
           
           // Clear current card and used cards to start fresh with new language
           if (gameState?.current_card) {
@@ -386,7 +429,7 @@ const Game = () => {
             });
           }
           
-          setPrevLanguage(i18n.language);
+          setPrevLanguage(roomLanguage);
         }
         
       } catch (error) {
@@ -403,7 +446,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
+  }, [currentLevel, roomLanguage, gameState?.current_card, updateGameState, prevLanguage, room?.selected_language]);
 
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
@@ -490,7 +533,12 @@ const Game = () => {
           room && !isGeneratingCard) {
         
         const usedCardsFromState = gameState?.used_cards || [];
-        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
+        // FIXED: Used cards now store question IDs, so we need to compare against question text
+        // For compatibility, we'll filter out both question text and IDs
+        const availableCards = levelCards.filter(card => 
+          !usedCardsFromState.includes(card) && 
+          !usedCardsFromState.some(usedCard => typeof usedCard === 'string' && usedCard.length > 50 ? usedCard === card : false)
+        );
         
         if (availableCards.length > 0) {
           // ALWAYS try AI selection first - for ALL cards, not just first
@@ -501,11 +549,11 @@ const Game = () => {
             isFirstQuestion, 
             availableCards: availableCards.length,
             currentLevel,
-            language: i18n.language
+            language: roomLanguage
           });
           
           // Try AI selection with current level number - FOR ALL CARDS
-          selectedCard = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
+          selectedCard = await selectCardWithAI(room.id, currentLevel, roomLanguage, isFirstQuestion);
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
@@ -534,7 +582,7 @@ const Game = () => {
     };
 
     generateCard();
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, roomLanguage]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
@@ -648,7 +696,9 @@ const Game = () => {
     const nextRoundNumber = currentUsedCards.length + 1;
     
     // FIXED: Use AI selection instead of deterministic selection for ALL subsequent cards
-    const usedCardsAfterCurrent = [...currentUsedCards, completedQuestion];
+    // CRITICAL FIX: Store question ID instead of text to prevent massive repetitions
+    const currentQuestionId = await getQuestionIdFromText(completedQuestion, roomLanguage, currentLevel);
+    const usedCardsAfterCurrent = [...currentUsedCards, currentQuestionId];
     const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card));
     
     // FIX: Determine who should answer next based on who answered the previous question
@@ -673,7 +723,7 @@ const Game = () => {
       
       // Try AI selection first for ALL cards
       if (room?.id) {
-        nextCard = await selectCardWithAI(room.id, currentLevel, i18n.language, false);
+        nextCard = await selectCardWithAI(room.id, currentLevel, roomLanguage, false);
       }
       
       // Fallback to random if AI fails
@@ -1140,7 +1190,7 @@ const Game = () => {
           onPlayAgain={handlePlayAgain}
           onGoHome={handleGoHome}
           roomId={room?.id}
-          language={i18n.language}
+          language={roomLanguage}
         />
         )}
 

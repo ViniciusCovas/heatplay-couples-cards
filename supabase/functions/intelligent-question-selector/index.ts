@@ -308,6 +308,7 @@ serve(async (req) => {
 
     // Filter out already used questions (compare by ID, not text)
     const usedCards = roomData.used_cards || [];
+    console.log('🔍 Filtering questions by used IDs:', { usedCards, totalQuestions: questions.length });
     const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.id));
 
     if (availableQuestions.length === 0) {
