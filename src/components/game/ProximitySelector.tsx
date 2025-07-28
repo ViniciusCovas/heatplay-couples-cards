@@ -43,14 +43,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
     }
   }, [gameState, navigate, roomCode]);
 
-  // Check if current player has already answered
+  // Get current player number for individual response tracking
   const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
-  const currentPlayerHasAnswered = currentPlayerNumber === 1 
-    ? gameState?.player1_proximity_response !== null && gameState?.player1_proximity_response !== undefined
-    : gameState?.player2_proximity_response !== null && gameState?.player2_proximity_response !== undefined;
-  const otherPlayerHasAnswered = currentPlayerNumber === 1
-    ? gameState?.player2_proximity_response !== null && gameState?.player2_proximity_response !== undefined
-    : gameState?.player1_proximity_response !== null && gameState?.player1_proximity_response !== undefined;
 
   const handleSelect = (isClose: boolean) => {
     console.log('🎯 ProximitySelector option selected:', { isClose });
@@ -158,8 +152,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
           </div>
         </div>
 
-        {/* Different states based on player responses */}
-        {currentPlayerHasAnswered && !otherPlayerHasAnswered ? (
+        {/* Waiting State */}
+        {waitingForPartner ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-primary animate-pulse" />
@@ -168,31 +162,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t('proximitySelector.waitingForPartner')}
-            </p>
-          </div>
-        ) : currentPlayerHasAnswered && otherPlayerHasAnswered ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-              <Check className="w-8 h-8 text-green-600 animate-pulse" />
-            </div>
-            <h3 className="text-lg font-brand text-foreground mb-2">
-              {t('proximitySelector.bothAnswered')}
-            </h3>
-            <p className="text-sm text-muted-foreground">
               {t('proximitySelector.advancing')}
-            </p>
-          </div>
-        ) : waitingForPartner ? (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
-              <Clock className="w-8 h-8 text-primary animate-pulse" />
-            </div>
-            <h3 className="text-lg font-brand text-foreground mb-2">
-              {t('proximitySelector.processing')}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {t('proximitySelector.pleaseWait')}
             </p>
           </div>
         ) : (
