@@ -91,6 +91,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
       // Update individual player response based on player number
       const updates: any = {
         proximity_response: selectedOption, // Keep legacy field for backward compatibility
+        proximity_question_answered: true, // Set this immediately like the original logic
+        current_phase: 'level-select' // Advance immediately like the original logic
       };
       
       if (playerNumber === 1) {
