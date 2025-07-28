@@ -58,7 +58,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       console.log('✅ Level selection result:', result);
 
       // Type assertion since we know this is our custom function return type
-      const typedResult = result as LevelSelectionResult;
+      const typedResult = result as unknown as LevelSelectionResult;
       setSelectedLevel(level);
       setHasVoted(true);
 
