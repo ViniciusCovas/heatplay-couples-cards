@@ -16,12 +16,12 @@ export default function CreateRoom() {
   const [roomCode, setRoomCode] = useState('');
   const navigate = useNavigate();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const handleCreateRoom = async (): Promise<void> => {
     setIsCreating(true);
     try {
-      const code = await createRoom(level, i18n.language);
+      const code = await createRoom(level);
       setRoomCode(code);
       toast.success(t('messages.roomCreated'));
     } catch (error) {

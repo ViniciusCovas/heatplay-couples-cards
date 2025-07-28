@@ -155,12 +155,9 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
               response: action.action_data.response,
-              responseTime: action.action_data.response_time,
+              responseTime: action.action_data.responseTime,
               question: action.action_data.question,
-              from: action.action_data.from,
-              evaluating_player: action.action_data.evaluating_player,
-              evaluating_player_number: action.action_data.evaluating_player_number,
-              responding_player_number: action.action_data.responding_player_number
+              from: action.action_data.from
             }
           }));
         }
@@ -226,102 +223,27 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       return;
     }
 
-    const maxRetries = 3;
-    let lastError;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        setIsLoading(true);
-        
-        const { error } = await supabase
-          .from('game_sync')
-          .insert({
-            room_id: roomId,
-            action_type,
-            action_data,
-            triggered_by: playerId
-          });
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from('game_sync')
+        .insert({
+          room_id: roomId,
+          action_type,
+          action_data,
+          triggered_by: playerId
+        });
 
-        if (error) {
-          console.error(`❌ Error syncing action (attempt ${attempt}):`, error);
-          lastError = error;
-          if (attempt < maxRetries) {
-            console.log(`🔄 Retrying sync in ${attempt * 1000}ms...`);
-            await new Promise(resolve => setTimeout(resolve, attempt * 1000));
-            continue;
-          }
-          throw error;
-        }
-
-        console.log(`✅ Action synced successfully: ${action_type} (attempt ${attempt})`);
-        return;
-      } catch (error) {
-        lastError = error;
-        if (attempt === maxRetries) {
-          console.error('❌ All sync attempts failed:', error);
-          toast.error(t('game.notifications.actionSyncError'));
-        }
-      } finally {
-        if (attempt === maxRetries) {
-          setIsLoading(false);
-        }
+      if (error) {
+        throw error;
       }
+    } catch (error) {
+      toast.error(t('game.notifications.actionSyncError'));
+    } finally {
+      setIsLoading(false);
     }
   }, [roomId, playerId]);
-
-  // Enhanced monitoring: Check for stuck evaluation states
-  const checkForStuckEvaluation = useCallback(async () => {
-    if (!roomId || !gameState) return;
-    
-    // Only check if we're in evaluation phase for more than 30 seconds
-    if (gameState.current_phase === 'evaluation') {
-      try {
-        // Check if there's a recent response without corresponding sync event
-        const { data: responses } = await supabase
-          .from('game_responses')
-          .select('*')
-          .eq('room_id', roomId)
-          .is('evaluation', null)
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (responses && responses.length > 0) {
-          const latestResponse = responses[0];
-          const responseTime = new Date(latestResponse.created_at).getTime();
-          const now = Date.now();
-          
-          // If response is older than 30 seconds, check for sync event
-          if (now - responseTime > 30000) {
-            const { data: syncEvents } = await supabase
-              .from('game_sync')
-              .select('*')
-              .eq('room_id', roomId)
-              .eq('action_type', 'response_submit')
-              .gte('created_at', latestResponse.created_at);
-            
-            if (!syncEvents || syncEvents.length === 0) {
-              console.warn('🚨 Detected stuck evaluation - attempting repair');
-              
-              // Try to trigger repair function
-              await supabase.rpc('repair_stuck_evaluations');
-              
-              console.log('✅ Attempted automatic repair of stuck evaluation');
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error checking for stuck evaluation:', error);
-      }
-    }
-  }, [roomId, gameState]);
-
-  // Run stuck evaluation check periodically
-  useEffect(() => {
-    if (!roomId || !gameState) return;
-    
-    const interval = setInterval(checkForStuckEvaluation, 10000); // Check every 10 seconds
-    return () => clearInterval(interval);
-  }, [checkForStuckEvaluation]);
 
   const updateGameState = useCallback(async (updates: Partial<GameState>) => {
     if (!roomId) {

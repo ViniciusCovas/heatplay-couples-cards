@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
@@ -21,7 +20,7 @@ import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'waiting-for-evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -40,7 +39,7 @@ const Game = () => {
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
-  const [levelCards, setLevelCards] = useState<{id: string, text: string}[]>([]);
+  const [levelCards, setLevelCards] = useState<string[]>([]);
   const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
@@ -59,6 +58,12 @@ const Game = () => {
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
+  
+  // Timer state - Enhanced for proper pause/resume functionality
+  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
+  const [timerPaused, setTimerPaused] = useState<boolean>(false);
+  const [pausedTime, setPausedTime] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(Date.now());
   
   console.log('🎮 Game component initialized:', { 
     roomCode, 
@@ -82,20 +87,11 @@ const Game = () => {
     // Clear any pending evaluation data
     setPendingEvaluation(null);
     
-    // CRITICAL: Maintain language consistency across level changes
-    if (room?.selected_language && i18n.language !== room.selected_language) {
-      console.log('🌐 Restoring language consistency:', { 
-        currentLang: i18n.language, 
-        roomLang: room.selected_language 
-      });
-      i18n.changeLanguage(room.selected_language);
-    }
+    // DON'T clear AI info immediately - let it persist through level changes
+    // Only clear it when we actually generate a new card
     
-    console.log('✅ Local game state reset for new level (language preserved):', {
-      level: currentLevel,
-      language: room?.selected_language
-    });
-  }, [currentLevel, room?.selected_language, i18n]);
+    console.log('✅ Local game state reset for new level (AI info preserved):', currentLevel);
+  }, [currentLevel]);
 
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
@@ -163,9 +159,6 @@ const Game = () => {
   const [showCard, setShowCard] = useState(false);
   const [showResponseInput, setShowResponseInput] = useState(false);
   
-  // Card display timer
-  const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
-  
   // Evaluation state
   const [pendingEvaluation, setPendingEvaluation] = useState<{
     question: string;
@@ -179,7 +172,6 @@ const Game = () => {
   
   // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
-  
 
   // Determine if it's my turn based on player number and current turn
   const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
@@ -193,7 +185,7 @@ const Game = () => {
     gamePhase: gameState?.current_phase 
   });
   
-  // Helper function to derive local phase from database state with improved evaluation detection
+  // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
     // Check if room is finished first - this overrides any phase logic
     if (room?.status === 'finished') {
@@ -209,8 +201,7 @@ const Game = () => {
       dbTurn: dbState.current_turn, 
       roomStatus: room?.status,
       playerNum, 
-      isMyTurnInDB,
-      evaluationSyncData
+      isMyTurnInDB 
     });
     
     switch (dbState.current_phase) {
@@ -219,20 +210,8 @@ const Game = () => {
       case 'response-input':
         return 'card-display'; // Always show card first, use local state for response input
       case 'evaluation':
-        // PRIORITIZE sync event data to determine who should evaluate
-        if (evaluationSyncData?.evaluating_player_number) {
-          const shouldEvaluate = evaluationSyncData.evaluating_player_number === playerNum;
-          console.log('🎯 Evaluation phase with sync data - shouldEvaluate:', shouldEvaluate, 'evaluating_player_number:', evaluationSyncData.evaluating_player_number, 'playerNum:', playerNum);
-          return shouldEvaluate ? 'evaluation' : 'waiting-for-evaluation';
-        }
-        // Fallback to database turn logic
-        if (isMyTurnInDB) {
-          console.log('🎯 I am the evaluator based on database turn');
-          return 'evaluation';
-        } else {
-          console.log('🎯 Not my turn to evaluate, waiting for evaluation');
-          return 'waiting-for-evaluation';
-        }
+        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
+        return isMyTurnInDB ? 'evaluation' : 'card-display';
       case 'final-report':
         return 'final-report';
       default:
@@ -290,68 +269,6 @@ const Game = () => {
     });
   }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
 
-  // State to track evaluation sync event data
-  const [evaluationSyncData, setEvaluationSyncData] = useState<any>(null);
-
-  // Listen for partner's response sync event to determine evaluation phase
-  useEffect(() => {
-    const handlePartnerResponse = (event: CustomEvent) => {
-      const syncData = event.detail;
-      console.log('🔄 Received partner response sync data:', syncData);
-      setEvaluationSyncData(syncData);
-    };
-
-    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
-    return () => {
-      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
-    };
-  }, []);
-
-  // Enhanced sync event listener to capture evaluation data from database
-  useEffect(() => {
-    const fetchLatestSyncEvents = async () => {
-      if (!room?.id) return;
-
-      try {
-        const { data: syncEvents, error } = await supabase
-          .from('game_sync')
-          .select('*')
-          .eq('room_id', room.id)
-          .eq('action_type', 'response_submit')
-          .order('created_at', { ascending: false })
-          .limit(1);
-
-        if (error) {
-          console.error('Error fetching sync events:', error);
-          return;
-        }
-
-        if (syncEvents && syncEvents.length > 0) {
-          const latestSync = syncEvents[0];
-          const syncData = latestSync.action_data as any;
-          
-          console.log('🔄 Processing latest sync event from database:', { 
-            syncData, 
-            myPlayerNumber: playerNumber,
-            evaluatingPlayerNumber: syncData?.evaluating_player_number 
-          });
-          
-          // Update evaluation sync data if this affects me
-          if (syncData?.evaluating_player_number === playerNumber || syncData?.responding_player_number === playerNumber) {
-            setEvaluationSyncData(syncData);
-          }
-        }
-      } catch (error) {
-        console.error('Error processing sync events:', error);
-      }
-    };
-
-    // Fetch sync events when gameState changes to evaluation phase
-    if (gameState?.current_phase === 'evaluation') {
-      fetchLatestSyncEvents();
-    }
-  }, [gameState?.current_phase, room?.id, playerNumber]);
-
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
     const setupEvaluationData = async () => {
@@ -361,62 +278,39 @@ const Game = () => {
         try {
           // Get the current round number
           const currentRound = (gameState.used_cards?.length || 0) + 1;
+          const currentCardFromState = gameState.current_card;
           
-          // Fetch the latest valid response that needs evaluation 
-          // - exclude responses with empty card_id (malformed data)
-          // - prioritize responses that match current card, but fallback to any valid response
+          // Fetch the latest response that needs evaluation for the current card/round
           const { data: responseData, error } = await supabase
             .from('game_responses')
             .select('*')
             .eq('room_id', room.id)
+            .eq('card_id', currentCardFromState)
             .eq('round_number', currentRound)
             .is('evaluation', null)
-            .neq('card_id', '') // Exclude empty card_id
             .order('created_at', { ascending: false })
-            .limit(1);
+            .limit(1)
+            .single();
 
           if (error) {
             console.error('❌ Error fetching response for evaluation:', error);
             return;
           }
 
-          if (responseData && responseData.length > 0) {
-            const response = responseData[0];
-            
-            // Get the actual question text from the questions table
-            let questionText = response.card_id; // Fallback to card_id
-            
-            if (response.card_id) {
-              const { data: questionData } = await supabase
-                .from('questions')
-                .select('text')
-                .eq('id', response.card_id)
-                .single();
-              
-              if (questionData) {
-                questionText = questionData.text;
-              }
-            }
-            
+          if (responseData) {
             // Get partner's name based on their player ID
-            const partnerName = response.player_id !== playerId ? 
+            const partnerName = responseData.player_id !== playerId ? 
               (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
               t('game.yourResponse');
 
             setPendingEvaluation({
-              question: questionText,
-              response: response.response || '',
-              responseId: response.id,
+              question: responseData.card_id,
+              response: responseData.response || '',
+              responseId: responseData.id,
               playerName: partnerName
             });
 
-            console.log('✅ Evaluation data set up successfully:', { 
-              question: questionText, 
-              response: response.response,
-              cardId: response.card_id 
-            });
-          } else {
-            console.log('⚠️ No valid responses found for evaluation');
+            console.log('✅ Evaluation data set up successfully for partner response');
           }
         } catch (error) {
           console.error('❌ Error setting up evaluation data:', error);
@@ -432,72 +326,27 @@ const Game = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   
-  // These state variables are now declared at the top
-  
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
-  // Helper function to get question ID from text (critical for fixing used_cards)
-  const getQuestionIdFromText = async (questionText: string, language: string, level: number): Promise<string> => {
-    try {
-      // Get level data first
-      const { data: levelData, error: levelError } = await supabase
-        .from('levels')
-        .select('id')
-        .eq('sort_order', level)
-        .eq('language', language)
-        .eq('is_active', true)
-        .single();
-
-      if (levelError || !levelData) {
-        console.warn('⚠️ Could not find level data for question ID lookup, using question text as fallback');
-        return questionText;
-      }
-
-      // Find the question by text and level
-      const { data: questionData, error: questionError } = await supabase
-        .from('questions')
-        .select('id')
-        .eq('text', questionText)
-        .eq('level_id', levelData.id)
-        .eq('language', language)
-        .eq('is_active', true)
-        .single();
-
-      if (questionError || !questionData) {
-        console.warn('⚠️ Could not find question ID for text, using text as fallback:', questionText.substring(0, 50));
-        return questionText;
-      }
-
-      console.log('✅ Successfully found question ID for text:', questionData.id);
-      return questionData.id;
-    } catch (error) {
-      console.warn('⚠️ Error getting question ID, using text as fallback:', error);
-      return questionText;
-    }
-  };
-
-  // Get the room's selected language, fallback to current i18n if not available
-  const roomLanguage = room?.selected_language || i18n.language;
-  
   // Track previous language to detect changes
-  const [prevLanguage, setPrevLanguage] = useState(roomLanguage);
+  const [prevLanguage, setPrevLanguage] = useState(i18n.language);
   
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        console.log('🌍 Fetching questions for room language:', roomLanguage, 'level:', currentLevel);
+        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
         
         // Get level information
         const { data: levelData, error: levelError } = await supabase
           .from('levels')
           .select('*')
           .eq('sort_order', currentLevel)
-          .eq('language', roomLanguage)
+          .eq('language', i18n.language)
           .eq('is_active', true)
           .single();
 
@@ -506,14 +355,14 @@ const Game = () => {
         // Get questions for this level
         const { data: questionsData, error: questionsError } = await supabase
           .from('questions')
-          .select('id, text')
+          .select('text')
           .eq('level_id', levelData.id)
-          .eq('language', roomLanguage)
+          .eq('language', i18n.language)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
 
-        const questions = questionsData.map(q => ({id: q.id, text: q.text}));
+        const questions = questionsData.map(q => q.text);
         setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
 
@@ -521,12 +370,12 @@ const Game = () => {
           level: currentLevel, 
           levelName: levelData.name, 
           questionCount: questions.length,
-          language: roomLanguage
+          language: i18n.language
         });
         
         // If language changed, reset the game state for new language
-        if (prevLanguage !== roomLanguage) {
-          console.log('🔄 Language changed from', prevLanguage, 'to', roomLanguage, '- resetting game state');
+        if (prevLanguage !== i18n.language) {
+          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
           
           // Clear current card and used cards to start fresh with new language
           if (gameState?.current_card) {
@@ -536,16 +385,16 @@ const Game = () => {
             });
           }
           
-          setPrevLanguage(roomLanguage);
+          setPrevLanguage(i18n.language);
         }
         
       } catch (error) {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          {id: 'fallback-1', text: t('game.fallbackQuestions.question1')},
-          {id: 'fallback-2', text: t('game.fallbackQuestions.question2')},
-          {id: 'fallback-3', text: t('game.fallbackQuestions.question3')}
+          t('game.fallbackQuestions.question1'),
+          t('game.fallbackQuestions.question2'),
+          t('game.fallbackQuestions.question3')
         ];
         setLevelCards(fallbackQuestions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
@@ -553,7 +402,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, roomLanguage, gameState?.current_card, updateGameState, prevLanguage, room?.selected_language]);
+  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
 
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
@@ -640,10 +489,7 @@ const Game = () => {
           room && !isGeneratingCard) {
         
         const usedCardsFromState = gameState?.used_cards || [];
-        // FIXED: Used cards now store question IDs, so we filter by IDs
-        const availableCards = levelCards.filter(card => 
-          !usedCardsFromState.includes(card.id)
-        );
+        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
         
         if (availableCards.length > 0) {
           // ALWAYS try AI selection first - for ALL cards, not just first
@@ -654,15 +500,15 @@ const Game = () => {
             isFirstQuestion, 
             availableCards: availableCards.length,
             currentLevel,
-            language: roomLanguage
+            language: i18n.language
           });
           
           // Try AI selection with current level number - FOR ALL CARDS
-          selectedCard = await selectCardWithAI(room.id, currentLevel, roomLanguage, isFirstQuestion);
+          selectedCard = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
-            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)]?.text;
+            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
             setAiCardInfo(null); // Clear AI info for random selection
             console.log('🎲 Using random card fallback:', { 
               selectedCard, 
@@ -687,24 +533,79 @@ const Game = () => {
     };
 
     generateCard();
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, roomLanguage]);
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
   }, [usedCards, totalCards]);
 
+  // Deterministic card selection based on database state
+  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: string[], roundNumber: number) => {
+    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card));
+    if (availableCards.length === 0) {
+      return null;
+    }
+    
+    // Use round number as seed for deterministic selection
+    // This ensures all players get the same card based on the same database state
+    const deterministicIndex = roundNumber % availableCards.length;
+    return availableCards[deterministicIndex];
+  };
+
+  const startTimer = () => {
+    console.log('⏱️ Starting timer');
+    setCardDisplayStartTime(Date.now());
+    setTimerPaused(false);
+    setPausedTime(0);
+  };
+
+  const pauseTimer = () => {
+    if (!timerPaused && cardDisplayStartTime > 0) {
+      console.log('⏸️ Pausing timer');
+      const elapsedTime = Date.now() - cardDisplayStartTime;
+      setPausedTime(elapsedTime);
+      setTimerPaused(true);
+    }
+  };
+
+  const resumeTimer = () => {
+    if (timerPaused) {
+      console.log('▶️ Resuming timer');
+      setCardDisplayStartTime(Date.now() - pausedTime);
+      setTimerPaused(false);
+    }
+  };
+
+  const resetTimer = () => {
+    console.log('🔄 Resetting timer');
+    setCardDisplayStartTime(0);
+    setTimerPaused(false);
+    setPausedTime(0);
+  };
+
+  // Calculate actual response time including paused time
+  const getActualResponseTime = (): number => {
+    if (cardDisplayStartTime === 0) return 0;
+    
+    if (timerPaused) {
+      return pausedTime / 1000; // Convert to seconds
+    } else {
+      return (Date.now() - cardDisplayStartTime) / 1000; // Convert to seconds
+    }
+  };
+
   const handleStartResponse = async () => {
+    // Pause timer when response starts
+    pauseTimer();
+    
     // For spoken mode (close proximity), submit response directly without showing modal
     if (isCloseProximity) {
-      const responseTime = cardDisplayStartTime > 0 
-        ? (Date.now() - cardDisplayStartTime) / 1000 
-        : 0;
-      
+      const responseTime = getActualResponseTime();
       await handleResponseSubmit(t('game.spokenResponse'), responseTime);
       return;
     }
     
-    // For written mode, show the response input modal - timer already started with card display
+    // For written mode, show the response input modal
     setShowResponseInput(true);
     
     // Update database phase to response-input
@@ -714,10 +615,9 @@ const Game = () => {
   };
 
   const handleResponseSubmit = async (response: string, responseTimeFromModal: number) => {
-    // Calculate actual response time from when card was displayed
-    const actualResponseTime = cardDisplayStartTime > 0 
-      ? (Date.now() - cardDisplayStartTime) / 1000 
-      : responseTimeFromModal;
+    // Use the actual response time from timer, not from modal
+    const actualResponseTime = getActualResponseTime();
+    
     if (isSubmitting || !room) {
       toast({
         title: t('common.error'),
@@ -734,10 +634,10 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      console.log('📝 Submitting response with PERSISTENT AI info:', { 
-           response, 
-           actualResponseTime, 
-           currentCardFromState,
+      console.log('📝 Submitting response with timer data:', { 
+        response, 
+        actualResponseTime, 
+        currentCardFromState,
         currentRound,
         playerId,
         currentTurn,
@@ -746,39 +646,15 @@ const Game = () => {
         aiReasoning: aiCardInfo?.reasoning || null
       });
 
-  // Enhanced response submission with better question tracking
-  // CRITICAL FIX: Ensure cardId is ALWAYS a valid UUID, never empty
-  let cardId = levelCards.find(card => card.text === currentCardFromState)?.id;
-  
-  if (!cardId || cardId.trim() === '') {
-    console.warn('⚠️ No valid card ID found for question, searching in database');
-    // If we can't find the card ID, try to get it from database by text
-    const { data: questionData } = await supabase
-      .from('questions')
-      .select('id')
-      .eq('text', currentCardFromState)
-      .single();
-    
-    if (questionData?.id) {
-      cardId = questionData.id;
-      console.log('✅ Found card ID in database:', cardId);
-    } else {
-      console.error('❌ Could not find valid UUID for question, skipping response');
-      throw new Error('Cannot submit response - invalid question ID');
-    }
-  }
-      
-      console.log('✅ Card ID validation successful:', { cardId, questionText: currentCardFromState });
-      
-      // Save response to database WITH AI information - PERSIST AI DATA
+      // Save response to database WITH timing information
       const { error: responseError } = await supabase
         .from('game_responses')
         .insert({
           room_id: room.id,
           player_id: playerId,
-          card_id: cardId, // Use validated question ID
+          card_id: currentCardFromState,
           response: response,
-          response_time: Math.round(actualResponseTime),
+          response_time: Math.round(actualResponseTime), // Store actual timer-based response time
           round_number: currentRound,
           selection_method: aiCardInfo?.selectionMethod || 'random',
           ai_reasoning: aiCardInfo?.reasoning || null
@@ -789,7 +665,10 @@ const Game = () => {
         throw responseError;
       }
 
-      console.log('✅ Response saved successfully with AI info preserved and persisted');
+      console.log('✅ Response saved successfully with accurate timing data');
+
+      // Reset timer after successful submission
+      resetTimer();
 
       // Hide the response input modal
       setShowResponseInput(false);
@@ -797,53 +676,10 @@ const Game = () => {
       // Transition to evaluation phase - other player evaluates
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
       console.log('✅ Response submitted, moving to evaluation phase for other player');
-      
-      // Update game state first
       await updateGameState({
         current_turn: nextTurn,
         current_phase: 'evaluation'
       });
-
-      // CRITICAL FIX: Send sync event to notify other player about evaluation phase
-      console.log('🔄 Sending response_submit sync event to notify other player');
-      
-      // Retry logic for sync action
-      let syncSuccess = false;
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (!syncSuccess && retryCount < maxRetries) {
-        try {
-          await syncAction('response_submit', {
-            question: currentCardFromState,
-            response: response,
-            response_time: Math.round(actualResponseTime),
-            evaluating_player: nextTurn,
-            round_number: currentRound,
-            timestamp: new Date().toISOString()
-          });
-          
-          syncSuccess = true;
-          console.log('✅ Response submit sync event sent successfully');
-          
-        } catch (syncError) {
-          retryCount++;
-          console.error(`❌ Sync attempt ${retryCount} failed:`, syncError);
-          
-          if (retryCount < maxRetries) {
-            console.log(`🔄 Retrying sync in ${retryCount * 1000}ms...`);
-            await new Promise(resolve => setTimeout(resolve, retryCount * 1000));
-          } else {
-            console.error('❌ All sync attempts failed - other player may not receive evaluation screen');
-            // Show warning but don't break the flow
-            toast({
-              title: t('game.warnings.syncFailed'),
-              description: t('game.warnings.syncFailedDescription'),
-              variant: "destructive"
-            });
-          }
-        }
-      }
       
     } catch (error) {
       console.error('❌ Error submitting response:', error);
@@ -857,7 +693,7 @@ const Game = () => {
     }
   };
 
-  // FIXED: Centralized function to advance to the next round - NOW USES AI FOR ALL CARDS
+  // Centralized function to advance to the next round
   const advanceToNextRound = async (completedQuestion: string) => {
     if (!room || !gameState) return;
 
@@ -867,55 +703,38 @@ const Game = () => {
     const currentUsedCards = gameState.used_cards || [];
     const nextRoundNumber = currentUsedCards.length + 1;
     
-    // FIXED: Use AI selection instead of deterministic selection for ALL subsequent cards
-    // CRITICAL FIX: Store question ID instead of text to prevent massive repetitions
-    const currentQuestionId = await getQuestionIdFromText(completedQuestion, roomLanguage, currentLevel);
-    const usedCardsAfterCurrent = [...currentUsedCards, currentQuestionId];
-    const availableCards = levelCards.filter(card => !usedCardsAfterCurrent.includes(card.id));
+    // Use deterministic card selection based on database state
+    const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
     
     // FIX: Determine who should answer next based on who answered the previous question
-    // currentTurn is the evaluator, so the next answerer should be the opposite player
-    // Switch turns after evaluation is complete
-    const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
+    // currentTurn is the evaluator, so the answerer was the other player
+    // The next answerer should be the current evaluator (who just finished evaluating)
+    const nextTurn = currentTurn; // The evaluator becomes the next answerer
     
     console.log('🔄 Turn switching logic:', {
       currentTurn: currentTurn,
       nextTurn: nextTurn,
-      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next (alternating turns)`
+      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
     });
     
-    if (availableCards.length > 0) {
-      // CRITICAL FIX: Use AI selection for ALL subsequent cards, not just first
-      console.log('🧠 Attempting AI selection for next card (round', nextRoundNumber, ')');
+    if (nextCard) {
+      // Continue with next question
+      const newUsedCards = [...currentUsedCards, completedQuestion];
       
-      // Clear previous AI info before generating new card
+      // IMPORTANT: Clear AI info when advancing to next round for NEW card generation
       setAiCardInfo(null);
       
-      let nextCard = null;
-      
-      // Try AI selection first for ALL cards
-      if (room?.id) {
-        nextCard = await selectCardWithAI(room.id, currentLevel, roomLanguage, false);
-      }
-      
-      // Fallback to random if AI fails
-      if (!nextCard) {
-        nextCard = availableCards[Math.floor(Math.random() * availableCards.length)]?.text;
-        console.log('🎲 AI failed, using random fallback for next card');
-      }
-      
-      console.log('🎯 Moving to next card with AI selection:', {
+      console.log('🎯 Moving to next card (deterministic):', {
         nextCard,
         nextTurn,
-        newUsedCards: usedCardsAfterCurrent.length,
+        newUsedCards: newUsedCards.length,
         currentLevel,
-        roundNumber: nextRoundNumber,
-        aiSelected: Boolean(aiCardInfo?.reasoning)
+        roundNumber: nextRoundNumber
       });
       
       await updateGameState({
         current_card: nextCard,
-        used_cards: usedCardsAfterCurrent,
+        used_cards: newUsedCards,
         current_turn: nextTurn,
         current_phase: 'response-input'
       });
@@ -947,13 +766,24 @@ const Game = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('📊 Submitting evaluation:', { evaluation, responseId: pendingEvaluation.responseId });
+      console.log('📊 Submitting evaluation with timing context:', { 
+        evaluation, 
+        responseId: pendingEvaluation.responseId 
+      });
+
+      // Enhanced evaluation data to include timing insights
+      const enhancedEvaluation = {
+        ...evaluation,
+        timing_context: {
+          evaluation_timestamp: Date.now()
+        }
+      };
 
       // Save evaluation to database
       const { error: evaluationError } = await supabase
         .from('game_responses')
         .update({
-          evaluation: JSON.stringify(evaluation),
+          evaluation: JSON.stringify(enhancedEvaluation),
           evaluation_by: playerId
         })
         .eq('id', pendingEvaluation.responseId);
@@ -963,9 +793,9 @@ const Game = () => {
         throw evaluationError;
       }
 
-      console.log('✅ Evaluation saved successfully');
+      console.log('✅ Evaluation saved successfully with timing context');
 
-      // Call centralized function to advance to next round (NOW WITH AI!)
+      // Call centralized function to advance to next round
       await advanceToNextRound(pendingEvaluation.question);
       
       setPendingEvaluation(null);
@@ -1099,15 +929,17 @@ const Game = () => {
     }
   };
 
-  // Add state for real-time timer update
-  const [currentTime, setCurrentTime] = useState<number>(Date.now());
-
   useEffect(() => {
     setShowCard(true);
     
     // Start timer when card is displayed in card-display phase
     if (gamePhase === 'card-display' && currentCard && isMyTurn) {
-      setCardDisplayStartTime(Date.now());
+      startTimer();
+    }
+    
+    // Reset timer when it's not my turn
+    if (!isMyTurn) {
+      resetTimer();
     }
     
     // Listen for game finish events from partner
@@ -1135,16 +967,16 @@ const Game = () => {
     };
   }, [roomCode, navigate, gamePhase, currentCard, isMyTurn]);
 
-  // Timer update effect for real-time display
+  // Timer update effect for real-time display - Enhanced with pause support
   useEffect(() => {
-    if (gamePhase === 'card-display' && cardDisplayStartTime > 0) {
+    if (gamePhase === 'card-display' && cardDisplayStartTime > 0 && !timerPaused) {
       const interval = setInterval(() => {
         setCurrentTime(Date.now());
       }, 1000); // Update every second
 
       return () => clearInterval(interval);
     }
-  }, [gamePhase, cardDisplayStartTime]);
+  }, [gamePhase, cardDisplayStartTime, timerPaused]);
 
   // Redirect to home if no room code
   if (!roomCode) {
@@ -1240,7 +1072,7 @@ const Game = () => {
         </div>
 
         {/* Game Content based on current phase */}
-        {(gamePhase === 'card-display' || gamePhase === 'waiting-for-evaluation') && (
+        {gamePhase === 'card-display' && (
           <>
             <GameCard
               currentCard={currentCard}
@@ -1255,12 +1087,18 @@ const Game = () => {
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />
 
-            {/* Timer starts immediately when card is displayed */}
-            {currentCard && cardDisplayStartTime > 0 && (
+            {/* Enhanced timer display with pause state */}
+            {currentCard && cardDisplayStartTime > 0 && isMyTurn && (
               <div className="text-center py-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-mono">
-                  <Timer className="w-4 h-4" />
-                  {Math.floor((currentTime - cardDisplayStartTime) / 1000)}s
+                <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-mono ${
+                  timerPaused ? 'bg-orange-500/10 text-orange-600' : 'bg-primary/10 text-primary'
+                }`}>
+                  <Timer className={`w-4 h-4 ${timerPaused ? 'text-orange-500' : ''}`} />
+                  {timerPaused ? (
+                    <span>{Math.floor(pausedTime / 1000)}s (paused)</span>
+                  ) : (
+                    <span>{Math.floor((currentTime - cardDisplayStartTime) / 1000)}s</span>
+                  )}
                 </div>
               </div>
             )}
@@ -1319,7 +1157,7 @@ const Game = () => {
           </>
         )}
 
-        {/* Response Input Modal */}
+        {/* Response Input Modal - Enhanced with timer pause functionality */}
         <ResponseInput
           isVisible={showResponseInput}
           question={currentCard}
@@ -1328,29 +1166,17 @@ const Game = () => {
           isCloseProximity={isCloseProximity}
           isSubmitting={isSubmitting}
           startTime={cardDisplayStartTime}
+          pausedTime={pausedTime}
+          isPaused={timerPaused}
         />
 
-         {/* Response Evaluation Modal - Enhanced with sync data fallback */}
-         {gamePhase === 'evaluation' && (
+         {/* Response Evaluation Modal - Show only for evaluation phase */}
+         {pendingEvaluation && gamePhase === 'evaluation' && (
            <ResponseEvaluation
              isVisible={true}
-             question={
-               evaluationSyncData?.question || 
-               pendingEvaluation?.question || 
-               currentCard || 
-               ''
-             }
-             response={
-               evaluationSyncData?.response || 
-               pendingEvaluation?.response || 
-               ''
-             }
-             playerName={
-               evaluationSyncData ? 
-                 `Player ${evaluationSyncData.responding_player_number || ''}` :
-                 pendingEvaluation?.playerName || 
-                 t('game.partner')
-             }
+             question={pendingEvaluation.question}
+             response={pendingEvaluation.response}
+             playerName={pendingEvaluation.playerName}
              onSubmitEvaluation={handleEvaluationSubmit}
              onCancel={handleEvaluationCancel}
              isSubmitting={isSubmitting}
@@ -1376,7 +1202,7 @@ const Game = () => {
           onPlayAgain={handlePlayAgain}
           onGoHome={handleGoHome}
           roomId={room?.id}
-          language={roomLanguage}
+          language={i18n.language}
         />
         )}
 

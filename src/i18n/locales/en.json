@@ -258,10 +258,6 @@
       "differentLevelsSelected": "You selected different levels. You must select the same level to play.",
       "choosingNewLevel": "Your partner wants to change level. Choosing new level...",
       "actionSyncError": "Error syncing action"
-    },
-    "warnings": {
-      "syncFailed": "Sync Warning",
-      "syncFailedDescription": "Your partner may not see the evaluation screen immediately. Please wait a moment."
     }
   },
   "proximitySelection": {

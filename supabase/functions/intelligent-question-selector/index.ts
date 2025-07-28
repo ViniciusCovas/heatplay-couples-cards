@@ -1,5 +1,3 @@
-
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -24,29 +22,6 @@ const MAX_DELAY = 10000; // 10 seconds
 
 // Utility function for exponential backoff delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Helper function to extract JSON from markdown code blocks
-function extractJSONFromMarkdown(text: string): string {
-  console.log('🔍 Extracting JSON from text:', text.substring(0, 100) + '...');
-  
-  // Remove markdown JSON code block wrapper if present
-  const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-  if (jsonMatch) {
-    console.log('✅ Found JSON in markdown code block');
-    return jsonMatch[1].trim();
-  }
-  
-  // Remove generic code block wrapper if present
-  const codeMatch = text.match(/```\s*([\s\S]*?)\s*```/);
-  if (codeMatch) {
-    console.log('✅ Found content in generic code block');
-    return codeMatch[1].trim();
-  }
-  
-  // Return original text if no code blocks found
-  console.log('📝 No code blocks found, using original text');
-  return text.trim();
-}
 
 // Enhanced retry function with exponential backoff
 async function retryWithBackoff<T>(
@@ -123,7 +98,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
     console.log('🤖 Calling OpenAI API...');
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 20000); // Reduced to 20 seconds for lightweight prompt
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -133,10 +108,10 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
+          model: 'gpt-4.1-2025-04-14',
           messages: [{ role: 'user', content: promptContent }],
           temperature: 0.7,
-          max_tokens: 150, // Reduced for faster response
+          max_tokens: 300,
         }),
         signal: controller.signal,
       });
@@ -163,69 +138,15 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
       clearTimeout(timeoutId);
       
       if (error.name === 'AbortError') {
-        throw new Error('OpenAI API call timed out after 20 seconds');
+        throw new Error('OpenAI API call timed out after 30 seconds');
       }
       throw error;
     }
   }, 1, 'OpenAI API call');
 }
 
-// Enhanced sampling function for better diversity and deduplication
-function getSmartSample<T extends { id: string; category?: string; question_type?: string }>(
-  array: T[], 
-  size: number, 
-  usedIds: string[]
-): T[] {
-  // First, ensure complete deduplication
-  const uniqueQuestions = array.filter(q => !usedIds.includes(q.id));
-  
-  if (uniqueQuestions.length <= size) {
-    return shuffleArray(uniqueQuestions);
-  }
-
-  // Group by category for balanced selection
-  const categoryGroups = uniqueQuestions.reduce((groups, question) => {
-    const category = question.category || 'default';
-    if (!groups[category]) groups[category] = [];
-    groups[category].push(question);
-    return groups;
-  }, {} as Record<string, T[]>);
-
-  const categories = Object.keys(categoryGroups);
-  const questionsPerCategory = Math.floor(size / categories.length);
-  const remainder = size % categories.length;
-
-  let result: T[] = [];
-
-  // Take equal amounts from each category
-  categories.forEach((category, index) => {
-    const categoryQuestions = shuffleArray(categoryGroups[category]);
-    const takeCount = questionsPerCategory + (index < remainder ? 1 : 0);
-    result.push(...categoryQuestions.slice(0, takeCount));
-  });
-
-  // Fill any remaining slots with random questions
-  if (result.length < size) {
-    const remaining = uniqueQuestions.filter(q => !result.some(r => r.id === q.id));
-    const additionalNeeded = size - result.length;
-    result.push(...shuffleArray(remaining).slice(0, additionalNeeded));
-  }
-
-  return shuffleArray(result.slice(0, size));
-}
-
-// Fisher-Yates shuffle for true randomization
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
 // Smart fallback function that considers context
-function getSmartRandomFallback(availableQuestions: any[], lastTurnAnalysis: any, isFirstQuestion: boolean): any {
+function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean): any {
   console.log('🎲 Using smart random fallback with context');
   
   if (isFirstQuestion) {
@@ -238,23 +159,18 @@ function getSmartRandomFallback(availableQuestions: any[], lastTurnAnalysis: any
     }
   }
 
-  // If we have last turn analysis, try to balance areas
-  if (lastTurnAnalysis && lastTurnAnalysis.count > 0) {
-    const avgHonesty = lastTurnAnalysis.honesty / lastTurnAnalysis.count;
-    const avgAttraction = lastTurnAnalysis.attraction / lastTurnAnalysis.count;
-    const avgIntimacy = lastTurnAnalysis.intimacy / lastTurnAnalysis.count;
-    const avgSurprise = lastTurnAnalysis.surprise / lastTurnAnalysis.count;
-    
-    // Find the lowest scoring area
+  // If we have last response analysis, try to balance areas
+  if (lastResponseAnalysis.honesty !== undefined) {
+    // Find the lowest scoring area from the last response
     const scores = [
-      { area: 'honesty', score: avgHonesty },
-      { area: 'attraction', score: avgAttraction },
-      { area: 'intimacy', score: avgIntimacy },
-      { area: 'surprise', score: avgSurprise }
+      { area: 'honesty', score: lastResponseAnalysis.honesty },
+      { area: 'attraction', score: lastResponseAnalysis.attraction },
+      { area: 'intimacy', score: lastResponseAnalysis.intimacy },
+      { area: 'surprise', score: lastResponseAnalysis.surprise }
     ];
     
     const lowestArea = scores.reduce((min, current) => current.score < min.score ? current : min);
-    console.log(`🎯 Targeting lowest area: ${lowestArea.area} (score: ${lowestArea.score})`);
+    console.log(`🎯 Targeting lowest area from last response: ${lowestArea.area} (score: ${lowestArea.score})`);
     
     // Try to find questions that might improve this area
     const targetQuestions = availableQuestions.filter(q => 
@@ -299,19 +215,20 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     // Parallel data fetching with individual error handling
-    const [lastTurnResponses, room, levelId] = await Promise.allSettled([
-      // Get only the LAST TURN responses (most recent 2 responses)
+    const [recentResponses, room, levelId] = await Promise.allSettled([
+      // Get only the most recent response pair (last 2 responses) for analysis
       retryWithBackoff(async () => {
         const { data, error } = await supabase
           .from('game_responses')
           .select('*')
           .eq('room_id', roomId)
+          .not('evaluation', 'is', null) // Only get evaluated responses
           .order('created_at', { ascending: false })
-          .limit(2); // Only get last 2 responses (one from each player)
+          .limit(2); // Only get the last 2 responses (most recent turn)
 
-        if (error) throw new Error(`Failed to fetch recent game responses: ${error.message}`);
+        if (error) throw new Error(`Failed to fetch recent responses: ${error.message}`);
         return data || [];
-      }, 1, 'last turn responses fetch'),
+      }, 1, 'recent responses fetch'),
 
       // Get room data
       retryWithBackoff(async () => {
@@ -330,9 +247,9 @@ serve(async (req) => {
     ]);
 
     // Handle individual failures
-    if (lastTurnResponses.status === 'rejected') {
-      failureReason = `Database error: ${lastTurnResponses.reason.message}`;
-      throw lastTurnResponses.reason;
+    if (recentResponses.status === 'rejected') {
+      failureReason = `Database error: ${recentResponses.reason.message}`;
+      throw recentResponses.reason;
     }
     if (room.status === 'rejected') {
       failureReason = `Room fetch error: ${room.reason.message}`;
@@ -343,44 +260,26 @@ serve(async (req) => {
       throw levelId.reason;
     }
 
-    const lastTurnResponseData = lastTurnResponses.value;
+    const recentResponseData = recentResponses.value;
     const roomData = room.value;
     const levelIdValue = levelId.value;
 
-    // Get available questions with metadata
+    // Get available questions with retry
     const questions = await retryWithBackoff(async () => {
       const { data, error } = await supabase
-        .from('questions')
-        .select('id, text, category, intensity, question_type')
-        .eq('level_id', levelIdValue)
-        .eq('language', language)
-        .eq('is_active', true);
+        .rpc('get_random_questions_for_level', {
+          level_id_param: levelIdValue,
+          language_param: language,
+          limit_param: 50
+        });
 
       if (error) throw new Error(`Failed to fetch questions: ${error.message}`);
       return data || [];
     }, 1, 'questions fetch');
 
-    // Get comprehensive list of used question IDs from both sources
-    const { data: usedQuestionIds, error: usedIdsError } = await supabase
-      .rpc('get_used_question_ids', { room_id_param: roomId });
-
-    if (usedIdsError) {
-      console.error('❌ Error fetching used question IDs:', usedIdsError);
-    }
-
-    // Use comprehensive deduplication
+    // Filter out already used questions
     const usedCards = roomData.used_cards || [];
-    const allUsedIds = usedQuestionIds || usedCards;
-    
-    console.log('🔍 Comprehensive used question tracking:', { 
-      fromRoomUsedCards: usedCards.length, 
-      fromDatabase: usedQuestionIds?.length || 0,
-      totalUsedIds: allUsedIds.length,
-      totalQuestions: questions.length 
-    });
-    
-    // Filter out already used questions with enhanced deduplication
-    const availableQuestions = questions.filter((q: any) => !allUsedIds.includes(q.id));
+    const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.text));
 
     if (availableQuestions.length === 0) {
       failureReason = 'No available questions for this level and language';
@@ -391,96 +290,83 @@ serve(async (req) => {
     console.log('📊 Data fetched successfully:', {
       availableQuestions: availableQuestions.length,
       usedCards: usedCards.length,
-      lastTurnResponses: lastTurnResponseData.length
+      recentResponses: recentResponseData.length
     });
 
-    // Analyze ONLY the last turn responses for patterns
-    const lastTurnAnalysis = lastTurnResponseData.reduce((acc: any, response: any) => {
-      if (response.evaluation) {
+    // Analyze only the most recent response for context (keep prompt short)
+    let lastResponseAnalysis = { hasData: false };
+    if (recentResponseData.length > 0) {
+      const lastResponse = recentResponseData[0];
+      if (lastResponse.evaluation) {
         try {
-          const evaluation = JSON.parse(response.evaluation);
-          acc.honesty = (acc.honesty || 0) + (evaluation.honesty || 0);
-          acc.attraction = (acc.attraction || 0) + (evaluation.attraction || 0);
-          acc.intimacy = (acc.intimacy || 0) + (evaluation.intimacy || 0);
-          acc.surprise = (acc.surprise || 0) + (evaluation.surprise || 0);
-          acc.count++;
+          const evaluation = JSON.parse(lastResponse.evaluation);
+          lastResponseAnalysis = {
+            hasData: true,
+            honesty: evaluation.honesty || 0,
+            attraction: evaluation.attraction || 0,
+            intimacy: evaluation.intimacy || 0,
+            surprise: evaluation.surprise || 0,
+            response_time: lastResponse.response_time || 0
+          };
         } catch (e) {
-          console.warn('⚠️ Failed to parse evaluation:', e);
+          console.warn('⚠️ Failed to parse last evaluation:', e);
         }
       }
-      return acc;
-    }, { count: 0 });
+    }
 
-    console.log('📈 Last turn analysis:', lastTurnAnalysis);
+    console.log('📈 Last response analysis:', lastResponseAnalysis);
 
-    // --- INICIO DE LA SOLUCIÓN RECOMENDADA ---
+    // Compact AI prompt focusing only on the immediate emotional state
+    const promptContent = `You are GetClose AI, selecting the next question to deepen this couple's connection.
 
-    // 1. Enhanced question sampling for better diversity (increased from 50 to 100)
-    const sampleSize = Math.min(100, availableQuestions.length);
-    const questionSample = getSmartSample(availableQuestions, sampleSize, allUsedIds);
-    
-    const availableQuestionProfiles = questionSample.map((q: any, i: number) => 
-      `${i}. [category: ${q.category || 'general'}, intensity: ${q.intensity || 3}, type: ${q.question_type || 'open_ended'}]`
-    ).join('\n');
+Context:
+- Level: ${currentLevel} (${language})
+- Is First Question: ${isFirstQuestion}
+- Available Questions: ${availableQuestions.length}
 
-    // 2. Crear un resumen muy corto y numérico del último turno.
-    const lastTurnSummary = lastTurnAnalysis.count > 0
-      ? `The last turn's average scores were: Honesty ${(lastTurnAnalysis.honesty/lastTurnAnalysis.count).toFixed(1)}, Attraction ${(lastTurnAnalysis.attraction/lastTurnAnalysis.count).toFixed(1)}, Intimacy ${(lastTurnAnalysis.intimacy/lastTurnAnalysis.count).toFixed(1)}, Surprise ${(lastTurnAnalysis.surprise/lastTurnAnalysis.count).toFixed(1)}.`
-      : "This is the first question of the game.";
+${lastResponseAnalysis.hasData ? `
+Most Recent Response Analysis:
+- Honesty: ${lastResponseAnalysis.honesty}/10
+- Attraction: ${lastResponseAnalysis.attraction}/10
+- Intimacy: ${lastResponseAnalysis.intimacy}/10
+- Surprise: ${lastResponseAnalysis.surprise}/10
+- Response Time: ${lastResponseAnalysis.response_time}ms
 
-    // 3. Construir el prompt final: ligero, rápido y estratégico.
-    const promptContent = `You are GetClose AI, an expert relationship coach. Your mission is to select the best question index to create a meaningful emotional arc for the couple.
+Strategy: Based on their most recent emotional state, what question would create the deepest connection right now?
+` : `
+First Question Strategy: Choose an engaging opener that creates comfort and encourages vulnerability.
+`}
 
-**Current State:**
-- Relationship Level: ${currentLevel}
-- Last Interaction Summary: ${lastTurnSummary}
+Available Questions:
+${availableQuestions.map((q: any, i: number) => `${i + 1}. [${q.category || 'general'}] ${q.text}`).join('\n')}
 
-**Available Question Profiles (0-based index and Profile):**
-${availableQuestionProfiles}
+Select the ONE question that will create the deepest connection based on their current emotional state.
 
-**Your Task:**
-Based on the last interaction, select the 0-based index of the ONE question from the list that is the best strategic fit for this moment.
-
-Respond in JSON format ONLY:
+Respond with ONLY a JSON object:
 {
-  "selectedQuestionIndex": [index],
-  "reasoning": "[Your concise, 2-sentence reasoning for choosing this profile]",
-  "targetArea": "[honesty|attraction|intimacy|surprise|general]"
+  "selectedQuestionIndex": [0-based index],
+  "reasoning": "[2-3 sentences explaining why this question is perfect right now]",
+  "targetArea": "[honesty|attraction|intimacy|surprise]"
 }`;
-
-    // --- FIN DE LA SOLUCIÓN RECOMENDADA ---
 
     // Call OpenAI with enhanced error handling
     let aiResponse;
     try {
       const data = await callOpenAIWithRetry(promptContent);
       
-      // Get the raw response content
-      const rawContent = data.choices[0].message.content;
-      console.log('🔍 Raw OpenAI response:', rawContent);
-      
-      // Extract JSON from markdown code blocks if present
-      const extractedJSON = extractJSONFromMarkdown(rawContent);
-      console.log('📝 Extracted JSON:', extractedJSON);
-      
       try {
-        aiResponse = JSON.parse(extractedJSON);
-        console.log('✅ Successfully parsed AI response:', aiResponse);
+        aiResponse = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
-        failureReason = `AI returned invalid JSON format. Raw response: ${rawContent}. Extracted: ${extractedJSON}. Parse error: ${parseError.message}`;
-        console.error('❌ Failed to parse extracted JSON:', {
-          rawContent,
-          extractedJSON,
-          parseError: parseError.message
-        });
+        failureReason = `AI returned invalid JSON format: ${data.choices[0].message.content}`;
+        console.error('❌ Failed to parse OpenAI response:', data.choices[0].message.content);
         throw new Error(failureReason);
       }
     } catch (apiError) {
       failureReason = `OpenAI API failed: ${apiError.message}`;
       console.error('❌ OpenAI API error:', apiError);
       
-      // Use smart fallback
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastTurnAnalysis, isFirstQuestion);
+      // Use smart fallback based on last response
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
       
       // Store fallback analysis
       try {
@@ -491,8 +377,7 @@ Respond in JSON format ONLY:
             analysis_type: 'question_selection_fallback',
             input_data: {
               available_questions: availableQuestions.length,
-              last_turn_analysis: lastTurnAnalysis,
-              last_turn_responses: lastTurnResponseData.length,
+              last_response_analysis: lastResponseAnalysis,
               is_first_question: isFirstQuestion,
               level: currentLevel,
               language: language,
@@ -535,7 +420,7 @@ Respond in JSON format ONLY:
       console.error('❌ Invalid question index:', aiResponse.selectedQuestionIndex);
       
       // Use smart fallback
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastTurnAnalysis, isFirstQuestion);
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
       
       return new Response(JSON.stringify({
         question: fallbackQuestion,
@@ -557,13 +442,11 @@ Respond in JSON format ONLY:
           analysis_type: 'question_selection',
           input_data: {
             available_questions: availableQuestions.length,
-            last_turn_analysis: lastTurnAnalysis,
-            last_turn_responses: lastTurnResponseData.length,
+            last_response_analysis: lastResponseAnalysis,
             is_first_question: isFirstQuestion,
             level: currentLevel,
             language: language,
-            processing_time: Date.now() - startTime,
-            prompt_size_tokens: Math.ceil(promptContent.length / 4) // Estimate tokens
+            processing_time: Date.now() - startTime
           },
           ai_response: {
             ...aiResponse,
@@ -581,8 +464,7 @@ Respond in JSON format ONLY:
       selectedQuestion: selectedQuestion.text.substring(0, 50) + '...',
       reasoning: aiResponse.reasoning,
       targetArea: aiResponse.targetArea,
-      processingTime: Date.now() - startTime,
-      promptSize: promptContent.length
+      processingTime: Date.now() - startTime
     });
 
     return new Response(JSON.stringify({
@@ -613,4 +495,3 @@ Respond in JSON format ONLY:
     });
   }
 });
-

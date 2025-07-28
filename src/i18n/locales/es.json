@@ -257,10 +257,6 @@
       "differentLevelsSelected": "Seleccionaron diferentes niveles. Deben seleccionar el mismo nivel para jugar.",
       "choosingNewLevel": "Tu pareja quiere cambiar de nivel. Eligiendo nuevo nivel...",
       "actionSyncError": "Error sincronizando acción"
-    },
-    "warnings": {
-      "syncFailed": "Advertencia de Sincronización",
-      "syncFailedDescription": "Tu pareja puede no ver la pantalla de evaluación inmediatamente. Por favor espera un momento."
     }
   },
   "proximitySelection": {
