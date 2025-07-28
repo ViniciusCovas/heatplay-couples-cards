@@ -43,28 +43,18 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     console.log('🗳️ Submitting level vote:', { roomId, playerId, level });
     
     try {
-      // Call the atomic level selection function using direct RPC call
-      const response = await fetch(`https://bbdeyohqrutithaziulp.supabase.co/rest/v1/rpc/handle_level_selection`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJiZGV5b2hxcnV0aXRoYXppdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNjM0MDcsImV4cCI6MjA2NzgzOTQwN30.hQOobohL9GanO4Wbf1zk-wp0tyvklJDEC8PMn6EPiog',
-          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJiZGV5b2hxcnV0aXRoYXppdWxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyNjM0MDcsImV4cCI6MjA2NzgzOTQwN30.hQOobohL9GanO4Wbf1zk-wp0tyvklJDEC8PMn6EPiog`
-        },
-        body: JSON.stringify({
-          room_id_param: roomId,
-          player_id_param: playerId,
-          selected_level_param: level
-        })
+      // Call the atomic level selection function using Supabase RPC
+      const { data: result, error } = await supabase.rpc('handle_level_selection', {
+        room_id_param: roomId,
+        player_id_param: playerId,
+        selected_level_param: level
       });
 
-      if (!response.ok) {
-        console.error('❌ RPC call failed:', response.status, response.statusText);
+      if (error) {
+        console.error('❌ RPC call failed:', error);
         toast.error('Failed to select level. Please try again.');
         return;
       }
-
-      const result = await response.json() as LevelSelectionResult;
       console.log('✅ Level selection result:', result);
 
       setSelectedLevel(level);
