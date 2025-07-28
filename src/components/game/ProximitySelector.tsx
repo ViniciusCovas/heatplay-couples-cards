@@ -52,11 +52,12 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
   };
 
   const handleConfirm = async () => {
-    console.log('🔍 Debug handleConfirm values:', { 
+    console.log('🔍 Debug handleConfirm START:', { 
       selectedOption, 
       roomId: room?.id, 
       playerId,
-      roomObject: room 
+      currentPlayerNumber,
+      participants: participants.map(p => ({ id: p.player_id, number: p.player_number }))
     });
     
     if (selectedOption === null || !room?.id || !playerId) {
