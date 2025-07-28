@@ -9,8 +9,9 @@ import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
 import { LanguageSelector } from '@/components/ui/language-selector';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
-export default function CreateRoom() {
+function CreateRoomContent() {
   const [level] = useState(1); // Default level
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
@@ -120,5 +121,13 @@ export default function CreateRoom() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+export default function CreateRoom() {
+  return (
+    <ProtectedRoute>
+      <CreateRoomContent />
+    </ProtectedRoute>
   );
 }
