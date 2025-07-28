@@ -37,7 +37,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
     });
     
     // Navigate when both players have answered
-    if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
+    if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-selection') {
       console.log('🎯 Both players answered, navigating to level select...');
       navigate(`/level-select?room=${roomCode}`);
     }
@@ -107,7 +107,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
       const updates: any = {
         proximity_response: selectedOption, // Keep legacy field for backward compatibility
         proximity_question_answered: true, // Set this immediately like the original logic
-        current_phase: 'level-select' // Advance immediately like the original logic
+        current_phase: 'level-selection' // Advance immediately like the original logic
       };
       
       if (playerNumber === 1) {

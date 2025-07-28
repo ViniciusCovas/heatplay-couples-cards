@@ -91,7 +91,7 @@ const ProximitySelection = () => {
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
-    if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
+    if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-selection') {
       navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);

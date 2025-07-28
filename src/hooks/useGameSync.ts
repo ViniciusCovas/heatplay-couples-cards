@@ -13,7 +13,7 @@ interface GameSyncAction {
 }
 
 interface GameState {
-  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-select' | 'waiting-for-evaluation';
+  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-selection' | 'waiting-for-evaluation';
   proximity_question_answered: boolean;
   proximity_response: boolean | null;
   player1_proximity_response: boolean | null;
@@ -209,7 +209,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         await supabase
           .from('game_rooms')
           .update({ 
-            current_phase: 'level-select',
+            current_phase: 'level-selection',
             current_card: null,
             used_cards: [],
             current_card_index: 0
