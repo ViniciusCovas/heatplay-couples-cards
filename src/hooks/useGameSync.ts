@@ -155,9 +155,12 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           window.dispatchEvent(new CustomEvent('partnerResponse', {
             detail: {
               response: action.action_data.response,
-              responseTime: action.action_data.responseTime,
+              responseTime: action.action_data.response_time,
               question: action.action_data.question,
-              from: action.action_data.from
+              from: action.action_data.from,
+              evaluating_player: action.action_data.evaluating_player,
+              evaluating_player_number: action.action_data.evaluating_player_number,
+              responding_player_number: action.action_data.responding_player_number
             }
           }));
         }

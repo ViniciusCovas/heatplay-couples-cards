@@ -393,6 +393,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_player_number: {
+        Args: { room_id_param: string; player_id_param: string }
+        Returns: number
+      }
       get_random_questions_for_level: {
         Args: {
           level_id_param: string

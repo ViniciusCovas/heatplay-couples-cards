@@ -209,7 +209,8 @@ const Game = () => {
       dbTurn: dbState.current_turn, 
       roomStatus: room?.status,
       playerNum, 
-      isMyTurnInDB 
+      isMyTurnInDB,
+      evaluationSyncData
     });
     
     switch (dbState.current_phase) {
@@ -218,7 +219,13 @@ const Game = () => {
       case 'response-input':
         return 'card-display'; // Always show card first, use local state for response input
       case 'evaluation':
-        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
+        // NEW: Use sync event data to determine who should evaluate
+        if (evaluationSyncData?.evaluating_player_number) {
+          const shouldEvaluate = evaluationSyncData.evaluating_player_number === playerNum;
+          console.log('🎯 Evaluation phase with sync data - shouldEvaluate:', shouldEvaluate, 'evaluating_player_number:', evaluationSyncData.evaluating_player_number, 'playerNum:', playerNum);
+          return shouldEvaluate ? 'evaluation' : 'card-display';
+        }
+        // Fallback to turn-based evaluation for backwards compatibility
         return isMyTurnInDB ? 'evaluation' : 'card-display';
       case 'final-report':
         return 'final-report';
@@ -276,6 +283,23 @@ const Game = () => {
       participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
     });
   }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
+
+  // State to track evaluation sync event data
+  const [evaluationSyncData, setEvaluationSyncData] = useState<any>(null);
+
+  // Listen for partner's response sync event to determine evaluation phase
+  useEffect(() => {
+    const handlePartnerResponse = (event: CustomEvent) => {
+      const syncData = event.detail;
+      console.log('🔄 Received partner response sync data:', syncData);
+      setEvaluationSyncData(syncData);
+    };
+
+    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    return () => {
+      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    };
+  }, []);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
