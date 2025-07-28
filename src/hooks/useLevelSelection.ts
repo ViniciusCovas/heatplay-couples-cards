@@ -57,29 +57,31 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       }
       console.log('✅ Level selection result:', result);
 
+      // Type assertion since we know this is our custom function return type
+      const typedResult = result as LevelSelectionResult;
       setSelectedLevel(level);
       setHasVoted(true);
 
       // Handle the response based on status
-      switch (result.status) {
+      switch (typedResult.status) {
         case 'waiting':
           setIsWaitingForPartner(true);
           setLevelsMismatch(false);
           setCountdown(null);
-          toast.info(result.message);
+          toast.info(typedResult.message);
           break;
 
         case 'agreed':
           setIsWaitingForPartner(false);
           setLevelsMismatch(false);
-          setAgreedLevel(result.selected_level || level);
+          setAgreedLevel(typedResult.selected_level || level);
           
           // Start countdown if provided
-          if (result.countdown) {
-            setCountdown(result.countdown);
-            toast.success(result.message);
+          if (typedResult.countdown) {
+            setCountdown(typedResult.countdown);
+            toast.success(typedResult.message);
             
-            let timeLeft = result.countdown;
+            let timeLeft = typedResult.countdown;
             const countdownInterval = setInterval(() => {
               timeLeft--;
               setCountdown(timeLeft);
@@ -96,7 +98,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setLevelsMismatch(true);
           setIsWaitingForPartner(false);
           setCountdown(null);
-          toast.error(result.message);
+          toast.error(typedResult.message);
           
           // Auto-reset after 3 seconds
           setTimeout(() => {
@@ -105,7 +107,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           break;
 
         case 'error':
-          toast.error(result.message);
+          toast.error(typedResult.message);
           break;
       }
     } catch (error) {
