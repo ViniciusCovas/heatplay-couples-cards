@@ -146,6 +146,7 @@ const ProximitySelection = () => {
             onSelect={handleProximitySelect}
             roomCode={roomCode}
             room={room}
+            participants={participants}
           />
         </div>
       </div>

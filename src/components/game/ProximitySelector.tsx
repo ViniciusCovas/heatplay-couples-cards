@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Users, MessageSquare, Mic, Gamepad2, Clock, Check } from "lucide-react";
 import { Logo } from "@/components/ui/animated-logo";
 import { useGameSync } from "@/hooks/useGameSync";
-import { useRoomService } from "@/hooks/useRoomService";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -14,14 +13,14 @@ interface ProximitySelectorProps {
   isVisible: boolean;
   onSelect: (isClose: boolean) => void;
   roomCode: string | null;
-  room: any; // Add room as a prop
+  room: any;
+  participants: any[]; // Add participants as a prop
 }
 
-export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: ProximitySelectorProps) => {
+export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, participants }: ProximitySelectorProps) => {
   const navigate = useNavigate();
   const playerId = usePlayerId();
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
-  const { participants } = useRoomService();
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
