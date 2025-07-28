@@ -39,7 +39,7 @@ const Game = () => {
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
-  const [levelCards, setLevelCards] = useState<string[]>([]);
+  const [levelCards, setLevelCards] = useState<{id: string, text: string}[]>([]);
   const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
@@ -54,7 +54,7 @@ const Game = () => {
   const maxRetries = 3;
 
   // Game state
-  const [currentCard, setCurrentCard] = useState('');
+  const [currentCard, setCurrentCard] = useState(''); // This stores the question ID
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
@@ -355,14 +355,14 @@ const Game = () => {
         // Get questions for this level
         const { data: questionsData, error: questionsError } = await supabase
           .from('questions')
-          .select('text')
+          .select('id, text')
           .eq('level_id', levelData.id)
           .eq('language', i18n.language)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
 
-        const questions = questionsData.map(q => q.text);
+        const questions = questionsData.map(q => ({ id: q.id, text: q.text }));
         setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
 
@@ -370,7 +370,8 @@ const Game = () => {
           level: currentLevel, 
           levelName: levelData.name, 
           questionCount: questions.length,
-          language: i18n.language
+          language: i18n.language,
+          questions: questions.map(q => q.text).slice(0, 3) // Show first 3 questions for debugging
         });
         
         // If language changed, reset the game state for new language
@@ -392,9 +393,9 @@ const Game = () => {
         console.error('Error fetching questions:', error);
         // Fallback to sample data
         const fallbackQuestions = [
-          t('game.fallbackQuestions.question1'),
-          t('game.fallbackQuestions.question2'),
-          t('game.fallbackQuestions.question3')
+          { id: 'fallback-1', text: t('game.fallbackQuestions.question1') },
+          { id: 'fallback-2', text: t('game.fallbackQuestions.question2') },
+          { id: 'fallback-3', text: t('game.fallbackQuestions.question3') }
         ];
         setLevelCards(fallbackQuestions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: t('game.level', { level: currentLevel }) }));
@@ -464,7 +465,7 @@ const Game = () => {
         setAiCardInfo(aiInfo);
         console.log('🎯 AI Card Info set successfully:', aiInfo);
         
-        return data.question.text;
+        return data.question.id;
       }
       
       console.log('⚠️ AI selection returned invalid data, falling back to random');
@@ -489,7 +490,7 @@ const Game = () => {
           room && !isGeneratingCard) {
         
         const usedCardsFromState = gameState?.used_cards || [];
-        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card));
+        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card.id));
         
         if (availableCards.length > 0) {
           // ALWAYS try AI selection first - for ALL cards, not just first
@@ -508,10 +509,12 @@ const Game = () => {
           
           // Fallback to random selection if AI fails
           if (!selectedCard) {
-            selectedCard = availableCards[Math.floor(Math.random() * availableCards.length)];
+            const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
+            selectedCard = randomQuestion.id;
             setAiCardInfo(null); // Clear AI info for random selection
             console.log('🎲 Using random card fallback:', { 
               selectedCard, 
+              selectedText: randomQuestion.text,
               availableCards: availableCards.length,
               usedCards: usedCardsFromState.length,
               isFirstQuestion
@@ -540,8 +543,8 @@ const Game = () => {
   }, [usedCards, totalCards]);
 
   // Deterministic card selection based on database state
-  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: string[], roundNumber: number) => {
-    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card));
+  const getNextCardDeterministic = (usedCardsFromDB: string[], levelCardsArray: any[], roundNumber: number) => {
+    const availableCards = levelCardsArray.filter(card => !usedCardsFromDB.includes(card.id));
     if (availableCards.length === 0) {
       return null;
     }
@@ -549,7 +552,7 @@ const Game = () => {
     // Use round number as seed for deterministic selection
     // This ensures all players get the same card based on the same database state
     const deterministicIndex = roundNumber % availableCards.length;
-    return availableCards[deterministicIndex];
+    return availableCards[deterministicIndex].id;
   };
 
   const startTimer = () => {
@@ -1075,7 +1078,7 @@ const Game = () => {
         {gamePhase === 'card-display' && (
           <>
             <GameCard
-              currentCard={currentCard}
+              currentCard={levelCards.find(card => card.id === currentCard)?.text || ''}
               currentLevel={currentLevel}
               showCard={showCard}
               cardIndex={usedCards.length}
