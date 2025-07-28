@@ -104,8 +104,8 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
-  // Show loading if we don't have room yet or are retrying
-  if (!room || isRetrying) {
+  // Show loading if we don't have room yet, are retrying, or participants aren't loaded
+  if (!room || isRetrying || participants.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
