@@ -21,7 +21,7 @@ import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'waiting-for-evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -219,19 +219,19 @@ const Game = () => {
       case 'response-input':
         return 'card-display'; // Always show card first, use local state for response input
       case 'evaluation':
-        // NEW: Use sync event data to determine who should evaluate
+        // PRIORITIZE sync event data to determine who should evaluate
         if (evaluationSyncData?.evaluating_player_number) {
           const shouldEvaluate = evaluationSyncData.evaluating_player_number === playerNum;
           console.log('🎯 Evaluation phase with sync data - shouldEvaluate:', shouldEvaluate, 'evaluating_player_number:', evaluationSyncData.evaluating_player_number, 'playerNum:', playerNum);
-          return shouldEvaluate ? 'evaluation' : 'card-display';
+          return shouldEvaluate ? 'evaluation' : 'waiting-for-evaluation';
         }
-        // Enhanced fallback: check for actual unevaluated responses
+        // Fallback to database turn logic
         if (isMyTurnInDB) {
-          console.log('🎯 I am the evaluator based on turn, checking for pending evaluations');
+          console.log('🎯 I am the evaluator based on database turn');
           return 'evaluation';
         } else {
-          console.log('🎯 Not my turn to evaluate, staying in card-display');
-          return 'card-display';
+          console.log('🎯 Not my turn to evaluate, waiting for evaluation');
+          return 'waiting-for-evaluation';
         }
       case 'final-report':
         return 'final-report';
@@ -1240,7 +1240,7 @@ const Game = () => {
         </div>
 
         {/* Game Content based on current phase */}
-        {gamePhase === 'card-display' && (
+        {(gamePhase === 'card-display' || gamePhase === 'waiting-for-evaluation') && (
           <>
             <GameCard
               currentCard={currentCard}
