@@ -143,6 +143,10 @@
     },
     "confirm": "Confirm selection",
     "confirmed": "Confirmed! ✓",
+    "waitingForPartner": "Waiting for your partner...",
+    "bothAnswered": "Both answered! ✓",
+    "processing": "Processing...",
+    "pleaseWait": "Please wait a moment",
     "advancing": "Advancing...",
     "preparing": "Preparing to connect..."
   },

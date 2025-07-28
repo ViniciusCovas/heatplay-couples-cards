@@ -142,6 +142,10 @@
     },
     "confirm": "Confirmar selección",
     "confirmed": "¡Confirmado! ✓",
+    "waitingForPartner": "Esperando a tu pareja...",
+    "bothAnswered": "¡Ambos respondieron! ✓",
+    "processing": "Procesando...",
+    "pleaseWait": "Por favor espera un momento",
     "advancing": "Avanzando...",
     "preparing": "Preparándose para conectar..."
   },

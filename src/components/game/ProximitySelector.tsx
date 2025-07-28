@@ -20,25 +20,37 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
   const navigate = useNavigate();
   const playerId = usePlayerId();
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
+  const { participants } = useRoomService();
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
   const { t } = useTranslation();
 
-  // Handle automatic navigation when someone has answered
+  // Handle automatic navigation when both players have answered
   useEffect(() => {
     console.log('🔍 ProximitySelector useEffect:', { 
       gameState, 
       proximity_answered: gameState?.proximity_question_answered,
-      current_phase: gameState?.current_phase 
+      current_phase: gameState?.current_phase,
+      player1_response: gameState?.player1_proximity_response,
+      player2_response: gameState?.player2_proximity_response
     });
     
-    // Navigate when someone has answered
+    // Navigate when both players have answered
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-select') {
-      console.log('🎯 Someone answered, navigating to level select...');
+      console.log('🎯 Both players answered, navigating to level select...');
       navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);
+
+  // Check if current player has already answered
+  const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
+  const currentPlayerHasAnswered = currentPlayerNumber === 1 
+    ? gameState?.player1_proximity_response !== null && gameState?.player1_proximity_response !== undefined
+    : gameState?.player2_proximity_response !== null && gameState?.player2_proximity_response !== undefined;
+  const otherPlayerHasAnswered = currentPlayerNumber === 1
+    ? gameState?.player2_proximity_response !== null && gameState?.player2_proximity_response !== undefined
+    : gameState?.player1_proximity_response !== null && gameState?.player1_proximity_response !== undefined;
 
   const handleSelect = (isClose: boolean) => {
     console.log('🎯 ProximitySelector option selected:', { isClose });
@@ -69,17 +81,40 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
     setWaitingForPartner(true);
 
     try {
-      // Update game state in database
-      console.log('📝 Updating game state...');
-      await updateGameState({
-        proximity_response: selectedOption,
-        proximity_question_answered: true,
-        current_phase: 'level-select'
-      });
+      // Get room participants to determine player number
+      const participant = participants.find(p => p.player_id === playerId);
+      const playerNumber = participant?.player_number;
+      
+      console.log('📝 Player number for proximity response:', playerNumber);
+      
+      if (!playerNumber) {
+        console.error('❌ Could not determine player number');
+        setWaitingForPartner(false);
+        setIsConfirmed(false);
+        return;
+      }
+
+      // Update individual player response based on player number
+      const updates: any = {
+        proximity_response: selectedOption, // Keep legacy field for backward compatibility
+      };
+      
+      if (playerNumber === 1) {
+        updates.player1_proximity_response = selectedOption;
+      } else {
+        updates.player2_proximity_response = selectedOption;
+      }
+      
+      console.log('📝 Updating game state with:', updates);
+      await updateGameState(updates);
       
       // Send sync action to notify other player
       console.log('🔄 Sending sync action...');
-      await syncAction('proximity_answer', { isClose: selectedOption });
+      await syncAction('proximity_answer', { 
+        isClose: selectedOption, 
+        playerNumber,
+        playerId 
+      });
       
       console.log('✅ Proximity selection confirmed successfully');
       
@@ -123,8 +158,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
           </div>
         </div>
 
-        {/* Waiting State */}
-        {waitingForPartner ? (
+        {/* Different states based on player responses */}
+        {currentPlayerHasAnswered && !otherPlayerHasAnswered ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-primary animate-pulse" />
@@ -133,7 +168,31 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
+              {t('proximitySelector.waitingForPartner')}
+            </p>
+          </div>
+        ) : currentPlayerHasAnswered && otherPlayerHasAnswered ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-4">
+              <Check className="w-8 h-8 text-green-600 animate-pulse" />
+            </div>
+            <h3 className="text-lg font-brand text-foreground mb-2">
+              {t('proximitySelector.bothAnswered')}
+            </h3>
+            <p className="text-sm text-muted-foreground">
               {t('proximitySelector.advancing')}
+            </p>
+          </div>
+        ) : waitingForPartner ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
+              <Clock className="w-8 h-8 text-primary animate-pulse" />
+            </div>
+            <h3 className="text-lg font-brand text-foreground mb-2">
+              {t('proximitySelector.processing')}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t('proximitySelector.pleaseWait')}
             </p>
           </div>
         ) : (

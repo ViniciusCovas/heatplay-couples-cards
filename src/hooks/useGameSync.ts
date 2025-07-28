@@ -16,6 +16,8 @@ interface GameState {
   current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-select' | 'waiting-for-evaluation';
   proximity_question_answered: boolean;
   proximity_response: boolean | null;
+  player1_proximity_response: boolean | null;
+  player2_proximity_response: boolean | null;
   current_turn: 'player1' | 'player2';
   current_card: string | null;
   current_card_index: number;
@@ -45,7 +47,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       try {
         const { data: room, error } = await supabase
           .from('game_rooms')
-          .select('current_phase, proximity_question_answered, proximity_response, current_turn, current_card, current_card_index, used_cards')
+          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards')
           .eq('id', roomId)
           .single();
 
@@ -56,6 +58,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_phase: (room.current_phase as GameState['current_phase']) || 'proximity-selection',
             proximity_question_answered: room.proximity_question_answered || false,
             proximity_response: room.proximity_response,
+            player1_proximity_response: room.player1_proximity_response,
+            player2_proximity_response: room.player2_proximity_response,
             current_turn: (room.current_turn as GameState['current_turn']) || 'player1',
             current_card: room.current_card,
             current_card_index: room.current_card_index || 0,
@@ -107,6 +111,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_phase: (updatedRoom.current_phase as GameState['current_phase']) || 'proximity-selection',
             proximity_question_answered: updatedRoom.proximity_question_answered || false,
             proximity_response: updatedRoom.proximity_response,
+            player1_proximity_response: updatedRoom.player1_proximity_response,
+            player2_proximity_response: updatedRoom.player2_proximity_response,
             current_turn: (updatedRoom.current_turn as GameState['current_turn']) || 'player1',
             current_card: updatedRoom.current_card,
             current_card_index: updatedRoom.current_card_index || 0,
@@ -258,6 +264,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       if (updates.current_phase !== undefined) updateData.current_phase = updates.current_phase;
       if (updates.proximity_question_answered !== undefined) updateData.proximity_question_answered = updates.proximity_question_answered;
       if (updates.proximity_response !== undefined) updateData.proximity_response = updates.proximity_response;
+      if (updates.player1_proximity_response !== undefined) updateData.player1_proximity_response = updates.player1_proximity_response;
+      if (updates.player2_proximity_response !== undefined) updateData.player2_proximity_response = updates.player2_proximity_response;
       if (updates.current_turn !== undefined) updateData.current_turn = updates.current_turn;
       if (updates.current_card !== undefined) updateData.current_card = updates.current_card;
       if (updates.current_card_index !== undefined) updateData.current_card_index = updates.current_card_index;
