@@ -108,6 +108,8 @@ export type Database = {
           finished_at: string | null
           id: string
           level: number
+          player1_proximity_response: boolean | null
+          player2_proximity_response: boolean | null
           proximity_question_answered: boolean | null
           proximity_response: boolean | null
           room_code: string
@@ -129,6 +131,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           level?: number
+          player1_proximity_response?: boolean | null
+          player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code: string
@@ -150,6 +154,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           level?: number
+          player1_proximity_response?: boolean | null
+          player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code?: string
