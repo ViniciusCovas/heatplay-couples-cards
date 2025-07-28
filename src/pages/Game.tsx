@@ -193,7 +193,7 @@ const Game = () => {
     gamePhase: gameState?.current_phase 
   });
   
-  // Helper function to derive local phase from database state
+  // Helper function to derive local phase from database state with improved evaluation detection
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
     // Check if room is finished first - this overrides any phase logic
     if (room?.status === 'finished') {
@@ -225,8 +225,14 @@ const Game = () => {
           console.log('🎯 Evaluation phase with sync data - shouldEvaluate:', shouldEvaluate, 'evaluating_player_number:', evaluationSyncData.evaluating_player_number, 'playerNum:', playerNum);
           return shouldEvaluate ? 'evaluation' : 'card-display';
         }
-        // Fallback to turn-based evaluation for backwards compatibility
-        return isMyTurnInDB ? 'evaluation' : 'card-display';
+        // Enhanced fallback: check for actual unevaluated responses
+        if (isMyTurnInDB) {
+          console.log('🎯 I am the evaluator based on turn, checking for pending evaluations');
+          return 'evaluation';
+        } else {
+          console.log('🎯 Not my turn to evaluate, staying in card-display');
+          return 'card-display';
+        }
       case 'final-report':
         return 'final-report';
       default:
@@ -300,6 +306,51 @@ const Game = () => {
       window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
     };
   }, []);
+
+  // Enhanced sync event listener to capture evaluation data from database
+  useEffect(() => {
+    const fetchLatestSyncEvents = async () => {
+      if (!room?.id) return;
+
+      try {
+        const { data: syncEvents, error } = await supabase
+          .from('game_sync')
+          .select('*')
+          .eq('room_id', room.id)
+          .eq('action_type', 'response_submit')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) {
+          console.error('Error fetching sync events:', error);
+          return;
+        }
+
+        if (syncEvents && syncEvents.length > 0) {
+          const latestSync = syncEvents[0];
+          const syncData = latestSync.action_data as any;
+          
+          console.log('🔄 Processing latest sync event from database:', { 
+            syncData, 
+            myPlayerNumber: playerNumber,
+            evaluatingPlayerNumber: syncData?.evaluating_player_number 
+          });
+          
+          // Update evaluation sync data if this affects me
+          if (syncData?.evaluating_player_number === playerNumber || syncData?.responding_player_number === playerNumber) {
+            setEvaluationSyncData(syncData);
+          }
+        }
+      } catch (error) {
+        console.error('Error processing sync events:', error);
+      }
+    };
+
+    // Fetch sync events when gameState changes to evaluation phase
+    if (gameState?.current_phase === 'evaluation') {
+      fetchLatestSyncEvents();
+    }
+  }, [gameState?.current_phase, room?.id, playerNumber]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
@@ -1279,13 +1330,27 @@ const Game = () => {
           startTime={cardDisplayStartTime}
         />
 
-         {/* Response Evaluation Modal - Show only for evaluation phase */}
-         {pendingEvaluation && gamePhase === 'evaluation' && (
+         {/* Response Evaluation Modal - Enhanced with sync data fallback */}
+         {gamePhase === 'evaluation' && (
            <ResponseEvaluation
              isVisible={true}
-             question={pendingEvaluation.question}
-             response={pendingEvaluation.response}
-             playerName={pendingEvaluation.playerName}
+             question={
+               evaluationSyncData?.question || 
+               pendingEvaluation?.question || 
+               currentCard || 
+               ''
+             }
+             response={
+               evaluationSyncData?.response || 
+               pendingEvaluation?.response || 
+               ''
+             }
+             playerName={
+               evaluationSyncData ? 
+                 `Player ${evaluationSyncData.responding_player_number || ''}` :
+                 pendingEvaluation?.playerName || 
+                 t('game.partner')
+             }
              onSubmitEvaluation={handleEvaluationSubmit}
              onCancel={handleEvaluationCancel}
              isSubmitting={isSubmitting}

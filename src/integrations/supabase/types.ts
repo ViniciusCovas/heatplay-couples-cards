@@ -393,6 +393,13 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      fix_stuck_evaluation_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          room_id: string
+          action_taken: string
+        }[]
+      }
       get_player_number: {
         Args: { room_id_param: string; player_id_param: string }
         Returns: number
