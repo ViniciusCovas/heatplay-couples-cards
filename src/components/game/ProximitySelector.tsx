@@ -8,6 +8,7 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProximitySelectorProps {
   isVisible: boolean;
@@ -70,20 +71,34 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
       return;
     }
     
-    console.log('🎯 ProximitySelector handleConfirm:', { selectedOption, roomId: room?.id, playerId });
-    
     setIsConfirmed(true);
     setWaitingForPartner(true);
 
     try {
-      // Get room participants to determine player number
-      const participant = participants.find(p => p.player_id === playerId);
-      const playerNumber = participant?.player_number;
+      let playerNumber = currentPlayerNumber;
       
-      console.log('📝 Player number for proximity response:', playerNumber);
-      
+      // If we can't get the player number from participants, use database fallback
       if (!playerNumber) {
-        console.error('❌ Could not determine player number');
+        console.log('🔍 Player number not found in participants, using database fallback...');
+        
+        const { data: dbPlayerNumber, error } = await supabase.rpc('get_player_number', {
+          room_id_param: room.id,
+          player_id_param: playerId
+        });
+        
+        if (error) {
+          console.error('❌ Database fallback failed:', error);
+          setWaitingForPartner(false);
+          setIsConfirmed(false);
+          return;
+        }
+        
+        playerNumber = dbPlayerNumber as 1 | 2;
+        console.log('📝 Got player number from database:', playerNumber);
+      }
+      
+      if (!playerNumber || (playerNumber !== 1 && playerNumber !== 2)) {
+        console.error('❌ Could not determine valid player number even with database fallback');
         setWaitingForPartner(false);
         setIsConfirmed(false);
         return;
@@ -170,14 +185,29 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Together Option */}
-            <div 
-              onClick={() => handleSelect(true)}
-              className={`group relative p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20 ${
-                selectedOption === true 
-                  ? 'border-green-500 bg-green-500/20 scale-[1.02]' 
-                  : 'border-green-500/20 hover:border-green-500/40'
-              }`}
+            {/* Show loading if participants aren't loaded yet */}
+            {participants.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center mb-4">
+                  <Clock className="w-8 h-8 text-primary animate-spin" />
+                </div>
+                <h3 className="text-lg font-brand text-foreground mb-2">
+                  {t('proximitySelector.loading')}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t('proximitySelector.waitingConnection')}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Together Option */}
+                <div 
+                  onClick={() => handleSelect(true)}
+                  className={`group relative p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-blue-500/10 border-2 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-lg hover:shadow-green-500/20 ${
+                    selectedOption === true 
+                      ? 'border-green-500 bg-green-500/20 scale-[1.02]' 
+                      : 'border-green-500/20 hover:border-green-500/40'
+                  }`}
             >
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
@@ -234,18 +264,20 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room }: Proxi
               <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             
-            {/* Confirm Button */}
-            {selectedOption !== null && !isConfirmed && (
-              <div className="pt-4">
-                <Button 
-                  onClick={handleConfirm}
-                  className="w-full h-14 text-lg font-brand btn-gradient-primary"
-                  size="lg"
-                >
-                  <Check className="w-5 h-5 mr-2" />
-                  {t('proximitySelector.confirm')}
-                </Button>
-              </div>
+                {/* Confirm Button */}
+                {selectedOption !== null && !isConfirmed && (
+                  <div className="pt-4">
+                    <Button 
+                      onClick={handleConfirm}
+                      className="w-full h-14 text-lg font-brand btn-gradient-primary"
+                      size="lg"
+                    >
+                      <Check className="w-5 h-5 mr-2" />
+                      {t('proximitySelector.confirm')}
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
