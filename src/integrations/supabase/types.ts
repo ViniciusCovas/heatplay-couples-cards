@@ -99,7 +99,10 @@ export type Database = {
           created_at: string
           created_by: string | null
           current_card: string | null
+          current_card_ai_reasoning: string | null
+          current_card_ai_target_area: string | null
           current_card_index: number | null
+          current_card_selection_method: string | null
           current_phase: string | null
           current_turn: string | null
           finished_at: string | null
@@ -108,6 +111,7 @@ export type Database = {
           proximity_question_answered: boolean | null
           proximity_response: boolean | null
           room_code: string
+          selected_language: string | null
           started_at: string | null
           status: string
           used_cards: string[] | null
@@ -116,7 +120,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_card?: string | null
+          current_card_ai_reasoning?: string | null
+          current_card_ai_target_area?: string | null
           current_card_index?: number | null
+          current_card_selection_method?: string | null
           current_phase?: string | null
           current_turn?: string | null
           finished_at?: string | null
@@ -125,6 +132,7 @@ export type Database = {
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code: string
+          selected_language?: string | null
           started_at?: string | null
           status?: string
           used_cards?: string[] | null
@@ -133,7 +141,10 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_card?: string | null
+          current_card_ai_reasoning?: string | null
+          current_card_ai_target_area?: string | null
           current_card_index?: number | null
+          current_card_selection_method?: string | null
           current_phase?: string | null
           current_turn?: string | null
           finished_at?: string | null
@@ -142,6 +153,7 @@ export type Database = {
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
           room_code?: string
+          selected_language?: string | null
           started_at?: string | null
           status?: string
           used_cards?: string[] | null
@@ -289,9 +301,11 @@ export type Database = {
           category: string | null
           created_at: string
           id: string
+          intensity: number | null
           is_active: boolean
           language: string
           level_id: string
+          question_type: string | null
           text: string
           updated_at: string
         }
@@ -299,9 +313,11 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          intensity?: number | null
           is_active?: boolean
           language?: string
           level_id: string
+          question_type?: string | null
           text: string
           updated_at?: string
         }
@@ -309,9 +325,11 @@ export type Database = {
           category?: string | null
           created_at?: string
           id?: string
+          intensity?: number | null
           is_active?: boolean
           language?: string
           level_id?: string
+          question_type?: string | null
           text?: string
           updated_at?: string
         }
@@ -375,6 +393,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      fix_stuck_evaluation_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          room_id: string
+          action_taken: string
+        }[]
+      }
+      get_player_number: {
+        Args: { room_id_param: string; player_id_param: string }
+        Returns: number
+      }
       get_random_questions_for_level: {
         Args: {
           level_id_param: string
@@ -392,6 +421,10 @@ export type Database = {
           is_active: boolean
         }[]
       }
+      get_used_question_ids: {
+        Args: { room_id_param: string }
+        Returns: string[]
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -408,9 +441,20 @@ export type Database = {
         Args: { user_id: string }
         Returns: boolean
       }
+      normalize_used_cards: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       promote_to_admin: {
         Args: { user_email: string }
         Returns: boolean
+      }
+      repair_stuck_evaluations: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          room_id: string
+          action_taken: string
+        }[]
       }
     }
     Enums: {
