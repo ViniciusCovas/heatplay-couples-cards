@@ -10,19 +10,32 @@ import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
+import { CreditBalance } from '@/components/credits/CreditBalance';
+import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal';
+import { useCredits } from '@/hooks/useCredits';
 
 function CreateRoomContent() {
   const [level] = useState(1); // Default level
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
+  const [showCreditModal, setShowCreditModal] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
+  const { credits } = useCredits();
   const { t } = useTranslation();
 
   const handleCreateRoom = async (): Promise<void> => {
+    // Check if user has credits first
+    if (credits < 1) {
+      setShowCreditModal(true);
+      return;
+    }
+
     setIsCreating(true);
     try {
-      const code = await createRoom(level);
+      const code = await createRoom(level, user?.id);
       setRoomCode(code);
       toast.success(t('messages.roomCreated'));
     } catch (error) {
@@ -70,7 +83,10 @@ function CreateRoomContent() {
             size="medium"
             className="hover:scale-105 transition-transform duration-300"
           />
-          <LanguageSelector />
+          <div className="flex items-center gap-3">
+            <CreditBalance />
+            <LanguageSelector />
+          </div>
         </div>
       </div>
       
@@ -120,6 +136,17 @@ function CreateRoomContent() {
           </div>
         </CardContent>
       </Card>
+
+      <CreditPurchaseModal 
+        open={showCreditModal}
+        onOpenChange={setShowCreditModal}
+        onPurchaseComplete={() => {
+          // After purchase, try creating room again
+          setTimeout(() => {
+            handleCreateRoom();
+          }, 1000);
+        }}
+      />
     </div>
   );
 }

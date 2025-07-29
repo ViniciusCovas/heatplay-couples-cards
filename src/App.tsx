@@ -11,6 +11,7 @@ import ProximitySelection from "./pages/ProximitySelection";
 import LevelSelect from "./pages/LevelSelect";
 import Game from "./pages/Game";
 import Auth from "./pages/Auth";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLevels from "./pages/AdminLevels";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/level-select" element={<LevelSelect />} />
             <Route path="/game" element={<Game />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/admin-panel-secret" element={
               <AdminGuard>
                 <AdminDashboard />
