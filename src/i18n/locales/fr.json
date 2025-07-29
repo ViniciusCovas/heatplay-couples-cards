@@ -417,5 +417,25 @@
     "personalizedTips": "Conseils Personnalisés",
     "culturalNotes": "Notes Culturelles",
     "nextSession": "Prochaine Session"
+  },
+  "credits": {
+    "modal": {
+      "title": "Choisissez Votre Plan de Connexion",
+      "subtitle": "Débloquez des conversations plus profondes et des connexions significatives",
+      "features_title": "Ce Qui Est Inclus dans Chaque Session",
+      "session_feature": "Questions illimitées et insights IA",
+      "analysis_feature": "Analyse profonde de connexion",
+      "progress_feature": "Suivi des progrès relationnels",
+      "support_feature": "Support premium 24/7",
+      "most_popular": "Le Plus Populaire",
+      "best_value": "Meilleure Valeur",
+      "limited_time": "Temps Limité",
+      "per_session": "par session",
+      "total_sessions": "sessions au total",
+      "you_save": "Vous économisez",
+      "purchase_button": "Commencer à Se Connecter",
+      "loading": "Traitement...",
+      "currency": "€"
+    }
   }
 }

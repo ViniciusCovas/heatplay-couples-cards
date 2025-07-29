@@ -57,6 +57,14 @@ const config: Config = {
 					DEFAULT: "hsl(var(--card))",
 					foreground: "hsl(var(--card-foreground))",
 				},
+				// Romantic color mappings
+				romantic: {
+					primary: "hsl(var(--primary))", // Pink
+					secondary: "hsl(var(--secondary))", // Coral
+					accent: "hsl(var(--accent))", // Purple
+					glow: "hsl(45 100% 75%)", // Gold accent for highlights
+					muted: "hsl(var(--muted))",
+				},
 			},
 			borderRadius: {
 				lg: "var(--radius)",
