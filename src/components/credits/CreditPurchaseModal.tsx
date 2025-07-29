@@ -21,12 +21,6 @@ const packageIcons = {
   endless_heat: Infinity
 };
 
-const popularityStats = {
-  first_spark: "Para comenzar",
-  date_night_duo: "Elegido por el 65%",
-  weekend_blaze: "Mejor valor",
-  endless_heat: "Sin límites"
-};
 
 export const CreditPurchaseModal = ({ open, onOpenChange, onPurchaseComplete }: CreditPurchaseModalProps) => {
   const { purchaseCredits, purchasing } = useCredits();
@@ -50,34 +44,17 @@ export const CreditPurchaseModal = ({ open, onOpenChange, onPurchaseComplete }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(
-        "max-w-6xl max-h-[95vh] overflow-hidden",
-        isMobile ? "w-[95vw] h-[95vh] p-0" : "sm:max-w-5xl"
+        <DialogContent className={cn(
+        "max-w-6xl max-h-[95vh]",
+        isMobile ? "w-[95vw] h-[95vh] p-0 overflow-y-auto" : "sm:max-w-5xl overflow-y-auto"
       )}>
         {/* Header */}
         <div className="relative overflow-hidden bg-gradient-to-br from-primary via-accent to-secondary p-6 text-white">
           <div className="relative z-10">
             <DialogHeader className="text-center space-y-2">
-              <div className="flex items-center justify-center space-x-2 mb-2">
-                <Crown className="h-8 w-8 text-yellow-400 animate-pulse" />
-                <DialogTitle className="text-3xl font-brand font-bold text-white">
-                  {t('credits.modal.title')}
-                </DialogTitle>
-                <Crown className="h-8 w-8 text-yellow-400 animate-pulse" />
-              </div>
-              <p className="text-white/90 text-lg max-w-2xl mx-auto">
-                {t('credits.modal.subtitle')}
-              </p>
-              <div className="flex items-center justify-center space-x-4 mt-4 text-sm text-white/80">
-                <div className="flex items-center space-x-1">
-                  <Zap className="h-4 w-4" />
-                  <span>{t('credits.modal.limited_time')}</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Star className="h-4 w-4" />
-                  <span>{t('credits.modal.best_value')}</span>
-                </div>
-              </div>
+              <DialogTitle className="text-3xl font-brand font-bold text-white">
+                {t('credits.modal.title')}
+              </DialogTitle>
             </DialogHeader>
           </div>
           
@@ -146,7 +123,7 @@ export const CreditPurchaseModal = ({ open, onOpenChange, onPurchaseComplete }: 
                         )} />
                       </div>
                       <p className="text-xs text-muted-foreground font-medium">
-                        {popularityStats[pkg.id as keyof typeof popularityStats]}
+                        {t(`credits.modal.popularity.${pkg.id}`)}
                       </p>
                     </div>
 

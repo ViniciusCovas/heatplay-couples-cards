@@ -420,22 +420,24 @@
   },
   "credits": {
     "modal": {
-      "title": "Choisissez Votre Plan de Connexion",
-      "subtitle": "Débloquez des conversations plus profondes et des connexions significatives",
-      "features_title": "Ce Qui Est Inclus dans Chaque Session",
-      "session_feature": "Questions illimitées et insights IA",
-      "analysis_feature": "Analyse profonde de connexion",
-      "progress_feature": "Suivi des progrès relationnels",
-      "support_feature": "Support premium 24/7",
-      "most_popular": "Le Plus Populaire",
-      "best_value": "Meilleure Valeur",
-      "limited_time": "Temps Limité",
+      "title": "Sélectionnez Votre Plan",
+      "most_popular": "Plus Populaire",
+      "currency": "$",
       "per_session": "par session",
-      "total_sessions": "sessions au total",
-      "you_save": "Vous économisez",
-      "purchase_button": "Commencer à Se Connecter",
+      "total_sessions": "sessions totales",
+      "purchase_button": "Commencer",
       "loading": "Traitement...",
-      "currency": "€"
+      "features_title": "Ce Que Vous Obtenez",
+      "session_feature": "Sessions intimes illimitées avec votre partenaire",
+      "analysis_feature": "Insights et analyses de relation alimentés par l'IA",
+      "progress_feature": "Suivez les progrès de votre connexion au fil du temps",
+      "support_feature": "Support client 24/7 et guidance relationnelle",
+      "popularity": {
+        "first_spark": "Parfait pour commencer",
+        "date_night_duo": "Choisi par 65%",
+        "weekend_blaze": "Meilleure valeur",
+        "endless_heat": "Illimité"
+      }
     }
   }
 }

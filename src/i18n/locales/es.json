@@ -420,22 +420,24 @@
   },
   "credits": {
     "modal": {
-      "title": "Elige Tu Plan de Conexión",
-      "subtitle": "Desbloquea conversaciones más profundas y conexiones significativas",
-      "features_title": "Qué Incluye Cada Sesión",
-      "session_feature": "Preguntas ilimitadas e insights de IA",
-      "analysis_feature": "Análisis profundo de conexión",
-      "progress_feature": "Seguimiento del progreso de la relación",
-      "support_feature": "Soporte premium 24/7",
+      "title": "Selecciona Tu Plan",
       "most_popular": "Más Popular",
-      "best_value": "Mejor Valor",
-      "limited_time": "Tiempo Limitado",
+      "currency": "$",
       "per_session": "por sesión",
-      "total_sessions": "sesiones en total",
-      "you_save": "Ahorras",
-      "purchase_button": "Comenzar a Conectar",
+      "total_sessions": "sesiones totales",
+      "purchase_button": "Comenzar",
       "loading": "Procesando...",
-      "currency": "$"
+      "features_title": "Lo Que Obtienes",
+      "session_feature": "Sesiones íntimas ilimitadas con tu pareja",
+      "analysis_feature": "Análisis e insights de relación potenciados por IA",
+      "progress_feature": "Rastrea el progreso de tu conexión a lo largo del tiempo",
+      "support_feature": "Soporte al cliente 24/7 y orientación en relaciones",
+      "popularity": {
+        "first_spark": "Para comenzar",
+        "date_night_duo": "Elegido por el 65%",
+        "weekend_blaze": "Mejor valor",
+        "endless_heat": "Sin límites"
+      }
     }
   }
 }
