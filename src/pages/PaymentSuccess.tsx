@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
+import { toast } from 'sonner';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -11,29 +12,51 @@ export default function PaymentSuccess() {
   const { verifyPayment } = useCredits();
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const sessionId = searchParams.get('session_id');
   const credits = searchParams.get('credits');
 
+  const handleVerification = async (isRetry = false) => {
+    if (!sessionId) {
+      setError('No se encontró ID de sesión en la URL');
+      setVerifying(false);
+      return;
+    }
+
+    if (isRetry) {
+      setVerifying(true);
+      setError(null);
+    }
+
+    try {
+      console.log(`[PaymentSuccess] Attempting verification for session: ${sessionId}, retry: ${retryCount}`);
+      const success = await verifyPayment(sessionId);
+      
+      if (success) {
+        setVerified(true);
+        setError(null);
+      } else {
+        setError('La verificación del pago falló. Por favor, contacta soporte si tu tarjeta fue cobrada.');
+      }
+    } catch (error) {
+      console.error('Payment verification failed:', error);
+      setError('Error al verificar el pago. Por favor, intenta de nuevo.');
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+    handleVerification(true);
+  };
+
   useEffect(() => {
-    const handleVerification = async () => {
-      if (!sessionId) {
-        setVerifying(false);
-        return;
-      }
-
-      try {
-        const success = await verifyPayment(sessionId);
-        setVerified(success);
-      } catch (error) {
-        console.error('Payment verification failed:', error);
-      } finally {
-        setVerifying(false);
-      }
-    };
-
+    console.log('[PaymentSuccess] Component mounted', { sessionId, credits });
     handleVerification();
-  }, [sessionId, verifyPayment]);
+  }, [sessionId]);
 
   const handleContinue = () => {
     navigate('/');
@@ -67,6 +90,7 @@ export default function PaymentSuccess() {
           {verifying ? (
             <p className="text-muted-foreground">
               Estamos confirmando tu pago. Esto puede tomar unos segundos...
+              {retryCount > 0 && <span className="block text-sm mt-1">Intento {retryCount + 1}</span>}
             </p>
           ) : verified ? (
             <>
@@ -78,18 +102,42 @@ export default function PaymentSuccess() {
               </p>
             </>
           ) : (
-            <p className="text-muted-foreground">
-              Hubo un problema al verificar tu pago. Por favor, contacta soporte si los créditos no aparecen en tu cuenta.
-            </p>
+            <div className="space-y-3">
+              <p className="text-muted-foreground">
+                {error || "Hubo un problema al verificar tu pago."}
+              </p>
+              <p className="text-sm text-orange-600">
+                Si tu tarjeta fue cobrada, tus créditos aparecerán pronto. Puedes intentar verificar de nuevo o contactar soporte.
+              </p>
+              {!sessionId && (
+                <p className="text-xs text-red-500">
+                  URL inválida - falta el ID de sesión de pago.
+                </p>
+              )}
+            </div>
           )}
 
-          <Button 
-            onClick={handleContinue}
-            className="w-full"
-            disabled={verifying}
-          >
-            Continuar
-          </Button>
+          <div className="flex gap-2">
+            {!verified && !verifying && sessionId && (
+              <Button 
+                onClick={handleRetry}
+                variant="outline"
+                disabled={verifying}
+                className="flex-1"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Verificar de nuevo
+              </Button>
+            )}
+            
+            <Button 
+              onClick={handleContinue}
+              className={verified || !sessionId ? "w-full" : "flex-1"}
+              disabled={verifying}
+            >
+              {verified ? "Continuar" : "Ir al inicio"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
