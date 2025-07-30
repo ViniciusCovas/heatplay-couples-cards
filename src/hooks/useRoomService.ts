@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { usePlayerId } from '@/hooks/usePlayerId';
+import { useTranslation } from 'react-i18next';
 
 export interface GameRoom {
   id: string;
@@ -45,6 +46,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
   const playerId = usePlayerId();
+  const { i18n } = useTranslation();
 
   const generateRoomCode = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -67,7 +69,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
           status: 'waiting',
           created_by: playerId,
           credit_status: 'pending_credit',
-          host_user_id: userId || null
+          host_user_id: userId || null,
+          selected_language: i18n.language || 'en' // Set the creator's language
         })
         .select()
         .single();
@@ -96,7 +99,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     } catch (error) {
       throw error;
     }
-  }, [playerId]);
+  }, [playerId, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     if (!playerId) {

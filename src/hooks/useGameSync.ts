@@ -22,6 +22,7 @@ interface GameState {
   current_card: string | null;
   current_card_index: number;
   used_cards: string[];
+  selected_language?: string;
 }
 
 interface UseGameSyncReturn {
@@ -47,7 +48,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       try {
         const { data: room, error } = await supabase
           .from('game_rooms')
-          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards')
+          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language')
           .eq('id', roomId)
           .single();
 
@@ -63,7 +64,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_turn: (room.current_turn as GameState['current_turn']) || 'player1',
             current_card: room.current_card,
             current_card_index: room.current_card_index || 0,
-            used_cards: room.used_cards || []
+            used_cards: room.used_cards || [],
+            selected_language: room.selected_language
           });
         }
       } catch (error) {
@@ -116,7 +118,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_turn: (updatedRoom.current_turn as GameState['current_turn']) || 'player1',
             current_card: updatedRoom.current_card,
             current_card_index: updatedRoom.current_card_index || 0,
-            used_cards: updatedRoom.used_cards || []
+            used_cards: updatedRoom.used_cards || [],
+            selected_language: updatedRoom.selected_language
           });
         }
       )

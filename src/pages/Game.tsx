@@ -339,14 +339,16 @@ const Game = () => {
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
-        console.log('🌍 Fetching questions for language:', i18n.language, 'level:', currentLevel);
+        // Use room's selected language if available, otherwise fall back to UI language
+        const gameLanguage = gameState?.selected_language || i18n.language;
+        console.log('🌍 Fetching questions for language:', gameLanguage, 'level:', currentLevel, 'room language:', gameState?.selected_language);
         
         // Get level information
         const { data: levelData, error: levelError } = await supabase
           .from('levels')
           .select('*')
           .eq('sort_order', currentLevel)
-          .eq('language', i18n.language)
+          .eq('language', gameLanguage)
           .eq('is_active', true)
           .single();
 
@@ -357,7 +359,7 @@ const Game = () => {
           .from('questions')
           .select('id, text')
           .eq('level_id', levelData.id)
-          .eq('language', i18n.language)
+          .eq('language', gameLanguage)
           .eq('is_active', true);
 
         if (questionsError) throw questionsError;
@@ -370,13 +372,16 @@ const Game = () => {
           level: currentLevel, 
           levelName: levelData.name, 
           questionCount: questions.length,
-          language: i18n.language,
+          gameLanguage: gameLanguage,
+          uiLanguage: i18n.language,
+          roomLanguage: gameState?.selected_language,
           questions: questions.map(q => q.text).slice(0, 3) // Show first 3 questions for debugging
         });
         
-        // If language changed, reset the game state for new language
-        if (prevLanguage !== i18n.language) {
-          console.log('🔄 Language changed from', prevLanguage, 'to', i18n.language, '- resetting game state');
+        // If game language changed, reset the game state for new language
+        const currentGameLanguage = gameState?.selected_language || i18n.language;
+        if (prevLanguage !== currentGameLanguage) {
+          console.log('🔄 Game language changed from', prevLanguage, 'to', currentGameLanguage, '- resetting game state');
           
           // Clear current card and used cards to start fresh with new language
           if (gameState?.current_card) {
@@ -386,7 +391,7 @@ const Game = () => {
             });
           }
           
-          setPrevLanguage(i18n.language);
+          setPrevLanguage(currentGameLanguage);
         }
         
       } catch (error) {
@@ -403,7 +408,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, i18n.language, gameState?.current_card, updateGameState, prevLanguage]);
+  }, [currentLevel, i18n.language, gameState?.current_card, gameState?.selected_language, updateGameState, prevLanguage]);
 
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
@@ -427,14 +432,16 @@ const Game = () => {
   // Enhanced intelligent card selection using AI - ALWAYS TRY AI FIRST
   const selectCardWithAI = async (roomId: string, currentLevel: number, language: string, isFirstQuestion: boolean = false) => {
     try {
-      console.log('🧠 Starting AI card selection (ALWAYS TRY AI)...', { roomId, currentLevel, language, isFirstQuestion });
+      // Use room's language for AI selection
+      const gameLanguage = gameState?.selected_language || language;
+      console.log('🧠 Starting AI card selection (ALWAYS TRY AI)...', { roomId, currentLevel, language: gameLanguage, isFirstQuestion });
       setIsGeneratingCard(true);
       
       const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
         body: { 
           roomId,
           currentLevel,
-          language,
+          language: gameLanguage,
           isFirstQuestion
         }
       });
