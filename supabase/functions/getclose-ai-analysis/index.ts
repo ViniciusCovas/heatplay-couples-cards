@@ -199,10 +199,20 @@ Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
 
     let analysis;
     try {
-      analysis = JSON.parse(data.choices[0].message.content);
+      let content = data.choices[0].message.content;
+      
+      // Strip markdown code blocks if present
+      const jsonMatch = content.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+      if (jsonMatch) {
+        content = jsonMatch[1];
+        console.log('📝 Stripped markdown from response');
+      }
+      
+      analysis = JSON.parse(content);
       console.log('📊 Analysis parsed successfully');
     } catch (parseError) {
       console.error('❌ Failed to parse OpenAI response:', parseError);
+      console.error('Raw content:', data.choices[0].message.content);
       throw new Error('Failed to parse AI analysis response');
     }
 

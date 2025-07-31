@@ -81,6 +81,16 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
     }
   };
 
+  const getTargetAreaExplanation = (area?: string) => {
+    switch (area) {
+      case 'honesty': return t('ai.targetExplanation.honesty', 'GetClose AI is targeting honesty for deeper vulnerability');
+      case 'attraction': return t('ai.targetExplanation.attraction', 'GetClose AI is targeting attraction for stronger connection');
+      case 'intimacy': return t('ai.targetExplanation.intimacy', 'GetClose AI is targeting intimacy for emotional closeness');
+      case 'surprise': return t('ai.targetExplanation.surprise', 'GetClose AI is targeting surprise for unexpected moments');
+      default: return t('ai.targetExplanation.general', 'GetClose AI selected this for optimal connection');
+    }
+  };
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -90,13 +100,13 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
             className={`
               ${getTargetAreaColor(targetArea)} 
               gap-1 px-2 py-0.5 text-xs font-medium
-              hover:scale-110 transition-transform cursor-help
+              hover:scale-110 transition-transform cursor-pointer
               ${className}
             `}
           >
             <Brain className="w-2.5 h-2.5" />
             {t('ai.getcloseAI')}
-            <Lightbulb className="w-2.5 h-2.5 opacity-70" />
+            <Lightbulb className="w-2.5 h-2.5 opacity-70 hover:opacity-100 transition-opacity" />
           </Badge>
         </TooltipTrigger>
         <TooltipContent 
@@ -109,8 +119,8 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
               {t('ai.intelligentSelection')}
             </div>
             {targetArea && (
-              <div className="text-xs text-muted-foreground">
-                {t('ai.targetArea')}: <span className="font-medium">{t(`game.evaluation.${targetArea}`)}</span>
+              <div className="text-xs font-medium text-foreground bg-muted px-2 py-1 rounded">
+                {getTargetAreaExplanation(targetArea)}
               </div>
             )}
             <p className="text-sm leading-relaxed">{reasoning}</p>

@@ -332,6 +332,20 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Helper function to get question text with fallback handling
+  const getCurrentCardText = (cardId: string, cards: {id: string, text: string}[]): string => {
+    if (!cardId) return '';
+    
+    const foundCard = cards.find(card => card.id === cardId);
+    if (foundCard) {
+      return foundCard.text;
+    }
+    
+    // Fallback: If question not found in loaded cards, show the ID for debugging
+    console.warn('⚠️ Question text not found for ID:', cardId, 'Available cards:', cards.length);
+    return cardId; // This will help identify when the issue occurs
+  };
+
   // Track previous language to detect changes
   const [prevLanguage, setPrevLanguage] = useState(i18n.language);
   
@@ -1085,7 +1099,7 @@ const Game = () => {
         {gamePhase === 'card-display' && (
           <>
             <GameCard
-              currentCard={levelCards.find(card => card.id === currentCard)?.text || ''}
+              currentCard={getCurrentCardText(currentCard, levelCards)}
               currentLevel={currentLevel}
               showCard={showCard}
               cardIndex={usedCards.length}

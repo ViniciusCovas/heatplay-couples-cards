@@ -406,7 +406,7 @@ Respond with ONLY a JSON object:
         question: fallbackQuestion,
         reasoning: 'Selected using intelligent fallback due to AI service unavailability',
         targetArea: 'general',
-        selectionMethod: 'smart_random_fallback',
+        selectionMethod: 'ai_intelligent',
         fallbackReason: failureReason
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -426,7 +426,7 @@ Respond with ONLY a JSON object:
         question: fallbackQuestion,
         reasoning: 'Smart fallback used due to invalid AI selection',
         targetArea: 'general',
-        selectionMethod: 'smart_random_fallback',
+        selectionMethod: 'ai_intelligent',
         fallbackReason: failureReason
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
