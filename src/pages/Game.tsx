@@ -304,7 +304,7 @@ const Game = () => {
               t('game.yourResponse');
 
             setPendingEvaluation({
-              question: responseData.card_id,
+              question: getQuestionTextByCardId(responseData.card_id),
               response: responseData.response || '',
               responseId: responseData.id,
               playerName: partnerName
@@ -346,6 +346,12 @@ const Game = () => {
     // Fallback: try to get card text from database if levelCards is empty
     console.warn('🚨 getCurrentCardText: Card not found in levelCards, returning ID as fallback:', currentCard);
     return currentCard;
+  };
+
+  // Helper function to get question text by card ID
+  const getQuestionTextByCardId = (cardId: string) => {
+    const question = levelCards.find(q => q.id === cardId);
+    return question?.text || cardId; // Fallback to ID if text not found
   };
 
   // Track previous language to detect changes
