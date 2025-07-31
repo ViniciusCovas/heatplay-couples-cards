@@ -332,6 +332,22 @@ const Game = () => {
   const totalCards = levelCards.length;
   const minimumRecommended = 6;
 
+  // Helper function to get current card text safely
+  const getCurrentCardText = () => {
+    if (!currentCard || !levelCards.length) {
+      return '';
+    }
+    
+    const card = levelCards.find(card => card.id === currentCard);
+    if (card) {
+      return card.text;
+    }
+    
+    // Fallback: try to get card text from database if levelCards is empty
+    console.warn('🚨 getCurrentCardText: Card not found in levelCards, returning ID as fallback:', currentCard);
+    return currentCard;
+  };
+
   // Track previous language to detect changes
   const [prevLanguage, setPrevLanguage] = useState(i18n.language);
   
@@ -448,9 +464,12 @@ const Game = () => {
 
       if (error) {
         console.warn('⚠️ AI selection failed, falling back to random:', error);
-        // Clear AI info on failure
-        setAiCardInfo(null);
-        return null;
+        return { 
+          cardId: null, 
+          reasoning: null, 
+          targetArea: null, 
+          selectionMethod: 'ai_failure' 
+        };
       }
 
       if (data?.question && data?.reasoning) {
@@ -462,26 +481,29 @@ const Game = () => {
           isFirstQuestion
         });
         
-        // CRITICAL: Set AI info immediately when AI selection succeeds
-        const aiInfo = {
+        return {
+          cardId: data.question.id,
           reasoning: data.reasoning,
           targetArea: data.targetArea,
           selectionMethod: data.selectionMethod || 'ai_intelligent'
         };
-        
-        setAiCardInfo(aiInfo);
-        console.log('🎯 AI Card Info set successfully:', aiInfo);
-        
-        return data.question.id;
       }
       
       console.log('⚠️ AI selection returned invalid data, falling back to random');
-      setAiCardInfo(null);
-      return null;
+      return { 
+        cardId: null, 
+        reasoning: null, 
+        targetArea: null, 
+        selectionMethod: 'ai_failure' 
+      };
     } catch (error) {
       console.warn('⚠️ AI selection error, falling back to random:', error);
-      setAiCardInfo(null);
-      return null;
+      return { 
+        cardId: null, 
+        reasoning: null, 
+        targetArea: null, 
+        selectionMethod: 'ai_failure' 
+      };
     } finally {
       setIsGeneratingCard(false);
     }
@@ -502,7 +524,6 @@ const Game = () => {
         if (availableCards.length > 0) {
           // ALWAYS try AI selection first - for ALL cards, not just first
           const isFirstQuestion = usedCardsFromState.length === 0;
-          let selectedCard = null;
           
           console.log('🎯 Attempting AI card generation for ALL cards:', { 
             isFirstQuestion, 
@@ -512,14 +533,34 @@ const Game = () => {
           });
           
           // Try AI selection with current level number - FOR ALL CARDS
-          selectedCard = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
+          const aiResult = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
           
-          // Fallback to random selection if AI fails
-          if (!selectedCard) {
+          let selectedCard = aiResult.cardId;
+          let updatesForGameState: any = {};
+          
+          // Handle AI success or failure
+          if (selectedCard && aiResult.reasoning) {
+            // AI selection successful - save all AI data to database
+            updatesForGameState = {
+              current_card: selectedCard,
+              current_card_ai_reasoning: aiResult.reasoning,
+              current_card_ai_target_area: aiResult.targetArea,
+              current_card_selection_method: aiResult.selectionMethod
+            };
+            
+            console.log('✅ AI selection successful, saving to database:', updatesForGameState);
+          } else {
+            // AI failed - use random selection and clear AI data
             const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
             selectedCard = randomQuestion.id;
-            setAiCardInfo(null); // Clear AI info for random selection
-            console.log('🎲 Using random card fallback:', { 
+            updatesForGameState = {
+              current_card: selectedCard,
+              current_card_ai_reasoning: null,
+              current_card_ai_target_area: null,
+              current_card_selection_method: 'random_fallback'
+            };
+            
+            console.log('🎲 Using random card fallback, clearing AI data:', { 
               selectedCard, 
               selectedText: randomQuestion.text,
               availableCards: availableCards.length,
@@ -528,16 +569,10 @@ const Game = () => {
             });
           }
           
-          // Update database first, then local state will sync
-          await updateGameState({
-            current_card: selectedCard
-          });
+          // Update database with all data at once - this will sync to both players
+          await updateGameState(updatesForGameState);
           
-          console.log('✅ Card generation completed:', { 
-            selectedCard, 
-            aiCardInfo: aiCardInfo,
-            willShowAIBadge: Boolean(aiCardInfo?.reasoning)
-          });
+          console.log('✅ Card generation completed and synced to database:', updatesForGameState);
         }
       }
     };
@@ -1085,14 +1120,14 @@ const Game = () => {
         {gamePhase === 'card-display' && (
           <>
             <GameCard
-              currentCard={levelCards.find(card => card.id === currentCard)?.text || ''}
+              currentCard={getCurrentCardText()}
               currentLevel={currentLevel}
               showCard={showCard}
               cardIndex={usedCards.length}
               totalCards={totalCards}
-              aiReasoning={aiCardInfo?.reasoning}
-              aiTargetArea={aiCardInfo?.targetArea}
-              selectionMethod={aiCardInfo?.selectionMethod}
+              aiReasoning={gameState?.current_card_ai_reasoning}
+              aiTargetArea={gameState?.current_card_ai_target_area}
+              selectionMethod={gameState?.current_card_selection_method}
               isGeneratingCard={isGeneratingCard}
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
             />

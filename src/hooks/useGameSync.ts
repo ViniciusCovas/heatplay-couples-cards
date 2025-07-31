@@ -23,6 +23,9 @@ interface GameState {
   current_card_index: number;
   used_cards: string[];
   selected_language?: string;
+  current_card_ai_reasoning?: string;
+  current_card_ai_target_area?: string;
+  current_card_selection_method?: string;
 }
 
 interface UseGameSyncReturn {
@@ -48,7 +51,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       try {
         const { data: room, error } = await supabase
           .from('game_rooms')
-          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language')
+          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language, current_card_ai_reasoning, current_card_ai_target_area, current_card_selection_method')
           .eq('id', roomId)
           .single();
 
@@ -65,7 +68,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_card: room.current_card,
             current_card_index: room.current_card_index || 0,
             used_cards: room.used_cards || [],
-            selected_language: room.selected_language
+            selected_language: room.selected_language,
+            current_card_ai_reasoning: room.current_card_ai_reasoning,
+            current_card_ai_target_area: room.current_card_ai_target_area,
+            current_card_selection_method: room.current_card_selection_method
           });
         }
       } catch (error) {
@@ -119,7 +125,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_card: updatedRoom.current_card,
             current_card_index: updatedRoom.current_card_index || 0,
             used_cards: updatedRoom.used_cards || [],
-            selected_language: updatedRoom.selected_language
+            selected_language: updatedRoom.selected_language,
+            current_card_ai_reasoning: updatedRoom.current_card_ai_reasoning,
+            current_card_ai_target_area: updatedRoom.current_card_ai_target_area,
+            current_card_selection_method: updatedRoom.current_card_selection_method
           });
         }
       )
@@ -273,6 +282,9 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       if (updates.current_card !== undefined) updateData.current_card = updates.current_card;
       if (updates.current_card_index !== undefined) updateData.current_card_index = updates.current_card_index;
       if (updates.used_cards !== undefined) updateData.used_cards = updates.used_cards;
+      if (updates.current_card_ai_reasoning !== undefined) updateData.current_card_ai_reasoning = updates.current_card_ai_reasoning;
+      if (updates.current_card_ai_target_area !== undefined) updateData.current_card_ai_target_area = updates.current_card_ai_target_area;
+      if (updates.current_card_selection_method !== undefined) updateData.current_card_selection_method = updates.current_card_selection_method;
 
       const { error } = await supabase
         .from('game_rooms')
