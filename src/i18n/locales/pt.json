@@ -401,16 +401,6 @@
     "getcloseAI": "GetClose AI",
     "intelligentSelection": "Seleção Inteligente",
     "targetArea": "Área alvo",
-    "analyzing": "Analisando...",
-    "randomFallback": "Aleatório",
-    "fallbackSelection": "Seleção de Fallback",
-    "targetExplanation": {
-      "honesty": "GetClose AI está focando na honestidade para maior vulnerabilidade",
-      "attraction": "GetClose AI está focando na atração para conexão mais forte",
-      "intimacy": "GetClose AI está focando na intimidade para proximidade emocional",
-      "surprise": "GetClose AI está focando na surpresa para momentos inesperados",
-      "general": "GetClose AI selecionou isto para conexão otimizada"
-    },
     "getcloseAIAnalysis": "Análise GetClose AI",
     "analysisDescription": "Obtenha insights personalizados sobre sua compatibilidade alimentados por IA avançada",
     "generateAnalysis": "Gerar Análise",
