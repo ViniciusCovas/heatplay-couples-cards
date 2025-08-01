@@ -43,28 +43,26 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
   // Show failure state if AI failed
   if (failureReason && !reasoning) {
     return (
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge 
-              variant="outline" 
-              className={`bg-orange-500/10 text-orange-600 border-orange-200 gap-1 px-2 py-0.5 text-xs font-medium cursor-help ${className}`}
-            >
-              <AlertTriangle className="w-2.5 h-2.5" />
-              {t('ai.randomFallback')}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent side="bottom" className="max-w-sm p-3 bg-card border shadow-lg">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-medium text-sm">
-                <AlertTriangle className="w-4 h-4 text-orange-500" />
-                {t('ai.fallbackSelection')}
-              </div>
-              <p className="text-sm leading-relaxed">{failureReason}</p>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge 
+            variant="outline" 
+            className={`bg-orange-500/10 text-orange-600 border-orange-200 gap-1 px-2 py-0.5 text-xs font-medium cursor-help ${className}`}
+          >
+            <AlertTriangle className="w-2.5 h-2.5" />
+            {t('ai.randomFallback')}
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-sm p-3 bg-card border shadow-lg z-50">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 font-medium text-sm">
+              <AlertTriangle className="w-4 h-4 text-orange-500" />
+              {t('ai.fallbackSelection')}
             </div>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+            <p className="text-sm leading-relaxed">{failureReason}</p>
+          </div>
+        </TooltipContent>
+      </Tooltip>
     );
   }
 
@@ -82,41 +80,38 @@ export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={`
-              ${getTargetAreaColor(targetArea)} 
-              gap-1 px-2 py-0.5 text-xs font-medium
-              hover:scale-110 transition-transform cursor-help
-              ${className}
-            `}
-          >
-            <Brain className="w-2.5 h-2.5" />
-            {t('ai.getcloseAI')}
-            <Lightbulb className="w-2.5 h-2.5 opacity-70" />
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent 
-          side="bottom" 
-          className="max-w-sm p-3 bg-card border shadow-lg"
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge 
+          variant="outline" 
+          className={`
+            ${getTargetAreaColor(targetArea)} 
+            gap-1 px-2 py-0.5 text-xs font-medium cursor-help
+            ${className}
+          `}
         >
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 font-medium text-sm">
-              <Brain className="w-4 h-4 text-primary" />
-              {t('ai.intelligentSelection')}
-            </div>
-            {targetArea && (
-              <div className="text-xs text-muted-foreground">
-                {t('ai.targetArea')}: <span className="font-medium">{t(`game.evaluation.${targetArea}`)}</span>
-              </div>
-            )}
-            <p className="text-sm leading-relaxed">{reasoning}</p>
+          <Brain className="w-2.5 h-2.5" />
+          {t('ai.getcloseAI')}
+          <Lightbulb className="w-2.5 h-2.5 opacity-70" />
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent 
+        side="bottom" 
+        className="max-w-sm p-3 bg-card border shadow-lg z-50"
+      >
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 font-medium text-sm">
+            <Brain className="w-4 h-4 text-primary" />
+            {t('ai.intelligentSelection')}
           </div>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+          {targetArea && (
+            <div className="text-xs text-muted-foreground">
+              {t('ai.targetArea')}: <span className="font-medium">{t(`game.evaluation.${targetArea}`)}</span>
+            </div>
+          )}
+          <p className="text-sm leading-relaxed">{reasoning}</p>
+        </div>
+      </TooltipContent>
+    </Tooltip>
   );
 };
