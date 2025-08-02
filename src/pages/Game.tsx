@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
 import { ResponseEvaluation, type EvaluationData } from "@/components/game/ResponseEvaluation";
-import { InterstitialScreen } from "@/components/game/InterstitialScreen";
 import { LanguageIndicator } from "@/components/ui/language-indicator";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
@@ -21,7 +20,7 @@ import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { supabase } from "@/integrations/supabase/client";
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'interstitial' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -213,8 +212,6 @@ const Game = () => {
       case 'evaluation':
         // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
         return isMyTurnInDB ? 'evaluation' : 'card-display';
-      case 'interstitial':
-        return 'interstitial';
       case 'final-report':
         return 'final-report';
       default:
@@ -518,80 +515,76 @@ const Game = () => {
     }
   };
 
-  // Centralized AI card selection during interstitial phase ONLY
+  // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
-    const selectCardDuringInterstitial = async () => {
-      if (gameState?.current_phase === 'interstitial' && 
-          levelCards.length > 0 && 
+    const generateCard = async () => {
+      if (levelCards.length > 0 && 
+          !gameState?.current_card && 
+          isMyTurn && 
+          gameState?.current_phase === 'card-display' &&
           room && !isGeneratingCard) {
-        
-        console.log('🎯 Starting AI card selection during interstitial phase');
-        setIsGeneratingCard(true);
         
         const usedCardsFromState = gameState?.used_cards || [];
         const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card.id));
         
         if (availableCards.length > 0) {
+          // ALWAYS try AI selection first - for ALL cards, not just first
           const isFirstQuestion = usedCardsFromState.length === 0;
           
-          // Try AI selection
+          console.log('🎯 Attempting AI card generation for ALL cards:', { 
+            isFirstQuestion, 
+            availableCards: availableCards.length,
+            currentLevel,
+            language: i18n.language
+          });
+          
+          // Try AI selection with current level number - FOR ALL CARDS
           const aiResult = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
           
           let selectedCard = aiResult.cardId;
           let updatesForGameState: any = {};
           
-          // Determine next turn (evaluator becomes next answerer) 
-          const nextTurn = currentTurn;
-          
           // Handle AI success or failure
           if (selectedCard && aiResult.reasoning) {
-            // AI selection successful
+            // AI selection successful - save all AI data to database
             updatesForGameState = {
               current_card: selectedCard,
               current_card_ai_reasoning: aiResult.reasoning,
               current_card_ai_target_area: aiResult.targetArea,
-              current_card_selection_method: aiResult.selectionMethod,
-              current_phase: 'card-display',
-              current_turn: nextTurn
+              current_card_selection_method: aiResult.selectionMethod
             };
             
-            console.log('✅ AI selection successful during interstitial, transitioning to card-display:', updatesForGameState);
+            console.log('✅ AI selection successful, saving to database:', updatesForGameState);
           } else {
-            // AI failed - use random selection
+            // AI failed - use random selection and clear AI data
             const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
             selectedCard = randomQuestion.id;
             updatesForGameState = {
               current_card: selectedCard,
               current_card_ai_reasoning: null,
               current_card_ai_target_area: null,
-              current_card_selection_method: 'random_fallback',
-              current_phase: 'card-display', 
-              current_turn: nextTurn
+              current_card_selection_method: 'random_fallback'
             };
             
-            console.log('🎲 Random fallback during interstitial, transitioning to card-display:', updatesForGameState);
+            console.log('🎲 Using random card fallback, clearing AI data:', { 
+              selectedCard, 
+              selectedText: randomQuestion.text,
+              availableCards: availableCards.length,
+              usedCards: usedCardsFromState.length,
+              isFirstQuestion
+            });
           }
           
-          // Single atomic update from interstitial → card-display with final card
+          // Update database with all data at once - this will sync to both players
           await updateGameState(updatesForGameState);
           
-          console.log('✅ Interstitial card selection completed - transitioned to card-display with final card');
-        } else {
-          // No more cards available
-          console.log('🏁 No more cards available during interstitial - finishing level');
-          if (currentLevel >= 4) {
-            generateFinalReport();
-          } else {
-            navigate(`/level-select?room=${roomCode}`);
-          }
+          console.log('✅ Card generation completed and synced to database:', updatesForGameState);
         }
-        
-        setIsGeneratingCard(false);
       }
     };
 
-    selectCardDuringInterstitial();
-  }, [gameState?.current_phase, levelCards, room, isGeneratingCard, currentLevel, i18n.language, currentTurn, navigate, roomCode]);
+    generateCard();
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
@@ -853,10 +846,8 @@ const Game = () => {
 
       console.log('✅ Evaluation saved successfully with timing context');
 
-      // Transition to interstitial phase for AI card selection
-      await updateGameState({
-        current_phase: 'interstitial'
-      });
+      // Call centralized function to advance to next round
+      await advanceToNextRound(pendingEvaluation.question);
       
       setPendingEvaluation(null);
     } catch (error) {
@@ -1132,10 +1123,6 @@ const Game = () => {
         </div>
 
         {/* Game Content based on current phase */}
-        {gamePhase === 'interstitial' && (
-          <InterstitialScreen />
-        )}
-        
         {gamePhase === 'card-display' && (
           <>
             <GameCard
