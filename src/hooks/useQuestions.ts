@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useTranslation } from 'react-i18next';
 import { shuffleArray, questionTracker } from '@/utils/questionRandomizer';
+import { logger } from '@/utils/logger';
 
 interface Question {
   id: string;
@@ -47,7 +48,7 @@ export const useQuestions = (): UseQuestionsReturn => {
         setIsLoading(true);
         setError(null);
 
-        console.log('🌍 Loading data for language:', currentLanguage);
+        logger.debug('Loading data for language', { language: currentLanguage });
 
         // Load levels
         const { data: levelsData, error: levelsError } = await supabase
@@ -68,7 +69,11 @@ export const useQuestions = (): UseQuestionsReturn => {
 
         if (questionsError) throw questionsError;
 
-        console.log('📊 Loaded', questionsData?.length || 0, 'questions and', levelsData?.length || 0, 'levels for', currentLanguage);
+        logger.debug('Data loaded successfully', { 
+          questions: questionsData?.length || 0, 
+          levels: levelsData?.length || 0, 
+          language: currentLanguage 
+        });
 
         setLevels(levelsData || []);
         setQuestions(questionsData || []);
@@ -76,7 +81,7 @@ export const useQuestions = (): UseQuestionsReturn => {
         // Reset question history when language changes to avoid conflicts
         questionTracker.reset();
       } catch (err) {
-        console.error('❌ Error loading questions/levels:', err);
+        logger.error('Error loading questions/levels', err);
         setError(err instanceof Error ? err.message : 'Failed to load data');
       } finally {
         setIsLoading(false);

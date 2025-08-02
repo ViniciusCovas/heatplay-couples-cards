@@ -32,17 +32,13 @@ async function retryWithBackoff<T>(
   try {
     return await fn();
   } catch (error) {
-    console.log(`🔄 Retry attempt ${attempt}/${MAX_RETRIES} for ${context}:`, error.message);
-    
     if (attempt >= MAX_RETRIES) {
-      console.error(`❌ Max retries exceeded for ${context}:`, error);
       throw error;
     }
 
     // Handle specific OpenAI rate limit errors
     if (error.message?.includes('429') || error.message?.includes('rate limit')) {
       const waitTime = Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
-      console.log(`⏳ Rate limited, waiting ${waitTime}ms before retry...`);
       await delay(waitTime);
     } else {
       // Standard exponential backoff for other errors
@@ -61,7 +57,6 @@ async function getCachedLevelId(supabase: any, currentLevel: number, language: s
   
   // Return cached result if valid
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-    console.log(`📋 Using cached level ID for ${cacheKey}:`, cached.id);
     return cached.id;
   }
 
@@ -87,7 +82,6 @@ async function getCachedLevelId(supabase: any, currentLevel: number, language: s
 
   // Cache the result
   levelCache.set(cacheKey, { id: levelData.id, timestamp: Date.now() });
-  console.log(`💾 Cached level ID for ${cacheKey}:`, levelData.id);
   
   return levelData.id;
 }
@@ -95,8 +89,6 @@ async function getCachedLevelId(supabase: any, currentLevel: number, language: s
 // Enhanced OpenAI API call with better error handling
 async function callOpenAIWithRetry(promptContent: string): Promise<any> {
   return retryWithBackoff(async () => {
-    console.log('🤖 Calling OpenAI API...');
-    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
 
@@ -132,7 +124,6 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
       }
 
       const data = await response.json();
-      console.log('✅ OpenAI API call successful');
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -147,8 +138,6 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
 
 // Smart fallback function that considers context
 function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean): any {
-  console.log('🎲 Using smart random fallback with context');
-  
   if (isFirstQuestion) {
     // For first questions, prefer general or introductory questions
     const introQuestions = availableQuestions.filter(q => 
@@ -170,7 +159,6 @@ function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis:
     ];
     
     const lowestArea = scores.reduce((min, current) => current.score < min.score ? current : min);
-    console.log(`🎯 Targeting lowest area from last response: ${lowestArea.area} (score: ${lowestArea.score})`);
     
     // Try to find questions that might improve this area
     const targetQuestions = availableQuestions.filter(q => 
@@ -197,18 +185,10 @@ serve(async (req) => {
   try {
     const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
 
-    console.log('🧠 AI Question Selector called:', { 
-      roomId, 
-      currentLevel, 
-      language, 
-      isFirstQuestion,
-      timestamp: new Date().toISOString()
-    });
 
     // Validate OpenAI API key
     if (!openAIApiKey) {
       failureReason = 'OpenAI API key not configured in environment';
-      console.error('❌ OpenAI API key not configured');
       throw new Error(failureReason);
     }
 
@@ -283,15 +263,8 @@ serve(async (req) => {
 
     if (availableQuestions.length === 0) {
       failureReason = 'No available questions for this level and language';
-      console.warn('⚠️ No available questions for this level');
       throw new Error(failureReason);
     }
-
-    console.log('📊 Data fetched successfully:', {
-      availableQuestions: availableQuestions.length,
-      usedCards: usedCards.length,
-      recentResponses: recentResponseData.length
-    });
 
     // Analyze only the most recent response for context (keep prompt short)
     let lastResponseAnalysis = { hasData: false };
@@ -309,12 +282,12 @@ serve(async (req) => {
             response_time: lastResponse.response_time || 0
           };
         } catch (e) {
-          console.warn('⚠️ Failed to parse last evaluation:', e);
+          // Failed to parse evaluation - continue without analysis
         }
       }
     }
 
-    console.log('📈 Last response analysis:', lastResponseAnalysis);
+    
 
     // Compact AI prompt focusing only on the immediate emotional state
     const promptContent = `You are GetClose AI, selecting the next question to deepen this couple's connection.
@@ -358,12 +331,10 @@ Respond with ONLY a JSON object:
         aiResponse = JSON.parse(data.choices[0].message.content);
       } catch (parseError) {
         failureReason = `AI returned invalid JSON format: ${data.choices[0].message.content}`;
-        console.error('❌ Failed to parse OpenAI response:', data.choices[0].message.content);
         throw new Error(failureReason);
       }
     } catch (apiError) {
       failureReason = `OpenAI API failed: ${apiError.message}`;
-      console.error('❌ OpenAI API error:', apiError);
       
       // Use smart fallback based on last response
       const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
@@ -393,14 +364,8 @@ Respond with ONLY a JSON object:
             }
           });
       } catch (analysisError) {
-        console.warn('⚠️ Failed to store fallback analysis:', analysisError);
+        // Failed to store analysis - continue
       }
-
-      console.log('🎲 Using smart fallback selection:', {
-        selectedQuestion: fallbackQuestion.text,
-        method: 'smart_random_fallback',
-        processingTime: Date.now() - startTime
-      });
 
       return new Response(JSON.stringify({
         question: fallbackQuestion,
@@ -417,7 +382,6 @@ Respond with ONLY a JSON object:
     const selectedQuestion = availableQuestions[aiResponse.selectedQuestionIndex];
     if (!selectedQuestion) {
       failureReason = `Invalid question index selected: ${aiResponse.selectedQuestionIndex}`;
-      console.error('❌ Invalid question index:', aiResponse.selectedQuestionIndex);
       
       // Use smart fallback
       const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
@@ -455,17 +419,8 @@ Respond with ONLY a JSON object:
           }
         });
     } catch (analysisError) {
-      console.warn('⚠️ Failed to store AI analysis:', analysisError);
-      // Don't throw, just log the warning
+      // Failed to store analysis - continue
     }
-
-    console.log('✅ AI question selection successful:', {
-      isFirstQuestion,
-      selectedQuestion: selectedQuestion.text.substring(0, 50) + '...',
-      reasoning: aiResponse.reasoning,
-      targetArea: aiResponse.targetArea,
-      processingTime: Date.now() - startTime
-    });
 
     return new Response(JSON.stringify({
       question: selectedQuestion,
@@ -478,11 +433,7 @@ Respond with ONLY a JSON object:
 
   } catch (error) {
     const processingTime = Date.now() - startTime;
-    console.error('❌ Error in intelligent-question-selector:', {
-      error: error.message,
-      failureReason,
-      processingTime
-    });
+    console.error('Error in intelligent-question-selector:', error.message);
     
     return new Response(JSON.stringify({ 
       error: error.message,

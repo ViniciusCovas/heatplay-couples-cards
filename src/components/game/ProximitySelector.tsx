@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 interface ProximitySelectorProps {
   isVisible: boolean;
@@ -28,17 +29,14 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
 
   // Handle automatic navigation when both players have answered
   useEffect(() => {
-    console.log('🔍 ProximitySelector useEffect:', { 
-      gameState, 
+    logger.debug('ProximitySelector state check', { 
       proximity_answered: gameState?.proximity_question_answered,
-      current_phase: gameState?.current_phase,
-      player1_response: gameState?.player1_proximity_response,
-      player2_response: gameState?.player2_proximity_response
+      current_phase: gameState?.current_phase
     });
     
     // Navigate when both players have answered
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-selection') {
-      console.log('🎯 Both players answered, navigating to level select...');
+      logger.debug('Both players answered, navigating to level select');
       navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);
@@ -47,25 +45,23 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
 
   const handleSelect = (isClose: boolean) => {
-    console.log('🎯 ProximitySelector option selected:', { isClose });
+    logger.debug('ProximitySelector option selected', { isClose });
     setSelectedOption(isClose);
   };
 
   const handleConfirm = async () => {
-    console.log('🔍 Debug handleConfirm START:', { 
+    logger.debug('ProximitySelector confirm started', { 
       selectedOption, 
       roomId: room?.id, 
       playerId,
-      currentPlayerNumber,
-      participants: participants.map(p => ({ id: p.player_id, number: p.player_number }))
+      currentPlayerNumber
     });
     
     if (selectedOption === null || !room?.id || !playerId) {
-      console.error('❌ Missing selection, room ID or player ID', {
+      logger.error('Missing selection, room ID or player ID', {
         selectedOption,
         roomId: room?.id,
-        playerId,
-        room
+        playerId
       });
       return;
     }
@@ -78,7 +74,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
       
       // If we can't get the player number from participants, use database fallback
       if (!playerNumber) {
-        console.log('🔍 Player number not found in participants, using database fallback...');
+        logger.debug('Player number not found in participants, using database fallback');
         
         const { data: dbPlayerNumber, error } = await supabase.rpc('get_player_number', {
           room_id_param: room.id,
@@ -86,18 +82,18 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
         });
         
         if (error) {
-          console.error('❌ Database fallback failed:', error);
+          logger.error('Database fallback failed', error);
           setWaitingForPartner(false);
           setIsConfirmed(false);
           return;
         }
         
         playerNumber = dbPlayerNumber as 1 | 2;
-        console.log('📝 Got player number from database:', playerNumber);
+        logger.debug('Got player number from database', { playerNumber });
       }
       
       if (!playerNumber || (playerNumber !== 1 && playerNumber !== 2)) {
-        console.error('❌ Could not determine valid player number even with database fallback');
+        logger.error('Could not determine valid player number');
         setWaitingForPartner(false);
         setIsConfirmed(false);
         return;
@@ -116,32 +112,31 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
         updates.player2_proximity_response = selectedOption;
       }
       
-      console.log('📝 Updating game state with:', updates);
+      logger.debug('Updating game state', updates);
       await updateGameState(updates);
       
       // Send sync action to notify other player
-      console.log('🔄 Sending sync action...');
+      logger.debug('Sending proximity sync action');
       await syncAction('proximity_answer', { 
         isClose: selectedOption, 
         playerNumber,
         playerId 
       });
       
-      console.log('✅ Proximity selection confirmed successfully');
+      logger.debug('Proximity selection confirmed successfully');
       
     } catch (error) {
-      console.error('❌ Error confirming proximity selection:', error);
+      logger.error('Error confirming proximity selection', error);
       setWaitingForPartner(false);
       setIsConfirmed(false);
     }
   };
 
-  console.log('🎯 ProximitySelector render:', { 
+  logger.debug('ProximitySelector render', { 
     isVisible, 
     roomCode, 
-    room: room?.id, 
+    roomId: room?.id, 
     playerId, 
-    gameState, 
     waitingForPartner 
   });
 

@@ -4,6 +4,7 @@ import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
 import { AIInsightBadge } from "@/components/game/AIInsightBadge";
+import { logger } from "@/utils/logger";
 
 interface GameCardProps {
   currentCard: string;
@@ -40,13 +41,12 @@ export const GameCard = ({
   const isAICard = selectionMethod === 'ai_intelligent' || Boolean(aiReasoning);
   
   // Debug logging for AI badge display
-  console.log('🎴 GameCard render:', {
-    currentCard: currentCard?.substring(0, 50) + '...',
+  logger.debug('GameCard render', {
+    hasCard: Boolean(currentCard),
     isAICard,
     hasReasoning: Boolean(aiReasoning),
     selectionMethod,
-    targetArea: aiTargetArea,
-    reasoning: aiReasoning?.substring(0, 100) + '...'
+    targetArea: aiTargetArea
   });
   
   return (

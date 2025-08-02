@@ -19,6 +19,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from "@/utils/logger";
 
 interface AnalysisData {
   compatibilityScore: number;
@@ -66,7 +67,7 @@ export const GetCloseAnalysis: React.FC<GetCloseAnalysisProps> = ({
     setError(null);
 
     try {
-      console.log('🧠 Generating GetClose AI analysis for room:', roomId);
+      logger.debug('Generating GetClose AI analysis', { roomId, language });
       
       const { data, error } = await supabase.functions.invoke('getclose-ai-analysis', {
         body: { roomId, language }

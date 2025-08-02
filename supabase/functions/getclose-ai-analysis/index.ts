@@ -18,20 +18,15 @@ serve(async (req) => {
   }
 
   try {
-    console.log('🧠 Starting GetClose AI analysis...');
-    
     const { roomId, language = 'en' } = await req.json();
-    console.log('📊 Processing room:', roomId, 'language:', language);
 
     if (!openAIApiKey) {
-      console.error('❌ OpenAI API key not configured');
       throw new Error('OpenAI API key not configured');
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
 
     // Get all game data
-    console.log('🔍 Fetching room data...');
     const { data: room, error: roomError } = await supabase
       .from('game_rooms')
       .select('*')
@@ -39,12 +34,10 @@ serve(async (req) => {
       .single();
 
     if (roomError) {
-      console.error('❌ Room fetch error:', roomError);
       throw new Error(`Failed to fetch room data: ${roomError.message}`);
     }
 
     // Get all responses with evaluations
-    console.log('📝 Fetching game responses...');
     const { data: responses, error: responsesError } = await supabase
       .from('game_responses')
       .select('*')
@@ -52,24 +45,20 @@ serve(async (req) => {
       .order('created_at', { ascending: true });
 
     if (responsesError) {
-      console.error('❌ Responses fetch error:', responsesError);
       throw new Error(`Failed to fetch responses: ${responsesError.message}`);
     }
 
     // Get participants
-    console.log('👥 Fetching participants...');
     const { data: participants, error: participantsError } = await supabase
       .from('room_participants')
       .select('*')
       .eq('room_id', roomId);
 
     if (participantsError) {
-      console.error('❌ Participants fetch error:', participantsError);
       throw new Error(`Failed to fetch participants: ${participantsError.message}`);
     }
 
     // Calculate session statistics
-    console.log('📊 Calculating session statistics...');
     const sessionStats = responses.reduce((acc: any, response: any) => {
       if (response.evaluation) {
         try {
@@ -80,7 +69,7 @@ serve(async (req) => {
           acc.totalSurprise += evalData.surprise || 0;
           acc.evaluationCount++;
         } catch (parseError) {
-          console.warn('⚠️ Failed to parse evaluation data:', parseError, 'for response:', response.id);
+          // Failed to parse evaluation - continue
         }
       }
       return acc;
@@ -100,7 +89,7 @@ serve(async (req) => {
       surprise: sessionStats.evaluationCount ? sessionStats.totalSurprise / sessionStats.evaluationCount : 0
     };
 
-    console.log('📈 Average scores calculated:', avgScores);
+    
 
     const culturalContext = {
       en: "Western relationship dynamics",
@@ -174,7 +163,6 @@ Provide a comprehensive analysis in the following JSON format:
 
 Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
 
-    console.log('🤖 Sending request to OpenAI...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -190,24 +178,19 @@ Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
     });
 
     if (!response.ok) {
-      console.error('❌ OpenAI API error:', response.status, response.statusText);
       throw new Error(`OpenAI API error: ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('✅ OpenAI response received');
 
     let analysis;
     try {
       analysis = JSON.parse(data.choices[0].message.content);
-      console.log('📊 Analysis parsed successfully');
     } catch (parseError) {
-      console.error('❌ Failed to parse OpenAI response:', parseError);
       throw new Error('Failed to parse AI analysis response');
     }
 
     // Store the final analysis
-    console.log('💾 Storing analysis in database...');
     const { error: insertError } = await supabase
       .from('ai_analyses')
       .insert({
@@ -223,11 +206,9 @@ Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
       });
 
     if (insertError) {
-      console.error('❌ Database insert error:', insertError);
-      // Don't throw here, just log the error and continue
+      // Don't throw here, just continue
     }
 
-    console.log('✅ GetClose AI analysis completed successfully');
     return new Response(JSON.stringify({
       success: true,
       analysis: analysis
@@ -236,7 +217,7 @@ Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
     });
 
   } catch (error) {
-    console.error('❌ Error in getclose-ai-analysis:', error);
+    console.error('Error in getclose-ai-analysis:', error.message);
     return new Response(JSON.stringify({ 
       error: error.message,
       success: false

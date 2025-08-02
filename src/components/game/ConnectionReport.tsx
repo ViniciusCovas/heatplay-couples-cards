@@ -6,6 +6,7 @@ import { Heart, Flame, Zap, Star, Eye, Home, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { GetCloseAnalysis } from "./GetCloseAnalysis";
 import { useSearchParams } from "react-router-dom";
+import { logger } from "@/utils/logger";
 
 export interface ConnectionData {
   emotionalConnection: number; // 0-5
@@ -43,7 +44,7 @@ export const ConnectionReport = ({
   const currentRoomId = roomId || searchParams.get('room');
   
   // Debug language consistency
-  console.log('🌍 ConnectionReport language:', i18n.language);
+  logger.debug('ConnectionReport language', { language: i18n.language });
   
   if (!isVisible) return null;
 

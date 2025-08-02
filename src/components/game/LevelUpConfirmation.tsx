@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Heart, Flame, Zap, Users, AlertTriangle, Gamepad2, Trophy } from "lucide-react";
 import { useTranslation } from 'react-i18next';
+import { logger } from "@/utils/logger";
 
 interface LevelUpConfirmationProps {
   isVisible: boolean;
@@ -40,7 +41,7 @@ export const LevelUpConfirmation = ({
   const { t, i18n } = useTranslation();
   
   // Debug language consistency
-  console.log('🌍 LevelUpConfirmation language:', i18n.language);
+  logger.debug('LevelUpConfirmation language', { language: i18n.language });
   
   if (!isVisible) return null;
 

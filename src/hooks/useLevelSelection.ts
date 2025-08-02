@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/utils/logger';
 
 interface LevelSelectionResult {
   status: 'waiting' | 'agreed' | 'mismatch' | 'error';
@@ -36,11 +37,11 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   // Submit level vote using atomic RPC function
   const submitLevelVote = useCallback(async (level: number) => {
     if (!roomId) {
-      console.error('❌ No room ID for level vote');
+      logger.error('No room ID for level vote');
       return;
     }
 
-    console.log('🗳️ Submitting level vote:', { roomId, playerId, level });
+    logger.debug('Submitting level vote', { roomId, playerId, level });
     
     try {
       // Call the atomic level selection function using Supabase RPC
@@ -51,11 +52,11 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       });
 
       if (error) {
-        console.error('❌ RPC call failed:', error);
+        logger.error('RPC call failed', error);
         toast.error('Failed to select level. Please try again.');
         return;
       }
-      console.log('✅ Level selection result:', result);
+      logger.debug('Level selection result', result);
 
       // Type assertion since we know this is our custom function return type
       const typedResult = result as unknown as LevelSelectionResult;
@@ -111,14 +112,14 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           break;
       }
     } catch (error) {
-      console.error('❌ Exception in level selection:', error);
+      logger.error('Exception in level selection', error);
       toast.error(t('game.errors.levelSelectionFailed'));
     }
   }, [roomId, playerId, t]);
 
   // Reset function for mismatch scenarios
   const tryAgain = useCallback(async () => {
-    console.log('🔄 Resetting level selection state');
+    logger.debug('Resetting level selection state');
     
     setHasVoted(false);
     setSelectedLevel(null);
@@ -146,14 +147,14 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         if (error) throw error;
 
         if (room?.current_phase === 'card-display' && room.level) {
-          console.log('🎯 Room already in card-display phase, syncing state');
+          logger.debug('Room already in card-display phase, syncing state');
           setAgreedLevel(room.level);
           setIsWaitingForPartner(false);
           setLevelsMismatch(false);
           setCountdown(null);
         }
       } catch (error) {
-        console.error('Error checking room state:', error);
+        logger.error('Error checking room state', error);
       }
     };
 
@@ -175,11 +176,11 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           filter: `id=eq.${roomId}`
         },
         (payload) => {
-          console.log('📨 Room update received:', payload);
+          logger.debug('Room update received', payload);
           const room = payload.new as any;
           
           if (room.current_phase === 'card-display' && room.level) {
-            console.log('🎯 Room moved to card-display phase');
+            logger.debug('Room moved to card-display phase');
             setAgreedLevel(room.level);
             setIsWaitingForPartner(false);
             setLevelsMismatch(false);
@@ -213,7 +214,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
         setCountdown(null);
       }
     } catch (error) {
-      console.error('Error in force sync:', error);
+      logger.error('Error in force sync', error);
     }
   }, [roomId]);
 
