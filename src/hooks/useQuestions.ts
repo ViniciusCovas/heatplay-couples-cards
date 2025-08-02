@@ -75,8 +75,19 @@ export const useQuestions = (): UseQuestionsReturn => {
           language: currentLanguage 
         });
 
-        setLevels(levelsData || []);
-        setQuestions(questionsData || []);
+        setLevels((levelsData || []).map(level => ({
+          ...level,
+          description: level.description || undefined,
+          bg_color: level.bg_color || undefined,
+          color: level.color || undefined,
+          icon: level.icon || undefined
+        })));
+        setQuestions((questionsData || []).map(q => ({
+          ...q,
+          category: q.category || undefined,
+          question_type: q.question_type || undefined,
+          intensity: q.intensity || undefined
+        })));
         
         // Reset question history when language changes to avoid conflicts
         questionTracker.reset();

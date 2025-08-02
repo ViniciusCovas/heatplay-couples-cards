@@ -144,7 +144,7 @@ export const ResponseEvaluation = ({
                 </div>
                 
                 <Slider
-                  value={[evaluation[criterion.key]]}
+                  value={[evaluation[criterion.key] || 3]}
                   onValueChange={(value) => updateEvaluation(criterion.key, value[0])}
                   max={5}
                   min={1}

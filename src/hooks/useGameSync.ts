@@ -68,10 +68,10 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
             current_card: room.current_card,
             current_card_index: room.current_card_index || 0,
             used_cards: room.used_cards || [],
-            selected_language: room.selected_language,
-            current_card_ai_reasoning: room.current_card_ai_reasoning,
-            current_card_ai_target_area: room.current_card_ai_target_area,
-            current_card_selection_method: room.current_card_selection_method
+            selected_language: room.selected_language || undefined,
+            current_card_ai_reasoning: room.current_card_ai_reasoning || undefined,
+            current_card_ai_target_area: room.current_card_ai_target_area || undefined,
+            current_card_selection_method: room.current_card_selection_method || undefined
           });
         }
       } catch (error) {

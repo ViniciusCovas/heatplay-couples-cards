@@ -91,8 +91,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       // Set the room state after successful creation
       setRoom({
-        ...roomData,
-        status: roomData.status as 'waiting' | 'playing' | 'finished'
+        id: roomData.id,
+        room_code: roomData.room_code,
+        level: roomData.level || 1,
+        status: roomData.status as 'waiting' | 'playing' | 'finished',
+        created_by: roomData.created_by || undefined,
+        created_at: roomData.created_at,
+        started_at: roomData.started_at || undefined,
+        finished_at: roomData.finished_at || undefined
       });
       setIsConnected(true);
 
@@ -149,8 +155,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
         // Player already in room, just connect
         setParticipants(existingParticipants as RoomParticipant[]);
         setRoom({
-          ...roomData,
-          status: roomData.status as 'waiting' | 'playing' | 'finished'
+          id: roomData.id,
+          room_code: roomData.room_code,
+          level: roomData.level || 1,
+          status: roomData.status as 'waiting' | 'playing' | 'finished',
+          created_by: roomData.created_by || undefined,
+          created_at: roomData.created_at,
+          started_at: roomData.started_at || undefined,
+          finished_at: roomData.finished_at || undefined
         });
         setIsConnected(true);
         return true;
@@ -184,8 +196,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       setRoom({
-        ...roomData,
-        status: roomData.status as 'waiting' | 'playing' | 'finished'
+        id: roomData.id,
+        room_code: roomData.room_code,
+        level: roomData.level || 1,
+        status: roomData.status as 'waiting' | 'playing' | 'finished',
+        created_by: roomData.created_by || undefined,
+        created_at: roomData.created_at,
+        started_at: roomData.started_at || undefined,
+        finished_at: roomData.finished_at || undefined
       });
       setIsConnected(true);
       return true;

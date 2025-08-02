@@ -100,7 +100,13 @@ const AdminDashboard = () => {
 
       setStats({
         total: totalCount || 0,
-        byLevel: levelsWithCounts,
+        byLevel: levelsWithCounts.map(level => ({
+          ...level,
+          color: level.color || undefined,
+          bg_color: level.bg_color || undefined,
+          description: level.description || undefined,
+          icon: level.icon || undefined
+        })),
         recent
       });
     } catch (error) {

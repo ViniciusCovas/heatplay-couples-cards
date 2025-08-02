@@ -101,7 +101,7 @@ const LevelSelect = () => {
               }
             };
 
-            const iconDisplay = getIconDisplay(level.icon);
+            const iconDisplay = getIconDisplay(level.icon || '');
 
             return {
               id: level.sort_order, // Use sort_order as id for compatibility

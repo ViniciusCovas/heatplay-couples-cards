@@ -242,7 +242,7 @@ const Game = () => {
       }
       
       // Sync game phase based on database state and player logic - ONLY source of phase changes
-      const newPhase = deriveLocalPhase(gameState, playerNumber);
+      const newPhase = deriveLocalPhase(gameState, playerNumber || 1);
       if (newPhase !== gamePhase) {
         logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
@@ -286,7 +286,7 @@ const Game = () => {
             .from('game_responses')
             .select('*')
             .eq('room_id', room.id)
-            .eq('card_id', currentCardFromState)
+            .eq('card_id', currentCardFromState || '')
             .eq('round_number', currentRound)
             .is('evaluation', null)
             .order('created_at', { ascending: false })

@@ -111,7 +111,10 @@ export default function AdminQuestionsManual() {
       }));
 
       setLevels(levelsData || []);
-      setQuestions(questionsWithLevelNames || []);
+      setQuestions((questionsWithLevelNames || []).map(q => ({
+        ...q,
+        category: q.category || ''
+      })));
     } catch (error) {
       logger.error('Error fetching data:', error);
       toast({
