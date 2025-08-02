@@ -518,6 +518,69 @@ const Game = () => {
     }
   };
 
+  // Generate initial card when transitioning from proximity to card-display with null card
+  useEffect(() => {
+    const handleInitialCardGeneration = async () => {
+      if (gameState?.current_phase === 'card-display' && 
+          !gameState?.current_card && 
+          levelCards.length > 0 && 
+          room && 
+          !isGeneratingCard) {
+        
+        console.log('🎯 Generating initial card for first round');
+        setIsGeneratingCard(true);
+        
+        const usedCardsFromState = gameState?.used_cards || [];
+        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card.id));
+        
+        if (availableCards.length > 0) {
+          try {
+            // Try AI selection for first card
+            const aiResult = await selectCardWithAI(room.id, currentLevel, i18n.language, true);
+            
+            let selectedCard = aiResult.cardId;
+            let updatesForGameState: any = {};
+            
+            if (selectedCard && aiResult.reasoning) {
+              // AI selection successful
+              updatesForGameState = {
+                current_card: selectedCard,
+                current_card_ai_reasoning: aiResult.reasoning,
+                current_card_ai_target_area: aiResult.targetArea,
+                current_card_selection_method: aiResult.selectionMethod
+              };
+              
+              console.log('✅ AI selection successful for initial card:', updatesForGameState);
+            } else {
+              // AI failed - use random selection
+              const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
+              selectedCard = randomQuestion.id;
+              updatesForGameState = {
+                current_card: selectedCard,
+                current_card_ai_reasoning: null,
+                current_card_ai_target_area: null,
+                current_card_selection_method: 'random_fallback'
+              };
+              
+              console.log('🎲 Using random card fallback for initial card:', updatesForGameState);
+            }
+            
+            // Update game state with the first card
+            await updateGameState(updatesForGameState);
+            
+            console.log('✅ Initial card generation completed');
+          } catch (error) {
+            console.error('❌ Error during initial card generation:', error);
+          } finally {
+            setIsGeneratingCard(false);
+          }
+        }
+      }
+    };
+
+    handleInitialCardGeneration();
+  }, [gameState?.current_phase, gameState?.current_card, levelCards, room, isGeneratingCard, currentLevel, i18n.language]);
+
   // Centralized AI card selection during interstitial phase
   useEffect(() => {
     const handleInterstitialCardSelection = async () => {
