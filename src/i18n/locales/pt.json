@@ -439,5 +439,46 @@
         "endless_heat": "Ilimitado"
       }
     }
+  },
+  "interstitial": {
+    "selecting": "A IA está selecionando sua próxima pergunta...",
+    "please_wait": "Por favor aguarde enquanto encontramos a pergunta perfeita para você",
+    "did_you_know": "Você sabia?",
+    "tips": {
+      "colors": "Cada nível tem sua própria cor única para representar a profundidade emocional das perguntas",
+      "ai_analysis": "Nossa IA analisa suas respostas para selecionar perguntas mais personalizadas conforme o jogo progride",
+      "response_timing": "O tempo de resposta ajuda a medir autenticidade - respostas espontâneas frequentemente revelam mais verdade",
+      "level_progression": "O jogo aprofunda progressivamente a intimidade através de níveis cuidadosamente elaborados de conexão emocional",
+      "proximity_question": "A pergunta de proximidade no início determina se você responderá verbalmente ou por escrito",
+      "ai_reasoning": "Cada pergunta selecionada por IA vem com o raciocínio sobre por que foi escolhida para seu relacionamento",
+      "evaluation_criteria": "Honestidade, atração, intimidade e surpresa são os quatro pilares de uma conexão significativa",
+      "connection_algorithm": "Sua pontuação final de conexão é calculada usando algoritmos avançados de psicologia de relacionamentos",
+      "question_variety": "As perguntas são categorizadas por temas como comunicação, valores, sonhos e crescimento pessoal",
+      "cultural_adaptation": "A IA adapta a seleção de perguntas baseada no contexto cultural e preferências de idioma",
+      "surprise_factor": "Perguntas inesperadas podem revelar aspectos ocultos da personalidade e aprofundar o entendimento",
+      "honest_responses": "As conexões mais poderosas vêm da expressão vulnerável e honesta de si mesmo",
+      "attraction_scale": "A atração abrange dimensões físicas, emocionais, intelectuais e espirituais",
+      "intimacy_levels": "A intimidade se constrói gradualmente através da vulnerabilidade compartilhada e tomada de riscos emocionais",
+      "game_psychology": "O jogo é projetado usando princípios da teoria do apego e pesquisa de relacionamentos",
+      "relationship_insights": "Suas respostas criam um perfil psicológico único da dinâmica do seu relacionamento",
+      "ai_selection": "IA avançada considera seu histórico, preferências e fase do relacionamento para escolher perguntas",
+      "conversation_flow": "As perguntas são sequenciadas para criar fluxo natural de conversa e progressão emocional",
+      "emotional_intelligence": "O jogo ajuda a desenvolver consciência emocional e habilidades de comunicação",
+      "vulnerability_trust": "Compartilhar vulnerabilidades com segurança constrói confiança e fortalece laços emocionais",
+      "authentic_connection": "Conexão autêntica acontece quando ambos os parceiros se sentem vistos e aceitos por quem são",
+      "listening_skills": "Escuta ativa durante respostas é tão importante quanto compartilhar seus próprios pensamentos",
+      "empathy_building": "Entender a perspectiva do seu parceiro constrói empatia e intimidade emocional",
+      "communication_patterns": "O jogo revela seus estilos e padrões únicos de comunicação",
+      "relationship_growth": "Check-ins emocionais regulares como este podem acelerar o desenvolvimento do relacionamento",
+      "trust_building": "A confiança se aprofunda quando parceiros consistentemente se apresentam com honestidade e aceitação",
+      "shared_experiences": "Criar novas experiências compartilhadas fortalece seu vínculo e cria memórias duradouras",
+      "emotional_safety": "Um espaço emocional seguro permite que ambos os parceiros se expressem sem julgamento",
+      "active_listening": "Realmente ouvir seu parceiro cria mais conexão do que ter a resposta perfeita",
+      "non_verbal_cues": "Preste atenção à linguagem corporal e emoções, não apenas palavras durante as respostas",
+      "quality_time": "Tempo focado e intencional juntos é um dos investimentos de relacionamento mais poderosos",
+      "appreciation_gratitude": "Expressar apreciação pela vulnerabilidade do seu parceiro cria reforço positivo",
+      "conflict_resolution": "Entender um ao outro profundamente torna resolver conflitos muito mais fácil",
+      "future_planning": "Compartilhar sonhos e objetivos ajuda a alinhar a direção do seu relacionamento"
+    }
   }
 }

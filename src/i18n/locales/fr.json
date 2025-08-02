@@ -439,5 +439,46 @@
         "endless_heat": "Illimité"
       }
     }
+  },
+  "interstitial": {
+    "selecting": "L'IA sélectionne votre prochaine question...",
+    "please_wait": "Veuillez patienter pendant que nous trouvons la question parfaite pour vous",
+    "did_you_know": "Le saviez-vous ?",
+    "tips": {
+      "colors": "Chaque niveau a sa propre couleur unique pour représenter la profondeur émotionnelle des questions",
+      "ai_analysis": "Notre IA analyse vos réponses pour sélectionner des questions plus personnalisées au fur et à mesure du jeu",
+      "response_timing": "Le temps de réponse aide à mesurer l'authenticité - les réponses spontanées révèlent souvent plus de vérité",
+      "level_progression": "Le jeu approfondit progressivement l'intimité à travers des niveaux soigneusement conçus de connexion émotionnelle",
+      "proximity_question": "La question de proximité au début détermine si vous répondrez verbalement ou par écrit",
+      "ai_reasoning": "Chaque question sélectionnée par IA vient avec le raisonnement sur pourquoi elle a été choisie pour votre relation",
+      "evaluation_criteria": "L'honnêteté, l'attraction, l'intimité et la surprise sont les quatre piliers d'une connexion significative",
+      "connection_algorithm": "Votre score de connexion final est calculé en utilisant des algorithmes avancés de psychologie relationnelle",
+      "question_variety": "Les questions sont catégorisées par thèmes comme la communication, les valeurs, les rêves et la croissance personnelle",
+      "cultural_adaptation": "L'IA adapte la sélection de questions basée sur le contexte culturel et les préférences linguistiques",
+      "surprise_factor": "Les questions inattendues peuvent révéler des aspects cachés de la personnalité et approfondir la compréhension",
+      "honest_responses": "Les connexions les plus puissantes viennent de l'expression vulnérable et honnête de soi",
+      "attraction_scale": "L'attraction englobe les dimensions physiques, émotionnelles, intellectuelles et spirituelles",
+      "intimacy_levels": "L'intimité se construit graduellement à travers la vulnérabilité partagée et la prise de risques émotionnels",
+      "game_psychology": "Le jeu est conçu en utilisant les principes de la théorie de l'attachement et la recherche relationnelle",
+      "relationship_insights": "Vos réponses créent un profil psychologique unique de votre dynamique relationnelle",
+      "ai_selection": "L'IA avancée considère votre historique, préférences et phase de relation pour choisir les questions",
+      "conversation_flow": "Les questions sont séquencées pour créer un flux de conversation naturel et une progression émotionnelle",
+      "emotional_intelligence": "Le jeu aide à développer la conscience émotionnelle et les compétences de communication",
+      "vulnerability_trust": "Partager les vulnérabilités en sécurité construit la confiance et renforce les liens émotionnels",
+      "authentic_connection": "La connexion authentique arrive quand les deux partenaires se sentent vus et acceptés pour qui ils sont",
+      "listening_skills": "L'écoute active pendant les réponses est aussi importante que partager vos propres pensées",
+      "empathy_building": "Comprendre la perspective de votre partenaire construit l'empathie et l'intimité émotionnelle",
+      "communication_patterns": "Le jeu révèle vos styles et patterns uniques de communication",
+      "relationship_growth": "Les vérifications émotionnelles régulières comme celle-ci peuvent accélérer le développement relationnel",
+      "trust_building": "La confiance s'approfondit quand les partenaires se présentent constamment avec honnêteté et acceptation",
+      "shared_experiences": "Créer de nouvelles expériences partagées renforce votre lien et crée des souvenirs durables",
+      "emotional_safety": "Un espace émotionnel sûr permet aux deux partenaires de s'exprimer sans jugement",
+      "active_listening": "Vraiment entendre votre partenaire crée plus de connexion qu'avoir la réponse parfaite",
+      "non_verbal_cues": "Faites attention au langage corporel et aux émotions, pas seulement aux mots pendant les réponses",
+      "quality_time": "Le temps focalisé et intentionnel ensemble est l'un des investissements relationnels les plus puissants",
+      "appreciation_gratitude": "Exprimer l'appréciation pour la vulnérabilité de votre partenaire crée un renforcement positif",
+      "conflict_resolution": "Se comprendre profondément rend la résolution de conflits beaucoup plus facile",
+      "future_planning": "Partager les rêves et objectifs aide à aligner la direction de votre relation"
+    }
   }
 }

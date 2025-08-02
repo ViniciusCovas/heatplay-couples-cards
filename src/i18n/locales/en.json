@@ -440,5 +440,46 @@
         "endless_heat": "Unlimited"
       }
     }
+  },
+  "interstitial": {
+    "selecting": "AI is selecting your next question...",
+    "please_wait": "Please wait while we find the perfect question for you",
+    "did_you_know": "Did you know?",
+    "tips": {
+      "colors": "Each level has its own unique color to represent the emotional depth of the questions",
+      "ai_analysis": "Our AI analyzes your responses to select more personalized questions as the game progresses",
+      "response_timing": "Response timing helps measure authenticity - spontaneous answers often reveal more truth",
+      "level_progression": "The game progressively deepens intimacy through carefully crafted levels of emotional connection",
+      "proximity_question": "The proximity question at the start determines whether you'll answer verbally or in writing",
+      "ai_reasoning": "Each AI-selected question comes with reasoning about why it was chosen for your relationship",
+      "evaluation_criteria": "Honesty, attraction, intimacy, and surprise are the four pillars of meaningful connection",
+      "connection_algorithm": "Your final connection score is calculated using advanced relationship psychology algorithms",
+      "question_variety": "Questions are categorized by themes like communication, values, dreams, and personal growth",
+      "cultural_adaptation": "The AI adapts question selection based on cultural context and language preferences",
+      "surprise_factor": "Unexpected questions can reveal hidden aspects of personality and deepen understanding",
+      "honest_responses": "The most powerful connections come from vulnerable and honest self-expression",
+      "attraction_scale": "Attraction encompasses physical, emotional, intellectual, and spiritual dimensions",
+      "intimacy_levels": "Intimacy builds gradually through shared vulnerability and emotional risk-taking",
+      "game_psychology": "The game is designed using principles from attachment theory and relationship research",
+      "relationship_insights": "Your responses create a unique psychological profile of your relationship dynamics",
+      "ai_selection": "Advanced AI considers your history, preferences, and relationship phase to choose questions",
+      "conversation_flow": "Questions are sequenced to create natural conversation flow and emotional progression",
+      "emotional_intelligence": "The game helps develop emotional awareness and communication skills",
+      "vulnerability_trust": "Sharing vulnerabilities safely builds trust and strengthens emotional bonds",
+      "authentic_connection": "Authentic connection happens when both partners feel seen and accepted for who they are",
+      "listening_skills": "Active listening during responses is as important as sharing your own thoughts",
+      "empathy_building": "Understanding your partner's perspective builds empathy and emotional intimacy",
+      "communication_patterns": "The game reveals your unique communication styles and patterns",
+      "relationship_growth": "Regular emotional check-ins like this can accelerate relationship development",
+      "trust_building": "Trust deepens when partners consistently show up with honesty and acceptance",
+      "shared_experiences": "Creating new shared experiences strengthens your bond and creates lasting memories",
+      "emotional_safety": "A safe emotional space allows both partners to express themselves without judgment",
+      "active_listening": "Truly hearing your partner creates connection more than having the perfect response",
+      "non_verbal_cues": "Pay attention to body language and emotions, not just words during responses",
+      "quality_time": "Focused, intentional time together is one of the most powerful relationship investments",
+      "appreciation_gratitude": "Expressing appreciation for your partner's vulnerability creates positive reinforcement",
+      "conflict_resolution": "Understanding each other deeply makes resolving conflicts much easier",
+      "future_planning": "Sharing dreams and goals helps align your relationship direction"
+    }
   }
 }
