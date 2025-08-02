@@ -180,10 +180,6 @@
     "waitingForEvaluation": "Esperando evaluación...",
     "proximityQuestion": "¿Qué tan cerca están?",
     "responseTime": "Tiempo de respuesta: {{time}}s",
-    "ai": {
-      "selectingQuestion": "La IA está seleccionando tu próxima pregunta...",
-      "analyzingResponse": "Analizando tu conversación para elegir la pregunta perfecta"
-    },
     "typeYourResponse": "Escribe tu respuesta...",
     "evaluateResponse": "Evalúa esta respuesta",
     "aiCardText": "✨ Carta-IA | Basada en su interacción 🪄",
