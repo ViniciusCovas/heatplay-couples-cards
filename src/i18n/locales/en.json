@@ -181,6 +181,10 @@
     "waitingForEvaluation": "Waiting for evaluation...",
     "proximityQuestion": "How close are you?",
     "responseTime": "Response time: {{time}}s",
+    "ai": {
+      "selectingQuestion": "AI is selecting your next question...",
+      "analyzingResponse": "Analyzing your conversation to pick the perfect question"
+    },
     "typeYourResponse": "Type your response...",
     "evaluateResponse": "Evaluate this response",
     "aiCardText": "✨ AI-Card Based on Last Interaction 🪄",

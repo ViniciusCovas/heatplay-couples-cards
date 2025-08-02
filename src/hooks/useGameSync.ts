@@ -13,7 +13,7 @@ interface GameSyncAction {
 }
 
 interface GameState {
-  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-selection' | 'waiting-for-evaluation';
+  current_phase: 'proximity-selection' | 'card-display' | 'response-input' | 'evaluation' | 'level-selection' | 'waiting-for-evaluation' | 'interstitial';
   proximity_question_answered: boolean;
   proximity_response: boolean | null;
   player1_proximity_response: boolean | null;
