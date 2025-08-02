@@ -39,11 +39,6 @@ i18n
     },
   })
   .then(() => {
-    if (import.meta.env?.DEV) {
-      console.log('🌍 i18n initialized with language:', i18n.language);
-      console.log('🌍 Available languages:', Object.keys(resources));
-      console.log('🌍 Browser language:', navigator.language);
-    }
   });
 
 export default i18n;

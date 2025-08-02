@@ -12,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Search, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/utils/logger";
 
 interface Level {
   id: string;
@@ -112,7 +113,7 @@ export default function AdminQuestionsManual() {
       setLevels(levelsData || []);
       setQuestions(questionsWithLevelNames || []);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      logger.error('Error fetching data:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los datos",
@@ -197,7 +198,7 @@ export default function AdminQuestionsManual() {
       setFormData({ text: "", category: "", level_id: "", language: selectedLanguage });
       fetchData();
     } catch (error) {
-      console.error('Error saving question:', error);
+      logger.error('Error saving question:', error);
       toast({
         title: "Error",
         description: "No se pudo guardar la pregunta",
@@ -233,7 +234,7 @@ export default function AdminQuestionsManual() {
       
       fetchData();
     } catch (error) {
-      console.error('Error deleting question:', error);
+      logger.error('Error deleting question:', error);
       toast({
         title: "Error",
         description: "No se pudo eliminar la pregunta",

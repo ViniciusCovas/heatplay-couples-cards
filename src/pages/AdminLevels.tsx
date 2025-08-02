@@ -11,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Edit, Trash2, Eye } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/utils/logger";
 
 interface Level {
   id: string;
@@ -74,7 +75,7 @@ export default function AdminLevels() {
 
       setLevels(levelsWithCounts);
     } catch (error) {
-      console.error('Error fetching levels:', error);
+      logger.error('Error fetching levels:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los niveles",
@@ -123,7 +124,7 @@ export default function AdminLevels() {
       setFormData({ name: "", description: "", icon: "", color: "", bg_color: "" });
       fetchLevels();
     } catch (error) {
-      console.error('Error saving level:', error);
+      logger.error('Error saving level:', error);
       toast({
         title: "Error",
         description: "No se pudo guardar el nivel",
@@ -160,7 +161,7 @@ export default function AdminLevels() {
       
       fetchLevels();
     } catch (error) {
-      console.error('Error deleting level:', error);
+      logger.error('Error deleting level:', error);
       toast({
         title: "Error",
         description: "No se pudo eliminar el nivel",

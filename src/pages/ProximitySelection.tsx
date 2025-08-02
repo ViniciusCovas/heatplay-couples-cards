@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/utils/logger';
 
 const ProximitySelection = () => {
   const navigate = useNavigate();
@@ -39,17 +40,17 @@ const ProximitySelection = () => {
     
     const autoJoinRoom = async () => {
       if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        console.log(`🔗 Auto-joining room attempt ${retryCount + 1}:`, roomCode);
+        logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode);
         setIsRetrying(true);
         
         try {
           const success = await joinRoom(roomCode);
           if (success) {
-            console.log('✅ Successfully joined room');
+            logger.debug('Successfully joined room');
             setRetryCount(0);
             setIsRetrying(false);
           } else {
-            console.log(`❌ Failed to join room (attempt ${retryCount + 1})`);
+            logger.debug(`Failed to join room (attempt ${retryCount + 1})`);
             setRetryCount(prev => prev + 1);
             
             // Retry after 2 seconds
@@ -67,7 +68,7 @@ const ProximitySelection = () => {
             }
           }
         } catch (error) {
-          console.error(`❌ Auto-join error (attempt ${retryCount + 1}):`, error);
+          logger.error(`Auto-join error (attempt ${retryCount + 1}):`, error);
           setRetryCount(prev => prev + 1);
           setIsRetrying(false);
           
@@ -97,7 +98,7 @@ const ProximitySelection = () => {
   }, [gameState, navigate, roomCode]);
 
   const handleProximitySelect = (isClose: boolean) => {
-    console.log('Proximity selected:', isClose);
+    logger.debug('Proximity selected:', isClose);
   };
 
   const handleGoBack = () => {

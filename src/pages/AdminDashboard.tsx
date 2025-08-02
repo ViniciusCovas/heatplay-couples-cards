@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Settings, Upload, Plus, FileText, Database, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/utils/logger";
 
 interface LevelStats {
   id: string;
@@ -103,7 +104,7 @@ const AdminDashboard = () => {
         recent
       });
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
+      logger.error('Error fetching admin stats:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar las estadísticas",

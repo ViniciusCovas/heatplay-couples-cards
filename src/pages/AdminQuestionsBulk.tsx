@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/utils/logger";
 
 interface Level {
   id: string;
@@ -46,7 +47,7 @@ export default function AdminQuestionsBulk() {
       if (error) throw error;
       setLevels(data || []);
     } catch (error) {
-      console.error('Error fetching levels:', error);
+      logger.error('Error fetching levels:', error);
       toast({
         title: "Error",
         description: "No se pudieron cargar los niveles",
@@ -169,7 +170,7 @@ export default function AdminQuestionsBulk() {
       if (fileInput) fileInput.value = '';
 
     } catch (error) {
-      console.error('Error uploading questions:', error);
+      logger.error('Error uploading questions:', error);
       toast({
         title: "Error",
         description: "No se pudieron subir las preguntas",

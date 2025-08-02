@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
@@ -31,7 +32,7 @@ export default function PaymentSuccess() {
     }
 
     try {
-      console.log(`[PaymentSuccess] Attempting verification for session: ${sessionId}, retry: ${retryCount}`);
+      logger.debug(`Attempting payment verification for session: ${sessionId}, retry: ${retryCount}`);
       const success = await verifyPayment(sessionId);
       
       if (success) {
@@ -41,7 +42,7 @@ export default function PaymentSuccess() {
         setError('La verificación del pago falló. Por favor, contacta soporte si tu tarjeta fue cobrada.');
       }
     } catch (error) {
-      console.error('Payment verification failed:', error);
+      logger.error('Payment verification failed:', error);
       setError('Error al verificar el pago. Por favor, intenta de nuevo.');
     } finally {
       setVerifying(false);
@@ -54,7 +55,7 @@ export default function PaymentSuccess() {
   };
 
   useEffect(() => {
-    console.log('[PaymentSuccess] Component mounted', { sessionId, credits });
+    logger.debug('PaymentSuccess component mounted', { sessionId, credits });
     handleVerification();
   }, [sessionId]);
 

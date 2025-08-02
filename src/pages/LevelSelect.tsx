@@ -22,6 +22,7 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useLevelSelection } from "@/hooks/useLevelSelection";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/ui/animated-logo";
+import { logger } from "@/utils/logger";
 
 const LevelSelect = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const LevelSelect = () => {
   const playerNumber = getPlayerNumber();
 
   // Debug information
-  console.log('📊 LevelSelect Debug:', {
+  logger.debug('LevelSelect Debug:', {
     roomCode,
     room: room?.id,
     isConnected,
@@ -61,7 +62,7 @@ const LevelSelect = () => {
   useEffect(() => {
     const fetchLevels = async () => {
       try {
-        console.log('🔍 Fetching levels for language:', i18n.language);
+        logger.debug('Fetching levels for language:', i18n.language);
         const { data: levelsData, error: levelsError } = await supabase
           .from('levels')
           .select('*')
@@ -69,7 +70,7 @@ const LevelSelect = () => {
           .eq('language', i18n.language)
           .order('sort_order');
 
-        console.log('📊 Levels query result:', { levelsData, levelsError, count: levelsData?.length });
+        logger.debug('Levels query result:', { levelsData, levelsError, count: levelsData?.length });
 
         if (levelsError) throw levelsError;
 
@@ -115,10 +116,10 @@ const LevelSelect = () => {
           })
         );
 
-        console.log('✅ Final levels with counts:', levelsWithCounts);
+        logger.debug('Final levels with counts:', levelsWithCounts);
         setLevels(levelsWithCounts);
       } catch (error) {
-        console.error('Error fetching levels:', error);
+        logger.error('Error fetching levels:', error);
         // Fallback to default levels if database fails
         setLevels([
           {
@@ -148,12 +149,12 @@ const LevelSelect = () => {
   };
 
   const startLevel = async (levelId: number) => {
-    console.log('🚀 startLevel called:', { levelId, roomId: room?.id, playerId });
+    logger.debug('startLevel called:', { levelId, roomId: room?.id, playerId });
     
     try {
       await submitLevelVote(levelId);
     } catch (error) {
-      console.error('❌ Error voting for level:', error);
+      logger.error('Error voting for level:', error);
     }
   };
 
@@ -181,7 +182,7 @@ const LevelSelect = () => {
   // Navigate to game when level is agreed upon
   useEffect(() => {
     if (agreedLevel && room?.id) {
-      console.log('🚀 Level agreed, navigating to game:', { agreedLevel, roomId: room.id });
+      logger.debug('Level agreed, navigating to game:', { agreedLevel, roomId: room.id });
       const timer = setTimeout(() => {
         navigate(`/game?room=${roomCode}&level=${agreedLevel}`);
       }, 1500); // Reduced time to 1.5 seconds
@@ -194,7 +195,7 @@ const LevelSelect = () => {
   // Auto-join room if not connected
   useEffect(() => {
     if (roomCode && !isConnected && !room) {
-      console.log('🔗 Auto-joining room from LevelSelect:', roomCode);
+      logger.debug('Auto-joining room from LevelSelect:', roomCode);
       joinRoom(roomCode);
     }
   }, [roomCode, isConnected, room, joinRoom]);

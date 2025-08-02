@@ -90,7 +90,7 @@ export const GetCloseAnalysis: React.FC<GetCloseAnalysisProps> = ({
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-      console.error('❌ Error generating AI analysis:', errorMessage);
+      logger.error('Error generating AI analysis:', errorMessage);
       setError(errorMessage);
       
       toast({
