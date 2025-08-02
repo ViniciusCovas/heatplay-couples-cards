@@ -419,11 +419,6 @@
     "culturalNotes": "Cultural Notes",
     "nextSession": "Next Session"
   },
-  "interstitial": {
-    "aiSelecting": "AI is selecting your next question...",
-    "choosingPerfectQuestion": "Choosing the perfect question for you both",
-    "didYouKnow": "Did you know?"
-  },
   "credits": {
     "modal": {
       "title": "Select Your Plan",
