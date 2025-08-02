@@ -418,21 +418,6 @@
     "culturalNotes": "Notes Culturelles",
     "nextSession": "Prochaine Session"
   },
-  "interstitial": {
-    "aiSelecting": "L'IA sélectionne votre prochaine question...",
-    "tips": {
-      "director": "GetClose AI agit comme un Directeur d'Expérience Émotionnelle.",
-      "variables": "Notre IA mesure des dizaines de variables pour créer l'expérience de carte parfaite pour vous.",
-      "questions": "Parmi plus de 1 000 questions, nous choisissons seulement celles dont vous avez besoin maintenant.",
-      "context": "Vos interactions établissent le contexte conversationnel actuel pour l'IA.",
-      "honest": "Ne faites pas semblant. Notre IA est conçue pour lire entre les lignes.",
-      "personalized": "Plus vous êtes honnête, plus votre parcours devient personnalisé.",
-      "calculated": "Ce n'est pas aléatoire. Chaque carte est un pas calculé vers l'avant.",
-      "rhythm": "Notre moteur analyse le rythme émotionnel de votre conversation.",
-      "fingerprint": "Nous suivons l'empreinte unique de votre connexion.",
-      "language": "L'IA apprend votre langage partagé."
-    }
-  },
   "credits": {
     "modal": {
       "title": "Sélectionnez Votre Plan",
