@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export interface CreditPackage {
   id: string;
@@ -69,12 +70,12 @@ export const useCredits = () => {
         .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching credits:', error);
+        logger.error('Error fetching credits', error);
       }
 
       setCredits(data?.balance || 0);
     } catch (error) {
-      console.error('Error fetching credits:', error);
+      logger.error('Error fetching credits', error);
     } finally {
       setLoading(false);
     }
@@ -99,7 +100,7 @@ export const useCredits = () => {
         return true;
       }
     } catch (error) {
-      console.error('Error purchasing credits:', error);
+      logger.error('Error purchasing credits', error);
       toast.error('Error al procesar el pago');
       return false;
     } finally {
@@ -121,7 +122,7 @@ export const useCredits = () => {
         return true;
       }
     } catch (error) {
-      console.error('Error verifying payment:', error);
+      logger.error('Error verifying payment', error);
       toast.error('Error al verificar el pago');
     }
     return false;
@@ -146,7 +147,7 @@ export const useCredits = () => {
         return { success: false, error: result?.error, balance: result?.balance };
       }
     } catch (error) {
-      console.error('Error consuming credit:', error);
+      logger.error('Error consuming credit', error);
       return { success: false, error: 'server_error' };
     }
   };

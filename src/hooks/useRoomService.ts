@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { usePlayerId } from '@/hooks/usePlayerId';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/utils/logger';
 
 export interface GameRoom {
   id: string;
@@ -273,7 +274,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
             .eq('room_id', room.id);
           
           if (data) {
-            console.log('🔄 Participants updated via realtime:', data);
+            logger.debug('Participants updated via realtime', { data });
             setParticipants(data as RoomParticipant[]);
           }
         }
@@ -314,7 +315,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .eq('room_id', room.id);
       
       if (data) {
-        console.log('🔄 Initial participants loaded:', data);
+        logger.debug('Initial participants loaded', { data });
         setParticipants(data as RoomParticipant[]);
       }
     };
@@ -332,7 +333,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     const participant = participants.find(p => p.player_id === playerId);
     const newPlayerNumber = participant?.player_number || null;
     
-    console.log('🎯 Player number calculation:', {
+    logger.debug('Player number calculation', {
       playerId,
       participants: participants.map(p => ({ id: p.player_id, number: p.player_number })),
       currentParticipant: participant,
@@ -341,7 +342,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     });
     
     if (newPlayerNumber !== playerNumber) {
-      console.log('🔄 Player number updated:', { from: playerNumber, to: newPlayerNumber });
+      logger.debug('Player number updated', { from: playerNumber, to: newPlayerNumber });
       setPlayerNumber(newPlayerNumber);
     }
   }, [playerId, participants, playerNumber]);

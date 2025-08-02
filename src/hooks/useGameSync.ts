@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { logger } from '@/utils/logger';
 
 interface GameSyncAction {
   id: string;
@@ -40,8 +41,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
   const [isLoading, setIsLoading] = useState(false);
   const { t, i18n } = useTranslation();
 
-  // Debug language consistency
-  console.log('🌍 useGameSync language:', i18n.language);
+  logger.debug('useGameSync language', { language: i18n.language });
 
   // Load initial game state
   useEffect(() => {
@@ -209,7 +209,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
       case 'level_change_request':
         showToast(t('game.notifications.choosingNewLevel'));
         
-        console.log('🔄 Level change request - resetting game state');
+        logger.info('Level change request - resetting game state');
         
         // Clear existing level selection votes for fresh start
         await supabase
@@ -228,7 +228,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           })
           .eq('id', action.room_id);
         
-        console.log('✅ Game state reset: current_card=null, used_cards=[]');
+        logger.info('Game state reset: current_card=null, used_cards=[]');
         
         // Navigate both players to level selection
         window.location.href = `/level-select?room=${action.action_data.roomCode}`;

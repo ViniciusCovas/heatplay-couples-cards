@@ -19,6 +19,7 @@ import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/utils/logger";
 
 type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
@@ -65,7 +66,7 @@ const Game = () => {
   const [pausedTime, setPausedTime] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(Date.now());
   
-  console.log('🎮 Game component initialized:', { 
+  logger.debug('Game component initialized', { 
     roomCode, 
     currentLevel, 
     room: room?.id,
@@ -76,7 +77,7 @@ const Game = () => {
 
   // RESET GAME STATE WHEN LEVEL CHANGES
   useEffect(() => {
-    console.log('🔄 Level changed - resetting local game state:', { currentLevel });
+    logger.debug('Level changed - resetting local game state', { currentLevel });
     
     // Reset all local game state when level changes
     setCurrentCard('');
@@ -90,7 +91,7 @@ const Game = () => {
     // DON'T clear AI info immediately - let it persist through level changes
     // Only clear it when we actually generate a new card
     
-    console.log('✅ Local game state reset for new level (AI info preserved):', currentLevel);
+    logger.debug('Local game state reset for new level (AI info preserved)', { currentLevel });
   }, [currentLevel]);
 
   // Auto-join room if we have a roomCode but aren't connected
@@ -99,17 +100,17 @@ const Game = () => {
     
     const autoJoinRoom = async () => {
       if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        console.log(`🔗 Auto-joining room attempt ${retryCount + 1}:`, roomCode);
+        logger.debug(`Auto-joining room attempt ${retryCount + 1}`, { roomCode });
         setIsRetrying(true);
         
         try {
           const success = await joinRoom(roomCode);
           if (success) {
-            console.log('✅ Successfully joined room');
+            logger.info('Successfully joined room');
             setRetryCount(0);
             setIsRetrying(false);
           } else {
-            console.log(`❌ Failed to join room (attempt ${retryCount + 1})`);
+            logger.warn(`Failed to join room (attempt ${retryCount + 1})`);
             setRetryCount(prev => prev + 1);
             
             // Retry after 2 seconds
@@ -127,7 +128,7 @@ const Game = () => {
             }
           }
         } catch (error) {
-          console.error(`❌ Auto-join error (attempt ${retryCount + 1}):`, error);
+          logger.error(`Auto-join error (attempt ${retryCount + 1})`, error);
           setRetryCount(prev => prev + 1);
           setIsRetrying(false);
           
@@ -178,7 +179,7 @@ const Game = () => {
                    (currentTurn === 'player2' && playerNumber === 2);
   
   
-  console.log('🎯 Turn logic:', { 
+  logger.debug('Turn logic', { 
     currentTurn, 
     playerNumber, 
     isMyTurn, 
@@ -189,14 +190,14 @@ const Game = () => {
   const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
     // Check if room is finished first - this overrides any phase logic
     if (room?.status === 'finished') {
-      console.log('🏁 Game is finished, showing final report');
+      logger.info('Game is finished, showing final report');
       return 'final-report';
     }
     
     const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
                          (dbState.current_turn === 'player2' && playerNum === 2);
     
-    console.log('🎯 deriveLocalPhase:', { 
+    logger.debug('deriveLocalPhase', { 
       dbPhase: dbState.current_phase, 
       dbTurn: dbState.current_turn, 
       roomStatus: room?.status,
@@ -222,14 +223,14 @@ const Game = () => {
   // Main sync useEffect - handles ALL phase transitions based on database state
   useEffect(() => {
     if (gameState) {
-      console.log('🔄 Syncing with game state:', gameState);
+      logger.debug('Syncing with game state', { gameState });
       
       // Update turn
       setCurrentTurn(gameState.current_turn);
       
       // Update card only if it exists in game state
       if (gameState.current_card && gameState.current_card !== currentCard) {
-        console.log('📄 Card updated from game state:', gameState.current_card);
+        logger.debug('Card updated from game state', { currentCard: gameState.current_card });
         setCurrentCard(gameState.current_card);
         setShowCard(false);
         setTimeout(() => setShowCard(true), 300);
@@ -243,7 +244,7 @@ const Game = () => {
       // Sync game phase based on database state and player logic - ONLY source of phase changes
       const newPhase = deriveLocalPhase(gameState, playerNumber);
       if (newPhase !== gamePhase) {
-        console.log('🎮 Phase changed via deriveLocalPhase:', { 
+        logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
           to: newPhase, 
           dbPhase: gameState.current_phase,
@@ -258,7 +259,7 @@ const Game = () => {
 
   // Debug effect to track critical state changes
   useEffect(() => {
-    console.log('🔄 Critical state update:', { 
+    logger.debug('Critical state update', { 
       playerNumber, 
       gamePhase,
       currentTurn: gameState?.current_turn,
@@ -273,7 +274,7 @@ const Game = () => {
   useEffect(() => {
     const setupEvaluationData = async () => {
       if (gamePhase === 'evaluation' && gameState && room && !pendingEvaluation) {
-        console.log('🔄 Setting up evaluation data for evaluator');
+        logger.debug('Setting up evaluation data for evaluator');
         
         try {
           // Get the current round number
@@ -293,7 +294,7 @@ const Game = () => {
             .single();
 
           if (error) {
-            console.error('❌ Error fetching response for evaluation:', error);
+            logger.error('Error fetching response for evaluation', error);
             return;
           }
 
@@ -310,10 +311,10 @@ const Game = () => {
               playerName: partnerName
             });
 
-            console.log('✅ Evaluation data set up successfully for partner response');
+            logger.info('Evaluation data set up successfully for partner response');
           }
         } catch (error) {
-          console.error('❌ Error setting up evaluation data:', error);
+          logger.error('Error setting up evaluation data', error);
         }
       }
     };
@@ -344,7 +345,7 @@ const Game = () => {
     }
     
     // Fallback: try to get card text from database if levelCards is empty
-    console.warn('🚨 getCurrentCardText: Card not found in levelCards, returning ID as fallback:', currentCard);
+    logger.warn('getCurrentCardText: Card not found in levelCards, returning ID as fallback', { currentCard });
     return currentCard;
   };
 
@@ -363,7 +364,7 @@ const Game = () => {
       try {
         // Use room's selected language if available, otherwise fall back to UI language
         const gameLanguage = gameState?.selected_language || i18n.language;
-        console.log('🌍 Fetching questions for language:', gameLanguage, 'level:', currentLevel, 'room language:', gameState?.selected_language);
+        logger.debug('Fetching questions', { gameLanguage, currentLevel, roomLanguage: gameState?.selected_language });
         
         // Get level information
         const { data: levelData, error: levelError } = await supabase
@@ -390,7 +391,7 @@ const Game = () => {
         setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
 
-        console.log('📚 Loaded questions:', { 
+        logger.debug('Loaded questions', { 
           level: currentLevel, 
           levelName: levelData.name, 
           questionCount: questions.length,
@@ -403,7 +404,7 @@ const Game = () => {
         // If game language changed, reset the game state for new language
         const currentGameLanguage = gameState?.selected_language || i18n.language;
         if (prevLanguage !== currentGameLanguage) {
-          console.log('🔄 Game language changed from', prevLanguage, 'to', currentGameLanguage, '- resetting game state');
+          logger.info('Game language changed - resetting game state', { from: prevLanguage, to: currentGameLanguage });
           
           // Clear current card and used cards to start fresh with new language
           if (gameState?.current_card) {
@@ -417,7 +418,7 @@ const Game = () => {
         }
         
       } catch (error) {
-        console.error('Error fetching questions:', error);
+        logger.error('Error fetching questions', error);
         // Fallback to sample data
         const fallbackQuestions = [
           { id: 'fallback-1', text: t('game.fallbackQuestions.question1') },
@@ -442,7 +443,7 @@ const Game = () => {
 
   // Enhanced AI card info debugging
   useEffect(() => {
-    console.log('🤖 AI Card Info state changed:', { 
+    logger.debug('AI Card Info state changed', { 
       aiCardInfo, 
       currentCard,
       hasReasoning: Boolean(aiCardInfo?.reasoning),
@@ -456,7 +457,7 @@ const Game = () => {
     try {
       // Use room's language for AI selection
       const gameLanguage = gameState?.selected_language || language;
-      console.log('🧠 Starting AI card selection (ALWAYS TRY AI)...', { roomId, currentLevel, language: gameLanguage, isFirstQuestion });
+      logger.info('Starting AI card selection', { roomId, currentLevel, language: gameLanguage, isFirstQuestion });
       setIsGeneratingCard(true);
       
       const { data, error } = await supabase.functions.invoke('intelligent-question-selector', {
@@ -469,7 +470,7 @@ const Game = () => {
       });
 
       if (error) {
-        console.warn('⚠️ AI selection failed, falling back to random:', error);
+        logger.warn('AI selection failed, falling back to random', error);
         return { 
           cardId: null, 
           reasoning: null, 
@@ -479,7 +480,7 @@ const Game = () => {
       }
 
       if (data?.question && data?.reasoning) {
-        console.log('✅ AI selected card successfully:', { 
+        logger.info('AI selected card successfully', { 
           question: data.question.text,
           reasoning: data.reasoning,
           targetArea: data.targetArea,
@@ -495,7 +496,7 @@ const Game = () => {
         };
       }
       
-      console.log('⚠️ AI selection returned invalid data, falling back to random');
+      logger.warn('AI selection returned invalid data, falling back to random');
       return { 
         cardId: null, 
         reasoning: null, 
@@ -503,7 +504,7 @@ const Game = () => {
         selectionMethod: 'ai_failure' 
       };
     } catch (error) {
-      console.warn('⚠️ AI selection error, falling back to random:', error);
+      logger.warn('AI selection error, falling back to random', error);
       return { 
         cardId: null, 
         reasoning: null, 
@@ -531,7 +532,7 @@ const Game = () => {
           // ALWAYS try AI selection first - for ALL cards, not just first
           const isFirstQuestion = usedCardsFromState.length === 0;
           
-          console.log('🎯 Attempting AI card generation for ALL cards:', { 
+          logger.debug('Attempting AI card generation for ALL cards', { 
             isFirstQuestion, 
             availableCards: availableCards.length,
             currentLevel,
@@ -554,7 +555,7 @@ const Game = () => {
               current_card_selection_method: aiResult.selectionMethod
             };
             
-            console.log('✅ AI selection successful, saving to database:', updatesForGameState);
+            logger.info('AI selection successful, saving to database', { updatesForGameState });
           } else {
             // AI failed - use random selection and clear AI data
             const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
@@ -566,7 +567,7 @@ const Game = () => {
               current_card_selection_method: 'random_fallback'
             };
             
-            console.log('🎲 Using random card fallback, clearing AI data:', { 
+            logger.info('Using random card fallback, clearing AI data', { 
               selectedCard, 
               selectedText: randomQuestion.text,
               availableCards: availableCards.length,
@@ -578,7 +579,7 @@ const Game = () => {
           // Update database with all data at once - this will sync to both players
           await updateGameState(updatesForGameState);
           
-          console.log('✅ Card generation completed and synced to database:', updatesForGameState);
+          logger.info('Card generation completed and synced to database', { updatesForGameState });
         }
       }
     };
@@ -604,7 +605,7 @@ const Game = () => {
   };
 
   const startTimer = () => {
-    console.log('⏱️ Starting timer');
+    logger.debug('Starting timer');
     setCardDisplayStartTime(Date.now());
     setTimerPaused(false);
     setPausedTime(0);
@@ -612,7 +613,7 @@ const Game = () => {
 
   const pauseTimer = () => {
     if (!timerPaused && cardDisplayStartTime > 0) {
-      console.log('⏸️ Pausing timer');
+      logger.debug('Pausing timer');
       const elapsedTime = Date.now() - cardDisplayStartTime;
       setPausedTime(elapsedTime);
       setTimerPaused(true);
@@ -621,14 +622,14 @@ const Game = () => {
 
   const resumeTimer = () => {
     if (timerPaused) {
-      console.log('▶️ Resuming timer');
+      logger.debug('Resuming timer');
       setCardDisplayStartTime(Date.now() - pausedTime);
       setTimerPaused(false);
     }
   };
 
   const resetTimer = () => {
-    console.log('🔄 Resetting timer');
+    logger.debug('Resetting timer');
     setCardDisplayStartTime(0);
     setTimerPaused(false);
     setPausedTime(0);
@@ -685,7 +686,7 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      console.log('📝 Submitting response with timer data:', { 
+      logger.info('Submitting response with timer data', { 
         response, 
         actualResponseTime, 
         currentCardFromState,
@@ -712,11 +713,11 @@ const Game = () => {
         });
 
       if (responseError) {
-        console.error('❌ Error saving response:', responseError);
+        logger.error('Error saving response', responseError);
         throw responseError;
       }
 
-      console.log('✅ Response saved successfully with accurate timing data');
+      logger.info('Response saved successfully with accurate timing data');
 
       // Reset timer after successful submission
       resetTimer();
@@ -726,14 +727,14 @@ const Game = () => {
       
       // Transition to evaluation phase - other player evaluates
       const nextTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-      console.log('✅ Response submitted, moving to evaluation phase for other player');
+      logger.info('Response submitted, moving to evaluation phase for other player');
       await updateGameState({
         current_turn: nextTurn,
         current_phase: 'evaluation'
       });
       
     } catch (error) {
-      console.error('❌ Error submitting response:', error);
+      logger.error('Error submitting response', error);
       toast({
         title: t('common.error'),
         description: t('game.errors.responseSaveFailed'),
@@ -748,7 +749,7 @@ const Game = () => {
   const advanceToNextRound = async (completedQuestion: string) => {
     if (!room || !gameState) return;
 
-    console.log('🎯 Advancing to next round after completing:', completedQuestion);
+    logger.info('Advancing to next round after completing', { completedQuestion });
 
     // Calculate the round number based on current used cards + the completed question
     const currentUsedCards = gameState.used_cards || [];
@@ -762,7 +763,7 @@ const Game = () => {
     // The next answerer should be the current evaluator (who just finished evaluating)
     const nextTurn = currentTurn; // The evaluator becomes the next answerer
     
-    console.log('🔄 Turn switching logic:', {
+    logger.debug('Turn switching logic', {
       currentTurn: currentTurn,
       nextTurn: nextTurn,
       explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
@@ -775,7 +776,7 @@ const Game = () => {
       // IMPORTANT: Clear AI info when advancing to next round for NEW card generation
       setAiCardInfo(null);
       
-      console.log('🎯 Moving to next card (deterministic):', {
+      logger.info('Moving to next card (deterministic)', {
         nextCard,
         nextTurn,
         newUsedCards: newUsedCards.length,
@@ -793,7 +794,7 @@ const Game = () => {
       return { nextCard, nextTurn };
     } else {
       // No more cards, finish level
-      console.log('🏁 No more cards available - finishing level:', currentLevel);
+      logger.info('No more cards available - finishing level', { currentLevel });
       
       if (currentLevel >= 4) {
         generateFinalReport();
@@ -817,7 +818,7 @@ const Game = () => {
     setIsSubmitting(true);
 
     try {
-      console.log('📊 Submitting evaluation with timing context:', { 
+      logger.info('Submitting evaluation with timing context', { 
         evaluation, 
         responseId: pendingEvaluation.responseId 
       });
@@ -840,18 +841,18 @@ const Game = () => {
         .eq('id', pendingEvaluation.responseId);
 
       if (evaluationError) {
-        console.error('❌ Error saving evaluation:', evaluationError);
+        logger.error('Error saving evaluation', evaluationError);
         throw evaluationError;
       }
 
-      console.log('✅ Evaluation saved successfully with timing context');
+      logger.info('Evaluation saved successfully with timing context');
 
       // Call centralized function to advance to next round
       await advanceToNextRound(pendingEvaluation.question);
       
       setPendingEvaluation(null);
     } catch (error) {
-      console.error('❌ Error submitting evaluation:', error);
+      logger.error('Error submitting evaluation', error);
       toast({
         title: t('common.error'),
         description: t('game.errors.evaluationSaveFailed'),
@@ -886,7 +887,7 @@ const Game = () => {
 
   const generateFinalReport = async () => {
     try {
-      console.log('📊 Generating final report - fetching all game data from database');
+      logger.info('Generating final report - fetching all game data from database');
       
       // Fetch all responses and evaluations from database for complete analysis
       const { data: allResponses, error } = await supabase
@@ -898,14 +899,14 @@ const Game = () => {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('❌ Error fetching game responses:', error);
+        logger.error('Error fetching game responses', error);
         throw error;
       }
 
-      console.log('📊 Retrieved responses for analysis:', allResponses);
+      logger.debug('Retrieved responses for analysis', { responseCount: allResponses?.length });
 
       if (!allResponses || allResponses.length === 0) {
-        console.log('⚠️ No responses found for analysis');
+        logger.warn('No responses found for analysis');
         toast({
           title: t('game.errors.insufficientData'),
           description: t('game.errors.insufficientDataDescription'),
@@ -929,12 +930,12 @@ const Game = () => {
         playerId: response.player_id
       }));
 
-      console.log('📊 Formatted responses for connection analysis:', formattedResponses);
+      logger.debug('Formatted responses for connection analysis', { responseCount: formattedResponses.length });
 
       const connectionData = calculateConnectionScore(formattedResponses);
       setConnectionData(connectionData);
       
-      console.log('🏁 Setting game to finished state');
+      logger.info('Setting game to finished state');
       
       // Sync the final report to both players
       await syncAction('game_finish', {
@@ -945,7 +946,7 @@ const Game = () => {
       // Update room status to finished (deriveLocalPhase will handle phase transition)
       await updateRoomStatus('finished');
     } catch (error) {
-      console.error('❌ Error generating final report:', error);
+      logger.error('Error generating final report', error);
       toast({
         title: t('common.error'),
         description: t('game.errors.finalReportFailed'),
@@ -971,7 +972,7 @@ const Game = () => {
       });
       navigate(`/level-select?room=${roomCode}`);
     } catch (error) {
-      console.error('❌ Error requesting level change:', error);
+      logger.error('Error requesting level change', error);
       toast({
         title: t('common.error'),
         description: t('game.errors.levelChangeFailed'),
@@ -995,7 +996,7 @@ const Game = () => {
     
     // Listen for game finish events from partner
     const handleGameFinish = (event: CustomEvent) => {
-      console.log('🏁 Received game finish event from partner');
+      logger.info('Received game finish event from partner');
       const { connectionData } = event.detail;
       if (connectionData) {
         setConnectionData(connectionData);
@@ -1005,7 +1006,7 @@ const Game = () => {
 
     // Listen for level change requests from partner
     const handleChangeLevelRequest = (event: CustomEvent) => {
-      console.log('🎯 Received level change request from partner');
+      logger.info('Received level change request from partner');
       navigate(`/level-select?room=${roomCode}`);
     };
 

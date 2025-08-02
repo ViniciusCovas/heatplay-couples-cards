@@ -5,6 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { X } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
+import { logger } from "@/utils/logger";
 
 interface ResponseEvaluationProps {
   isVisible: boolean;
@@ -84,8 +85,7 @@ export const ResponseEvaluation = ({
     }
   ];
 
-  // Debug language consistency
-  console.log('🌍 ResponseEvaluation language:', i18n.language);
+  logger.debug('ResponseEvaluation language', { language: i18n.language });
   
   return (
     <div className="fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
