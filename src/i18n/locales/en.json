@@ -419,6 +419,21 @@
     "culturalNotes": "Cultural Notes",
     "nextSession": "Next Session"
   },
+  "interstitial": {
+    "aiSelecting": "AI is selecting your next question...",
+    "tips": {
+      "director": "GetClose AI acts as a Director of Emotional Experience.",
+      "variables": "Our AI measures dozens of variables to create the perfect card experience for you.",
+      "questions": "From over 1,000 questions, we pick only the ones you both need right now.",
+      "context": "Your interactions establish the current conversational context for the AI.",
+      "honest": "Don't fake it. Our AI is designed to read between the lines.",
+      "personalized": "The more honest you are, the more personalized your journey becomes.",
+      "calculated": "This isn't random. Every card is a calculated step forward.",
+      "rhythm": "Our engine analyzes the emotional rhythm of your conversation.",
+      "fingerprint": "We're tracking your connection's unique fingerprint.",
+      "language": "The AI is learning your shared language."
+    }
+  },
   "credits": {
     "modal": {
       "title": "Select Your Plan",
