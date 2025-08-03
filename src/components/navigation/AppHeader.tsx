@@ -7,7 +7,7 @@ import { Logo } from '@/components/ui/animated-logo';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Menu, LogOut, Settings, User } from 'lucide-react';
 
@@ -19,8 +19,17 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
   const { user, isAdmin, signOut } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Define game flow routes where logo and login should be hidden
+  const gameFlowRoutes = ['/join-room', '/proximity-selection', '/level-select'];
+  const isGameFlow = gameFlowRoutes.includes(location.pathname);
+  
+  // Show logo and login on marketing/auth pages only
+  const showLogo = !isGameFlow;
+  const showAuthButton = !isGameFlow;
 
   const handleSignOut = async () => {
     await signOut();
@@ -134,7 +143,7 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
                 </Button>
               </div>
             ) : (
-              <AuthButton />
+              showAuthButton && <AuthButton />
             )}
           </div>
           
@@ -152,19 +161,21 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <div className="flex items-center">
-          <Logo size="small" className="cursor-pointer" onClick={() => navigate('/')} />
-        </div>
+        {showLogo && (
+          <div className="flex items-center">
+            <Logo size="small" className="cursor-pointer" onClick={() => navigate('/')} />
+          </div>
+        )}
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-4">
+        <div className={`hidden md:flex items-center space-x-4 ${!showLogo ? 'ml-auto' : ''}`}>
           <LanguageSelector />
-          {user ? <UserMenu /> : <AuthButton />}
+          {user ? <UserMenu /> : (showAuthButton && <AuthButton />)}
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center space-x-2">
-          {!user && <AuthButton />}
+        <div className={`md:hidden flex items-center space-x-2 ${!showLogo ? 'ml-auto' : ''}`}>
+          {!user && showAuthButton && <AuthButton />}
           <MobileMenu />
         </div>
       </div>
