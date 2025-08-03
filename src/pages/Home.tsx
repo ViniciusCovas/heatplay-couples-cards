@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, Users, MessageCircle, Settings, Sparkles, ArrowRight, Shield, Clock, Zap, Star, TrendingUp, Users2, CheckCircle, LogOut } from "lucide-react";
+import { Heart, Users, MessageCircle, Sparkles, ArrowRight, Shield, Clock, Zap, Star, TrendingUp, Users2, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
-import { LanguageSelector } from "@/components/ui/language-selector";
 import { Logo } from "@/components/ui/animated-logo";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 const Home = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, signOut } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  React.useEffect(() => {
+    const handleAuthModalEvent = () => setShowAuthModal(true);
+    window.addEventListener('home-auth-modal', handleAuthModalEvent);
+    return () => window.removeEventListener('home-auth-modal', handleAuthModalEvent);
+  }, []);
 
   const handleStartJourney = () => {
     if (!user) {
@@ -23,10 +26,6 @@ const Home = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.reload();
-  };
   return <div className="min-h-screen bg-background relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 pointer-events-none"></div>
@@ -34,11 +33,6 @@ const Home = () => {
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-pulse" style={{
       animationDelay: '2s'
     }}></div>
-      
-      {/* Language Selector */}
-      <div className="absolute top-6 right-6 z-20">
-        <LanguageSelector />
-      </div>
       
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-screen">
@@ -143,39 +137,6 @@ const Home = () => {
               </span>
             </div>
 
-            {/* Admin & Auth Links */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start pt-4">
-              {isAdmin && (
-                <Button onClick={() => navigate('/admin-panel-secret')} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                  <Settings className="w-4 h-4 mr-2" />
-                  {t('navigation.admin')}
-                </Button>
-              )}
-              
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
-                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <span className="hidden sm:inline">{user.user_metadata?.full_name || user.email}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {t('auth.signOut', 'Sign Out')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button onClick={() => navigate('/auth')} variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-                  {t('home.buttons.login')}
-                </Button>
-              )}
-            </div>
           </div>
 
           {/* Right Side - Dynamic Visual - Hidden on Mobile */}

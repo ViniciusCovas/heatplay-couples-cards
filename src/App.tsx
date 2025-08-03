@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import Home from "./pages/Home";
 import CreateRoom from "./pages/CreateRoom";
@@ -22,8 +22,55 @@ import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import AdminGuard from "./components/auth/AdminGuard";
+import { AppHeader } from "./components/navigation/AppHeader";
 
 const queryClient = new QueryClient();
+
+const AppContent = () => {
+  const location = useLocation();
+  
+  // Pages that shouldn't show the header
+  const noHeaderPages = ['/game', '/admin-panel-secret', '/admin/levels', '/admin/questions-bulk', '/admin/questions-manual'];
+  const showHeader = !noHeaderPages.includes(location.pathname);
+
+  return (
+    <div className="min-h-screen">
+      {showHeader && <AppHeader onAuthClick={location.pathname === '/' ? () => window.dispatchEvent(new CustomEvent('home-auth-modal')) : undefined} />}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/create-room" element={<CreateRoom />} />
+        <Route path="/join-room" element={<JoinRoom />} />
+        <Route path="/proximity-selection" element={<ProximitySelection />} />
+        <Route path="/level-select" element={<LevelSelect />} />
+        <Route path="/game" element={<Game />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/admin-panel-secret" element={
+          <AdminGuard>
+            <AdminDashboard />
+          </AdminGuard>
+        } />
+        <Route path="/admin/levels" element={
+          <AdminGuard>
+            <AdminLevels />
+          </AdminGuard>
+        } />
+        <Route path="/admin/questions-bulk" element={
+          <AdminGuard>
+            <AdminQuestionsBulk />
+          </AdminGuard>
+        } />
+        <Route path="/admin/questions-manual" element={
+          <AdminGuard>
+            <AdminQuestionsManual />
+          </AdminGuard>
+        } />
+        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -33,38 +80,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create-room" element={<CreateRoom />} />
-            <Route path="/join-room" element={<JoinRoom />} />
-            <Route path="/proximity-selection" element={<ProximitySelection />} />
-            <Route path="/level-select" element={<LevelSelect />} />
-            <Route path="/game" element={<Game />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="/admin-panel-secret" element={
-              <AdminGuard>
-                <AdminDashboard />
-              </AdminGuard>
-            } />
-            <Route path="/admin/levels" element={
-              <AdminGuard>
-                <AdminLevels />
-              </AdminGuard>
-            } />
-            <Route path="/admin/questions-bulk" element={
-              <AdminGuard>
-                <AdminQuestionsBulk />
-              </AdminGuard>
-            } />
-            <Route path="/admin/questions-manual" element={
-              <AdminGuard>
-                <AdminQuestionsManual />
-              </AdminGuard>
-            } />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <AppContent />
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
