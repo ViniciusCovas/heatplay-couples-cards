@@ -9,7 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2, Search, Globe } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Globe, CheckSquare, Square } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/utils/logger";
@@ -55,6 +57,8 @@ export default function AdminQuestionsManual() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterLevel, setFilterLevel] = useState<string>("all");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("es");
+  const [selectedQuestions, setSelectedQuestions] = useState<string[]>([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [formData, setFormData] = useState<QuestionFormData>({
     text: "",
     category: "",
@@ -251,6 +255,49 @@ export default function AdminQuestionsManual() {
     setEditingQuestion(null);
   };
 
+  const handleSelectQuestion = (questionId: string) => {
+    setSelectedQuestions(prev => 
+      prev.includes(questionId) 
+        ? prev.filter(id => id !== questionId)
+        : [...prev, questionId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedQuestions.length === filteredQuestions.length) {
+      setSelectedQuestions([]);
+    } else {
+      setSelectedQuestions(filteredQuestions.map(q => q.id));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('questions')
+        .delete()
+        .in('id', selectedQuestions);
+
+      if (error) throw error;
+
+      toast({
+        title: "Preguntas eliminadas",
+        description: `${selectedQuestions.length} preguntas han sido eliminadas correctamente`,
+      });
+      
+      setSelectedQuestions([]);
+      setShowDeleteConfirm(false);
+      fetchData();
+    } catch (error) {
+      logger.error('Error deleting questions:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron eliminar las preguntas",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -413,67 +460,131 @@ export default function AdminQuestionsManual() {
         {/* Questions List */}
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-muted-foreground">
-              Mostrando {filteredQuestions.length} de {questions.length} preguntas
-            </p>
+            <div className="flex items-center gap-4">
+              <p className="text-muted-foreground">
+                Mostrando {filteredQuestions.length} de {questions.length} preguntas
+              </p>
+              {selectedQuestions.length > 0 && (
+                <p className="text-sm text-primary">
+                  {selectedQuestions.length} seleccionadas
+                </p>
+              )}
+            </div>
+            {selectedQuestions.length > 0 && (
+              <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar seleccionadas ({selectedQuestions.length})
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>¿Eliminar {selectedQuestions.length} preguntas?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción no se puede deshacer. Las {selectedQuestions.length} preguntas seleccionadas serán eliminadas permanentemente.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Eliminar {selectedQuestions.length} preguntas
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
           
           {filteredQuestions.length > 0 ? (
-            <div className="space-y-3">
-              {filteredQuestions.map((question) => (
-                <Card key={question.id} className="p-4">
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <p className="font-medium mb-2">{question.text}</p>
-                      <div className="flex gap-2">
+            <Card>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={filteredQuestions.length > 0 && selectedQuestions.length === filteredQuestions.length}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Seleccionar todas las preguntas"
+                      />
+                    </TableHead>
+                    <TableHead>Pregunta</TableHead>
+                    <TableHead>Nivel</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredQuestions.map((question) => (
+                    <TableRow key={question.id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedQuestions.includes(question.id)}
+                          onCheckedChange={() => handleSelectQuestion(question.id)}
+                          aria-label={`Seleccionar pregunta: ${question.text.substring(0, 50)}...`}
+                        />
+                      </TableCell>
+                      <TableCell className="max-w-md">
+                        <div className="space-y-1">
+                          <p className="font-medium leading-snug">{question.text}</p>
+                          <Badge variant="outline" className="text-xs">
+                            {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="outline">
                           {question.level_name}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant="secondary">
                           {question.category}
                         </Badge>
-                        <Badge variant="outline">
-                          {languages.find(lang => lang.code === question.language)?.flag} {question.language.toUpperCase()}
-                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={question.is_active ? "default" : "secondary"}>
                           {question.is_active ? "Activa" : "Inactiva"}
                         </Badge>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEdit(question)}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="sm" variant="outline">
-                            <Trash2 className="w-4 h-4" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex gap-2 justify-end">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEdit(question)}
+                          >
+                            <Edit className="w-4 h-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(question)}>
-                              Eliminar
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="outline">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar pregunta?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción no se puede deshacer. La pregunta será eliminada permanentemente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(question)}>
+                                  Eliminar
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </Card>
           ) : (
             <Card className="p-8 text-center">
               <p className="text-muted-foreground">No se encontraron preguntas</p>
