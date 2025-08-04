@@ -327,6 +327,8 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          last_login: string | null
+          last_seen: string | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           user_id: string
@@ -335,6 +337,8 @@ export type Database = {
           created_at?: string
           email: string
           id?: string
+          last_login?: string | null
+          last_seen?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id: string
@@ -343,6 +347,8 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+          last_login?: string | null
+          last_seen?: string | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           user_id?: string
@@ -561,6 +567,10 @@ export type Database = {
           room_id: string
           action_taken: string
         }[]
+      }
+      update_user_activity: {
+        Args: { user_id_param: string }
+        Returns: undefined
       }
     }
     Enums: {
