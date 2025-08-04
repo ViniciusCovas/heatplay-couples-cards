@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Logo } from '@/components/ui/animated-logo';
 import { LanguageSelector } from '@/components/ui/language-selector';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -23,12 +22,11 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Define game flow routes where logo and login should be hidden
+  // Define game flow routes where login should be hidden
   const gameFlowRoutes = ['/join-room', '/proximity-selection', '/level-select'];
   const isGameFlow = gameFlowRoutes.includes(location.pathname);
   
-  // Show logo and login on marketing/auth pages only
-  const showLogo = !isGameFlow;
+  // Show login on marketing/auth pages only
   const showAuthButton = !isGameFlow;
 
   const handleSignOut = async () => {
@@ -159,22 +157,15 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        {/* Logo */}
-        {showLogo && (
-          <div className="flex items-center">
-            <Logo size="small" className="cursor-pointer" onClick={() => navigate('/')} />
-          </div>
-        )}
-
+      <div className="container mx-auto flex h-16 items-center justify-end px-4">
         {/* Desktop Navigation */}
-        <div className={`hidden md:flex items-center space-x-4 ${!showLogo ? 'ml-auto' : ''}`}>
+        <div className="hidden md:flex items-center space-x-4">
           <LanguageSelector />
           {user ? <UserMenu /> : (showAuthButton && <AuthButton />)}
         </div>
 
         {/* Mobile Navigation */}
-        <div className={`md:hidden flex items-center space-x-2 ${!showLogo ? 'ml-auto' : ''}`}>
+        <div className="md:hidden flex items-center space-x-2">
           {!user && showAuthButton && <AuthButton />}
           <MobileMenu />
         </div>
