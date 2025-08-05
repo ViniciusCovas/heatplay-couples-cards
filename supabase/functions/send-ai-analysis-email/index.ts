@@ -109,14 +109,14 @@ const handler = async (req: Request): Promise<Response> => {
         userEmail: profileData.email,
         language: emailLanguage,
         analysisData: {
-          compatibility_score: analysis.compatibility_score || 0,
-          relationship_phase: analysis.relationship_phase || 'Discovery',
-          strength_areas: analysis.strength_areas || [],
-          growth_areas: analysis.growth_areas || [],
-          key_insights: analysis.key_insights || [],
-          personalized_tips: analysis.personalized_tips || [],
-          cultural_notes: analysis.cultural_notes || '',
-          next_session_recommendation: analysis.next_session_recommendation || ''
+          compatibility_score: analysis.compatibilityScore || analysis.compatibility_score || 0,
+          relationship_phase: analysis.relationshipPhase || analysis.relationship_phase || 'Discovery',
+          strength_areas: analysis.strengthAreas || analysis.strength_areas || [],
+          growth_areas: analysis.growthAreas || analysis.growth_areas || [],
+          key_insights: analysis.keyInsights || analysis.key_insights || [],
+          personalized_tips: analysis.personalizedTips || analysis.personalized_tips || [],
+          cultural_notes: analysis.culturalNotes || analysis.cultural_notes || '',
+          next_session_recommendation: analysis.nextSessionRecommendation || analysis.next_session_recommendation || ''
         }
       })
     );

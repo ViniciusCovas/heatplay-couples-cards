@@ -216,7 +216,7 @@ Be insightful, specific, and culturally sensitive. Focus on actionable advice.`;
       .from('ai_analyses')
       .insert({
         room_id: roomId,
-        analysis_type: 'final_report',
+        analysis_type: 'getclose-ai-analysis',
         input_data: {
           session_stats: sessionStats,
           avg_scores: avgScores,
