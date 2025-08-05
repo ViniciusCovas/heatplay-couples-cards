@@ -38,7 +38,7 @@ const handler = async (req: Request): Promise<Response> => {
     );
 
     const emailResponse = await resend.emails.send({
-      from: "Connection Cards <welcome@resend.dev>",
+      from: "Connection Cards <welcome@letsgetclose.com>",
       to: [email],
       subject: "Welcome to Connection Cards! 💕",
       html: emailHtml,

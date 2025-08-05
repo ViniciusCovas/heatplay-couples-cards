@@ -73,7 +73,7 @@ const handler = async (req: Request): Promise<Response> => {
         );
         
         const emailResponse = await resend.emails.send({
-          from: "Connection Cards <hello@resend.dev>",
+          from: "Connection Cards <hello@letsgetclose.com>",
           to: [user.email],
           subject: "We miss you! Come back to Connection Cards 💕",
           html: emailHtml,
