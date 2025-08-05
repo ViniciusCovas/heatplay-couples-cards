@@ -9,3 +9,9 @@ verify_jwt = false
 
 [functions.send-reengagement-email]
 verify_jwt = false
+
+[functions.getclose-ai-analysis]
+verify_jwt = false
+
+[functions.send-ai-analysis-email]
+verify_jwt = false

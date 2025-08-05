@@ -14,7 +14,8 @@ import {
   ChevronDown,
   ChevronUp,
   Sparkles,
-  Star
+  Star,
+  Mail
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,6 +60,7 @@ export const GetCloseAnalysis: React.FC<GetCloseAnalysisProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isEmailSending, setIsEmailSending] = useState(false);
 
   const generateAnalysis = async () => {
     if (!roomId) return;
@@ -100,6 +102,44 @@ export const GetCloseAnalysis: React.FC<GetCloseAnalysisProps> = ({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const sendAnalysisEmail = async () => {
+    if (!roomId || !analysis) return;
+    
+    setIsEmailSending(true);
+
+    try {
+      logger.debug('Sending AI analysis email', { roomId, language });
+      
+      const { data, error } = await supabase.functions.invoke('send-ai-analysis-email', {
+        body: { roomId, language }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to send email');
+      }
+
+      if (data?.success) {
+        toast({
+          title: t('ai.emailSent'),
+          description: t('ai.emailSentDescription'),
+        });
+      } else {
+        throw new Error('Failed to send analysis email');
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      logger.error('Error sending analysis email:', errorMessage);
+      
+      toast({
+        title: t('ai.emailError'),
+        description: t('ai.emailErrorDescription'),
+        variant: "destructive",
+      });
+    } finally {
+      setIsEmailSending(false);
     }
   };
 
@@ -341,6 +381,23 @@ export const GetCloseAnalysis: React.FC<GetCloseAnalysisProps> = ({
                     <p className="text-sm">{analysis.nextSessionRecommendation}</p>
                   </div>
                 )}
+
+                {/* Email Analysis Button */}
+                <div className="text-center pt-4 border-t border-border/50">
+                  <Button 
+                    onClick={sendAnalysisEmail}
+                    disabled={isEmailSending}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {isEmailSending ? (
+                      <Brain className="w-4 h-4 animate-pulse" />
+                    ) : (
+                      <Mail className="w-4 h-4" />
+                    )}
+                    {isEmailSending ? t('ai.sendingEmail') : t('ai.emailResults')}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
