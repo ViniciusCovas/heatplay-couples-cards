@@ -3,3 +3,9 @@ project_id = "bbdeyohqrutithaziulp"
 
 [functions.intelligent-question-selector]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-reengagement-email]
+verify_jwt = false

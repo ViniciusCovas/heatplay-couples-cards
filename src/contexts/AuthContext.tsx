@@ -41,6 +41,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const updateUserActivity = async (userId: string) => {
+    try {
+      const { error } = await supabase.rpc('update_user_activity', {
+        user_id_param: userId
+      });
+      
+      if (error) throw error;
+      logger.info('User activity updated');
+    } catch (error) {
+      logger.error('Error updating user activity', error);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -65,6 +78,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Update user activity on login
+          if (event === 'SIGNED_IN') {
+            setTimeout(() => {
+              updateUserActivity(session.user.id);
+            }, 0);
+          }
+          
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
