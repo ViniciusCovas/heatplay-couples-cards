@@ -70,23 +70,40 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get AI analysis data
+    // Get AI analysis data (support both old and new analysis types for backwards compatibility)
+    console.log(`Searching for AI analysis for room: ${roomId}`);
     const { data: analysisData, error: analysisError } = await supabase
       .from('ai_analyses')
-      .select('ai_response')
+      .select('ai_response, analysis_type')
       .eq('room_id', roomId)
-      .eq('analysis_type', 'getclose-ai-analysis')
+      .in('analysis_type', ['getclose-ai-analysis', 'final_report'])
       .order('created_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (analysisError || !analysisData) {
-      console.error('AI analysis not found:', analysisError);
+    if (analysisError) {
+      console.error('Error fetching AI analysis:', analysisError);
       return new Response(
-        JSON.stringify({ error: "AI analysis not found for this room" }),
-        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: 'Database error while fetching analysis' }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
       );
     }
+
+    if (!analysisData) {
+      console.error(`No AI analysis found for room: ${roomId}`);
+      return new Response(
+        JSON.stringify({ error: 'No AI analysis found for this room. Please generate an analysis first.' }),
+        {
+          status: 404,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
+      );
+    }
+
+    console.log(`Found AI analysis of type: ${analysisData.analysis_type}`);
 
     const analysis = analysisData.ai_response;
     const emailLanguage = language || roomData.selected_language || 'en';
