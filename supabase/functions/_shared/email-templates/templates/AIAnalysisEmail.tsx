@@ -10,8 +10,8 @@ interface AIAnalysisEmailProps {
   analysisData: {
     compatibility_score: number;
     relationship_phase: string;
-    strength_areas: string[];
-    growth_areas: string[];
+    strength_areas: Array<{area: string; score: number; insight: string}> | string[];
+    growth_areas: Array<{area: string; score: number; recommendation: string}> | string[];
     key_insights: string[];
     personalized_tips: string[];
     cultural_notes?: string;
@@ -147,8 +147,10 @@ export const AIAnalysisEmail = ({ userEmail, language, analysisData }: AIAnalysi
             💪 {t.strengthTitle}
           </Heading>
           <ul style={listStyle}>
-            {analysisData.strength_areas.map((area, index) => (
-              <li key={index} style={listItemStyle}>{area}</li>
+            {analysisData.strength_areas.map((item, index) => (
+              <li key={index} style={listItemStyle}>
+                {typeof item === 'string' ? item : `${item.area} (${item.score}): ${item.insight}`}
+              </li>
             ))}
           </ul>
         </Section>
@@ -159,8 +161,10 @@ export const AIAnalysisEmail = ({ userEmail, language, analysisData }: AIAnalysi
             🌱 {t.growthTitle}
           </Heading>
           <ul style={listStyle}>
-            {analysisData.growth_areas.map((area, index) => (
-              <li key={index} style={listItemStyle}>{area}</li>
+            {analysisData.growth_areas.map((item, index) => (
+              <li key={index} style={listItemStyle}>
+                {typeof item === 'string' ? item : `${item.area} (${item.score}): ${item.recommendation}`}
+              </li>
             ))}
           </ul>
         </Section>
