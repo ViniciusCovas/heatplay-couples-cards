@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.50.5";
 import { Resend } from "npm:resend@2.0.0";
+import { renderAsync } from "npm:@react-email/components@0.0.22";
+import React from "npm:react@18.3.1";
+import { ReengagementEmail } from "../_shared/email-templates/templates/ReengagementEmail.tsx";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -58,120 +61,22 @@ const handler = async (req: Request): Promise<Response> => {
     // Send re-engagement email to each inactive user
     for (const user of inactiveUsers) {
       try {
+        const daysSinceLastSeen = Math.floor((new Date().getTime() - new Date(user.last_seen).getTime()) / (1000 * 60 * 60 * 24));
+        
+        // Render the React Email template
+        const emailHtml = await renderAsync(
+          React.createElement(ReengagementEmail, {
+            email: user.email,
+            last_seen: user.last_seen,
+            days_inactive: daysSinceLastSeen,
+          })
+        );
+        
         const emailResponse = await resend.emails.send({
           from: "Connection Cards <hello@resend.dev>",
           to: [user.email],
-          subject: "We miss you! Ready to reconnect? 💕",
-          html: `
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>We Miss You!</title>
-              <style>
-                body { 
-                  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                  margin: 0; 
-                  padding: 0; 
-                  background: linear-gradient(135deg, #ff6b6b, #4ecdc4); 
-                  color: #333; 
-                }
-                .container { 
-                  max-width: 600px; 
-                  margin: 0 auto; 
-                  background: white; 
-                  border-radius: 12px; 
-                  overflow: hidden; 
-                  box-shadow: 0 20px 40px rgba(0,0,0,0.1); 
-                }
-                .header { 
-                  background: linear-gradient(135deg, #ff6b6b, #4ecdc4); 
-                  padding: 40px 20px; 
-                  text-align: center; 
-                  color: white; 
-                }
-                .header h1 { 
-                  margin: 0; 
-                  font-size: 28px; 
-                  font-weight: 700; 
-                }
-                .content { 
-                  padding: 40px 30px; 
-                  line-height: 1.6; 
-                }
-                .cta-button { 
-                  display: inline-block; 
-                  background: linear-gradient(135deg, #ff6b6b, #4ecdc4); 
-                  color: white; 
-                  text-decoration: none; 
-                  padding: 15px 30px; 
-                  border-radius: 25px; 
-                  font-weight: 600; 
-                  margin: 20px 0; 
-                  text-align: center; 
-                }
-                .footer { 
-                  background: #f8f9fa; 
-                  padding: 20px; 
-                  text-align: center; 
-                  font-size: 14px; 
-                  color: #666; 
-                }
-                .unsubscribe { 
-                  font-size: 12px; 
-                  color: #999; 
-                  margin-top: 10px; 
-                }
-              </style>
-            </head>
-            <body>
-              <div class="container">
-                <div class="header">
-                  <h1>We miss you! 💕</h1>
-                  <p>Your relationship deserves meaningful conversations</p>
-                </div>
-                
-                <div class="content">
-                  <h2>Ready to reconnect with your partner?</h2>
-                  
-                  <p>We noticed you haven't been on Connection Cards in a while, and we wanted to reach out because we believe every relationship deserves those deep, meaningful moments of connection.</p>
-                  
-                  <p><strong>What's new since you've been away:</strong></p>
-                  <ul>
-                    <li>🤖 Enhanced AI question selection for even better conversations</li>
-                    <li>🔥 New intimacy levels and question categories</li>
-                    <li>📊 Improved relationship insights and analysis</li>
-                    <li>🌍 Expanded language support</li>
-                  </ul>
-                  
-                  <p>Life gets busy, but your relationship is worth investing in. Take just 15 minutes today to rediscover something new about each other.</p>
-                  
-                  <a href="https://9efb8ab7-d861-473b-88f1-2736da9c245d.lovableproject.com" class="cta-button">
-                    Start a New Game Together
-                  </a>
-                  
-                  <p><strong>Quick reminder of what makes Connection Cards special:</strong></p>
-                  <ul>
-                    <li>🎯 Questions tailored by AI to your relationship dynamic</li>
-                    <li>💬 Safe space to share thoughts and feelings</li>
-                    <li>📈 Track your connection over time</li>
-                    <li>🎮 Fun, game-like experience that brings you closer</li>
-                  </ul>
-                  
-                  <p>Your partner is waiting - create a room and start connecting today!</p>
-                </div>
-                
-                <div class="footer">
-                  <p>Thanks for being part of the Connection Cards community!</p>
-                  <div class="unsubscribe">
-                    <p>Don't want to receive these emails? You can update your preferences in your account settings.</p>
-                  </div>
-                </div>
-              </div>
-            </body>
-            </html>
-          `,
+          subject: "We miss you! Come back to Connection Cards 💕",
+          html: emailHtml,
         });
 
         console.log(`Re-engagement email sent to: ${user.email}`);
