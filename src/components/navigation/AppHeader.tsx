@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Menu, LogOut, Settings, User } from 'lucide-react';
+import { Menu, LogOut, Settings, User, BarChart3 } from 'lucide-react';
 
 interface AppHeaderProps {
   onAuthClick?: () => void;
@@ -63,6 +63,10 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
             {user?.email}
           </p>
         </div>
+        <DropdownMenuItem onClick={() => navigate('/insights')}>
+          <BarChart3 className="mr-2 h-4 w-4" />
+          Connection Insights
+        </DropdownMenuItem>
         {isAdmin && (
           <DropdownMenuItem onClick={() => navigate('/admin-panel-secret')}>
             <Settings className="mr-2 h-4 w-4" />
@@ -115,6 +119,17 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
                     </p>
                   </div>
                 </div>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => {
+                    navigate('/insights');
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Connection Insights
+                </Button>
                 {isAdmin && (
                   <Button 
                     variant="ghost" 

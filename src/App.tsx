@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminLevels from "./pages/AdminLevels";
 import AdminQuestionsBulk from "./pages/AdminQuestionsBulk";
 import AdminQuestionsManual from "./pages/AdminQuestionsManual";
+import ConnectionInsights from "./pages/ConnectionInsights";
 import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -65,6 +66,7 @@ const AppContent = () => {
             <AdminQuestionsManual />
           </AdminGuard>
         } />
+        <Route path="/insights" element={<ConnectionInsights />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
