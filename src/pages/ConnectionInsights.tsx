@@ -2,31 +2,25 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
-  TrendingUp, 
-  Heart, 
-  Users, 
-  Eye, 
-  Sparkles, 
-  Target, 
-  Award, 
   BarChart3,
-  Lightbulb,
-  ArrowRight,
   Info,
-  Trophy,
-  Star,
-  Zap
+  Lightbulb,
+  TrendingUp,
 } from 'lucide-react';
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
+import { HeroSection } from '@/components/insights/HeroSection';
+import { AchievementDashboard } from '@/components/insights/AchievementDashboard';
+import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
+import { GrowthJourney } from '@/components/insights/GrowthJourney';
+import { BenchmarkLeaderboard } from '@/components/insights/BenchmarkLeaderboard';
+import { InsightsCards } from '@/components/insights/InsightsCards';
+import { NextLevelChallenge } from '@/components/insights/NextLevelChallenge';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();
@@ -110,251 +104,29 @@ const ConnectionInsights = () => {
           </Alert>
         )}
 
-        {/* Results */}
+        {/* Gamified Results */}
         {insights && (
-          <div className="space-y-8">
-            {/* Overview Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                    <Trophy className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">
-                    {insights.compatibilityScore}%
-                  </div>
-                  <div className="text-sm text-muted-foreground">Compatibility</div>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-3">
-                    <Heart className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1 capitalize">
-                    {insights.relationshipPhase}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Phase</div>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-primary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">
-                    {benchmarks?.percentile || 'N/A'}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Percentile</div>
-                </CardContent>
-              </Card>
-
-              <Card className="text-center">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-6 h-6 text-secondary" />
-                  </div>
-                  <div className="text-2xl font-bold text-foreground mb-1">
-                    {insights.strengthAreas?.length || 0}
-                  </div>
-                  <div className="text-sm text-muted-foreground">Strengths</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Detailed Analysis */}
-            <Tabs defaultValue="analysis" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="analysis">Analysis</TabsTrigger>
-                <TabsTrigger value="comparison">Compare</TabsTrigger>
-                <TabsTrigger value="insights">Insights</TabsTrigger>
-                <TabsTrigger value="growth">Growth</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="analysis" className="space-y-6">
-                {/* Strength Areas */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-primary" />
-                      Your Relationship Strengths
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {insights.strengthAreas?.map((strength, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium capitalize">{strength.area}</span>
-                          <Badge variant="secondary">{strength.score}/5</Badge>
-                        </div>
-                        <Progress value={strength.score * 20} className="h-2" />
-                        <p className="text-sm text-muted-foreground">{strength.insight}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-
-                {/* Growth Areas */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5 text-secondary" />
-                      Areas for Growth
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {insights.growthAreas?.map((growth, index) => (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium capitalize">{growth.area}</span>
-                          <Badge variant="outline">{growth.score}/5</Badge>
-                        </div>
-                        <Progress value={growth.score * 20} className="h-2" />
-                        <p className="text-sm text-muted-foreground">{growth.recommendation}</p>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="comparison" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5" />
-                      How You Compare
-                    </CardTitle>
-                    <CardDescription>
-                      See how your relationship metrics compare with other couples in similar phases
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {benchmarks && (
-                      <>
-                        <div className="text-center p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-lg">
-                          <div className="text-3xl font-bold text-foreground mb-2">
-                            {benchmarks.percentile}th
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            You're performing better than {benchmarks.percentile}% of couples in the {insights.relationshipPhase} phase
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-3">
-                            <h4 className="font-medium">Average Scores Comparison</h4>
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span>Your Score</span>
-                                <span className="font-medium">{insights.compatibilityScore}%</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span>Phase Average</span>
-                                <span>{benchmarks.phaseAverage}%</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span>Global Average</span>
-                                <span>{benchmarks.globalAverage}%</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-3">
-                            <h4 className="font-medium">Relationship Phase</h4>
-                            <div className="space-y-2">
-                              <Badge variant="secondary" className="w-full justify-center py-2">
-                                {insights.relationshipPhase}
-                              </Badge>
-                              <p className="text-xs text-muted-foreground text-center">
-                                Most couples spend 2-4 sessions in this phase
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="insights" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Lightbulb className="w-5 h-5" />
-                      Key Insights
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {insights.keyInsights?.map((insight, index) => (
-                        <div key={index} className="flex gap-3 p-4 rounded-lg bg-muted/30">
-                          <Sparkles className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-foreground">{insight}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Eye className="w-5 h-5" />
-                      Cultural Context
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {insights.culturalNotes && (
-                      <p className="text-sm text-muted-foreground">{insights.culturalNotes}</p>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="growth" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Target className="w-5 h-5" />
-                      Personalized Tips
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {insights.personalizedTips?.map((tip, index) => (
-                        <div key={index} className="flex gap-3 p-4 rounded-lg border border-primary/20 bg-primary/5">
-                          <Star className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                          <p className="text-sm text-foreground">{tip}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Next Session Recommendation</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {insights.nextSessionRecommendation && (
-                      <div className="space-y-4">
-                        <p className="text-sm text-muted-foreground">{insights.nextSessionRecommendation}</p>
-                        <Button 
-                          onClick={() => navigate('/create-room')}
-                          className="w-full"
-                        >
-                          Start New Session
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
+          <div className="space-y-12">
+            {/* Hero Section */}
+            <HeroSection insights={insights} />
+            
+            {/* Achievement Dashboard */}
+            <AchievementDashboard insights={insights} />
+            
+            {/* Compatibility Radar Chart */}
+            <CompatibilityRadar insights={insights} />
+            
+            {/* Growth Journey Timeline */}
+            <GrowthJourney insights={insights} />
+            
+            {/* Benchmark Leaderboard */}
+            <BenchmarkLeaderboard insights={insights} benchmarks={benchmarks} />
+            
+            {/* AI Insights Cards */}
+            <InsightsCards insights={insights} />
+            
+            {/* Next Level Challenge */}
+            <NextLevelChallenge insights={insights} />
           </div>
         )}
 
