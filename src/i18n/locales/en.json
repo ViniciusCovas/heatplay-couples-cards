@@ -423,7 +423,21 @@
     "keyInsights": "Key Insights",
     "personalizedTips": "Personalized Tips",
     "culturalNotes": "Cultural Notes",
-    "nextSession": "Next Session"
+    "nextSession": "Next Session",
+    "analyzing": "Analyzing your connection...",
+    "randomFallback": "Random selection",
+    "microTips": [
+      "AI is analyzing your conversation patterns...",
+      "Finding the perfect question for your connection...",
+      "Considering your previous responses...",
+      "Crafting a personalized experience...",
+      "AI is reading between the lines...",
+      "Selecting based on your unique dynamic...",
+      "Tailoring the next step in your journey...",
+      "AI is understanding your connection style...",
+      "Choosing the most meaningful question...",
+      "Creating magic with intelligent selection..."
+    ]
   },
   "credits": {
     "modal": {

@@ -1,10 +1,12 @@
 
+
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { Logo } from "@/components/ui/animated-logo";
 import { AIInsightBadge } from "@/components/game/AIInsightBadge";
 import { logger } from "@/utils/logger";
+import { useMemo } from 'react';
 
 interface GameCardProps {
   currentCard: string;
@@ -37,6 +39,16 @@ export const GameCard = ({
     return t(`levels.level${level}Name`);
   };
 
+  // Get a random micro-tip for loading state
+  const loadingMicroTip = useMemo(() => {
+    const microTips = t('ai.microTips', { returnObjects: true }) as string[];
+    if (Array.isArray(microTips) && microTips.length > 0) {
+      const randomIndex = Math.floor(Math.random() * microTips.length);
+      return microTips[randomIndex];
+    }
+    return t('ai.analyzing');
+  }, [t, isGeneratingCard]);
+
   // Check if this is an AI-selected card - Enhanced detection
   const isAICard = selectionMethod === 'ai_intelligent' || Boolean(aiReasoning);
   
@@ -46,7 +58,9 @@ export const GameCard = ({
     isAICard,
     hasReasoning: Boolean(aiReasoning),
     selectionMethod,
-    targetArea: aiTargetArea
+    targetArea: aiTargetArea,
+    isGeneratingCard,
+    loadingMicroTip
   });
   
   return (
@@ -81,6 +95,7 @@ export const GameCard = ({
                      className="text-xs px-1.5 py-0.5 shadow-sm scale-75 origin-left"
                      isGenerating={isGeneratingCard}
                      failureReason={aiFailureReason}
+                     loadingMicroTip={loadingMicroTip}
                    />
                 </div>
                 
@@ -104,10 +119,23 @@ export const GameCard = ({
                 <Heart className="w-6 h-6 text-white" />
               </div>
               
-              {/* Card text - No extra margin needed since badge is repositioned */}
-              <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
-                {currentCard}
-              </p>
+              {/* Card text or loading micro-tip */}
+              {isGeneratingCard ? (
+                <div className="text-center space-y-3">
+                  <div className="flex items-center justify-center space-x-1">
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                  <p className="text-sm text-gray-600 font-brand font-medium leading-relaxed max-w-60 px-2">
+                    {loadingMicroTip}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg text-gray-800 font-brand font-medium leading-relaxed max-w-60 px-2">
+                  {currentCard}
+                </p>
+              )}
               
               {/* Level name at bottom */}
               <div className="absolute bottom-6 left-6 right-6 text-center">
@@ -122,9 +150,11 @@ export const GameCard = ({
               </div>
               
               {/* Card number */}
-              <div className="absolute bottom-6 right-6 text-xs font-mono text-gray-400 opacity-80">
-                {cardIndex + 1}/{totalCards}
-              </div>
+              {!isGeneratingCard && (
+                <div className="absolute bottom-6 right-6 text-xs font-mono text-gray-400 opacity-80">
+                  {cardIndex + 1}/{totalCards}
+                </div>
+              )}
             </div>
           </div>
           
@@ -141,3 +171,4 @@ export const GameCard = ({
     </div>
   );
 };
+

@@ -1,14 +1,7 @@
 
-import React from 'react';
-import { Badge } from '@/components/ui/badge';
-import { Brain, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react';
+import { Sparkles, Zap, AlertTriangle, Loader2 } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface AIInsightBadgeProps {
   reasoning?: string;
@@ -16,102 +9,77 @@ interface AIInsightBadgeProps {
   className?: string;
   isGenerating?: boolean;
   failureReason?: string;
+  loadingMicroTip?: string;
 }
 
-export const AIInsightBadge: React.FC<AIInsightBadgeProps> = ({ 
+export const AIInsightBadge = ({ 
   reasoning, 
   targetArea, 
-  className = "",
+  className,
   isGenerating = false,
-  failureReason
-}) => {
+  failureReason,
+  loadingMicroTip
+}: AIInsightBadgeProps) => {
   const { t } = useTranslation();
 
-  // Show loading state while generating
+  // Show loading state during AI generation
   if (isGenerating) {
     return (
-      <Badge 
-        variant="outline" 
-        className={`bg-blue-500/10 text-blue-600 border-blue-200 gap-1 px-2 py-0.5 text-xs font-medium animate-pulse ${className}`}
-      >
-        <Loader2 className="w-2.5 h-2.5 animate-spin" />
-        {t('ai.analyzing')}
-      </Badge>
+      <div className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all",
+        "bg-blue-500/10 text-blue-700 border border-blue-200/50",
+        className
+      )}>
+        <Loader2 className="w-3 h-3 animate-spin" />
+        <span className="whitespace-nowrap truncate max-w-32">
+          {loadingMicroTip || t('ai.analyzing')}
+        </span>
+      </div>
     );
   }
 
   // Show failure state if AI failed
   if (failureReason && !reasoning) {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={`bg-orange-500/10 text-orange-600 border-orange-200 gap-1 px-2 py-0.5 text-xs font-medium cursor-help ${className}`}
-          >
-            <AlertTriangle className="w-2.5 h-2.5" />
-            {t('ai.randomFallback')}
-          </Badge>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" className="max-w-sm p-3 bg-card border shadow-lg z-50">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 font-medium text-sm">
-              <AlertTriangle className="w-4 h-4 text-orange-500" />
-              {t('ai.fallbackSelection')}
-            </div>
-            <p className="text-sm leading-relaxed">{failureReason}</p>
-          </div>
-        </TooltipContent>
-      </Tooltip>
+      <div className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all",
+        "bg-orange-500/10 text-orange-700 border border-orange-200/50",
+        className
+      )}>
+        <AlertTriangle className="w-3 h-3" />
+        <span className="whitespace-nowrap">
+          {t('ai.randomFallback')}
+        </span>
+      </div>
     );
   }
 
-  // Don't show if no AI reasoning
-  if (!reasoning) return null;
-
-  const getTargetAreaColor = (area?: string) => {
-    switch (area) {
-      case 'honesty': return 'bg-blue-500/10 text-blue-600 border-blue-200';
-      case 'attraction': return 'bg-pink-500/10 text-pink-600 border-pink-200';
-      case 'intimacy': return 'bg-purple-500/10 text-purple-600 border-purple-200';
-      case 'surprise': return 'bg-orange-500/10 text-orange-600 border-orange-200';
-      default: return 'bg-emerald-500/10 text-emerald-600 border-emerald-200';
-    }
-  };
-
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge 
-          variant="outline" 
-          className={`
-            ${getTargetAreaColor(targetArea)} 
-            gap-1 px-2 py-0.5 text-xs font-medium cursor-help
-            ${className}
-          `}
-        >
-          <Brain className="w-2.5 h-2.5" />
-          {t('ai.getcloseAI')}
-          <Lightbulb className="w-2.5 h-2.5 opacity-70" />
-        </Badge>
-      </TooltipTrigger>
-      <TooltipContent 
-        side="bottom" 
-        className="max-w-sm p-3 bg-card border shadow-lg z-50"
+  // Show AI success state with reasoning
+  if (reasoning) {
+    return (
+      <div className={cn(
+        "inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all",
+        "bg-gradient-to-r from-purple-500/10 to-pink-500/10 text-purple-700 border border-purple-200/50",
+        "hover:from-purple-500/20 hover:to-pink-500/20 cursor-help",
+        className
+      )}
+      title={`${t('ai.intelligentSelection')}: ${reasoning}${targetArea ? ` | ${t('ai.targetArea')}: ${targetArea}` : ''}`}
       >
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 font-medium text-sm">
-            <Brain className="w-4 h-4 text-primary" />
-            {t('ai.intelligentSelection')}
-          </div>
-          {targetArea && (
-            <div className="text-xs text-muted-foreground">
-              {t('ai.targetArea')}: <span className="font-medium">{t(`game.evaluation.${targetArea}`)}</span>
-            </div>
-          )}
-          <p className="text-sm leading-relaxed">{reasoning}</p>
-        </div>
-      </TooltipContent>
-    </Tooltip>
-  );
+        <Sparkles className="w-3 h-3" />
+        <span className="whitespace-nowrap">
+          {t('ai.getcloseAI')}
+        </span>
+        {targetArea && (
+          <>
+            <Zap className="w-2 h-2 opacity-70" />
+            <span className="whitespace-nowrap truncate max-w-20 opacity-80">
+              {targetArea}
+            </span>
+          </>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 };

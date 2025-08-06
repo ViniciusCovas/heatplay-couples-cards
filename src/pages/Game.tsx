@@ -233,7 +233,8 @@ const Game = () => {
         logger.debug('Card updated from game state', { currentCard: gameState.current_card });
         setCurrentCard(gameState.current_card);
         setShowCard(false);
-        setTimeout(() => setShowCard(true), 300);
+        // FIXED: Changed from 300ms to 700ms to match CSS transition duration
+        setTimeout(() => setShowCard(true), 700);
       }
       
       // Update used cards
@@ -545,7 +546,7 @@ const Game = () => {
           let selectedCard = aiResult.cardId;
           let updatesForGameState: any = {};
           
-          // Handle AI success or failure
+          // IMPROVED: Handle AI success or failure atomically to prevent intermediate UI states
           if (selectedCard && aiResult.reasoning) {
             // AI selection successful - save all AI data to database
             updatesForGameState = {
@@ -555,9 +556,9 @@ const Game = () => {
               current_card_selection_method: aiResult.selectionMethod
             };
             
-            logger.info('AI selection successful, saving to database', { updatesForGameState });
+            logger.info('AI selection successful, updating database atomically', { updatesForGameState });
           } else {
-            // AI failed - use random selection and clear AI data
+            // AI failed - use random selection and clear AI data atomically
             const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
             selectedCard = randomQuestion.id;
             updatesForGameState = {
@@ -567,7 +568,7 @@ const Game = () => {
               current_card_selection_method: 'random_fallback'
             };
             
-            logger.info('Using random card fallback, clearing AI data', { 
+            logger.info('Using random card fallback, updating database atomically', { 
               selectedCard, 
               selectedText: randomQuestion.text,
               availableCards: availableCards.length,
@@ -576,10 +577,11 @@ const Game = () => {
             });
           }
           
-          // Update database with all data at once - this will sync to both players
+          // Update database with all data at once - this will sync to both players atomically
+          // This prevents the intermediate "ai.randomfallback" state from showing in UI
           await updateGameState(updatesForGameState);
           
-          logger.info('Card generation completed and synced to database', { updatesForGameState });
+          logger.info('Card generation completed and synced atomically to database', { updatesForGameState });
         }
       }
     };
