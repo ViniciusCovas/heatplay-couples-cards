@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -6,9 +7,13 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// Enhanced CORS headers with production domain support
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept, accept-language, cache-control, pragma',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin',
 };
 
 // Simple in-memory cache for level lookups
@@ -100,7 +105,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4.1-2025-04-14',
+          model: 'gpt-4o-mini',
           messages: [{ role: 'user', content: promptContent }],
           temperature: 0.7,
           max_tokens: 300,
@@ -175,8 +180,18 @@ function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis:
 }
 
 serve(async (req) => {
+  const origin = req.headers.get('origin');
+  const method = req.method;
+  
+  console.log(`[${new Date().toISOString()}] ${method} request from origin: ${origin || 'unknown'}`);
+
+  // Enhanced CORS preflight handling
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('Handling CORS preflight request');
+    return new Response(null, { 
+      status: 200,
+      headers: corsHeaders 
+    });
   }
 
   const startTime = Date.now();
@@ -185,6 +200,7 @@ serve(async (req) => {
   try {
     const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
 
+    console.log(`Processing request for room ${roomId}, level ${currentLevel}, language ${language}`);
 
     // Validate OpenAI API key
     if (!openAIApiKey) {
@@ -283,11 +299,10 @@ serve(async (req) => {
           };
         } catch (e) {
           // Failed to parse evaluation - continue without analysis
+          console.log('Failed to parse evaluation:', e);
         }
       }
     }
-
-    
 
     // Compact AI prompt focusing only on the immediate emotional state
     const promptContent = `You are GetClose AI, selecting the next question to deepen this couple's connection.
@@ -325,15 +340,18 @@ Respond with ONLY a JSON object:
     // Call OpenAI with enhanced error handling
     let aiResponse;
     try {
+      console.log('Calling OpenAI API...');
       const data = await callOpenAIWithRetry(promptContent);
       
       try {
         aiResponse = JSON.parse(data.choices[0].message.content);
+        console.log('AI response parsed successfully');
       } catch (parseError) {
         failureReason = `AI returned invalid JSON format: ${data.choices[0].message.content}`;
         throw new Error(failureReason);
       }
     } catch (apiError) {
+      console.error('OpenAI API failed:', apiError.message);
       failureReason = `OpenAI API failed: ${apiError.message}`;
       
       // Use smart fallback based on last response
@@ -364,7 +382,7 @@ Respond with ONLY a JSON object:
             }
           });
       } catch (analysisError) {
-        // Failed to store analysis - continue
+        console.error('Failed to store analysis:', analysisError);
       }
 
       return new Response(JSON.stringify({
@@ -419,8 +437,10 @@ Respond with ONLY a JSON object:
           }
         });
     } catch (analysisError) {
-      // Failed to store analysis - continue
+      console.error('Failed to store analysis:', analysisError);
     }
+
+    console.log(`Successfully selected question: ${selectedQuestion.text.substring(0, 50)}...`);
 
     return new Response(JSON.stringify({
       question: selectedQuestion,
