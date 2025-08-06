@@ -17,6 +17,7 @@ import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
 import { HeroSection } from '@/components/insights/HeroSection';
 import { AchievementDashboard } from '@/components/insights/AchievementDashboard';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
+import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
 import { GrowthJourney } from '@/components/insights/GrowthJourney';
 import { BenchmarkLeaderboard } from '@/components/insights/BenchmarkLeaderboard';
 import { InsightsCards } from '@/components/insights/InsightsCards';
@@ -104,28 +105,25 @@ const ConnectionInsights = () => {
           </Alert>
         )}
 
-        {/* Gamified Results */}
+        {/* Phase 1 WOW Features */}
         {insights && (
-          <div className="space-y-12">
-            {/* Hero Section */}
+          <div className="space-y-16 animate-fade-in">
+            {/* 1. Animated Hero Section with Compatibility Gauge */}
             <HeroSection insights={insights} />
             
-            {/* Achievement Dashboard */}
-            <AchievementDashboard insights={insights} />
-            
-            {/* Compatibility Radar Chart */}
+            {/* 2. 5-Point Connection Radar with Smooth Fills */}
             <CompatibilityRadar insights={insights} />
             
-            {/* Growth Journey Timeline */}
-            <GrowthJourney insights={insights} />
+            {/* 3. Interactive Progress Timeline */}
+            <InteractiveTimeline insights={insights} />
             
-            {/* Benchmark Leaderboard */}
-            <BenchmarkLeaderboard insights={insights} benchmarks={benchmarks} />
-            
-            {/* AI Insights Cards */}
+            {/* 4. AI Insight Cards with Color-Coded Flips */}
             <InsightsCards insights={insights} />
             
-            {/* Next Level Challenge */}
+            {/* Keep existing components for now */}
+            <AchievementDashboard insights={insights} />
+            <GrowthJourney insights={insights} />
+            <BenchmarkLeaderboard insights={insights} benchmarks={benchmarks} />
             <NextLevelChallenge insights={insights} />
           </div>
         )}

@@ -1,7 +1,19 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Lightbulb, Eye, Star, ArrowRight, RefreshCw } from 'lucide-react';
+import { 
+  Lightbulb, 
+  Eye, 
+  Star, 
+  ArrowRight, 
+  RefreshCw, 
+  Brain,
+  Heart,
+  Zap,
+  Target,
+  Sparkles,
+  TrendingUp
+} from 'lucide-react';
 import { ConnectionInsightsData } from '@/hooks/useConnectionInsights';
 
 interface InsightsCardsProps {
@@ -19,105 +31,131 @@ export const InsightsCards = ({ insights }: InsightsCardsProps) => {
     );
   };
 
+  const getCardColor = (index: number) => {
+    const colors = [
+      'from-blue-500/10 to-blue-600/5 border-blue-200',
+      'from-pink-500/10 to-pink-600/5 border-pink-200', 
+      'from-purple-500/10 to-purple-600/5 border-purple-200',
+      'from-orange-500/10 to-orange-600/5 border-orange-200'
+    ];
+    return colors[index % colors.length];
+  };
+
+  const getCardIcon = (index: number) => {
+    const icons = [Brain, Heart, Star, Zap];
+    const IconComponent = icons[index % icons.length];
+    return <IconComponent className="w-5 h-5" />;
+  };
+
   return (
     <div className="mb-12">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
-          <Lightbulb className="w-6 h-6 text-primary" />
-          AI-Powered Relationship Insights
+          <Sparkles className="w-6 h-6 text-primary" />
+          AI-Powered Key Discoveries
         </h2>
         <p className="text-muted-foreground">
-          Discover hidden patterns and get personalized tips for your relationship
+          Flip each card to reveal personalized insights about your connection
         </p>
       </div>
 
-      {/* Key Insights */}
+      {/* Enhanced Color-Coded Flip Cards */}
       <div className="mb-8">
-        <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <Star className="w-5 h-5 text-primary" />
-          Key Discoveries
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {insights.keyInsights?.map((insight, index) => (
-            <div
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {insights.keyInsights?.slice(0, 4).map((insight, index) => (
+            <Card 
               key={index}
-              className={`relative h-32 cursor-pointer group perspective-1000 ${
-                flippedCards.includes(index) ? 'flipped' : ''
+              className={`relative h-52 cursor-pointer transition-all duration-700 hover:shadow-xl hover-scale group perspective-1000 ${
+                flippedCards.includes(index) ? '[transform-style:preserve-3d] [transform:rotateY(180deg)]' : ''
               }`}
               onClick={() => toggleFlip(index)}
+              style={{ transformStyle: 'preserve-3d' }}
             >
-              {/* Card Container */}
-              <div className="relative w-full h-full transition-transform duration-600 transform-style-preserve-3d">
-                {/* Front */}
-                <Card className={`absolute inset-0 bg-gradient-to-br from-primary/10 to-accent/10 border-primary/30 backface-hidden ${
-                  flippedCards.includes(index) ? 'rotate-y-180' : ''
-                }`}>
-                  <CardContent className="p-4 h-full flex items-center justify-center">
-                    <div className="text-center">
-                      <Lightbulb className="w-8 h-8 text-primary mx-auto mb-2" />
-                      <p className="text-sm font-medium text-foreground">
-                        Insight #{index + 1}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Click to reveal
-                      </p>
+              {/* Front of card */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${getCardColor(index)} rounded-lg backface-hidden border-2 shadow-lg`}>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-md`}>
+                      {getCardIcon(index)}
                     </div>
-                  </CardContent>
-                </Card>
-
-                {/* Back */}
-                <Card className={`absolute inset-0 bg-gradient-to-br from-secondary/10 to-primary/10 border-secondary/30 backface-hidden rotate-y-180 ${
-                  flippedCards.includes(index) ? 'rotate-y-0' : ''
-                }`}>
-                  <CardContent className="p-4 h-full flex items-center">
                     <div>
-                      <p className="text-sm text-foreground leading-relaxed">
-                        {insight}
-                      </p>
-                      <div className="flex items-center justify-between mt-2">
-                        <Badge variant="secondary" className="text-xs">
-                          AI Generated
-                        </Badge>
-                        <RefreshCw className="w-4 h-4 text-muted-foreground opacity-50" />
-                      </div>
+                      <div className="text-foreground">Key Discovery</div>
+                      <div className="text-sm text-muted-foreground font-normal">#{index + 1}</div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Personalized Tips */}
-      <div className="mb-8">
-        <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-          <ArrowRight className="w-5 h-5 text-secondary" />
-          Personalized Growth Tips
-        </h3>
-        <div className="space-y-4">
-          {insights.personalizedTips?.map((tip, index) => (
-            <Card 
-              key={index} 
-              className="bg-gradient-to-r from-secondary/5 to-primary/5 border-secondary/20 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
-            >
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-primary flex items-center justify-center flex-shrink-0">
-                    <span className="text-white font-bold text-sm">{index + 1}</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex items-center justify-center h-32">
+                  <div className="text-center">
+                    <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                      <RefreshCw className="w-8 h-8 text-primary animate-pulse" />
+                    </div>
+                    <p className="text-sm text-muted-foreground font-medium">
+                      Tap to reveal your insight
+                    </p>
                   </div>
-                  <div className="flex-1">
-                    <p className="text-foreground leading-relaxed">{tip}</p>
-                    <Badge variant="outline" className="mt-2 text-xs border-secondary/30 text-secondary">
-                      Actionable Tip
+                </CardContent>
+              </div>
+
+              {/* Back of card */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${getCardColor(index)} rounded-lg [transform:rotateY(180deg)] backface-hidden border-2 shadow-lg`}>
+                <CardContent className="p-6 h-full flex flex-col justify-center">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-3">
+                      {getCardIcon(index)}
+                    </div>
+                  </div>
+                  <p className="text-foreground text-center leading-relaxed text-sm font-medium bg-white/20 backdrop-blur-sm p-4 rounded-lg">
+                    {insight}
+                  </p>
+                  <div className="text-center mt-4">
+                    <Badge className="bg-primary/20 text-primary border-primary/30">
+                      🧠 AI Discovery
                     </Badge>
                   </div>
-                </div>
-              </CardContent>
+                </CardContent>
+              </div>
             </Card>
           ))}
         </div>
       </div>
+
+      {/* Enhanced Growth Tips with Icons */}
+      <Card className="bg-gradient-to-br from-accent/10 to-primary/5 border-accent/20 shadow-lg mb-8 hover-scale">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="text-foreground">Personalized Growth Tips</div>
+              <div className="text-sm text-muted-foreground font-normal">Actionable insights for deeper connection</div>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {insights.personalizedTips?.map((tip, index) => {
+              const tipIcons = [Target, Heart, Brain, Star, Zap];
+              const TipIcon = tipIcons[index % tipIcons.length];
+              return (
+                <div key={index} className="flex items-start gap-4 p-5 bg-white/60 backdrop-blur-sm rounded-xl border border-white/30 hover-scale group">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center flex-shrink-0 shadow-md group-hover:scale-110 transition-transform">
+                    <TipIcon className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="outline" className="text-xs bg-accent/10 border-accent/30">
+                        Tip #{index + 1}
+                      </Badge>
+                    </div>
+                    <p className="text-foreground leading-relaxed font-medium">{tip}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Cultural Context */}
       {insights.culturalNotes && (
