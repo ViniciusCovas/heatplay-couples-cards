@@ -22,6 +22,10 @@ import { GrowthJourney } from '@/components/insights/GrowthJourney';
 import { BenchmarkLeaderboard } from '@/components/insights/BenchmarkLeaderboard';
 import { InsightsCards } from '@/components/insights/InsightsCards';
 import { NextLevelChallenge } from '@/components/insights/NextLevelChallenge';
+import { PeerComparisonDashboard } from '@/components/insights/PeerComparisonDashboard';
+import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
+import { AdvancedAchievements } from '@/components/insights/AdvancedAchievements';
+import { GrowthTracker } from '@/components/insights/GrowthTracker';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();
@@ -105,22 +109,24 @@ const ConnectionInsights = () => {
           </Alert>
         )}
 
-        {/* Phase 1 WOW Features */}
+        {/* Connection Insights - Complete Experience */}
         {insights && (
           <div className="space-y-16 animate-fade-in">
-            {/* 1. Animated Hero Section with Compatibility Gauge */}
+            {/* Phase 1: WOW Features */}
             <HeroSection insights={insights} />
-            
-            {/* 2. 5-Point Connection Radar with Smooth Fills */}
             <CompatibilityRadar insights={insights} />
-            
-            {/* 3. Interactive Progress Timeline */}
             <InteractiveTimeline insights={insights} />
-            
-            {/* 4. AI Insight Cards with Color-Coded Flips */}
             <InsightsCards insights={insights} />
             
-            {/* Keep existing components for now */}
+            {/* Phase 2: Advanced Gamification */}
+            <AdvancedAchievements roomCode={searchCode} />
+            <PeerComparisonDashboard roomCode={searchCode} />
+            <ResponseTimeAnalytics roomCode={searchCode} />
+            
+            {/* Phase 3: Multi-Session Analytics */}
+            <GrowthTracker roomCode={searchCode} />
+            
+            {/* Legacy Components (Enhanced) */}
             <AchievementDashboard insights={insights} />
             <GrowthJourney insights={insights} />
             <BenchmarkLeaderboard insights={insights} benchmarks={benchmarks} />
