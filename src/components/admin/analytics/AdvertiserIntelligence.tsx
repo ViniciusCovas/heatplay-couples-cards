@@ -17,12 +17,76 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
     console.log('Generating advertiser report with:', { advertiserMetrics, revenueAnalytics });
   };
 
-  const audienceQualityData = advertiserMetrics ? [
-    { metric: 'Engagement', value: advertiserMetrics.audienceQuality.engagementDepth, fullMark: 100 },
-    { metric: 'Retention', value: advertiserMetrics.audienceQuality.retentionRate, fullMark: 100 },
-    { metric: 'Session Duration', value: (advertiserMetrics.audienceQuality.sessionDuration / 30) * 100, fullMark: 100 },
-    { metric: 'Premium Users', value: advertiserMetrics.audienceQuality.premiumUserPercentage * 4, fullMark: 100 },
-  ] : [];
+  // Enhanced data validation
+  const hasValidData = advertiserMetrics && 
+    typeof advertiserMetrics.audienceQuality === 'object' &&
+    typeof advertiserMetrics.revenueProjections === 'object' &&
+    Array.isArray(advertiserMetrics.roiForecasting);
+
+  if (!hasValidData) {
+    return (
+      <div className="text-center py-8 space-y-4">
+        <p className="text-muted-foreground">Loading advertiser intelligence...</p>
+        {advertiserMetrics && (
+          <p className="text-sm text-muted-foreground">
+            Data collection in progress. Advanced metrics available with more user data.
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // Safe data extraction with fallbacks
+  const safeMetrics = {
+    audienceQuality: {
+      engagementDepth: Number(advertiserMetrics.audienceQuality?.engagementDepth) || 0,
+      sessionDuration: Number(advertiserMetrics.audienceQuality?.sessionDuration) || 0,
+      retentionRate: Number(advertiserMetrics.audienceQuality?.retentionRate) || 0,
+      premiumUsers: Number(advertiserMetrics.audienceQuality?.premiumUsers) || 0
+    },
+    revenueProjections: {
+      monthlyRevenue: Number(advertiserMetrics.revenueProjections?.monthlyRevenue) || 0,
+      growthRate: Number(advertiserMetrics.revenueProjections?.growthRate) || 0,
+      ltv: Number(advertiserMetrics.revenueProjections?.ltv) || 0,
+      conversionRate: Number(advertiserMetrics.revenueProjections?.conversionRate) || 0
+    },
+    demographics: {
+      totalUsers: Number(advertiserMetrics.demographics?.totalUsers) || 0,
+      activeUsers: Number(advertiserMetrics.demographics?.activeUsers) || 0,
+      marketPenetration: Number(advertiserMetrics.demographics?.marketPenetration) || 0,
+      geographicSpread: Number(advertiserMetrics.demographics?.geographicSpread) || 1
+    },
+    marketPositioning: {
+      competitorAnalysis: Number(advertiserMetrics.marketPositioning?.competitorAnalysis) || 0,
+      marketShare: Number(advertiserMetrics.marketPositioning?.marketShare) || 0,
+      brandRecognition: Number(advertiserMetrics.marketPositioning?.brandRecognition) || 0,
+      innovationIndex: Number(advertiserMetrics.marketPositioning?.innovationIndex) || 0
+    },
+    roiForecasting: (advertiserMetrics.roiForecasting || []).filter(item => 
+      item && typeof item.projected === 'number' && !isNaN(item.projected)
+    )
+  };
+
+  // Chart data validation
+  const audienceQualityData = [
+    { subject: 'Engagement', A: safeMetrics.audienceQuality.engagementDepth },
+    { subject: 'Retention', A: safeMetrics.audienceQuality.retentionRate },
+    { subject: 'Premium Users', A: safeMetrics.audienceQuality.premiumUsers },
+    { subject: 'Session Quality', A: Math.min(safeMetrics.audienceQuality.sessionDuration * 10, 100) }
+  ].filter(item => !isNaN(item.A));
+
+  const demographicData = [
+    { name: 'Total Users', value: safeMetrics.demographics.totalUsers },
+    { name: 'Active Users', value: safeMetrics.demographics.activeUsers },
+    { name: 'Geographic Reach', value: safeMetrics.demographics.geographicSpread }
+  ].filter(item => !isNaN(item.value) && item.value > 0);
+
+  const marketPositionData = [
+    { category: 'Competitor Analysis', score: safeMetrics.marketPositioning.competitorAnalysis },
+    { category: 'Market Share', score: safeMetrics.marketPositioning.marketShare },
+    { category: 'Brand Recognition', score: safeMetrics.marketPositioning.brandRecognition },
+    { category: 'Innovation', score: safeMetrics.marketPositioning.innovationIndex }
+  ].filter(item => !isNaN(item.score));
 
   return (
     <div className="space-y-6">
@@ -49,7 +113,7 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {advertiserMetrics?.audienceQuality.engagementDepth}%
+              {safeMetrics.audienceQuality.engagementDepth}%
             </div>
             <p className="text-xs text-muted-foreground">
               High-quality, engaged users
@@ -64,7 +128,7 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-secondary">
-              {advertiserMetrics?.audienceQuality.sessionDuration}m
+              {safeMetrics.audienceQuality.sessionDuration}m
             </div>
             <p className="text-xs text-muted-foreground">
               Average time per session
@@ -79,7 +143,7 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">
-              {advertiserMetrics?.audienceQuality.premiumUserPercentage || 0}%
+              {safeMetrics.audienceQuality.premiumUsers}%
             </div>
             <p className="text-xs text-muted-foreground">
               Users willing to pay
@@ -94,7 +158,7 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              ${revenueAnalytics?.lifetimeValue.toFixed(2)}
+              ${safeMetrics.revenueProjections.ltv.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
               Average user value
@@ -117,41 +181,48 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={revenueAnalytics?.monthlyRevenue || []}>
+              <AreaChart data={safeMetrics.roiForecasting.length > 0 ? safeMetrics.roiForecasting : [{ month: 'Jan', projected: 10, actual: 5 }]}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="month" 
-                  tickFormatter={(month) => new Date(month).toLocaleDateString('en-US', { month: 'short' })}
                   className="text-xs"
                 />
                 <YAxis className="text-xs" />
                 <Tooltip 
-                  labelFormatter={(month) => new Date(month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   formatter={(value, name) => [
-                    name === 'amount' ? `$${value.toLocaleString()}` : value,
-                    name === 'amount' ? 'Revenue' : 'Sessions'
+                    `$${value.toLocaleString()}`,
+                    name === 'projected' ? 'Projected Revenue' : 'Actual Revenue'
                   ]}
                 />
                 <Area 
                   type="monotone" 
-                  dataKey="amount" 
+                  dataKey="projected" 
                   stroke="hsl(var(--primary))" 
                   fill="hsl(var(--primary))"
                   fillOpacity={0.3}
                 />
+                {safeMetrics.roiForecasting.some(item => item.actual !== null) && (
+                  <Area 
+                    type="monotone" 
+                    dataKey="actual" 
+                    stroke="hsl(var(--secondary))" 
+                    fill="hsl(var(--secondary))"
+                    fillOpacity={0.2}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
             
             <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
               <div className="text-center">
                 <div className="text-lg font-bold text-primary">
-                  ${revenueAnalytics?.totalRevenue.toLocaleString()}
+                  ${safeMetrics.revenueProjections.monthlyRevenue.toLocaleString()}
                 </div>
-                <p className="text-xs text-muted-foreground">Total Revenue</p>
+                <p className="text-xs text-muted-foreground">Monthly Revenue</p>
               </div>
               <div className="text-center">
                 <div className="text-lg font-bold text-secondary">
-                  {revenueAnalytics?.conversionRate}%
+                  {safeMetrics.revenueProjections.conversionRate.toFixed(1)}%
                 </div>
                 <p className="text-xs text-muted-foreground">Conversion Rate</p>
               </div>
@@ -171,13 +242,13 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={audienceQualityData}>
+              <RadarChart data={audienceQualityData.length > 0 ? audienceQualityData : [{ subject: 'No Data', A: 0 }]}>
                 <PolarGrid />
-                <PolarAngleAxis dataKey="metric" className="text-xs" />
+                <PolarAngleAxis dataKey="subject" className="text-xs" />
                 <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
                 <Radar
                   name="Quality Score"
-                  dataKey="value"
+                  dataKey="A"
                   stroke="hsl(var(--primary))"
                   fill="hsl(var(--primary))"
                   fillOpacity={0.3}
@@ -211,35 +282,33 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={advertiserMetrics?.roiForecasting || []}>
+              <LineChart data={safeMetrics.roiForecasting.length > 0 ? safeMetrics.roiForecasting : [{ month: 'Jan', projected: 10 }]}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="month" 
-                  tickFormatter={(month) => new Date(month).toLocaleDateString('en-US', { month: 'short' })}
                   className="text-xs"
                 />
                 <YAxis className="text-xs" />
                 <Tooltip 
-                  labelFormatter={(month) => new Date(month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   formatter={(value, name) => [
-                    name === 'projectedReach' ? value.toLocaleString() : `$${value.toLocaleString()}`,
-                    name === 'projectedReach' ? 'Projected Reach' : 'Estimated Value'
+                    `$${value.toLocaleString()}`,
+                    name === 'projected' ? 'Projected Revenue' : 'Actual Revenue'
                   ]}
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="projectedReach" 
+                  dataKey="projected" 
                   stroke="hsl(var(--primary))" 
                   strokeWidth={2}
-                  yAxisId="reach"
                 />
-                <Line 
-                  type="monotone" 
-                  dataKey="estimatedValue" 
-                  stroke="hsl(var(--secondary))" 
-                  strokeWidth={2}
-                  yAxisId="value"
-                />
+                {safeMetrics.roiForecasting.some(item => item.actual !== null) && (
+                  <Line 
+                    type="monotone" 
+                    dataKey="actual" 
+                    stroke="hsl(var(--secondary))" 
+                    strokeWidth={2}
+                  />
+                )}
               </LineChart>
             </ResponsiveContainer>
           </CardContent>
@@ -253,27 +322,30 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {advertiserMetrics?.demographics.map((segment, index) => (
-              <div key={segment.segment} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{segment.segment}</span>
-                  <Badge variant="outline" className="text-xs">
-                    ${segment.value}
-                  </Badge>
+            {demographicData.length > 0 ? (
+              demographicData.map((item, index) => (
+                <div key={item.name} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium">{item.name}</span>
+                    <Badge variant="outline" className="text-xs">
+                      {item.value}
+                    </Badge>
+                  </div>
+                  <Progress value={Math.min((item.value / Math.max(...demographicData.map(d => d.value))) * 100, 100)} className="h-2" />
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>{segment.percentage}% of audience</span>
-                  <span>Avg value/user</span>
-                </div>
-                <Progress value={segment.percentage} className="h-2" />
+              ))
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <p className="text-sm">Building demographic insights...</p>
+                <p className="text-xs">More data available as user base grows</p>
               </div>
-            ))}
+            )}
             
             <div className="pt-4 border-t text-center">
               <div className="text-lg font-bold text-primary">
-                ${advertiserMetrics?.marketPositioning.totalAddressableMarket.toLocaleString()}
+                {safeMetrics.demographics.totalUsers}
               </div>
-              <p className="text-xs text-muted-foreground">Total Addressable Market</p>
+              <p className="text-xs text-muted-foreground">Total Users</p>
             </div>
           </CardContent>
         </Card>
@@ -291,31 +363,31 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
             <div className="space-y-2">
               <div className="text-2xl font-bold text-primary">
-                {advertiserMetrics?.marketPositioning.growthRate}%
+                {safeMetrics.revenueProjections.growthRate.toFixed(1)}%
               </div>
               <p className="text-sm font-medium">Monthly Growth Rate</p>
               <p className="text-xs text-muted-foreground">
-                Consistent, sustainable growth trajectory
+                Real growth based on actual user data
               </p>
             </div>
             
             <div className="space-y-2">
               <div className="text-2xl font-bold text-secondary">
-                {((advertiserMetrics?.marketPositioning?.marketPenetration || 0) * 100).toFixed(3)}%
+                {safeMetrics.demographics.marketPenetration.toFixed(2)}%
               </div>
               <p className="text-sm font-medium">Market Penetration</p>
               <p className="text-xs text-muted-foreground">
-                Massive untapped opportunity for growth
+                Early stage with massive growth potential
               </p>
             </div>
             
             <div className="space-y-2">
               <div className="text-2xl font-bold text-accent">
-                ${revenueAnalytics?.averageSessionValue.toFixed(2)}
+                ${safeMetrics.revenueProjections.ltv.toFixed(2)}
               </div>
-              <p className="text-sm font-medium">Avg Session Value</p>
+              <p className="text-sm font-medium">Avg User LTV</p>
               <p className="text-xs text-muted-foreground">
-                High-value user engagement per session
+                Revenue potential per engaged user
               </p>
             </div>
           </div>
