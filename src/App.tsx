@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import PaymentSuccess from "./pages/PaymentSuccess";
 
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminIntelligence from "./pages/AdminIntelligence";
 import AdminLevels from "./pages/AdminLevels";
 import AdminQuestionsBulk from "./pages/AdminQuestionsBulk";
 import AdminQuestionsManual from "./pages/AdminQuestionsManual";
@@ -49,6 +50,11 @@ const AppContent = () => {
         <Route path="/admin-panel-secret" element={
           <AdminGuard>
             <AdminDashboard />
+          </AdminGuard>
+        } />
+        <Route path="/admin/intelligence" element={
+          <AdminGuard>
+            <AdminIntelligence />
           </AdminGuard>
         } />
         <Route path="/admin/levels" element={

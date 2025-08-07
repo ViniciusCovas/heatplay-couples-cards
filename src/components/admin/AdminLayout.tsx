@@ -12,6 +12,8 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { signOut, profile } = useAuth();
 
   const navItems = [
+    { path: "/admin", label: "Dashboard", icon: FileText },
+    { path: "/admin/intelligence", label: "Intelligence", icon: Settings },
     { path: "/admin/levels", label: "Gestionar Niveles", icon: Settings },
     { path: "/admin/questions-bulk", label: "Subir Preguntas", icon: Upload },
     { path: "/admin/questions-manual", label: "Añadir Preguntas", icon: Plus },
