@@ -79,7 +79,7 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-accent">
-              {advertiserMetrics?.audienceQuality.premiumUserPercentage}%
+              {advertiserMetrics?.audienceQuality.premiumUserPercentage || 0}%
             </div>
             <p className="text-xs text-muted-foreground">
               Users willing to pay
