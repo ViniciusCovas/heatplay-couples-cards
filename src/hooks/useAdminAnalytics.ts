@@ -34,12 +34,21 @@ export interface QuestionAnalytics {
     timesShown: number;
     avgResponseTime: number;
     avgHonestyScore: number;
+    avgAttractionScore: number;
+    avgIntimacyScore: number;
+    avgSurpriseScore: number;
     level: string;
     language: string;
   }>;
   languageDistribution: Array<{ language: string; count: number; percentage: number }>;
   levelPopularity: Array<{ level: string; sessions: number; avgDuration: number }>;
   responseTimeDistribution: Array<{ range: string; count: number }>;
+  evaluationAverages: {
+    honesty: number;
+    attraction: number;
+    intimacy: number;
+    surprise: number;
+  };
 }
 
 export interface RevenueAnalytics {
@@ -259,12 +268,14 @@ export const useAdminAnalytics = () => {
     const languageDistribution = processLanguageDistribution(questions || []);
     const levelPopularity = await fetchRealLevelPopularity();
     const responseTimeDistribution = generateRealResponseTimeDistribution(responses || []);
+    const evaluationAverages = calculateEvaluationAverages(responses || []);
 
     setQuestionAnalytics({
       topQuestions: questionUsage,
       languageDistribution,
       levelPopularity,
-      responseTimeDistribution
+      responseTimeDistribution,
+      evaluationAverages
     });
   };
 
@@ -527,6 +538,9 @@ export const useAdminAnalytics = () => {
           timesShown: 0,
           totalResponseTime: 0,
           totalHonestyScore: 0,
+          totalAttractionScore: 0,
+          totalIntimacyScore: 0,
+          totalSurpriseScore: 0,
           evaluationCount: 0,
           level: level?.name || `Level ${level?.sort_order || 'Unknown'}`,
           language: question.language
@@ -542,6 +556,9 @@ export const useAdminAnalytics = () => {
           const evaluation = JSON.parse(response.evaluation);
           if (evaluation.honesty) {
             questionStats[id].totalHonestyScore += evaluation.honesty;
+            questionStats[id].totalAttractionScore += evaluation.attraction || 0;
+            questionStats[id].totalIntimacyScore += evaluation.intimacy || 0;
+            questionStats[id].totalSurpriseScore += evaluation.surprise || 0;
             questionStats[id].evaluationCount++;
           }
         } catch (e) {
@@ -554,10 +571,42 @@ export const useAdminAnalytics = () => {
       .map((stats: any) => ({
         ...stats,
         avgResponseTime: stats.totalResponseTime / Math.max(stats.timesShown, 1),
-        avgHonestyScore: stats.evaluationCount > 0 ? stats.totalHonestyScore / stats.evaluationCount : 0
+        avgHonestyScore: stats.evaluationCount > 0 ? stats.totalHonestyScore / stats.evaluationCount : 0,
+        avgAttractionScore: stats.evaluationCount > 0 ? stats.totalAttractionScore / stats.evaluationCount : 0,
+        avgIntimacyScore: stats.evaluationCount > 0 ? stats.totalIntimacyScore / stats.evaluationCount : 0,
+        avgSurpriseScore: stats.evaluationCount > 0 ? stats.totalSurpriseScore / stats.evaluationCount : 0
       }))
       .sort((a: any, b: any) => b.timesShown - a.timesShown)
       .slice(0, 15);
+  };
+
+  const calculateEvaluationAverages = (responses: any[]) => {
+    let totalHonesty = 0, totalAttraction = 0, totalIntimacy = 0, totalSurprise = 0;
+    let evaluationCount = 0;
+
+    responses.forEach(response => {
+      if (response.evaluation) {
+        try {
+          const evaluation = JSON.parse(response.evaluation);
+          if (evaluation.honesty) {
+            totalHonesty += evaluation.honesty;
+            totalAttraction += evaluation.attraction || 0;
+            totalIntimacy += evaluation.intimacy || 0;
+            totalSurprise += evaluation.surprise || 0;
+            evaluationCount++;
+          }
+        } catch (e) {
+          // Ignore invalid evaluation JSON
+        }
+      }
+    });
+
+    return {
+      honesty: evaluationCount > 0 ? totalHonesty / evaluationCount : 0,
+      attraction: evaluationCount > 0 ? totalAttraction / evaluationCount : 0,
+      intimacy: evaluationCount > 0 ? totalIntimacy / evaluationCount : 0,
+      surprise: evaluationCount > 0 ? totalSurprise / evaluationCount : 0
+    };
   };
 
   const processLanguageDistribution = (questions: any[]) => {

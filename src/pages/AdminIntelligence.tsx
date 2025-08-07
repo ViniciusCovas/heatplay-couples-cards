@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RealTimeOperations } from "@/components/admin/analytics/RealTimeOperations";
-import { ContentUserIntelligence } from "@/components/admin/analytics/ContentUserIntelligence";
+import { EnhancedContentUserIntelligence } from "@/components/admin/analytics/EnhancedContentUserIntelligence";
 import { AdvertiserIntelligence } from "@/components/admin/analytics/AdvertiserIntelligence";
 import { AIIntelligence } from "@/components/admin/analytics/AIIntelligence";
 import { UserReturnAnalytics } from "@/components/admin/analytics/UserReturnAnalytics";
@@ -142,7 +142,7 @@ const AdminIntelligence = () => {
           </TabsContent>
 
           <TabsContent value="content" className="space-y-6">
-            <ContentUserIntelligence 
+            <EnhancedContentUserIntelligence 
               questionAnalytics={questionAnalytics}
               userAnalytics={userAnalytics}
             />
