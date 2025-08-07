@@ -51,55 +51,65 @@ export const ContentUserIntelligence = ({ questionAnalytics, userAnalytics }: Co
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {questionAnalytics?.topQuestions.slice(0, 8).map((question, index) => (
-              <div key={question.id} className="border rounded-lg p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-xs">
-                        #{index + 1}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {question.level}
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        {question.language.toUpperCase()}
-                      </Badge>
+            {questionAnalytics?.topQuestions && questionAnalytics.topQuestions.length > 0 ? (
+              questionAnalytics.topQuestions.slice(0, 8).map((question, index) => (
+                <div key={question.id} className="border rounded-lg p-4 space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge variant="secondary" className="text-xs">
+                          #{index + 1}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {question.level}
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {question.language.toUpperCase()}
+                        </Badge>
+                      </div>
+                      <p className="text-sm font-medium text-foreground line-clamp-2">
+                        {question.text}
+                      </p>
                     </div>
-                    <p className="text-sm font-medium text-foreground line-clamp-2">
-                      {question.text}
-                    </p>
+                    <div className="flex items-center gap-1 text-primary">
+                      <Eye className="h-4 w-4" />
+                      <span className="text-sm font-bold">{question.timesShown}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 text-primary">
-                    <Eye className="h-4 w-4" />
-                    <span className="text-sm font-bold">{question.timesShown}</span>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-muted-foreground">Response Time</span>
+                        <span className="font-medium">{question.avgResponseTime.toFixed(1)}s</span>
+                      </div>
+                      <Progress 
+                        value={Math.min(question.avgResponseTime * 2, 100)} 
+                        className="h-1" 
+                      />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1">
+                        <span className="text-muted-foreground">Honesty Score</span>
+                        <span className="font-medium">
+                          {question.avgHonestyScore > 0 ? question.avgHonestyScore.toFixed(1) : 'N/A'}/5
+                        </span>
+                      </div>
+                      <Progress 
+                        value={question.avgHonestyScore > 0 ? (question.avgHonestyScore / 5) * 100 : 0} 
+                        className="h-1" 
+                      />
+                    </div>
                   </div>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-muted-foreground">Response Time</span>
-                      <span className="font-medium">{question.avgResponseTime.toFixed(1)}s</span>
-                    </div>
-                    <Progress 
-                      value={Math.min(question.avgResponseTime * 2, 100)} 
-                      className="h-1" 
-                    />
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-muted-foreground">Honesty Score</span>
-                      <span className="font-medium">{question.avgHonestyScore.toFixed(1)}/5</span>
-                    </div>
-                    <Progress 
-                      value={(question.avgHonestyScore / 5) * 100} 
-                      className="h-1" 
-                    />
-                  </div>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">No Question Data Available</p>
+                <p className="text-sm">Questions will appear here once users start playing games</p>
               </div>
-            ))}
+            )}
           </div>
         </CardContent>
       </Card>
@@ -243,38 +253,39 @@ export const ContentUserIntelligence = ({ questionAnalytics, userAnalytics }: Co
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {userAnalytics?.cohortAnalysis.map((cohort, index) => (
-              <div key={cohort.period} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">{cohort.period}</span>
-                  <Badge variant="outline" className="text-xs">
-                    {cohort.newUsers} new
-                  </Badge>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">1-Week Retention</span>
-                    <span>{((cohort.retained1Week / cohort.newUsers) * 100).toFixed(0)}%</span>
+            <div className="text-center py-6">
+              <div className="text-2xl font-bold text-primary">
+                {userAnalytics?.totalUsers || 0}
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">Total Registered Users</p>
+              
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Active Users (7d)</span>
+                    <span className="font-medium">{userAnalytics?.activeUsers || 0}</span>
                   </div>
                   <Progress 
-                    value={(cohort.retained1Week / cohort.newUsers) * 100} 
-                    className="h-1" 
+                    value={userAnalytics?.retentionRate || 0} 
+                    className="h-2" 
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {userAnalytics?.retentionRate.toFixed(1)}% retention rate
+                  </p>
                 </div>
                 
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">1-Month Retention</span>
-                    <span>{((cohort.retained1Month / cohort.newUsers) * 100).toFixed(0)}%</span>
+                <div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Avg Sessions/User</span>
+                    <span className="font-medium">{userAnalytics?.averageSessionsPerUser.toFixed(1)}</span>
                   </div>
                   <Progress 
-                    value={(cohort.retained1Month / cohort.newUsers) * 100} 
-                    className="h-1" 
+                    value={Math.min((userAnalytics?.averageSessionsPerUser || 0) * 20, 100)} 
+                    className="h-2" 
                   />
                 </div>
               </div>
-            ))}
+            </div>
           </CardContent>
         </Card>
       </div>
