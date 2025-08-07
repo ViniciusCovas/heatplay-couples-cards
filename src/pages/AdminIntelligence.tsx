@@ -5,8 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { RealTimeOperations } from "@/components/admin/analytics/RealTimeOperations";
 import { ContentUserIntelligence } from "@/components/admin/analytics/ContentUserIntelligence";
 import { AdvertiserIntelligence } from "@/components/admin/analytics/AdvertiserIntelligence";
+import { AIIntelligence } from "@/components/admin/analytics/AIIntelligence";
+import { UserReturnAnalytics } from "@/components/admin/analytics/UserReturnAnalytics";
 import { useAdminAnalytics } from "@/hooks/useAdminAnalytics";
-import { Activity, Brain, TrendingUp, Loader2 } from 'lucide-react';
+import { Activity, Brain, TrendingUp, Loader2, Zap, RotateCcw } from 'lucide-react';
 
 const AdminIntelligence = () => {
   const {
@@ -15,6 +17,9 @@ const AdminIntelligence = () => {
     questionAnalytics,
     revenueAnalytics,
     advertiserMetrics,
+    aiAnalytics,
+    connectionIntelligence,
+    userReturnPatterns,
     loading
   } = useAdminAnalytics();
 
@@ -106,18 +111,26 @@ const AdminIntelligence = () => {
 
         {/* Main Dashboard Tabs */}
         <Tabs defaultValue="operations" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="operations" className="flex items-center gap-2">
               <Activity className="h-4 w-4" />
-              Real-Time Operations
+              Operations
             </TabsTrigger>
             <TabsTrigger value="content" className="flex items-center gap-2">
               <Brain className="h-4 w-4" />
-              Content & User Intelligence
+              Content & Users
+            </TabsTrigger>
+            <TabsTrigger value="ai" className="flex items-center gap-2">
+              <Zap className="h-4 w-4" />
+              AI Intelligence
+            </TabsTrigger>
+            <TabsTrigger value="returns" className="flex items-center gap-2">
+              <RotateCcw className="h-4 w-4" />
+              User Returns
             </TabsTrigger>
             <TabsTrigger value="advertisers" className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              Advertiser Intelligence
+              Advertisers
             </TabsTrigger>
           </TabsList>
 
@@ -132,6 +145,19 @@ const AdminIntelligence = () => {
             <ContentUserIntelligence 
               questionAnalytics={questionAnalytics}
               userAnalytics={userAnalytics}
+            />
+          </TabsContent>
+
+          <TabsContent value="ai" className="space-y-6">
+            <AIIntelligence 
+              aiAnalytics={aiAnalytics}
+              connectionIntelligence={connectionIntelligence}
+            />
+          </TabsContent>
+
+          <TabsContent value="returns" className="space-y-6">
+            <UserReturnAnalytics 
+              userReturnPatterns={userReturnPatterns}
             />
           </TabsContent>
 
