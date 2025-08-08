@@ -18,13 +18,12 @@ import { HeroSection } from '@/components/insights/HeroSection';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
 import { GrowthJourney } from '@/components/insights/GrowthJourney';
-import { NextLevelChallenge } from '@/components/insights/NextLevelChallenge';
-import { PeerComparisonDashboard } from '@/components/insights/PeerComparisonDashboard';
 import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
-import { AdvancedAchievements } from '@/components/insights/AdvancedAchievements';
-import { GrowthTracker } from '@/components/insights/GrowthTracker';
 import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
 import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
+import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
+import { SessionSummaryHeader } from '@/components/insights/SessionSummaryHeader';
+import { PerQuestionScores } from '@/components/insights/PerQuestionScores';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();
@@ -34,6 +33,7 @@ const ConnectionInsights = () => {
 
   const { data: insights, isLoading, error, refetch } = useConnectionInsights(searchCode);
   const { data: benchmarks } = useInsightsBenchmarks();
+  const { data: roomAnalytics } = useRoomAnalytics(searchCode);
 
   React.useEffect(() => {
     document.title = 'Connection Insights | Let\'s Get Close';
@@ -126,17 +126,15 @@ const ConnectionInsights = () => {
             <CompatibilityRadar insights={insights} />
             <InteractiveTimeline insights={insights} />
             
-            {/* Phase 2: Advanced Gamification (neutralized to milestones) */}
-            <AdvancedAchievements roomCode={searchCode} />
-            <PeerComparisonDashboard roomCode={searchCode} />
+            {/* Session context and deep dive */}
+            <SessionSummaryHeader insights={insights} analytics={roomAnalytics ?? null} />
+            <PerQuestionScores analytics={roomAnalytics ?? null} />
             <ResponseTimeAnalytics roomCode={searchCode} />
-            
-            {/* Phase 3: Multi-Session Analytics */}
-            <GrowthTracker roomCode={searchCode} />
+
+            {/* Multi-session perspective */}
             <UserGrowthHistoryChart roomCode={searchCode} />
-            
-            {/* Legacy Components (Refined) */}
-            <GrowthJourney insights={insights} />
+
+            {/* Global context (neutral, non-competitive) */}
             <GlobalContextOverview insights={insights} />
           </div>
         )}
