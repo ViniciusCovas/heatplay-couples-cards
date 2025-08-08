@@ -14,16 +14,14 @@ import {
 } from 'lucide-react';
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
-import { HeroSection } from '@/components/insights/HeroSection';
+import { EnhancedHeroSection } from '@/components/insights/EnhancedHeroSection';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
-import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
-import { GrowthJourney } from '@/components/insights/GrowthJourney';
+import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
+import { QuestionInsights } from '@/components/insights/QuestionInsights';
 import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
 import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
 import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
-import { SessionSummaryHeader } from '@/components/insights/SessionSummaryHeader';
-import { PerQuestionScores } from '@/components/insights/PerQuestionScores';
 import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
 
 const ConnectionInsights = () => {
@@ -121,21 +119,27 @@ const ConnectionInsights = () => {
 
         {/* Connection Insights - Complete Experience */}
         {insights && (
-          <div className="space-y-16 animate-fade-in">
-            {/* Phase 1: WOW Features */}
-            <HeroSection insights={insights} />
-            <CompatibilityRadar insights={insights} />
-            <InteractiveTimeline insights={insights} />
+          <div className="space-y-12 animate-fade-in">
+            {/* Enhanced Hero with dynamic insights */}
+            <EnhancedHeroSection insights={insights} analytics={roomAnalytics ?? null} />
             
-            {/* Session context and deep dive */}
-            <SessionSummaryHeader insights={insights} analytics={roomAnalytics ?? null} />
-            <PerQuestionScores analytics={roomAnalytics ?? null} />
+            {/* Connection Analysis */}
+            <CompatibilityRadar insights={insights} analytics={roomAnalytics ?? null} />
+            
+            {/* Journey Timeline */}
+            <VerticalTimeline insights={insights} />
+            
+            {/* Smart Question Insights */}
+            <QuestionInsights analytics={roomAnalytics ?? null} />
+            
+            {/* Peer Comparison */}
+            <PeerContextPanelV2 roomCode={searchCode} />
+            
+            {/* Analytics & Growth */}
             <ResponseTimeAnalytics roomCode={searchCode} />
-
-            {/* Multi-session perspective */}
             <UserGrowthHistoryChart roomCode={searchCode} />
-
-            {/* Global context (neutral, non-competitive) */}
+            
+            {/* Global Context */}
             <GlobalContextOverview insights={insights} />
           </div>
         )}
