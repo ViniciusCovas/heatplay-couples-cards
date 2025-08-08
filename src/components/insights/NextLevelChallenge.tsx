@@ -117,7 +117,6 @@ export const NextLevelChallenge = ({ insights }: NextLevelChallengeProps) => {
             </div>
           </CardContent>
         </Card>
-      </div>
     </div>
   );
 };

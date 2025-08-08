@@ -1,8 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Trophy, Medal, Award, TrendingUp, Users } from 'lucide-react';
+import { Users, TrendingUp } from 'lucide-react';
 import { ConnectionInsightsData } from '@/hooks/useConnectionInsights';
 import { BenchmarkData } from '@/hooks/useInsightsBenchmarks';
 
@@ -11,18 +10,9 @@ interface BenchmarkLeaderboardProps {
   benchmarks?: BenchmarkData;
 }
 
+// NOTE: This component has been simplified to a neutral, non-competitive global context.
 export const BenchmarkLeaderboard = ({ insights, benchmarks }: BenchmarkLeaderboardProps) => {
   if (!benchmarks) return null;
-
-  const yourPercentile = Math.round((insights.compatibilityScore / 100) * 100);
-  const getRankIcon = (percentile: number) => {
-    if (percentile >= 90) return { icon: Trophy, color: 'text-yellow-500', bg: 'from-yellow-400 to-yellow-600' };
-    if (percentile >= 75) return { icon: Medal, color: 'text-gray-400', bg: 'from-gray-400 to-gray-600' };
-    return { icon: Award, color: 'text-amber-600', bg: 'from-amber-500 to-amber-700' };
-  };
-
-  const rank = getRankIcon(benchmarks.percentile);
-  const RankIcon = rank.icon;
 
   return (
     <div className="mb-12">
@@ -37,17 +27,6 @@ export const BenchmarkLeaderboard = ({ insights, benchmarks }: BenchmarkLeaderbo
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Comparison Stats only (removed podium) */}
-        <Card className="bg-gradient-to-br from-white to-secondary/5 border-secondary/20 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-secondary" />
-              Comparison Metrics
-            </CardTitle>
-          </CardHeader>
-          ...
-
-        {/* Comparison Stats */}
         <Card className="bg-gradient-to-br from-white to-secondary/5 border-secondary/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -80,7 +59,6 @@ export const BenchmarkLeaderboard = ({ insights, benchmarks }: BenchmarkLeaderbo
               </div>
               <Progress value={benchmarks.globalAverage} className="h-3 bg-gray-200" />
             </div>
-          </CardContent>
           </CardContent>
         </Card>
       </div>
