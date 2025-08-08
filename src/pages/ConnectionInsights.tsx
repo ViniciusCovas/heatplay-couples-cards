@@ -24,6 +24,7 @@ import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryC
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
 import { SessionSummaryHeader } from '@/components/insights/SessionSummaryHeader';
 import { PerQuestionScores } from '@/components/insights/PerQuestionScores';
+import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();

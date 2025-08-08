@@ -3,38 +3,28 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Activity } from 'lucide-react';
 import { ConnectionInsightsData } from '@/hooks/useConnectionInsights';
+import { useGlobalInsights } from '@/hooks/useGlobalInsights';
+import type { RoomAnalyticsData } from '@/hooks/useRoomAnalytics';
 
 interface CompatibilityRadarProps {
   insights: ConnectionInsightsData;
+  analytics?: RoomAnalyticsData | null;
 }
 
-export const CompatibilityRadar = ({ insights }: CompatibilityRadarProps) => {
-  // Transform strength areas into 5-point radar chart data
-  const radarData = [
-    { area: 'Honesty', yourScore: 4.2, average: 3.2 },
-    { area: 'Attraction', yourScore: 3.8, average: 3.1 },
-    { area: 'Intimacy', yourScore: 4.0, average: 2.9 },
-    { area: 'Surprise', yourScore: 3.5, average: 3.0 },
-    { area: 'Connection', yourScore: 4.1, average: 3.2 },
-  ];
+export const CompatibilityRadar = ({ insights, analytics }: CompatibilityRadarProps) => {
+  const { data: global } = useGlobalInsights();
 
-  // If we have actual strength areas, use those instead
-  if (insights.strengthAreas && insights.strengthAreas.length > 0) {
-    const processedAreas = insights.strengthAreas.slice(0, 5).map(strength => ({
-      area: strength.area.charAt(0).toUpperCase() + strength.area.slice(1),
-      yourScore: strength.score,
-      average: 3.2, // Global average baseline
-    }));
-    
-    // Fill up to 5 areas if needed
-    while (processedAreas.length < 5) {
-      processedAreas.push({
-        area: `Area ${processedAreas.length + 1}`,
-        yourScore: 3.0,
-        average: 3.2,
-      });
-    }
-  }
+  const session = analytics?.sessionAverages;
+  const to5 = (n?: number | null) => (typeof n === 'number' ? Math.round(n * 10) / 10 : 0);
+  const to5from100 = (n?: number | null) => (typeof n === 'number' ? Math.round((n / 20) * 10) / 10 : 0);
+
+  const radarData = [
+    { area: 'Honesty', yourScore: to5(session?.honesty), average: to5(global?.pillarAverages.honesty) },
+    { area: 'Attraction', yourScore: to5(session?.attraction), average: to5(global?.pillarAverages.attraction) },
+    { area: 'Intimacy', yourScore: to5(session?.intimacy), average: to5(global?.pillarAverages.intimacy) },
+    { area: 'Surprise', yourScore: to5(session?.surprise), average: to5(global?.pillarAverages.surprise) },
+    { area: 'Connection', yourScore: to5from100((insights as any).compatibilityScore), average: to5from100(global?.globalCompatibilityAvg ?? undefined) },
+  ];
 
   return (
     <div className="mb-12">

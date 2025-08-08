@@ -11,6 +11,8 @@ import {
   Timer
 } from 'lucide-react';
 import { useAdvancedInsights } from '@/hooks/useAdvancedInsights';
+import { useGlobalInsights } from '@/hooks/useGlobalInsights';
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, ReferenceLine } from 'recharts';
 
 interface ResponseTimeAnalyticsProps {
   roomCode: string;
@@ -18,6 +20,7 @@ interface ResponseTimeAnalyticsProps {
 
 export const ResponseTimeAnalytics: React.FC<ResponseTimeAnalyticsProps> = ({ roomCode }) => {
   const { data: advancedInsights } = useAdvancedInsights(roomCode);
+  const { data: global } = useGlobalInsights();
 
   if (!advancedInsights) return null;
 
