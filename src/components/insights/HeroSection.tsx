@@ -92,12 +92,7 @@ export const HeroSection = ({ insights }: HeroSectionProps) => {
               </div>
             </div>
             
-            {/* Floating achievement badges */}
-            <div className="absolute -top-2 -right-2 w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-              <Trophy className="w-7 h-7 text-white" />
-            </div>
-            
-            {/* Sparkle effects */}
+            {/* Subtle decorative elements (reduced gamification) */}
             <Star className="absolute top-6 right-8 w-5 h-5 text-yellow-400 animate-pulse" />
             <Star className="absolute bottom-8 left-6 w-4 h-4 text-yellow-300 animate-pulse delay-500" />
             <Zap className="absolute top-12 left-12 w-4 h-4 text-primary animate-pulse delay-1000" />

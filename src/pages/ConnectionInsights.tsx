@@ -15,26 +15,32 @@ import {
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
 import { HeroSection } from '@/components/insights/HeroSection';
-import { AchievementDashboard } from '@/components/insights/AchievementDashboard';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
 import { GrowthJourney } from '@/components/insights/GrowthJourney';
-import { BenchmarkLeaderboard } from '@/components/insights/BenchmarkLeaderboard';
-import { InsightsCards } from '@/components/insights/InsightsCards';
 import { NextLevelChallenge } from '@/components/insights/NextLevelChallenge';
 import { PeerComparisonDashboard } from '@/components/insights/PeerComparisonDashboard';
 import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
 import { AdvancedAchievements } from '@/components/insights/AdvancedAchievements';
 import { GrowthTracker } from '@/components/insights/GrowthTracker';
+import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
+import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [roomCode, setRoomCode] = useState('');
   const [searchCode, setSearchCode] = useState('');
-  
+
   const { data: insights, isLoading, error, refetch } = useConnectionInsights(searchCode);
   const { data: benchmarks } = useInsightsBenchmarks();
+
+  React.useEffect(() => {
+    document.title = 'Connection Insights | Let\'s Get Close';
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute('content', 'Relationship insights and analysis for your session.');
+  }, []);
+
 
   const handleSearch = () => {
     if (roomCode.trim()) {
@@ -49,23 +55,26 @@ const ConnectionInsights = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-white" />
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8">
+          {/* SEO */}
+          {/* Title and description for SEO */}
+          {/* Note: Using document directly to avoid extra deps */}
+          {/* Header */}
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                Connection Insights
+              </h1>
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              Connection Insights
-            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Discover your relationship patterns, compare with other couples, and unlock insights to deepen your connection
+            </p>
           </div>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Discover your relationship patterns, compare with other couples, and unlock insights to deepen your connection
-          </p>
-        </div>
 
         {/* Search Section */}
         <Card className="max-w-2xl mx-auto mb-8">
@@ -116,21 +125,19 @@ const ConnectionInsights = () => {
             <HeroSection insights={insights} />
             <CompatibilityRadar insights={insights} />
             <InteractiveTimeline insights={insights} />
-            <InsightsCards insights={insights} />
             
-            {/* Phase 2: Advanced Gamification */}
+            {/* Phase 2: Advanced Gamification (neutralized to milestones) */}
             <AdvancedAchievements roomCode={searchCode} />
             <PeerComparisonDashboard roomCode={searchCode} />
             <ResponseTimeAnalytics roomCode={searchCode} />
             
             {/* Phase 3: Multi-Session Analytics */}
             <GrowthTracker roomCode={searchCode} />
+            <UserGrowthHistoryChart roomCode={searchCode} />
             
-            {/* Legacy Components (Enhanced) */}
-            <AchievementDashboard insights={insights} />
+            {/* Legacy Components (Refined) */}
             <GrowthJourney insights={insights} />
-            <BenchmarkLeaderboard insights={insights} benchmarks={benchmarks} />
-            <NextLevelChallenge insights={insights} />
+            <GlobalContextOverview insights={insights} />
           </div>
         )}
 

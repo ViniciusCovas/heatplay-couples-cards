@@ -33,18 +33,17 @@ export const NextLevelChallenge = ({ insights }: NextLevelChallengeProps) => {
         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-accent/20 to-transparent rounded-full blur-2xl" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-secondary/20 to-transparent rounded-full blur-xl" />
         
-        <div className="relative z-10">
-          <CardHeader className="text-center pb-4">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <Zap className="w-6 h-6 text-white" />
-              </div>
-              <CardTitle className="text-2xl">Continue Your Journey</CardTitle>
+        <CardHeader className="text-center pb-4">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+              <Zap className="w-6 h-6 text-white" />
             </div>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Ready to unlock the next level of connection? Your relationship adventure continues with new challenges and rewards.
-            </p>
-          </CardHeader>
+            <CardTitle className="text-2xl">Recommended Next Steps</CardTitle>
+          </div>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            Evidence-informed suggestions to keep meaningful conversations going. Continue at your own pace.
+          </p>
+        </CardHeader>
 
           <CardContent className="space-y-8">
             {/* Progress Section */}
@@ -67,35 +66,8 @@ export const NextLevelChallenge = ({ insights }: NextLevelChallengeProps) => {
                 </div>
               </div>
 
-              <Badge 
-                variant="secondary" 
-                className="bg-gradient-to-r from-primary/20 to-accent/20 text-primary border-primary/30 text-lg py-2 px-4"
-              >
-                <Trophy className="w-4 h-4 mr-2" />
-                {nextPhaseReward}
-              </Badge>
             </div>
 
-            {/* Rewards Preview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20">
-                <Star className="w-8 h-8 text-yellow-500 mx-auto mb-2" />
-                <h4 className="font-semibold text-sm">New Insights</h4>
-                <p className="text-xs text-muted-foreground">Unlock deeper analysis</p>
-              </div>
-              
-              <div className="text-center p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20">
-                <Heart className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                <h4 className="font-semibold text-sm">Bonus Questions</h4>
-                <p className="text-xs text-muted-foreground">Access exclusive content</p>
-              </div>
-              
-              <div className="text-center p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-white/20">
-                <Trophy className="w-8 h-8 text-primary mx-auto mb-2" />
-                <h4 className="font-semibold text-sm">Achievement</h4>
-                <p className="text-xs text-muted-foreground">Earn relationship badges</p>
-              </div>
-            </div>
 
             {/* Next Session Recommendation */}
             {insights.nextSessionRecommendation && (
@@ -144,8 +116,8 @@ export const NextLevelChallenge = ({ insights }: NextLevelChallengeProps) => {
               </div>
             </div>
           </CardContent>
-        </div>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 };

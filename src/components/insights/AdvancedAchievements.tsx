@@ -99,10 +99,10 @@ export const AdvancedAchievements: React.FC<AdvancedAchievementsProps> = ({ room
       {/* Header with XP and Level */}
       <div className="text-center space-y-6">
         <div className="flex items-center justify-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
-            <Trophy className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-foreground">Achievement Dashboard</h2>
+          <h2 className="text-3xl font-bold text-foreground">Relationship Milestones</h2>
         </div>
         
         {/* Level and XP Display */}

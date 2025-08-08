@@ -21,6 +21,9 @@ export interface ResponseTimeAnalytics {
   thoughtfulnessIndex: number;
   optimalRange: [number, number];
   consistency: number;
+  // optional sample sizes for transparency
+  globalSampleSize?: number;
+  userSampleSize?: number;
 }
 
 export interface PeerComparison {
@@ -81,23 +84,30 @@ export const useAdvancedInsights = (roomCode: string) => {
         .limit(1);
 
       // Get global benchmarks for comparison
-      const { data: allAnalyses } = await supabase
-        .from('ai_analyses')
-        .select('ai_response')
-        .eq('analysis_type', 'getclose-ai-analysis');
+      const [{ data: allAnalyses }, { data: allResponses }] = await Promise.all([
+        supabase
+          .from('ai_analyses')
+          .select('ai_response')
+          .eq('analysis_type', 'getclose-ai-analysis'),
+        supabase
+          .from('game_responses')
+          .select('response_time')
+          .not('response_time', 'is', null),
+      ]);
 
       const aiResponse = analysis?.[0]?.ai_response as any;
       const userResponses = responses || [];
-      const globalData = allAnalyses || [];
+      const globalAnalyses = allAnalyses || [];
+      const globalResponses = allResponses || [];
 
       // Calculate achievements
       const achievements = calculateAchievements(userResponses, aiResponse);
       
-      // Calculate response time analytics
-      const responseTimeAnalytics = calculateResponseTimeAnalytics(userResponses, globalData);
+      // Calculate response time analytics (now using real global data)
+      const responseTimeAnalytics = calculateResponseTimeAnalytics(userResponses, globalResponses);
       
-      // Calculate peer comparisons
-      const peerComparisons = calculatePeerComparisons(aiResponse, globalData);
+      // Calculate peer comparisons (now using real global analyses)
+      const peerComparisons = calculatePeerComparisons(aiResponse, globalAnalyses);
       
       // Calculate growth metrics
       const growthMetrics = calculateGrowthMetrics(userResponses, aiResponse);
@@ -195,32 +205,48 @@ function calculateAchievements(responses: any[], aiResponse: any): AchievementDa
   return achievements;
 }
 
-function calculateResponseTimeAnalytics(userResponses: any[], globalData: any[]): ResponseTimeAnalytics {
-  const userTimes = userResponses.map(r => r.response_time || 0).filter(t => t > 0);
+function calculateResponseTimeAnalytics(userResponses: any[], globalResponses: any[]): ResponseTimeAnalytics {
+  const userTimes = userResponses.map(r => r.response_time || 0).filter((t: number) => t > 0);
   const userAverage = userTimes.length > 0 
-    ? userTimes.reduce((sum, t) => sum + t, 0) / userTimes.length 
+    ? userTimes.reduce((sum: number, t: number) => sum + t, 0) / userTimes.length 
     : 0;
 
-  // Calculate global median (simplified)
-  const globalMedian = 45000; // 45 seconds as baseline
+  // Build global list from real response times
+  const globalTimes = (globalResponses || [])
+    .map((r: any) => r.response_time || 0)
+    .filter((t: number) => t > 0)
+    .sort((a: number, b: number) => a - b);
 
-  // Calculate percentile (simplified)
-  const percentile = userAverage < globalMedian ? 75 : 25;
+  const median = (arr: number[]) => {
+    if (arr.length === 0) return 45000; // fallback 45s
+    const mid = Math.floor(arr.length / 2);
+    return arr.length % 2 !== 0 ? arr[mid] : Math.round((arr[mid - 1] + arr[mid]) / 2);
+  };
 
-  // Mindfulness score: faster can mean less thoughtful
-  const mindfulnessScore = Math.max(0, Math.min(100, 
-    100 - ((Math.max(0, globalMedian - userAverage) / globalMedian) * 50)
-  ));
+  const globalMedian = median(globalTimes);
 
-  // Thoughtfulness index: optimal range consideration
-  const optimalRange: [number, number] = [20000, 60000]; // 20-60 seconds
+  // Percentile: faster averages rank higher (lower time = higher percentile)
+  let percentile = 50;
+  if (globalTimes.length > 0 && userAverage > 0) {
+    const idx = globalTimes.findIndex((t: number) => t >= userAverage);
+    const position = idx === -1 ? globalTimes.length - 1 : idx;
+    const pct = 1 - position / Math.max(globalTimes.length - 1, 1);
+    percentile = Math.max(1, Math.min(99, Math.round(pct * 100)));
+  }
+
+  // Mindfulness score: balance vs global median (closer to median -> higher)
+  const diffRatio = globalMedian > 0 ? Math.abs(userAverage - globalMedian) / globalMedian : 0;
+  const mindfulnessScore = Math.max(0, Math.min(100, Math.round((1 - Math.min(diffRatio, 1)) * 100)));
+
+  // Thoughtfulness index: optimal window 20-60s
+  const optimalRange: [number, number] = [20000, 60000];
   const thoughtfulnessIndex = userAverage >= optimalRange[0] && userAverage <= optimalRange[1] ? 85 : 60;
 
-  // Consistency: how much variation in response times
+  // Consistency: standard deviation relative to mean
   const variance = userTimes.length > 1 
-    ? userTimes.reduce((sum, t) => sum + Math.pow(t - userAverage, 2), 0) / userTimes.length
+    ? userTimes.reduce((sum: number, t: number) => sum + Math.pow(t - userAverage, 2), 0) / userTimes.length
     : 0;
-  const consistency = Math.max(0, 100 - (Math.sqrt(variance) / userAverage * 100));
+  const consistency = userAverage > 0 ? Math.max(0, Math.min(100, (1 - Math.sqrt(variance) / userAverage) * 100)) : 0;
 
   return {
     userAverage,
@@ -233,25 +259,30 @@ function calculateResponseTimeAnalytics(userResponses: any[], globalData: any[])
   };
 }
 
-function calculatePeerComparisons(aiResponse: any, globalData: any[]): PeerComparison[] {
+function calculatePeerComparisons(aiResponse: any, globalAnalyses: any[]): PeerComparison[] {
   const comparisons: PeerComparison[] = [];
-  
   if (!aiResponse?.strengthAreas) return comparisons;
 
-  // Calculate global averages for each dimension
-  const globalAverages = {
-    communication: 3.2,
-    emotional_intimacy: 3.1,
-    physical_connection: 3.3,
-    trust: 3.4,
-    shared_values: 3.2,
-  };
+  // Build real global averages from AI analyses
+  const areaTotals: Record<string, { sum: number; count: number }> = {};
+  (globalAnalyses || []).forEach((row: any) => {
+    const resp = row?.ai_response;
+    const areas = resp?.strengthAreas as Array<{ area: string; score: number }> | undefined;
+    if (!areas) return;
+    areas.forEach(({ area, score }) => {
+      if (!areaTotals[area]) areaTotals[area] = { sum: 0, count: 0 };
+      areaTotals[area].sum += Number(score) || 0;
+      areaTotals[area].count += 1;
+    });
+  });
 
   aiResponse.strengthAreas.forEach((area: any) => {
-    const peerAverage = globalAverages[area.area as keyof typeof globalAverages] || 3.0;
-    const userScore = area.score;
+    const stats = areaTotals[area.area] || { sum: 3, count: 1 };
+    const peerAverage = stats.sum / Math.max(stats.count, 1);
+    const userScore = Number(area.score) || 0;
+
+    // Simple percentile vs average proxy
     const percentile = userScore > peerAverage ? 75 : 25;
-    
     let rank = 'Average';
     if (percentile >= 90) rank = 'Top 10%';
     else if (percentile >= 75) rank = 'Top 25%';

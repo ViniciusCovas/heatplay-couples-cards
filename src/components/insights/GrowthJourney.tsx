@@ -49,10 +49,10 @@ export const GrowthJourney = ({ insights }: GrowthJourneyProps) => {
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
           <ArrowRight className="w-6 h-6 text-primary" />
-          Your Relationship Growth Journey
+          Your Connection Journey
         </h2>
         <p className="text-muted-foreground">
-          Track your progress through the phases of connection
+          A clear view of where you are and what comes next
         </p>
       </div>
 
@@ -141,24 +141,13 @@ export const GrowthJourney = ({ insights }: GrowthJourneyProps) => {
           <div className="mt-8 p-6 bg-gradient-to-br from-primary/5 to-secondary/5 rounded-2xl border border-primary/20">
             <div className="text-center">
               <h3 className="text-xl font-bold text-foreground mb-2">
-                You're in the {relationshipPhases[currentPhaseIndex]?.title} Phase!
+                Current Phase: {relationshipPhases[currentPhaseIndex]?.title}
               </h3>
               <p className="text-muted-foreground mb-4">
                 {relationshipPhases[currentPhaseIndex]?.description}
               </p>
-              
-              {/* Phase progress */}
-              <div className="max-w-md mx-auto">
-                <div className="flex justify-between text-sm text-muted-foreground mb-2">
-                  <span>Phase Progress</span>
-                  <span>{Math.round(((currentPhaseIndex + 1) / relationshipPhases.length) * 100)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-gradient-to-r from-primary to-secondary h-3 rounded-full transition-all duration-1000 ease-out"
-                    style={{ width: `${((currentPhaseIndex + 1) / relationshipPhases.length) * 100}%` }}
-                  />
-                </div>
+              <div className="text-sm text-muted-foreground">
+                Progress through phases is not linear—focus on understanding and growth over time.
               </div>
             </div>
           </div>

@@ -60,7 +60,7 @@ export const ResponseTimeAnalytics: React.FC<ResponseTimeAnalyticsProps> = ({ ro
       {/* Header */}
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-teal-600 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
             <Timer className="w-6 h-6 text-white" />
           </div>
           <h2 className="text-3xl font-bold text-foreground">Response Time Analytics</h2>
@@ -98,6 +98,9 @@ export const ResponseTimeAnalytics: React.FC<ResponseTimeAnalyticsProps> = ({ ro
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Your Percentile</span>
                 <span className="font-medium">{responseTimeAnalytics.percentile}th</span>
+              </div>
+              <div className="text-xs text-muted-foreground text-center">
+                Based on {Math.max(1, Math.round((responseTimeAnalytics as any).globalSampleSize || 0))} global responses
               </div>
             </div>
           </CardContent>
