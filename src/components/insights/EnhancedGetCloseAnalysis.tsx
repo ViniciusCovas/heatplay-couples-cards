@@ -23,6 +23,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { logger } from "@/utils/logger";
 import { AIIntelligenceDashboard } from './AIIntelligenceDashboard';
+import { AdvancedIntelligenceLayout } from './AdvancedIntelligenceLayout';
 import { calculatePsychologicalMetrics, generateIntelligenceInsights } from '@/utils/psychologicalAnalysis';
 import { calculateConnectionScore, GameResponse } from '@/utils/connectionAlgorithm';
 
@@ -472,12 +473,12 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
         </CardContent>
       </Card>
 
-      {/* Advanced AI Intelligence Dashboard */}
-      {analysis && advancedMetrics && intelligenceInsights && (
-        <AIIntelligenceDashboard 
+      {/* Advanced Intelligence 2.0 Layout */}
+      {analysis && advancedMetrics && intelligenceInsights && isExpanded && (
+        <AdvancedIntelligenceLayout 
           metrics={advancedMetrics}
           insights={intelligenceInsights}
-          isVisible={isExpanded}
+          responses={gameResponses}
         />
       )}
     </div>
