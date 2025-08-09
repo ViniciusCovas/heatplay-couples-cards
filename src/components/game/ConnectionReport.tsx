@@ -4,7 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Logo } from "@/components/ui/animated-logo";
 import { Heart, Flame, Zap, Star, Eye, Home, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { GetCloseAnalysis } from "./GetCloseAnalysis";
+import { EnhancedGetCloseAnalysis } from "@/components/insights/EnhancedGetCloseAnalysis";
 import { useSearchParams } from "react-router-dom";
 import { logger } from "@/utils/logger";
 
@@ -158,10 +158,10 @@ export const ConnectionReport = ({
           </Button>
         </div>
 
-        {/* GetClose AI Analysis Section */}
+        {/* GetClose AI Intelligence Section */}
         {currentRoomId && (
           <div className="mt-4">
-            <GetCloseAnalysis
+            <EnhancedGetCloseAnalysis
               roomId={currentRoomId}
               language={language || i18n.language}
               isVisible={true}
