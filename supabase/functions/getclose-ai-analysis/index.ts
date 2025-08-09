@@ -271,7 +271,7 @@ JSON Response Format:
   }
 }
 
-Make this feel like a $200 relationship analysis, not a generic card game result. Use the specific metrics provided.
+Make this feel like a $200 relationship analysis, not a generic card game result. Use the specific metrics provided.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
