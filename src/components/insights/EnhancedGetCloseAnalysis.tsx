@@ -16,8 +16,14 @@ import {
   Activity,
   Star,
   Mail,
-  Zap
+  Zap,
+  Info,
+  Users,
+  Lightbulb
 } from 'lucide-react';
+import { ExplanationTooltip } from './ExplanationTooltip';
+import { ExpandableSection } from './ExpandableSection';
+import { ScoreInterpretation } from './ScoreInterpretation';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -284,6 +290,7 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
           title: 'Intelligence Report Sent',
           description: 'Your premium analysis has been delivered to your email',
         });
+        // Don't reload the analysis after email is sent - this was causing duplication
       } else {
         throw new Error('Failed to send intelligence report');
       }
@@ -408,48 +415,85 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
 
           {analysis && advancedMetrics && intelligenceInsights && (
             <div className="space-y-6">
-              {/* Premium Intelligence Header */}
-              <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 p-6 rounded-xl border border-primary/20">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-                  <div className="space-y-2">
-                    <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                      {analysis.compatibilityScore}%
+              {/* Overview Summary Card */}
+              <Card className="bg-gradient-to-r from-primary/5 via-secondary/5 to-accent/5 border-primary/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-xl">Your Relationship Intelligence Summary</CardTitle>
+                      <CardDescription className="text-base mt-1">
+                        Here's what our AI discovered about your connection
+                      </CardDescription>
                     </div>
-                    <div className="text-sm text-muted-foreground">Intelligence Score</div>
-                    <Progress value={analysis.compatibilityScore} className="h-2" />
+                    <ExplanationTooltip 
+                      explanation="This summary combines advanced psychology with AI analysis to give you insights into your relationship dynamics, communication patterns, and compatibility."
+                      term="Intelligence Summary"
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1">
-                      <Brain className="w-5 h-5 text-purple-500" />
-                      <span className="font-semibold">{analysis.intelligenceMarkers?.rarityPercentile || '75th'}</span>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Primary Score Display */}
+                  <div className="text-center space-y-4 p-6 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl">
+                    <div className="space-y-2">
+                      <div className="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                        {analysis.compatibilityScore}%
+                      </div>
+                      <div className="text-lg font-medium">Overall Connection Score</div>
+                      <div className="text-sm text-muted-foreground max-w-md mx-auto">
+                        This score reflects the depth and quality of your emotional connection based on your responses
+                      </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">Percentile</div>
-                    <div className="text-xs text-purple-600">
-                      {intelligenceInsights.rarityMetrics.comparisonNote}
+                    <Progress value={analysis.compatibilityScore} className="h-3 max-w-md mx-auto" />
+                  </div>
+
+                  {/* Key Metrics Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <ScoreInterpretation
+                      score={Math.round((analysis.compatibilityScore / 100) * 5)}
+                      maxScore={5}
+                      label="Connection Strength"
+                      interpretation="Shows how well you understand and connect with each other emotionally."
+                      percentile={`${analysis.intelligenceMarkers?.rarityPercentile || '75th'} percentile`}
+                      showProgress={false}
+                      className="border-purple-200 bg-purple-50"
+                    />
+                    
+                    <div className="space-y-2 p-4 rounded-lg border bg-card">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium">Relationship Phase</span>
+                        <ExplanationTooltip 
+                          explanation="This identifies what stage your relationship is in based on communication patterns and intimacy levels."
+                          term="Relationship Phase"
+                        />
+                      </div>
+                      <div className="text-2xl font-bold capitalize text-amber-600">
+                        {analysis.relationshipPhase}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {intelligenceInsights.relationshipVelocity.direction}
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 p-4 rounded-lg border bg-card">
+                      <div className="flex items-center gap-2">
+                        <Activity className="w-4 h-4 text-green-500" />
+                        <span className="font-medium">Analysis Depth</span>
+                        <ExplanationTooltip 
+                          explanation="This shows how much data we analyzed to create your report - more data points mean more accurate insights."
+                          term="Analysis Depth"
+                        />
+                      </div>
+                      <div className="text-2xl font-bold text-blue-600">
+                        {analysis.intelligenceMarkers?.dataPoints || 16}
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        Data points analyzed
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1">
-                      <Activity className="w-5 h-5 text-blue-500" />
-                      <span className="font-semibold">{analysis.intelligenceMarkers?.dataPoints || 16}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">Data Points</div>
-                    <div className="text-xs text-blue-600">
-                      {analysis.intelligenceMarkers?.analysisDepth || 'Advanced Analysis'}
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-center gap-1">
-                      <Zap className="w-5 h-5 text-amber-500" />
-                      <span className="font-semibold capitalize">{analysis.relationshipPhase}</span>
-                    </div>
-                    <div className="text-sm text-muted-foreground">Phase</div>
-                    <div className="text-xs text-amber-600">
-                      {intelligenceInsights.relationshipVelocity.direction}
-                    </div>
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
 
               {/* Advanced Intelligence Layout */}
               <AdvancedIntelligenceLayout 
@@ -496,166 +540,253 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
                 </Card>
               )}
 
-              {/* Response Quote Analysis */}
+              {/* Top Questions Analysis - Fixed to show questions instead of responses */}
               {analysis.responseQuotes && analysis.responseQuotes.length > 0 && (
-                <Card className="border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-indigo-800">
-                      <Heart className="w-5 h-5" />
-                      Top Response Analysis
-                    </CardTitle>
-                    <CardDescription className="text-indigo-700">
-                      Your highest-rated responses with detailed breakdown
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
+                <ExpandableSection
+                  title="Top Questions Analysis"
+                  icon={<Heart className="w-4 h-4 text-indigo-600" />}
+                  description="The questions that sparked your most meaningful responses"
+                  className="border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm text-indigo-700 mb-4">
+                      <Info className="w-4 h-4" />
+                      These questions generated the highest-quality responses, showing deep engagement and authenticity.
+                    </div>
                     {analysis.responseQuotes.map((quote, index) => (
                       <Card key={index} className="border border-indigo-300 bg-white/70">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between mb-3">
+                        <CardContent className="p-4 space-y-4">
+                          <div className="flex items-start justify-between">
                             <Badge variant="outline" className="border-indigo-400 text-indigo-700">
-                              Question {quote.questionIndex}
+                              Question {quote.questionIndex + 1}
                             </Badge>
                             <div className="text-right">
                               <div className="text-lg font-bold text-indigo-600">{quote.overallScore}/5</div>
-                              <div className="text-xs text-indigo-600">Overall Score</div>
+                              <div className="text-xs text-indigo-600">Response Quality</div>
                             </div>
                           </div>
-                          <div className="bg-indigo-50 p-3 rounded-lg mb-3">
-                            <p className="text-sm text-indigo-900 italic">"{quote.responsePreview}"</p>
+                          
+                          {/* Show the question instead of the response */}
+                          <div className="bg-indigo-100 p-4 rounded-lg border-l-4 border-indigo-400">
+                            <div className="text-xs uppercase tracking-wide text-indigo-600 mb-1">Question Asked</div>
+                            <p className="text-sm text-indigo-900 font-medium">"{quote.questionText}"</p>
                           </div>
+                          
                           <div className="grid grid-cols-4 gap-3 text-center">
-                            <div>
-                              <div className="text-sm font-medium">{quote.breakdown.honesty}</div>
+                            <div className="p-2 bg-white rounded border">
+                              <div className="text-lg font-bold text-emerald-600">{quote.breakdown.honesty}</div>
                               <div className="text-xs text-muted-foreground">Honesty</div>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium">{quote.breakdown.attraction}</div>
+                            <div className="p-2 bg-white rounded border">
+                              <div className="text-lg font-bold text-pink-600">{quote.breakdown.attraction}</div>
                               <div className="text-xs text-muted-foreground">Attraction</div>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium">{quote.breakdown.intimacy}</div>
+                            <div className="p-2 bg-white rounded border">
+                              <div className="text-lg font-bold text-purple-600">{quote.breakdown.intimacy}</div>
                               <div className="text-xs text-muted-foreground">Intimacy</div>
                             </div>
-                            <div>
-                              <div className="text-sm font-medium">{quote.breakdown.surprise}</div>
+                            <div className="p-2 bg-white rounded border">
+                              <div className="text-lg font-bold text-amber-600">{quote.breakdown.surprise}</div>
                               <div className="text-xs text-muted-foreground">Surprise</div>
                             </div>
+                          </div>
+                          
+                          <div className="text-xs text-indigo-700 bg-indigo-50 p-2 rounded">
+                            💡 This question sparked authentic, engaging responses that revealed deeper connection
                           </div>
                         </CardContent>
                       </Card>
                     ))}
+                  </div>
+                </ExpandableSection>
+              )}
+
+              {/* Enhanced Detailed Analysis Sections */}
+              <div className="space-y-6">
+                <Separator className="my-8" />
+                
+                {/* Key Insights Section */}
+                {analysis.keyInsights.length > 0 && (
+                  <ExpandableSection
+                    title="Key Relationship Insights"
+                    icon={<Lightbulb className="w-4 h-4 text-amber-600" />}
+                    description="The most important discoveries about your connection"
+                    defaultExpanded={true}
+                    className="border-amber-200 bg-amber-50"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-amber-700 mb-4">
+                        <Info className="w-4 h-4" />
+                        These insights are based on patterns in your responses and communication style.
+                      </div>
+                      <div className="grid grid-cols-1 gap-3">
+                        {analysis.keyInsights.map((insight, index) => (
+                          <Card key={index} className="border border-amber-300 bg-white/70">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <span className="text-sm font-bold text-amber-700">{index + 1}</span>
+                                </div>
+                                <div className="space-y-2">
+                                  <p className="text-sm text-amber-900 leading-relaxed">{insight}</p>
+                                  <div className="text-xs text-amber-600">
+                                    💡 This insight helps you understand your relationship dynamic better
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </ExpandableSection>
+                )}
+
+                {/* Strength Areas */}
+                {analysis.strengthAreas.length > 0 && (
+                  <ExpandableSection
+                    title="Your Relationship Strengths"
+                    icon={<TrendingUp className="w-4 h-4 text-emerald-600" />}
+                    description="What you're already doing well together"
+                    className="border-emerald-200 bg-emerald-50"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-emerald-700 mb-4">
+                        <Info className="w-4 h-4" />
+                        These are areas where you both excel and should continue nurturing.
+                      </div>
+                      {analysis.strengthAreas.map((strength, index) => (
+                        <ScoreInterpretation
+                          key={index}
+                          score={strength.score}
+                          maxScore={10}
+                          label={strength.area}
+                          interpretation={strength.insight}
+                          className="border-emerald-300 bg-white/70"
+                        />
+                      ))}
+                    </div>
+                  </ExpandableSection>
+                )}
+
+                {/* Growth Areas */}
+                {analysis.growthAreas.length > 0 && (
+                  <ExpandableSection
+                    title="Growth Opportunities"
+                    icon={<Target className="w-4 h-4 text-blue-600" />}
+                    description="Areas with the most potential for deepening your connection"
+                    className="border-blue-200 bg-blue-50"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-blue-700 mb-4">
+                        <Info className="w-4 h-4" />
+                        These aren't weaknesses - they're opportunities to grow even closer together.
+                      </div>
+                      {analysis.growthAreas.map((growth, index) => (
+                        <Card key={index} className="border border-blue-300 bg-white/70">
+                          <CardContent className="p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Target className="w-4 h-4 text-blue-600" />
+                                <span className="font-medium capitalize">{growth.area}</span>
+                              </div>
+                              <Badge variant="outline" className="border-blue-400 text-blue-700">
+                                {growth.score}/10
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-blue-800 leading-relaxed">{growth.recommendation}</p>
+                            <div className="text-xs text-blue-600 bg-blue-100 p-2 rounded">
+                              🎯 Focus area for your next conversation sessions
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </ExpandableSection>
+                )}
+
+                {/* Actionable Recommendations */}
+                {analysis.personalizedTips.length > 0 && (
+                  <ExpandableSection
+                    title="Your Next Steps"
+                    icon={<Sparkles className="w-4 h-4 text-purple-600" />}
+                    description="Specific actions to strengthen your relationship"
+                    className="border-purple-200 bg-purple-50"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-sm text-purple-700 mb-4">
+                        <Info className="w-4 h-4" />
+                        These recommendations are tailored specifically to your relationship dynamic.
+                      </div>
+                      <div className="space-y-3">
+                        {analysis.personalizedTips.map((tip, index) => (
+                          <Card key={index} className="border border-purple-300 bg-white/70">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Sparkles className="w-4 h-4 text-purple-600" />
+                                </div>
+                                <div className="space-y-2">
+                                  <p className="text-sm text-purple-900 leading-relaxed">{tip}</p>
+                                  <div className="text-xs text-purple-600">
+                                    ✨ Try this in your next conversation
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  </ExpandableSection>
+                )}
+
+                {/* Email Report Section */}
+                <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-secondary/5">
+                  <CardContent className="p-6 text-center">
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Want to keep this analysis?</h3>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Get your complete intelligence report delivered to your email for future reference
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={sendAnalysisEmail}
+                        disabled={isEmailSending}
+                        size="lg"
+                        className="gap-2"
+                      >
+                        {isEmailSending ? (
+                          <Brain className="w-4 h-4 animate-pulse" />
+                        ) : (
+                          <Mail className="w-4 h-4" />
+                        )}
+                        {isEmailSending ? 'Sending Report...' : 'Email My Intelligence Report'}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
-              )}
-
-              {isExpanded && (
-                <div className="space-y-6 animate-fade-in">
-                  <Separator />
-                  
-                  {/* Intelligence Highlights */}
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <Zap className="w-5 h-5 text-primary" />
-                      Intelligence Highlights
-                    </h3>
-                    
-                    {analysis.keyInsights.length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {analysis.keyInsights.slice(0, 4).map((insight, index) => (
-                          <Card key={index} className="border border-blue-200 bg-blue-50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-2">
-                                <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2 flex-shrink-0" />
-                                <span className="text-sm text-blue-800">{insight}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Strength Areas */}
-                  {analysis.strengthAreas.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-emerald-600" />
-                        Strength Analysis
-                      </h3>
-                      <div className="space-y-2">
-                        {analysis.strengthAreas.map((strength, index) => (
-                          <Card key={index} className="border border-emerald-200 bg-emerald-50">
-                            <CardContent className="p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                  <Heart className="w-4 h-4 text-emerald-600" />
-                                  <span className="font-medium capitalize">{strength.area}</span>
-                                </div>
-                                <Badge variant="secondary" className="text-emerald-700">
-                                  {strength.score}/10
-                                </Badge>
-                              </div>
-                              <p className="text-sm text-emerald-700">{strength.insight}</p>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Intelligent Recommendations */}
-                  {analysis.personalizedTips.length > 0 && (
-                    <div className="space-y-3">
-                      <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Target className="w-5 h-5 text-purple-600" />
-                        Intelligent Recommendations
-                      </h3>
-                      <div className="space-y-2">
-                        {analysis.personalizedTips.map((tip, index) => (
-                          <Card key={index} className="border border-purple-200 bg-purple-50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-2">
-                                <Sparkles className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                                <span className="text-sm text-purple-800">{tip}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Email Report Button */}
-                  <div className="text-center pt-4 border-t border-border/50">
-                    <Button 
-                      onClick={sendAnalysisEmail}
-                      disabled={isEmailSending}
-                      variant="outline"
-                      className="gap-2"
-                    >
-                      {isEmailSending ? (
-                        <Brain className="w-4 h-4 animate-pulse" />
-                      ) : (
-                        <Mail className="w-4 h-4" />
-                      )}
-                      {isEmailSending ? 'Sending Premium Report...' : 'Email Full Intelligence Report'}
-                    </Button>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Advanced Intelligence 2.0 Layout */}
-      {analysis && advancedMetrics && intelligenceInsights && isExpanded && (
-        <AdvancedIntelligenceLayout 
-          metrics={advancedMetrics}
-          insights={intelligenceInsights}
-          responses={gameResponses}
-        />
+      {/* Advanced Intelligence Dashboard */}
+      {analysis && advancedMetrics && intelligenceInsights && (
+        <ExpandableSection
+          title="Advanced Psychology Dashboard"
+          icon={<Brain className="w-4 h-4 text-primary" />}
+          description="Deep psychological analysis of your relationship patterns"
+          className="border-primary/20 bg-primary/5"
+        >
+          <AdvancedIntelligenceLayout 
+            metrics={advancedMetrics}
+            insights={intelligenceInsights}
+            responses={gameResponses}
+          />
+        </ExpandableSection>
       )}
     </div>
   );
