@@ -62,7 +62,7 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
       }
 
       if (data?.ai_response) {
-        setAnalysis(data.ai_response as AnalysisData);
+        setAnalysis(data.ai_response as unknown as AnalysisData);
       }
     } catch (err) {
       console.error('Error loading analysis:', err);
