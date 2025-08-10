@@ -82,13 +82,30 @@ serve(async (req) => {
       throw new Error(`Failed to fetch room data: ${roomError.message}`);
     }
 
-    // Fetch responses
+    // Fetch responses with question data
     console.log('Fetching responses...');
     const { data: responses, error: responsesError } = await supabase
       .from('game_responses')
       .select('*')
       .eq('room_id', roomId)
       .order('created_at', { ascending: true });
+
+    // Fetch questions data separately for better performance
+    const questionIds = [...new Set(responses?.map(r => r.card_id) || [])];
+    const { data: questions, error: questionsError } = await supabase
+      .from('questions')
+      .select('id, text, level_id, language, category')
+      .in('id', questionIds);
+
+    if (questionsError) {
+      console.error('Questions fetch error:', questionsError);
+    }
+
+    // Create question lookup map
+    const questionMap = (questions || []).reduce((acc, q) => {
+      acc[q.id] = q;
+      return acc;
+    }, {} as Record<string, any>);
 
     if (responsesError) {
       throw new Error(`Failed to fetch responses: ${responsesError.message}`);
@@ -173,44 +190,53 @@ serve(async (req) => {
     const responseTimes = responses.map(r => r.response_time || 0).filter(t => t > 0);
     const avgResponseTime = responseTimes.length ? responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length : 0;
     
-    // Specific quote extraction
+    // Specific quote extraction with question text
     const topResponses = responses
       .filter(r => r.response && r.evaluation)
       .map((r, index) => {
         const evalData = parseEvaluation(r.evaluation);
         const avgScore = (evalData.honesty + evalData.attraction + evalData.intimacy + evalData.surprise) / 4;
-        return { index, response: r.response, avgScore, evalData };
+        const questionText = questionMap[r.card_id]?.text || 'Unknown question';
+        return { index, response: r.response, avgScore, evalData, questionText, cardId: r.card_id };
       })
       .sort((a, b) => b.avgScore - a.avgScore)
       .slice(0, 3);
 
-    // Breakthrough moment detection
+    // Breakthrough moment detection with question context
     const breakthroughMoments = [];
     responses.forEach((response, index) => {
       if (response.evaluation) {
         const evalData = parseEvaluation(response.evaluation);
+        const questionText = questionMap[response.card_id]?.text || 'Unknown question';
+        
         if (evalData.honesty >= 4.5) {
           breakthroughMoments.push({
             question: index + 1,
+            questionText: questionText.substring(0, 80) + '...',
             type: 'trust_breakthrough',
             score: evalData.honesty,
-            insight: `Question ${index + 1} triggered exceptional honesty (${evalData.honesty}/5)`
+            insight: `Question ${index + 1} triggered exceptional honesty (${evalData.honesty}/5)`,
+            responsePreview: response.response?.substring(0, 60) + '...' || ''
           });
         }
         if (evalData.intimacy >= 4.5) {
           breakthroughMoments.push({
             question: index + 1,
+            questionText: questionText.substring(0, 80) + '...',
             type: 'intimacy_peak',
             score: evalData.intimacy,
-            insight: `Deep emotional connection achieved in Question ${index + 1} (${evalData.intimacy}/5)`
+            insight: `Deep emotional connection achieved in Question ${index + 1} (${evalData.intimacy}/5)`,
+            responsePreview: response.response?.substring(0, 60) + '...' || ''
           });
         }
         if (evalData.attraction >= 4.5) {
           breakthroughMoments.push({
             question: index + 1,
+            questionText: questionText.substring(0, 80) + '...',
             type: 'attraction_spark',
             score: evalData.attraction,
-            insight: `Significant attraction spike at Question ${index + 1} (${evalData.attraction}/5)`
+            insight: `Significant attraction spike at Question ${index + 1} (${evalData.attraction}/5)`,
+            responsePreview: response.response?.substring(0, 60) + '...' || ''
           });
         }
       }
@@ -232,10 +258,10 @@ COMPREHENSIVE ANALYSIS DATA:
 - Language: ${language}
 
 TOP RESPONSE INSIGHTS:
-${topResponses.map(r => `- Response ${r.index + 1}: Score ${r.avgScore.toFixed(1)}/5`).join('\n')}
+${topResponses.map(r => `- Q${r.index + 1}: "${r.questionText}" | Response: "${r.response?.substring(0, 50)}..." | Score: ${r.avgScore.toFixed(1)}/5`).join('\n')}
 
 BREAKTHROUGH ANALYSIS:
-${breakthroughMoments.map(b => `- ${b.insight}`).join('\n')}
+${breakthroughMoments.map(b => `- ${b.insight} | Q: "${b.questionText}" | Response: "${b.responsePreview}"`).join('\n')}
 
 Provide a sophisticated GetClose Intelligence 2.0 analysis in this JSON format:
 {
@@ -287,7 +313,8 @@ Provide a sophisticated GetClose Intelligence 2.0 analysis in this JSON format:
   "responseQuotes": [
     ${topResponses.slice(0, 2).map(r => `{
       "questionIndex": ${r.index + 1},
-      "responsePreview": "${r.response.substring(0, 100)}...",
+      "questionText": "${r.questionText?.replace(/"/g, '\\"') || 'Unknown question'}",
+      "responsePreview": "${r.response?.substring(0, 100).replace(/"/g, '\\"') || ''}...",
       "overallScore": ${r.avgScore.toFixed(1)},
       "breakdown": {
         "honesty": ${r.evalData.honesty},

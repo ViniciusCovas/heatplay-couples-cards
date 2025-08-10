@@ -49,8 +49,8 @@ interface AnalysisData {
     communicationDNA: string;
     volatilityProfile: string;
     rarityPercentile: string;
-    dataPoints?: number;
-    analysisDepth?: string;
+    dataPoints: number;
+    analysisDepth: string;
   };
   specificMoments?: Array<{
     questionNumber: number;
@@ -61,6 +61,7 @@ interface AnalysisData {
   }>;
   responseQuotes?: Array<{
     questionIndex: number;
+    questionText: string;
     responsePreview: string;
     overallScore: number;
     breakdown: {
@@ -76,6 +77,9 @@ interface AnalysisData {
     overallVolatility: number;
     averageResponseTime: number;
     breakthroughFrequency: number;
+    rarityPercentile: string;
+    dataPoints?: number;
+    analysisDepth?: string;
   };
 }
 
@@ -141,17 +145,17 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
           response,
           response_time,
           evaluation,
-          question:questions(content_en, level)
+          question:questions(text, level_id)
         `)
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
 
       if (responses) {
         const gameResponses: GameResponse[] = responses.map(r => ({
-          question: (r.question as any)?.content_en || 'Unknown question',
+          question: (r.question as any)?.text || 'Unknown question',
           response: r.response || '',
           responseTime: r.response_time || 0,
-          level: (r.question as any)?.level || 1,
+          level: (r.question as any)?.level_id || 1,
           playerId: 'player',
           evaluation: r.evaluation ? (() => {
             try {

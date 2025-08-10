@@ -23,12 +23,15 @@ import { GlobalContextOverview } from '@/components/insights/GlobalContextOvervi
 import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
 import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
+import { EnhancedGetCloseAnalysis } from '@/components/insights/EnhancedGetCloseAnalysis';
+import { supabase } from '@/integrations/supabase/client';
 
 const ConnectionInsights = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [roomCode, setRoomCode] = useState('');
   const [searchCode, setSearchCode] = useState('');
+  const [roomId, setRoomId] = useState<string | null>(null);
 
   const { data: insights, isLoading, error, refetch } = useConnectionInsights(searchCode);
   const { data: benchmarks } = useInsightsBenchmarks();
@@ -41,9 +44,22 @@ const ConnectionInsights = () => {
   }, []);
 
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (roomCode.trim()) {
-      setSearchCode(roomCode.trim().toUpperCase());
+      const code = roomCode.trim().toUpperCase();
+      setSearchCode(code);
+      
+      // Fetch room ID for the GetClose analysis
+      const { data: room } = await supabase
+        .from('game_rooms')
+        .select('id')
+        .eq('room_code', code)
+        .single();
+      
+      if (room) {
+        setRoomId(room.id);
+      }
+      
       refetch();
     }
   };
@@ -122,6 +138,15 @@ const ConnectionInsights = () => {
           <div className="space-y-12 animate-fade-in">
             {/* Enhanced Hero with dynamic insights */}
             <EnhancedHeroSection insights={insights} analytics={roomAnalytics ?? null} />
+            
+            {/* GetClose AI Intelligence 2.0 - Premium Experience */}
+            {roomId && (
+              <EnhancedGetCloseAnalysis 
+                roomId={roomId} 
+                language="en" 
+                isVisible={true}
+              />
+            )}
             
             {/* Connection Analysis */}
             <CompatibilityRadar insights={insights} analytics={roomAnalytics ?? null} />
