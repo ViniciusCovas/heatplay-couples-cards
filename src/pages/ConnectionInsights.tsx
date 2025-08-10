@@ -7,23 +7,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
-  BarChart3,
+  Globe,
   Info,
   Lightbulb,
   TrendingUp,
 } from 'lucide-react';
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
-import { EnhancedHeroSection } from '@/components/insights/EnhancedHeroSection';
-import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
-import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
-import { QuestionInsights } from '@/components/insights/QuestionInsights';
-import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
-import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
-import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
-import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
-import { EnhancedGetCloseAnalysis } from '@/components/insights/EnhancedGetCloseAnalysis';
+import { GlobalBenchmarkDashboard } from '@/components/insights/GlobalBenchmarkDashboard';
 import { supabase } from '@/integrations/supabase/client';
 
 const ConnectionInsights = () => {
@@ -80,14 +72,15 @@ const ConnectionInsights = () => {
           <div className="text-center mb-12">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                <BarChart3 className="w-6 h-6 text-white" />
+                <Globe className="w-6 h-6 text-white" />
               </div>
               <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                Connection Insights
+                Global Insights Dashboard
               </h1>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Discover your relationship patterns, compare with other couples, and unlock insights to deepen your connection
+              Compare your relationship with thousands of couples worldwide. Discover where you stand, 
+              what makes you unique, and how you rank in the global relationship landscape.
             </p>
           </div>
 
@@ -96,10 +89,10 @@ const ConnectionInsights = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="w-5 h-5" />
-              Find Your Session Insights
+              Global Benchmark Analysis
             </CardTitle>
             <CardDescription>
-              Enter your room code to view your detailed relationship analysis and see how you compare with other couples
+              Enter your room code to see how your relationship compares with global patterns and statistical trends
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -117,7 +110,7 @@ const ConnectionInsights = () => {
                 disabled={!roomCode.trim() || isLoading}
                 className="px-8"
               >
-                {isLoading ? 'Searching...' : 'Analyze'}
+                {isLoading ? 'Searching...' : 'Compare Globally'}
               </Button>
             </div>
           </CardContent>
@@ -133,39 +126,13 @@ const ConnectionInsights = () => {
           </Alert>
         )}
 
-        {/* Connection Insights - Complete Experience */}
+        {/* Global Benchmark Experience */}
         {insights && (
           <div className="space-y-12 animate-fade-in">
-            {/* Enhanced Hero with dynamic insights */}
-            <EnhancedHeroSection insights={insights} analytics={roomAnalytics ?? null} />
-            
-            {/* GetClose AI Intelligence 2.0 - Premium Experience */}
-            {roomId && (
-              <EnhancedGetCloseAnalysis 
-                roomId={roomId} 
-                language="en" 
-                isVisible={true}
-              />
-            )}
-            
-            {/* Connection Analysis */}
-            <CompatibilityRadar insights={insights} analytics={roomAnalytics ?? null} />
-            
-            {/* Journey Timeline */}
-            <VerticalTimeline insights={insights} />
-            
-            {/* Smart Question Insights */}
-            <QuestionInsights analytics={roomAnalytics ?? null} />
-            
-            {/* Peer Comparison */}
-            <PeerContextPanelV2 roomCode={searchCode} />
-            
-            {/* Analytics & Growth */}
-            <ResponseTimeAnalytics roomCode={searchCode} />
-            <UserGrowthHistoryChart roomCode={searchCode} />
-            
-            {/* Global Context */}
-            <GlobalContextOverview insights={insights} />
+            <GlobalBenchmarkDashboard 
+              insights={insights} 
+              roomCode={searchCode}
+            />
           </div>
         )}
 
@@ -181,15 +148,15 @@ const ConnectionInsights = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium">Relationship Phases</h4>
+                  <h4 className="font-medium">Global Benchmarks</h4>
                   <p className="text-sm text-muted-foreground">
-                    Most couples go through 4 distinct connection phases: Exploring, Building, Deepening, and Mastering intimacy.
+                    Compare your relationship metrics against thousands of couples worldwide to understand your unique patterns.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">AI Insights</h4>
+                  <h4 className="font-medium">Statistical Analysis</h4>
                   <p className="text-sm text-muted-foreground">
-                    Our AI analyzes communication patterns, emotional responses, and compatibility indicators to provide personalized guidance.
+                    Advanced analytics reveal where you rank in compatibility, communication style, and relationship velocity.
                   </p>
                 </div>
               </CardContent>
@@ -204,15 +171,15 @@ const ConnectionInsights = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium">Average Compatibility</h4>
+                  <h4 className="font-medium">Performance Percentiles</h4>
                   <p className="text-sm text-muted-foreground">
-                    Couples who complete 3+ sessions show a 73% average compatibility score.
+                    Top 10% of couples score above 85% compatibility with consistent high honesty and intimacy.
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">Growth Patterns</h4>
+                  <h4 className="font-medium">Success Predictors</h4>
                   <p className="text-sm text-muted-foreground">
-                    85% of couples see improvement in intimacy scores after their second session.
+                    Strong correlation between attraction-intimacy balance and long-term relationship satisfaction.
                   </p>
                 </div>
               </CardContent>
