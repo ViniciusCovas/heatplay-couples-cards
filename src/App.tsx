@@ -20,6 +20,7 @@ import AdminLevels from "./pages/AdminLevels";
 import AdminQuestionsBulk from "./pages/AdminQuestionsBulk";
 import AdminQuestionsManual from "./pages/AdminQuestionsManual";
 import ConnectionInsights from "./pages/ConnectionInsights";
+import FullAnalysis from "./pages/FullAnalysis";
 import NotFound from "./pages/NotFound";
 
 import { AuthProvider } from "./contexts/AuthContext";
@@ -73,6 +74,7 @@ const AppContent = () => {
           </AdminGuard>
         } />
         <Route path="/insights" element={<ConnectionInsights />} />
+        <Route path="/analysis/:roomCode" element={<FullAnalysis />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
