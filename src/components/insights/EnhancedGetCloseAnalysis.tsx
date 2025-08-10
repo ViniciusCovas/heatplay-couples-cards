@@ -8,10 +8,22 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
+interface StrengthArea {
+  area: string;
+  score: number;
+  insight: string;
+}
+
+interface GrowthArea {
+  area: string;
+  priority: string;
+  suggestion: string;
+}
+
 interface AnalysisData {
   compatibilityScore: number;
-  strengthAreas: string[];
-  growthAreas: string[];
+  strengthAreas: (string | StrengthArea)[];
+  growthAreas: (string | GrowthArea)[];
   keyInsights: string[];
   personalizedTips: string[];
   culturalNotes: string[];
@@ -229,12 +241,15 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
                   <TrendingUp className="w-4 h-4" />
                   Your Strengths
                 </h4>
-                <div className="space-y-3">
-                  {(analysis.strengthAreas || []).slice(0, 2).map((strength, index) => (
-                    <div key={index} className="text-sm bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800 leading-relaxed">
-                      {strength.length > 100 ? `${strength.substring(0, 100)}...` : strength}
-                    </div>
-                  ))}
+                 <div className="space-y-3">
+                   {(analysis.strengthAreas || []).slice(0, 2).map((strength, index) => {
+                     const text = typeof strength === 'string' ? strength : strength.area || strength.insight || 'Strength identified';
+                     return (
+                       <div key={index} className="text-sm bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800 leading-relaxed">
+                         {text.length > 100 ? `${text.substring(0, 100)}...` : text}
+                       </div>
+                     );
+                   })}
                   {(analysis.strengthAreas || []).length > 2 && (
                     <p className="text-xs text-muted-foreground">
                       +{(analysis.strengthAreas || []).length - 2} more in full report
@@ -248,12 +263,15 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
                   <Lightbulb className="w-4 h-4" />
                   Key Insights
                 </h4>
-                <div className="space-y-3">
-                  {(analysis.keyInsights || []).slice(0, 2).map((insight, index) => (
-                    <div key={index} className="text-sm bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800 leading-relaxed">
-                      {insight.length > 100 ? `${insight.substring(0, 100)}...` : insight}
-                    </div>
-                  ))}
+                 <div className="space-y-3">
+                   {(analysis.keyInsights || []).slice(0, 2).map((insight, index) => {
+                     const text = typeof insight === 'string' ? insight : (insight as any).insight || 'Key insight identified';
+                     return (
+                       <div key={index} className="text-sm bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800 leading-relaxed">
+                         {text.length > 100 ? `${text.substring(0, 100)}...` : text}
+                       </div>
+                     );
+                   })}
                   {(analysis.keyInsights || []).length > 2 && (
                     <p className="text-xs text-muted-foreground">
                       +{(analysis.keyInsights || []).length - 2} more in full report

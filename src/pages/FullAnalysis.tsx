@@ -14,10 +14,22 @@ import { ExpandableSection } from '@/components/insights/ExpandableSection';
 import { ScoreInterpretation } from '@/components/insights/ScoreInterpretation';
 import { calculatePsychologicalMetrics, generateIntelligenceInsights } from '@/utils/psychologicalAnalysis';
 
+interface StrengthArea {
+  area: string;
+  score: number;
+  insight: string;
+}
+
+interface GrowthArea {
+  area: string;
+  priority: string;
+  suggestion: string;
+}
+
 interface AnalysisData {
   compatibilityScore: number;
-  strengthAreas: string[];
-  growthAreas: string[];
+  strengthAreas: (string | StrengthArea)[];
+  growthAreas: (string | GrowthArea)[];
   keyInsights: string[];
   personalizedTips: string[];
   culturalNotes: string[];
@@ -353,15 +365,37 @@ export default function FullAnalysis() {
               description="Areas where you naturally excel as a couple"
               defaultExpanded={true}
             >
-              <div className="space-y-4">
-                {analysis.strengthAreas.map((strength, index) => (
-                  <div key={index} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
-                    <Badge variant="secondary" className="mt-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                      {index + 1}
-                    </Badge>
-                    <p className="text-sm leading-relaxed">{strength}</p>
-                  </div>
-                ))}
+               <div className="space-y-4">
+                 {analysis.strengthAreas.map((strength, index) => {
+                   if (typeof strength === 'string') {
+                     return (
+                       <div key={index} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                         <Badge variant="secondary" className="mt-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                           {index + 1}
+                         </Badge>
+                         <p className="text-sm leading-relaxed">{strength}</p>
+                       </div>
+                     );
+                   } else {
+                     return (
+                       <div key={index} className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                         <Badge variant="secondary" className="mt-0.5 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                           {index + 1}
+                         </Badge>
+                         <div className="flex-1 space-y-2">
+                           <h4 className="font-medium text-green-800 dark:text-green-200">{strength.area}</h4>
+                           <p className="text-sm leading-relaxed">{strength.insight}</p>
+                           {strength.score && (
+                             <div className="flex items-center gap-2">
+                               <span className="text-xs text-green-600 dark:text-green-400">Strength Score:</span>
+                               <Badge variant="outline" className="text-xs">{strength.score}/5</Badge>
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     );
+                   }
+                 })}
               </div>
             </ExpandableSection>
           )}
@@ -390,12 +424,28 @@ export default function FullAnalysis() {
               icon={<Users className="w-5 h-5 text-blue-600" />}
               description="Areas where you can strengthen your connection"
             >
-              <div className="space-y-4">
-                {analysis.growthAreas.map((area, index) => (
-                  <div key={index} className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm leading-relaxed">{area}</p>
-                  </div>
-                ))}
+               <div className="space-y-4">
+                 {analysis.growthAreas.map((area, index) => {
+                   if (typeof area === 'string') {
+                     return (
+                       <div key={index} className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                         <p className="text-sm leading-relaxed">{area}</p>
+                       </div>
+                     );
+                   } else {
+                     return (
+                       <div key={index} className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
+                         <div className="flex items-center gap-2">
+                           <h4 className="font-medium text-blue-800 dark:text-blue-200">{area.area}</h4>
+                           {area.priority && (
+                             <Badge variant="secondary" className="text-xs">{area.priority} Priority</Badge>
+                           )}
+                         </div>
+                         <p className="text-sm leading-relaxed">{area.suggestion}</p>
+                       </div>
+                     );
+                   }
+                 })}
               </div>
             </ExpandableSection>
           )}
