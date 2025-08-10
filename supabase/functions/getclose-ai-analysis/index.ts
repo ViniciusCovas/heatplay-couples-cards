@@ -169,19 +169,75 @@ serve(async (req) => {
       ? Math.round((new Date(room.finished_at).getTime() - new Date(room.started_at).getTime()) / 60000)
       : 0;
 
-    // Build prompt for OpenAI
-    const promptContent = `You are GetClose AI Intelligence, analyzing relationship dynamics.
+    // Enhanced analysis for premium intelligence
+    const responseTimes = responses.map(r => r.response_time || 0).filter(t => t > 0);
+    const avgResponseTime = responseTimes.length ? responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length : 0;
+    
+    // Specific quote extraction
+    const topResponses = responses
+      .filter(r => r.response && r.evaluation)
+      .map((r, index) => {
+        const evalData = parseEvaluation(r.evaluation);
+        const avgScore = (evalData.honesty + evalData.attraction + evalData.intimacy + evalData.surprise) / 4;
+        return { index, response: r.response, avgScore, evalData };
+      })
+      .sort((a, b) => b.avgScore - a.avgScore)
+      .slice(0, 3);
 
-ANALYSIS DATA:
+    // Breakthrough moment detection
+    const breakthroughMoments = [];
+    responses.forEach((response, index) => {
+      if (response.evaluation) {
+        const evalData = parseEvaluation(response.evaluation);
+        if (evalData.honesty >= 4.5) {
+          breakthroughMoments.push({
+            question: index + 1,
+            type: 'trust_breakthrough',
+            score: evalData.honesty,
+            insight: `Question ${index + 1} triggered exceptional honesty (${evalData.honesty}/5)`
+          });
+        }
+        if (evalData.intimacy >= 4.5) {
+          breakthroughMoments.push({
+            question: index + 1,
+            type: 'intimacy_peak',
+            score: evalData.intimacy,
+            insight: `Deep emotional connection achieved in Question ${index + 1} (${evalData.intimacy}/5)`
+          });
+        }
+        if (evalData.attraction >= 4.5) {
+          breakthroughMoments.push({
+            question: index + 1,
+            type: 'attraction_spark',
+            score: evalData.attraction,
+            insight: `Significant attraction spike at Question ${index + 1} (${evalData.attraction}/5)`
+          });
+        }
+      }
+    });
+
+    // Build prompt for OpenAI
+    const promptContent = `You are GetClose AI Intelligence 2.0, providing premium relationship analysis.
+
+COMPREHENSIVE ANALYSIS DATA:
 - Bond Map: Closeness ${bondMap.closeness.toFixed(2)}, Spark ${bondMap.spark.toFixed(2)}, Anchor ${bondMap.anchor.toFixed(2)}
 - Average Scores: Honesty ${avgScores.honesty.toFixed(2)}, Attraction ${avgScores.attraction.toFixed(2)}, Intimacy ${avgScores.intimacy.toFixed(2)}, Surprise ${avgScores.surprise.toFixed(2)}
+- Volatility Scores: H±${volatility.honesty.toFixed(2)}, A±${volatility.attraction.toFixed(2)}, I±${volatility.intimacy.toFixed(2)}, S±${volatility.surprise.toFixed(2)}
+- Correlations: Honesty-Intimacy ${honestyIntimacyCorrelation.toFixed(3)}, Attraction-Surprise ${attractionSurpriseCorrelation.toFixed(3)}
 - Primary Dynamic: ${primaryDynamic}
 - Communication Style: ${communicationStyle}
 - Session Duration: ${sessionDuration} minutes
-- Total Responses: ${responses.length}
+- Response Analysis: ${responses.length} responses, avg time ${avgResponseTime.toFixed(1)}s
+- Breakthrough Moments: ${breakthroughMoments.length} detected
 - Language: ${language}
 
-Provide a sophisticated relationship analysis in this JSON format:
+TOP RESPONSE INSIGHTS:
+${topResponses.map(r => `- Response ${r.index + 1}: Score ${r.avgScore.toFixed(1)}/5`).join('\n')}
+
+BREAKTHROUGH ANALYSIS:
+${breakthroughMoments.map(b => `- ${b.insight}`).join('\n')}
+
+Provide a sophisticated GetClose Intelligence 2.0 analysis in this JSON format:
 {
   "compatibilityScore": [0-100 based on bond map average * 20],
   "relationshipPhase": "[exploring|building|deepening|mastering]",
@@ -214,8 +270,39 @@ Provide a sophisticated relationship analysis in this JSON format:
   "intelligenceMarkers": {
     "primaryDynamic": "${primaryDynamic}",
     "communicationDNA": "${communicationStyle}",
-    "volatilityProfile": "stable",
-    "rarityPercentile": "75th"
+    "volatilityProfile": "${volatility.honesty < 1 ? 'Stable' : 'Dynamic'}",
+    "rarityPercentile": "${Math.min(95, Math.max(5, (bondMap.closeness + bondMap.spark + bondMap.anchor) * 6.67))}th",
+    "dataPoints": ${responses.length * 4},
+    "analysisDepth": "Advanced Psychological Framework"
+  },
+  "specificMoments": [
+    ${breakthroughMoments.slice(0, 3).map(m => `{
+      "questionNumber": ${m.question},
+      "type": "${m.type}",
+      "score": ${m.score},
+      "insight": "${m.insight}",
+      "significance": "${m.score >= 4.8 ? 'Exceptional' : m.score >= 4.5 ? 'High' : 'Notable'}"
+    }`).join(',\n    ')}
+  ],
+  "responseQuotes": [
+    ${topResponses.slice(0, 2).map(r => `{
+      "questionIndex": ${r.index + 1},
+      "responsePreview": "${r.response.substring(0, 100)}...",
+      "overallScore": ${r.avgScore.toFixed(1)},
+      "breakdown": {
+        "honesty": ${r.evalData.honesty},
+        "attraction": ${r.evalData.attraction},
+        "intimacy": ${r.evalData.intimacy},
+        "surprise": ${r.evalData.surprise}
+      }
+    }`).join(',\n    ')}
+  ],
+  "advancedMetrics": {
+    "honestyIntimacyCorrelation": ${honestyIntimacyCorrelation.toFixed(3)},
+    "attractionSurpriseCorrelation": ${attractionSurpriseCorrelation.toFixed(3)},
+    "overallVolatility": ${((volatility.honesty + volatility.attraction + volatility.intimacy + volatility.surprise) / 4).toFixed(2)},
+    "averageResponseTime": ${avgResponseTime.toFixed(1)},
+    "breakthroughFrequency": ${breakthroughMoments.length}
   }
 }
 

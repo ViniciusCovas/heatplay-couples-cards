@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.5';
 import { Resend } from "npm:resend@2.0.0";
 import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import React from 'npm:react@18.3.1';
-import { AIAnalysisEmail } from '../_shared/email-templates/templates/AIAnalysisEmail.tsx';
+import { PremiumAIAnalysisEmail } from '../_shared/email-templates/templates/PremiumAIAnalysisEmail.tsx';
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -110,37 +110,29 @@ const handler = async (req: Request): Promise<Response> => {
     
     console.log(`Sending analysis email to: ${profileData.email} in language: ${emailLanguage}`);
 
-    // Prepare email subject based on language
+    // Prepare premium email subject based on language with compatibility score
+    const compatibilityScore = analysis.compatibilityScore || analysis.compatibility_score || 75;
     const subjects = {
-      en: 'Your Connection Cards AI Analysis Results 💕',
-      es: 'Tus Resultados de Análisis IA de Connection Cards 💕',
-      fr: 'Vos Résultats d\'Analyse IA Connection Cards 💕',
-      pt: 'Seus Resultados de Análise IA do Connection Cards 💕'
+      en: `Your GetClose Intelligence Report: ${compatibilityScore}% Compatibility Detected 🧠`,
+      es: `Tu Reporte de Inteligencia GetClose: ${compatibilityScore}% Compatibilidad Detectada 🧠`,
+      fr: `Votre Rapport d'Intelligence GetClose: ${compatibilityScore}% Compatibilité Détectée 🧠`,
+      pt: `Seu Relatório de Inteligência GetClose: ${compatibilityScore}% Compatibilidade Detectada 🧠`
     };
 
     const subject = subjects[emailLanguage as keyof typeof subjects] || subjects.en;
 
-    // Render the email template
+    // Render the premium email template
     const emailHtml = await renderAsync(
-      React.createElement(AIAnalysisEmail, {
+      React.createElement(PremiumAIAnalysisEmail, {
         userEmail: profileData.email,
         language: emailLanguage,
-        analysisData: {
-          compatibility_score: analysis.compatibilityScore || analysis.compatibility_score || 0,
-          relationship_phase: analysis.relationshipPhase || analysis.relationship_phase || 'Discovery',
-          strength_areas: analysis.strengthAreas || analysis.strength_areas || [],
-          growth_areas: analysis.growthAreas || analysis.growth_areas || [],
-          key_insights: analysis.keyInsights || analysis.key_insights || [],
-          personalized_tips: analysis.personalizedTips || analysis.personalized_tips || [],
-          cultural_notes: analysis.culturalNotes || analysis.cultural_notes || '',
-          next_session_recommendation: analysis.nextSessionRecommendation || analysis.next_session_recommendation || ''
-        }
+        analysisData: analysis // Pass the complete analysis data structure
       })
     );
 
-    // Send email via Resend
+    // Send premium intelligence email via Resend
     const emailResponse = await resend.emails.send({
-      from: "Connection Cards <analysis@letsgetclose.com>",
+      from: "GetClose Intelligence <intelligence@resend.dev>",
       to: [profileData.email],
       subject: subject,
       html: emailHtml,

@@ -49,6 +49,33 @@ interface AnalysisData {
     communicationDNA: string;
     volatilityProfile: string;
     rarityPercentile: string;
+    dataPoints?: number;
+    analysisDepth?: string;
+  };
+  specificMoments?: Array<{
+    questionNumber: number;
+    type: string;
+    score: number;
+    insight: string;
+    significance: string;
+  }>;
+  responseQuotes?: Array<{
+    questionIndex: number;
+    responsePreview: string;
+    overallScore: number;
+    breakdown: {
+      honesty: number;
+      attraction: number;
+      intimacy: number;
+      surprise: number;
+    };
+  }>;
+  advancedMetrics?: {
+    honestyIntimacyCorrelation: number;
+    attractionSurpriseCorrelation: number;
+    overallVolatility: number;
+    averageResponseTime: number;
+    breakthroughFrequency: number;
   };
 }
 
@@ -331,47 +358,148 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
             </div>
           )}
 
-          {analysis && (
+          {analysis && advancedMetrics && intelligenceInsights && (
             <div className="space-y-6">
-              {/* Quick Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="border border-primary/20 bg-primary/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">
+              {/* Premium Intelligence Header */}
+              <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-accent/10 p-6 rounded-xl border border-primary/20">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+                  <div className="space-y-2">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
                       {analysis.compatibilityScore}%
                     </div>
-                    <div className="text-sm text-muted-foreground">Compatibility</div>
-                    <Progress 
-                      value={analysis.compatibilityScore} 
-                      className="mt-2 h-1.5" 
-                    />
-                  </CardContent>
-                </Card>
-                
-                <Card className="border border-secondary/20 bg-secondary/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      <span className="font-semibold text-sm">Phase</span>
+                    <div className="text-sm text-muted-foreground">Intelligence Score</div>
+                    <Progress value={analysis.compatibilityScore} className="h-2" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <Brain className="w-5 h-5 text-purple-500" />
+                      <span className="font-semibold">{analysis.intelligenceMarkers?.rarityPercentile || '75th'}</span>
                     </div>
-                    <div className="text-sm capitalize font-medium">
-                      {analysis.relationshipPhase}
+                    <div className="text-sm text-muted-foreground">Percentile</div>
+                    <div className="text-xs text-purple-600">
+                      {intelligenceInsights.rarityMetrics.comparisonNote}
                     </div>
-                  </CardContent>
-                </Card>
-                
-                <Card className="border border-accent/20 bg-accent/5">
-                  <CardContent className="p-4 text-center">
-                    <div className="flex items-center justify-center gap-1 mb-2">
-                      <Target className="w-4 h-4 text-green-500" />
-                      <span className="font-semibold text-sm">Focus</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <Activity className="w-5 h-5 text-blue-500" />
+                      <span className="font-semibold">{analysis.intelligenceMarkers?.dataPoints || 16}</span>
                     </div>
-                    <div className="text-xs">
-                      {analysis.intelligenceMarkers?.primaryDynamic || 'Balanced Growth'}
+                    <div className="text-sm text-muted-foreground">Data Points</div>
+                    <div className="text-xs text-blue-600">
+                      {analysis.intelligenceMarkers?.analysisDepth || 'Advanced Analysis'}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-1">
+                      <Zap className="w-5 h-5 text-amber-500" />
+                      <span className="font-semibold capitalize">{analysis.relationshipPhase}</span>
+                    </div>
+                    <div className="text-sm text-muted-foreground">Phase</div>
+                    <div className="text-xs text-amber-600">
+                      {intelligenceInsights.relationshipVelocity.direction}
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Advanced Intelligence Layout */}
+              <AdvancedIntelligenceLayout 
+                metrics={advancedMetrics} 
+                insights={intelligenceInsights}
+                responses={gameResponses}
+              />
+
+              {/* Specific Moments Analysis */}
+              {analysis.specificMoments && analysis.specificMoments.length > 0 && (
+                <Card className="border border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-orange-800">
+                      <Target className="w-5 h-5" />
+                      Breakthrough Moments
+                    </CardTitle>
+                    <CardDescription className="text-orange-700">
+                      Key conversation highlights that triggered peak responses
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {analysis.specificMoments.map((moment, index) => (
+                      <Card key={index} className="border border-orange-300 bg-white/70">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="border-orange-400 text-orange-700">
+                                Question {moment.questionNumber}
+                              </Badge>
+                              <Badge variant="secondary" className="capitalize">
+                                {moment.type.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-orange-600">{moment.score}/5</div>
+                              <div className="text-xs text-orange-600">{moment.significance}</div>
+                            </div>
+                          </div>
+                          <p className="text-sm text-orange-800">{moment.insight}</p>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Response Quote Analysis */}
+              {analysis.responseQuotes && analysis.responseQuotes.length > 0 && (
+                <Card className="border border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-indigo-800">
+                      <Heart className="w-5 h-5" />
+                      Top Response Analysis
+                    </CardTitle>
+                    <CardDescription className="text-indigo-700">
+                      Your highest-rated responses with detailed breakdown
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    {analysis.responseQuotes.map((quote, index) => (
+                      <Card key={index} className="border border-indigo-300 bg-white/70">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <Badge variant="outline" className="border-indigo-400 text-indigo-700">
+                              Question {quote.questionIndex}
+                            </Badge>
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-indigo-600">{quote.overallScore}/5</div>
+                              <div className="text-xs text-indigo-600">Overall Score</div>
+                            </div>
+                          </div>
+                          <div className="bg-indigo-50 p-3 rounded-lg mb-3">
+                            <p className="text-sm text-indigo-900 italic">"{quote.responsePreview}"</p>
+                          </div>
+                          <div className="grid grid-cols-4 gap-3 text-center">
+                            <div>
+                              <div className="text-sm font-medium">{quote.breakdown.honesty}</div>
+                              <div className="text-xs text-muted-foreground">Honesty</div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{quote.breakdown.attraction}</div>
+                              <div className="text-xs text-muted-foreground">Attraction</div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{quote.breakdown.intimacy}</div>
+                              <div className="text-xs text-muted-foreground">Intimacy</div>
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium">{quote.breakdown.surprise}</div>
+                              <div className="text-xs text-muted-foreground">Surprise</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
 
               {isExpanded && (
                 <div className="space-y-6 animate-fade-in">
