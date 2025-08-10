@@ -501,6 +501,13 @@ export type Database = {
         Args: { room_id_param: string; user_id_param: string }
         Returns: Json
       }
+      create_room_and_join: {
+        Args: { level_param: number; selected_language_param?: string }
+        Returns: {
+          id: string
+          room_code: string
+        }[]
+      }
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
         Returns: {
@@ -551,6 +558,10 @@ export type Database = {
       }
       is_admin: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      is_user_participant: {
+        Args: { room_id_param: string; user_id_param: string }
         Returns: boolean
       }
       normalize_used_cards: {
