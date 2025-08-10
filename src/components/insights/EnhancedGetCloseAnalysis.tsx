@@ -125,6 +125,7 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
 
       if (existingAnalysis && existingAnalysis.length > 0) {
         setAnalysis(existingAnalysis[0].ai_response as unknown as AnalysisData);
+        setIsExpanded(true); // Auto-expand when existing analysis is loaded
         onAnalysisComplete?.(existingAnalysis[0].ai_response as unknown as AnalysisData);
       }
 
@@ -192,6 +193,7 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
 
       if (data?.success && data?.analysis) {
         setAnalysis(data.analysis);
+        setIsExpanded(true); // Auto-expand after successful analysis generation
         onAnalysisComplete?.(data.analysis);
         
         // Reload responses for metrics calculation
