@@ -52,7 +52,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const { i18n } = useTranslation();
   const { user } = useAuth();
 
-  // Prefer the authenticated user id to satisfy RLS; fall back to legacy id as last resort
+  // Support hybrid authentication: authenticated users for room creation, anonymous users for joining
   const effectivePlayerId = user?.id || localPlayerId;
 
   const generateRoomCode = (): string => {
@@ -131,10 +131,10 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [user?.id, effectivePlayerId, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    // Must be authenticated to join due to RLS
-    if (!user?.id) {
-      console.warn('joinRoom called without authenticated user');
-      return false;
+    logger.debug('Attempting to join room', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id });
+
+    if (!effectivePlayerId) {
+      throw new Error('Player ID not available');
     }
     
     try {
@@ -182,7 +182,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       const existing = (existingParticipants || []) as RoomParticipant[];
-      const alreadyInRoom = existing.some(p => p.player_id === user.id);
+      const alreadyInRoom = existing.some(p => p.player_id === effectivePlayerId);
 
       if (alreadyInRoom) {
         setParticipants(existing);
@@ -205,14 +205,17 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return false; // Room is full
       }
 
-      // Join as player 2 using the authenticated user id to satisfy RLS
+      // Determine player number (2 if someone else is there, 1 if empty)
+      const playerNumber = existing.length > 0 ? 2 : 1;
+
+      // Join the room - works for both authenticated and anonymous users
       const { error: joinError } = await supabase
         .from('room_participants')
         .insert({
           room_id: roomData.id,
-          player_id: user.id,
+          player_id: effectivePlayerId,
           is_ready: true,
-          player_number: 2
+          player_number: playerNumber
         });
 
       if (joinError) {
@@ -248,7 +251,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       console.error('Unexpected error joining room:', error);
       return false;
     }
-  }, [user?.id]);
+  }, [effectivePlayerId, user?.id]);
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {
