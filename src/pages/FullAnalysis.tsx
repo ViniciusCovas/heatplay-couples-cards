@@ -12,6 +12,16 @@ import { BondMap3D } from '@/components/insights/BondMap3D';
 import { ExplanationTooltip } from '@/components/insights/ExplanationTooltip';
 import { ExpandableSection } from '@/components/insights/ExpandableSection';
 import { ScoreInterpretation } from '@/components/insights/ScoreInterpretation';
+import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
+import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
+import { QuestionInsights } from '@/components/insights/QuestionInsights';
+import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
+import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
+import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
+import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
+import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
+import { useConnectionInsights } from '@/hooks/useConnectionInsights';
+import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
 import { calculatePsychologicalMetrics, generateIntelligenceInsights } from '@/utils/psychologicalAnalysis';
 
 interface StrengthArea {
@@ -46,6 +56,10 @@ export default function FullAnalysis() {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [psychMetrics, setPsychMetrics] = useState<any>(null);
   const [responses, setResponses] = useState<any[]>([]);
+  
+  // Enhanced data hooks
+  const connectionInsights = useConnectionInsights(roomCode || '');
+  const roomAnalytics = useRoomAnalytics(roomCode || '');
 
   useEffect(() => {
     if (roomCode) {
@@ -342,18 +356,86 @@ export default function FullAnalysis() {
           </CardContent>
         </Card>
 
-        {/* Bond Map Visualization */}
-        {psychMetrics && (
-          <BondMap3D 
-            bondMap={psychMetrics.bondMap}
-            volatility={psychMetrics.volatility}
-            trends={{
-              closeness: psychMetrics.progression.trend,
-              spark: psychMetrics.progression.trend,
-              anchor: psychMetrics.progression.trend
-            }}
-          />
-        )}
+        {/* Deep Analysis Section */}
+        <div className="grid gap-6">
+          {/* Bond Map Visualization */}
+          {psychMetrics && (
+            <BondMap3D 
+              bondMap={psychMetrics.bondMap}
+              volatility={psychMetrics.volatility}
+              trends={{
+                closeness: psychMetrics.progression.trend,
+                spark: psychMetrics.progression.trend,
+                anchor: psychMetrics.progression.trend
+              }}
+            />
+          )}
+
+          {/* Compatibility Radar & Timeline Row */}
+          <div className="grid lg:grid-cols-2 gap-6">
+            {connectionInsights.data && (
+              <CompatibilityRadar 
+                insights={connectionInsights.data} 
+                analytics={roomAnalytics.data}
+              />
+            )}
+            {connectionInsights.data && (
+              <VerticalTimeline insights={connectionInsights.data} />
+            )}
+          </div>
+        </div>
+
+        {/* Intelligence Insights Section */}
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Intelligence Analysis</h2>
+            <p className="text-muted-foreground">Deep insights from your conversation patterns</p>
+          </div>
+
+          {/* Question Insights & Interactive Timeline */}
+          <div className="grid gap-6">
+            {roomAnalytics.data && (
+              <QuestionInsights analytics={roomAnalytics.data} />
+            )}
+            {connectionInsights.data && (
+              <InteractiveTimeline insights={connectionInsights.data} />
+            )}
+          </div>
+        </div>
+
+        {/* Performance Analytics Section */}
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Performance Analytics</h2>
+            <p className="text-muted-foreground">Response patterns and growth tracking</p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            {roomCode && (
+              <ResponseTimeAnalytics roomCode={roomCode} />
+            )}
+            {roomCode && (
+              <UserGrowthHistoryChart roomCode={roomCode} />
+            )}
+          </div>
+        </div>
+
+        {/* Context & Comparison Section */}
+        <div className="space-y-6">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold text-foreground">Global Context</h2>
+            <p className="text-muted-foreground">How your session compares to global patterns</p>
+          </div>
+
+          <div className="space-y-6">
+            {connectionInsights.data && (
+              <GlobalContextOverview insights={connectionInsights.data} />
+            )}
+            {roomCode && (
+              <PeerContextPanelV2 roomCode={roomCode} />
+            )}
+          </div>
+        </div>
 
         {/* Detailed Analysis Sections */}
         <div className="space-y-6">
