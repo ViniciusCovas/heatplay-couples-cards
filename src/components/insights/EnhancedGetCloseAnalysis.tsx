@@ -140,37 +140,79 @@ export const EnhancedGetCloseAnalysis: React.FC<EnhancedGetCloseAnalysisProps> =
     if (!roomId) return;
 
     try {
-      const { data: responses } = await supabase
+      logger.debug('Loading game responses for room:', roomId);
+      
+      // First, fetch all game responses for this room
+      const { data: responses, error: responsesError } = await supabase
         .from('game_responses')
-        .select(`
-          response,
-          response_time,
-          evaluation,
-          question:questions(text, level_id)
-        `)
+        .select('response, response_time, evaluation, card_id')
         .eq('room_id', roomId)
         .order('created_at', { ascending: true });
 
-      if (responses) {
-        const gameResponses: GameResponse[] = responses.map(r => ({
-          question: (r.question as any)?.text || 'Unknown question',
+      if (responsesError) {
+        throw new Error(`Failed to fetch responses: ${responsesError.message}`);
+      }
+
+      if (!responses || responses.length === 0) {
+        logger.warn('No game responses found for room:', roomId);
+        setGameResponses([]);
+        return;
+      }
+
+      // Extract unique card IDs from responses
+      const cardIds = [...new Set(responses.map(r => r.card_id))].filter(Boolean);
+      
+      if (cardIds.length === 0) {
+        logger.warn('No valid card IDs found in responses');
+        setGameResponses([]);
+        return;
+      }
+
+      // Fetch the corresponding questions
+      const { data: questions, error: questionsError } = await supabase
+        .from('questions')
+        .select('id, text, level_id')
+        .in('id', cardIds);
+
+      if (questionsError) {
+        logger.error('Error fetching questions:', questionsError);
+        // Continue with available data even if some questions can't be fetched
+      }
+
+      // Create a map of question ID to question data for fast lookup
+      const questionMap = new Map();
+      if (questions) {
+        questions.forEach(q => {
+          questionMap.set(q.id, q);
+        });
+      }
+
+      // Combine responses with question data
+      const gameResponses: GameResponse[] = responses.map(r => {
+        const question = questionMap.get(r.card_id);
+        return {
+          question: question?.text || 'Unknown question',
           response: r.response || '',
           responseTime: r.response_time || 0,
-          level: (r.question as any)?.level_id || 1,
+          level: question?.level_id || 1,
           playerId: 'player',
           evaluation: r.evaluation ? (() => {
             try {
               return JSON.parse(r.evaluation);
-            } catch {
+            } catch (parseError) {
+              logger.warn('Failed to parse evaluation:', parseError);
               return undefined;
             }
           })() : undefined
-        }));
+        };
+      });
 
-        setGameResponses(gameResponses);
-      }
+      logger.debug(`Successfully loaded ${gameResponses.length} game responses`);
+      setGameResponses(gameResponses);
     } catch (err) {
       logger.error('Error loading game responses:', err);
+      // Set empty array on error to prevent cascading failures
+      setGameResponses([]);
     }
   };
 
