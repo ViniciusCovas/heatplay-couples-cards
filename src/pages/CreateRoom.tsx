@@ -53,20 +53,50 @@ function CreateRoomContent() {
   }, [room?.id, needsCreditConsumption, consumeCredit, t]);
 
   const handleCreateRoom = async (): Promise<void> => {
+    console.log('🚀 Starting room creation process', { 
+      user: user?.id, 
+      credits, 
+      level,
+      authenticated: !!user 
+    });
+
     // Check if user has credits first
     if (credits < 1) {
+      console.log('❌ Insufficient credits', { credits });
       setShowCreditModal(true);
       return;
     }
 
     setIsCreating(true);
     try {
+      console.log('📞 Calling createRoom function...');
       const code = await createRoom(level, user?.id);
+      console.log('✅ Room created successfully', { code });
       setRoomCode(code);
       setNeedsCreditConsumption(true); // Flag to consume credit once room is set
       toast.success(t('messages.roomCreated'));
     } catch (error) {
-      toast.error(t('errors.generic'));
+      console.error('❌ Room creation failed:', error);
+      
+      // More specific error handling
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
+        
+        // Show specific error messages
+        if (error.message.includes('row-level security')) {
+          toast.error('Permission denied. Please try logging out and back in.');
+        } else if (error.message.includes('duplicate')) {
+          toast.error('Room code conflict. Please try again.');
+        } else {
+          toast.error(`Error: ${error.message}`);
+        }
+      } else {
+        toast.error(t('errors.generic'));
+      }
     } finally {
       setIsCreating(false);
     }

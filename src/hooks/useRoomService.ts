@@ -59,8 +59,21 @@ export const useRoomService = (): UseRoomServiceReturn => {
   };
 
   const createRoom = useCallback(async (level: number, userId?: string): Promise<string> => {
+    console.log('🔧 createRoom called', { level, userId, playerId });
+    
     try {
       const roomCode = generateRoomCode();
+      console.log('🎲 Generated room code:', roomCode);
+      
+      console.log('📝 Inserting room into game_rooms...', {
+        room_code: roomCode,
+        level,
+        status: 'waiting',
+        created_by: playerId,
+        credit_status: 'pending_credit',
+        host_user_id: userId || null,
+        selected_language: i18n.language || 'en'
+      });
       
       const { data: roomData, error: roomError } = await supabase
         .from('game_rooms')
@@ -76,7 +89,18 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .select()
         .single();
 
-      if (roomError) throw roomError;
+      if (roomError) {
+        console.error('❌ Room insertion failed:', roomError);
+        throw roomError;
+      }
+      
+      console.log('✅ Room created successfully:', roomData);
+
+      console.log('👥 Adding participant to room_participants...', {
+        room_id: roomData.id,
+        player_id: playerId,
+        player_number: 1
+      });
 
       const { error: participantError } = await supabase
         .from('room_participants')
@@ -87,7 +111,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
           player_number: 1 // El creador siempre es jugador 1
         });
 
-      if (participantError) throw participantError;
+      if (participantError) {
+        console.error('❌ Participant insertion failed:', participantError);
+        throw participantError;
+      }
+      
+      console.log('✅ Participant added successfully');
 
       // Set the room state after successful creation
       setRoom({
