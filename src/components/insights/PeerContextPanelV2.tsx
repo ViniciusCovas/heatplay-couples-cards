@@ -36,6 +36,14 @@ export const PeerContextPanelV2: React.FC<PeerContextPanelV2Props> = ({ roomCode
   if (!data) return null;
   const { sessionPillars, cohorts } = data;
 
+  const explain = (name: string) => {
+    if (/global/i.test(name)) return 'How your session compares to all sessions—helpful for broad context.';
+    if (/level/i.test(name)) return 'Benchmark within the same intimacy level—keeps comparisons fair by intensity.';
+    if (/language|locale/i.test(name)) return 'Cultural and language cohort—accounts for expression styles across languages.';
+    if (/phase/i.test(name)) return 'Couples in a similar relationship phase—signals what’s typical for where you are.';
+    return 'How your session compares to this cohort and why it matters.';
+  };
+
   return (
     <div className="space-y-8">
       <div className="text-center space-y-3">
@@ -68,6 +76,7 @@ export const PeerContextPanelV2: React.FC<PeerContextPanelV2Props> = ({ roomCode
               <PillarRow label="Attraction" value={sessionPillars.attraction} avg={c.averages.attraction} />
               <PillarRow label="Intimacy" value={sessionPillars.intimacy} avg={c.averages.intimacy} />
               <PillarRow label="Surprise" value={sessionPillars.surprise} avg={c.averages.surprise} />
+              <p className="text-xs text-muted-foreground pt-2">{explain(c.name)}</p>
             </CardContent>
           </Card>
         ))}

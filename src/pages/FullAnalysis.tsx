@@ -15,11 +15,11 @@ import { ScoreInterpretation } from '@/components/insights/ScoreInterpretation';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
 import { QuestionInsights } from '@/components/insights/QuestionInsights';
-import { ResponseTimeAnalytics } from '@/components/insights/ResponseTimeAnalytics';
-import { UserGrowthHistoryChart } from '@/components/insights/UserGrowthHistoryChart';
+
+
 import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
 import { PeerContextPanelV2 } from '@/components/insights/PeerContextPanelV2';
-import { InteractiveTimeline } from '@/components/insights/InteractiveTimeline';
+
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
 import { calculatePsychologicalMetrics, generateIntelligenceInsights } from '@/utils/psychologicalAnalysis';
@@ -333,15 +333,15 @@ export default function FullAnalysis() {
                 score={analysis.strengthAreas?.length || 0}
                 maxScore={10}
                 label="Strength Areas"
-                interpretation="Areas where you naturally excel together"
+                interpretation="Consistent behaviors that predict connection quality"
                 showProgress={false}
               />
               
               <ScoreInterpretation
-                score={responses.length}
+                score={roomAnalytics.data?.sessionAverages.responsesCount || responses.length}
                 maxScore={20}
                 label="Questions Explored"
-                interpretation="Depth of your conversation journey"
+                interpretation="How many unique prompts you completed this session"
                 showProgress={false}
               />
               
@@ -349,10 +349,13 @@ export default function FullAnalysis() {
                 score={analysis.keyInsights?.length || 0}
                 maxScore={10}
                 label="Key Insights"
-                interpretation="Unique discoveries about your connection"
+                interpretation="AI‑distilled patterns that emerged from your answers"
                 showProgress={false}
               />
             </div>
+            <p className="text-sm text-muted-foreground">
+              What these mean: Strength Areas reflect where you work naturally well together; Questions Explored counts the prompts you answered; Key Insights summarize meaningful patterns observed by the AI.
+            </p>
           </CardContent>
         </Card>
 
@@ -371,16 +374,15 @@ export default function FullAnalysis() {
             />
           )}
 
-          {/* Compatibility Radar & Timeline Row */}
-          <div className="grid lg:grid-cols-2 gap-6">
+          {/* 5-Point Connection Radar */}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-foreground text-center">5-Point Connection Radar</h2>
+            <p className="text-muted-foreground text-center">See how your session compares across honesty, intimacy, attraction, surprise and stability.</p>
             {connectionInsights.data && (
               <CompatibilityRadar 
                 insights={connectionInsights.data} 
                 analytics={roomAnalytics.data}
               />
-            )}
-            {connectionInsights.data && (
-              <VerticalTimeline insights={connectionInsights.data} />
             )}
           </div>
         </div>
@@ -397,25 +399,21 @@ export default function FullAnalysis() {
             {roomAnalytics.data && (
               <QuestionInsights analytics={roomAnalytics.data} />
             )}
-            {connectionInsights.data && (
-              <InteractiveTimeline insights={connectionInsights.data} />
-            )}
           </div>
         </div>
 
-        {/* Performance Analytics Section */}
+        {/* Your Connection Journey */}
         <div className="space-y-6">
           <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Performance Analytics</h2>
-            <p className="text-muted-foreground">Response patterns and growth tracking</p>
+            <h2 className="text-2xl font-bold text-foreground">Your Connection Journey</h2>
+            <p className="text-muted-foreground">
+              We highlight the first 5 questions that shaped this session. Click "Show More" to explore the rest.
+            </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
-            {roomCode && (
-              <ResponseTimeAnalytics roomCode={roomCode} />
-            )}
-            {roomCode && (
-              <UserGrowthHistoryChart roomCode={roomCode} />
+          <div className="space-y-6">
+            {connectionInsights.data && (
+              <VerticalTimeline insights={connectionInsights.data} />
             )}
           </div>
         </div>
@@ -444,10 +442,13 @@ export default function FullAnalysis() {
             <ExpandableSection
               title="Your Unique Strengths"
               icon={<TrendingUp className="w-5 h-5 text-green-600" />}
-              description="Areas where you naturally excel as a couple"
+              description="Selected from your answers and partner evaluations—consistent behaviors that predict connection quality."
               defaultExpanded={true}
             >
                <div className="space-y-4">
+                 <p className="text-sm text-muted-foreground">
+                   Why we highlight these: they show where your connection is already working reliably, providing a foundation to build on.
+                 </p>
                  {analysis.strengthAreas.map((strength, index) => {
                    if (typeof strength === 'string') {
                      return (
@@ -504,9 +505,12 @@ export default function FullAnalysis() {
             <ExpandableSection
               title="Growth Opportunities"
               icon={<Users className="w-5 h-5 text-blue-600" />}
-              description="Areas where you can strengthen your connection"
+              description="Contextualized opportunities where small, repeatable changes can compound into deeper trust and closeness."
             >
                <div className="space-y-4">
+                 <p className="text-sm text-muted-foreground">
+                   What this means: based on your session patterns, focusing here should yield the highest impact next.
+                 </p>
                  {analysis.growthAreas.map((area, index) => {
                    if (typeof area === 'string') {
                      return (
@@ -537,9 +541,12 @@ export default function FullAnalysis() {
             <ExpandableSection
               title="Personalized Recommendations"
               icon={<Heart className="w-5 h-5 text-red-600" />}
-              description="Specific actions to deepen your connection"
+              description="Specific actions tailored to your journey today."
             >
               <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  These are calibrated to your strengths and current phase—try one or two this week and reflect together.
+                </p>
                 {analysis.personalizedTips.map((tip, index) => (
                   <div key={index} className="p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-200 dark:border-purple-800">
                     <p className="text-sm leading-relaxed">{tip}</p>
