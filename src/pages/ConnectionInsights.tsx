@@ -11,10 +11,13 @@ import {
   Info,
   Lightbulb,
   TrendingUp,
+  Users,
+  Heart,
 } from 'lucide-react';
 import { useConnectionInsights } from '@/hooks/useConnectionInsights';
 import { useInsightsBenchmarks } from '@/hooks/useInsightsBenchmarks';
 import { useRoomAnalytics } from '@/hooks/useRoomAnalytics';
+import { useGlobalInsights } from '@/hooks/useGlobalInsights';
 import { GlobalBenchmarkDashboard } from '@/components/insights/GlobalBenchmarkDashboard';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -28,7 +31,18 @@ const ConnectionInsights = () => {
   const { data: insights, isLoading, error, refetch } = useConnectionInsights(searchCode);
   const { data: benchmarks } = useInsightsBenchmarks();
   const { data: roomAnalytics } = useRoomAnalytics(searchCode);
-
+  const { data: globalInsights, isLoading: globalLoading } = useGlobalInsights();
+  const gi: any = globalInsights ?? {};
+  const totalSessions: number = gi.sessionCount ?? gi.sessions ?? gi.totalSessions ?? 0;
+  const avgCompatibility: number | null = gi.compatibility?.average ?? gi.avgCompatibility ?? gi.averageCompatibility ?? null;
+  const pillars: any = gi.pillarAverages ?? gi.pillars ?? {};
+  const topPhase: string | null = (() => {
+    const dist = gi.phaseDistribution ?? gi.relationshipPhaseDistribution ?? null;
+    if (!dist) return null;
+    let maxKey: string | null = null; let maxVal = -Infinity;
+    for (const key in dist) { const val = typeof dist[key] === 'number' ? dist[key] : 0; if (val > maxVal) { maxVal = val; maxKey = key; } }
+    return maxKey;
+  })();
   React.useEffect(() => {
     document.title = 'Connection Insights | Let\'s Get Close';
     const meta = document.querySelector('meta[name="description"]');
@@ -115,6 +129,73 @@ const ConnectionInsights = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Global Snapshot & CTA */}
+        <div className="max-w-5xl mx-auto mb-12">
+          <section className="rounded-xl border bg-card p-6 md:p-8 shadow-sm">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <h2 className="text-2xl font-semibold text-foreground">Global Snapshot</h2>
+                <p className="text-muted-foreground mt-1">What we’re seeing across thousands of connections.</p>
+              </div>
+              <Button size="lg" onClick={() => navigate('/create-room')}>
+                Start Your Connection
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+              <div className="rounded-lg bg-accent/30 p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Users className="w-4 h-4" />
+                  Couples analyzed
+                </div>
+                <div className="mt-2 text-3xl font-bold">{totalSessions || '—'}</div>
+              </div>
+
+              <div className="rounded-lg bg-accent/30 p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Heart className="w-4 h-4" />
+                  Avg compatibility
+                </div>
+                <div className="mt-2 text-3xl font-bold">{avgCompatibility != null ? `${Math.round(avgCompatibility)}%` : '—'}</div>
+              </div>
+
+              <div className="rounded-lg bg-accent/30 p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Lightbulb className="w-4 h-4" />
+                  Strongest pillar
+                </div>
+                <div className="mt-2 text-3xl font-bold">{(() => {
+                  const entries = [
+                    { k: 'Honesty', v: pillars?.honesty },
+                    { k: 'Attraction', v: pillars?.attraction },
+                    { k: 'Intimacy', v: pillars?.intimacy },
+                    { k: 'Surprise', v: pillars?.surprise },
+                  ].filter(p => typeof p.v === 'number');
+                  if (!entries.length) return '—';
+                  entries.sort((a,b)=>b.v - a.v);
+                  return entries[0].k;
+                })()}</div>
+              </div>
+
+              <div className="rounded-lg bg-accent/30 p-4">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <TrendingUp className="w-4 h-4" />
+                  Most common phase
+                </div>
+                <div className="mt-2 text-3xl font-bold">{topPhase ? String(topPhase).replace(/_/g,' ') : '—'}</div>
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground mt-6">
+              These insights come from aggregated, anonymized sessions. Ready to see your personalized breakdown?
+              <button onClick={()=>navigate('/create-room')} className="ml-2 underline text-primary">
+                Create a room
+              </button>
+              and start connecting with your partner today.
+            </p>
+          </section>
+        </div>
 
         {/* Error State */}
         {error && (
