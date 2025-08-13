@@ -572,6 +572,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      player_participates_in_room: {
+        Args: { room_id_param: string; player_id_param: string }
+        Returns: boolean
+      }
       promote_to_admin: {
         Args: { user_email: string }
         Returns: boolean
