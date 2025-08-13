@@ -17,7 +17,7 @@ const ProximitySelection = () => {
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('room');
   const { room, participants, joinRoom, isConnected } = useRoomService();
-  const playerId = usePlayerId();
+  const { playerId, isLoading: isPlayerIdLoading } = usePlayerId();
   const { gameState } = useGameSync(room?.id || null, playerId);
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -40,8 +40,9 @@ const ProximitySelection = () => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
-      if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, roomCode);
+      // Wait for player ID to be ready before attempting to join
+      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && retryCount < maxRetries) {
+        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, { roomCode, playerId });
         setIsRetrying(true);
         
         try {
@@ -89,7 +90,7 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered

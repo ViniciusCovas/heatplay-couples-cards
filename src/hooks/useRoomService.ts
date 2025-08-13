@@ -61,7 +61,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
-  const localPlayerId = usePlayerId();
+  const { playerId: localPlayerId, isLoading: isPlayerIdLoading } = usePlayerId();
   const { i18n } = useTranslation();
   const { user } = useAuth();
 

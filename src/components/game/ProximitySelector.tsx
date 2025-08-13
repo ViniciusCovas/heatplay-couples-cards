@@ -20,7 +20,7 @@ interface ProximitySelectorProps {
 
 export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, participants }: ProximitySelectorProps) => {
   const navigate = useNavigate();
-  const playerId = usePlayerId();
+  const { playerId, isLoading: isPlayerIdLoading } = usePlayerId();
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);

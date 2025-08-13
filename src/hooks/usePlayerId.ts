@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const usePlayerId = () => {
   const [playerId, setPlayerId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let isMounted = true;
@@ -39,6 +40,8 @@ export const usePlayerId = () => {
 
       if (isMounted && resolvedPlayerId) {
         setPlayerId(resolvedPlayerId);
+        setIsLoading(false);
+        logger.debug('Player ID resolved and loading complete', { resolvedPlayerId, isLoading: false });
       }
     };
 
@@ -69,5 +72,5 @@ export const usePlayerId = () => {
     };
   }, []);
 
-  return playerId;
+  return { playerId, isLoading };
 };

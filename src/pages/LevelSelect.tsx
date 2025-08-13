@@ -31,7 +31,7 @@ const LevelSelect = () => {
   const roomCode = searchParams.get('room');
   const { i18n, t } = useTranslation();
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
-  const playerId = usePlayerId();
+  const { playerId, isLoading: isPlayerIdLoading } = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
   // Remove unused imports and methods since we're now fully automatic
   const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, levelsMismatch } = useLevelSelection(room?.id || null, playerId);
@@ -195,11 +195,13 @@ const LevelSelect = () => {
   // Auto-join room if not connected 
   // ONLY for players trying to join (not room creators)
   useEffect(() => {
-    if (roomCode && !isConnected && !room) {
-      logger.debug('🔗 Auto-joining room from LevelSelect (ROOM JOINER):', roomCode);
+    if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId) {
+      logger.debug('🔗 Auto-joining room from LevelSelect (ROOM JOINER):', { roomCode, playerId });
       joinRoom(roomCode);
+    } else if (roomCode && !isConnected && !room && isPlayerIdLoading) {
+      logger.debug('Waiting for player ID to be ready before auto-join from LevelSelect', { roomCode, isPlayerIdLoading });
     }
-  }, [roomCode, isConnected, room, joinRoom]);
+  }, [roomCode, isConnected, room, joinRoom, isPlayerIdLoading, playerId]);
 
   // Show loading or connection status
   if (loading) {
