@@ -49,25 +49,9 @@ function CreateRoomContent() {
       console.log('✅ Room created successfully', { code });
       setRoomCode(code);
       
-      // Step 2: Consume credit immediately using room code
-      console.log('💳 Consuming credit for room code:', code);
-      try {
-        const consumeResult = await consumeCredit(code);
-        if (consumeResult.success) {
-          console.log('✅ Credit consumed successfully');
-          toast.success(t('messages.roomCreated'));
-        } else {
-          console.warn('⚠️ Credit consumption failed:', consumeResult.error);
-          // Room is created but credit consumption failed
-          if (consumeResult.error === 'insufficient_credits') {
-            setShowCreditModal(true);
-          }
-          toast.success(t('messages.roomCreated')); // Still show success for room creation
-        }
-      } catch (creditError) {
-        console.error('❌ Credit consumption error:', creditError);
-        toast.success(t('messages.roomCreated')); // Still show success for room creation
-      }
+      // Step 2: Show success immediately, defer credit consumption until both players join
+      console.log('✅ Room created, deferring credit consumption until game starts');
+      toast.success(t('messages.roomCreated'));
     } catch (error) {
       console.error('❌ Room creation failed:', error);
       
@@ -96,8 +80,27 @@ function CreateRoomContent() {
   };
 
   const handleGameStart = async (): Promise<void> => {
-    await startGame(); // Espera a que startGame() termine
-    navigate(`/proximity-selection?room=${roomCode}`);
+    try {
+      // Step 1: Consume credit when both players are ready to start
+      console.log('💳 Consuming credit for room code:', roomCode);
+      const consumeResult = await consumeCredit(roomCode);
+      if (consumeResult.success) {
+        console.log('✅ Credit consumed successfully');
+      } else {
+        console.warn('⚠️ Credit consumption failed:', consumeResult.error);
+        if (consumeResult.error === 'insufficient_credits') {
+          setShowCreditModal(true);
+          return; // Don't start game without credits
+        }
+      }
+      
+      // Step 2: Start the game
+      await startGame();
+      navigate(`/proximity-selection?room=${roomCode}`);
+    } catch (error) {
+      console.error('❌ Error starting game:', error);
+      toast.error('Error starting game. Please try again.');
+    }
   };
 
   const handleLeaveRoom = (): void => {

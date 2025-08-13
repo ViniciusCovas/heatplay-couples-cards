@@ -192,10 +192,11 @@ const LevelSelect = () => {
   }, [agreedLevel, navigate, roomCode, room?.id]);
 
 
-  // Auto-join room if not connected
+  // Auto-join room if not connected 
+  // ONLY for players trying to join (not room creators)
   useEffect(() => {
     if (roomCode && !isConnected && !room) {
-      logger.debug('Auto-joining room from LevelSelect:', roomCode);
+      logger.debug('🔗 Auto-joining room from LevelSelect (ROOM JOINER):', roomCode);
       joinRoom(roomCode);
     }
   }, [roomCode, isConnected, room, joinRoom]);

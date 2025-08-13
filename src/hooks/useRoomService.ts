@@ -78,7 +78,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   };
 
   const createRoom = useCallback(async (level: number, _userId?: string): Promise<string> => {
-    console.log('🔧 createRoom called', { level, userId: user?.id, effectivePlayerId });
+    logger.debug('🔧 createRoom called (ROOM CREATOR)', { level, userId: user?.id, effectivePlayerId });
     
     if (!user?.id) {
       console.error('❌ createRoom called without authenticated user');
@@ -86,7 +86,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
 
     // Use atomic RPC to create room and join as player 1 with correct RLS context
-    console.log('📞 Calling RPC: create_room_and_join...');
+    logger.debug('📞 Calling RPC: create_room_and_join...');
     const { data, error } = await supabase.rpc('create_room_and_join', {
       level_param: level,
       selected_language_param: i18n.language || 'en'
@@ -103,7 +103,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       throw new Error('Failed to create room. Please try again.');
     }
 
-    console.log('✅ RPC room created:', created);
+    logger.debug('✅ RPC room created (ROOM CREATOR)', created);
 
     // Fetch full room (ensures we have all fields)
     const { data: roomData, error: roomError } = await supabase
@@ -126,6 +126,13 @@ export const useRoomService = (): UseRoomServiceReturn => {
     if (participantsData) {
       logger.debug('Initial participants after room creation', { participantsData });
       setParticipants(participantsData as RoomParticipant[]);
+      
+      // Set player number for room creator (should be 1)
+      const creatorParticipant = participantsData.find(p => p.player_id === user.id);
+      if (creatorParticipant && (creatorParticipant.player_number === 1 || creatorParticipant.player_number === 2)) {
+        setPlayerNumber(creatorParticipant.player_number as 1 | 2);
+        logger.debug('🎯 Room creator player number set:', creatorParticipant.player_number);
+      }
     }
 
     setRoom({
@@ -144,7 +151,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [user?.id, effectivePlayerId, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Attempting to join room via RPC', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id });
+    logger.debug('🔗 Attempting to join room via RPC (ROOM JOINER)', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id });
 
     if (!effectivePlayerId) {
       logger.error('Player ID not available for room join');
@@ -367,6 +374,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     if (!room) return;
 
     try {
+      logger.debug('🎮 Starting game - updating room status to playing', { roomId: room.id, roomCode: room.room_code });
       await supabase
         .from('game_rooms')
         .update({ 
@@ -374,8 +382,9 @@ export const useRoomService = (): UseRoomServiceReturn => {
           started_at: new Date().toISOString()
         })
         .eq('id', room.id);
+      logger.debug('✅ Game started successfully');
     } catch (error) {
-      // Silent error handling
+      logger.error('❌ Error starting game:', error);
     }
   }, [room]);
 

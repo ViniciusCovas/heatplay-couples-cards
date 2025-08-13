@@ -35,12 +35,13 @@ const ProximitySelection = () => {
   }, [roomCode, navigate]);
 
   // Auto-join room if we have a roomCode but aren't connected
+  // ONLY for players trying to join (not room creators)
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
       if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode);
+        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, roomCode);
         setIsRetrying(true);
         
         try {

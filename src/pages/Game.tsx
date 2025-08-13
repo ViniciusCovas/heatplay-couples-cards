@@ -95,12 +95,14 @@ const Game = () => {
   }, [currentLevel]);
 
   // Auto-join room if we have a roomCode but aren't connected
+  // ONLY for players trying to join (not room creators)
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
+      // Prevent room creators from auto-joining their own rooms
       if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        logger.debug(`Auto-joining room attempt ${retryCount + 1}`, { roomCode });
+        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER)`, { roomCode, playerId });
         setIsRetrying(true);
         
         try {
