@@ -35,14 +35,18 @@ const ProximitySelection = () => {
   }, [roomCode, navigate]);
 
   // Auto-join room if we have a roomCode but aren't connected
-  // ONLY for players trying to join (not room creators)
+  // ONLY for players trying to join (not room creators) and avoid duplicate joins
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
+      // Check if we're already a participant in this room to avoid duplicate joins
+      const isAlreadyParticipant = participants.some(p => p.player_id === playerId);
+      
       // Wait for player ID to be ready before attempting to join
-      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && retryCount < maxRetries) {
-        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, { roomCode, playerId });
+      // Don't auto-join if already connected, already a participant, or player ID not ready
+      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && !isAlreadyParticipant && retryCount < maxRetries) {
+        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, { roomCode, playerId, isAlreadyParticipant });
         setIsRetrying(true);
         
         try {
@@ -90,7 +94,7 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId, participants]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
