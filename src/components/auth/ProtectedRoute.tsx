@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from './AuthModal';
 
@@ -9,7 +9,6 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
 
   if (loading) {
     return (
@@ -27,12 +26,11 @@ export const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
       return <>{fallback}</>;
     }
     
-    // Show auth modal
-    setShowAuthModal(true);
+    // Show auth modal directly without state management to prevent re-renders
     return (
       <AuthModal 
-        open={showAuthModal} 
-        onOpenChange={setShowAuthModal}
+        open={true} 
+        onOpenChange={() => {}} // Prevent closing modal - user must authenticate
         onSuccess={() => window.location.reload()}
       />
     );
