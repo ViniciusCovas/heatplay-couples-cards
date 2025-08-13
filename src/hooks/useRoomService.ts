@@ -347,6 +347,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
   useEffect(() => {
     if (!room) return;
 
+    logger.debug('Setting up real-time subscriptions for room', { roomId: room.id, effectivePlayerId });
+
     const roomChannel = supabase
       .channel(`room_${room.id}`)
       .on(
@@ -358,6 +360,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
           filter: `room_id=eq.${room.id}`
         },
         async () => {
+          logger.debug('Participants change detected via realtime');
           // Refresh participants
           const { data, error } = await supabase
             .from('room_participants')
@@ -366,19 +369,28 @@ export const useRoomService = (): UseRoomServiceReturn => {
           
           if (error) {
             logger.warn('Error refreshing participants via realtime', error);
-            setIsConnected(false);
+            // Don't immediately set disconnected - anonymous users might still work
+            if (error.code === 'PGRST301' || error.code === '42501') {
+              logger.debug('RLS permission error for anonymous user - using polling fallback');
+            } else {
+              setIsConnected(false);
+            }
+            
             // Retry connection after a delay
             setTimeout(() => {
               if (room) {
-                console.log('Retrying participant refresh...');
+                logger.debug('Retrying participant refresh...');
                 supabase
                   .from('room_participants')
                   .select('*, player_number')
                   .eq('room_id', room.id)
-                  .then(({ data: retryData }) => {
+                  .then(({ data: retryData, error: retryError }) => {
                     if (retryData) {
                       setParticipants(retryData as RoomParticipant[]);
                       setIsConnected(true);
+                      logger.debug('Participant refresh retry successful');
+                    } else if (retryError) {
+                      logger.debug('Participant refresh retry failed', retryError);
                     }
                   });
               }
@@ -399,6 +411,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
           filter: `id=eq.${room.id}`
         },
         (payload) => {
+          logger.debug('Room update detected via realtime', payload);
           const updatedRoom = payload.new as any;
           setRoom({
             ...updatedRoom,
@@ -407,16 +420,59 @@ export const useRoomService = (): UseRoomServiceReturn => {
         }
       )
       .subscribe((status) => {
-        logger.debug('Room channel subscription status', { status, roomId: room.id });
-        setIsConnected(status === 'SUBSCRIBED');
+        logger.debug('Room channel subscription status', { status, roomId: room.id, effectivePlayerId });
+        
+        if (status === 'SUBSCRIBED') {
+          setIsConnected(true);
+          logger.debug('Real-time subscription established successfully');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          logger.warn('Real-time subscription failed', { status, roomId: room.id });
+          // For anonymous users, don't immediately mark as disconnected
+          // They might still receive updates through other means
+          if (!user?.id) {
+            logger.debug('Anonymous user subscription failed, will use polling fallback');
+          } else {
+            setIsConnected(false);
+          }
+        } else if (status === 'CLOSED') {
+          setIsConnected(false);
+        }
       });
 
     setChannel(roomChannel);
 
+    // Set up polling fallback for anonymous users or when real-time fails
+    const pollInterval = setInterval(async () => {
+      if (!isConnected || !user?.id) {
+        logger.debug('Polling for participants updates (fallback)', { 
+          isConnected, 
+          isAuthenticated: !!user?.id,
+          roomId: room.id 
+        });
+        
+        const { data, error } = await supabase
+          .from('room_participants')
+          .select('*, player_number')
+          .eq('room_id', room.id);
+        
+        if (data && !error) {
+          setParticipants(data as RoomParticipant[]);
+          if (!isConnected) {
+            logger.debug('Polling fallback successful - marking as connected');
+            setIsConnected(true);
+          }
+        } else if (error) {
+          logger.debug('Polling fallback failed', error);
+        }
+      }
+    }, 3000); // Poll every 3 seconds
+
     return () => {
+      logger.debug('Cleaning up real-time subscriptions and polling');
+      clearInterval(pollInterval);
       supabase.removeChannel(roomChannel);
     };
-  }, [room]);
+  }, [room, isConnected, user?.id, effectivePlayerId]);
 
   // Initial participants load
   useEffect(() => {
