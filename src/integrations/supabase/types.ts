@@ -493,6 +493,10 @@ export type Database = {
         Args: { user_id_param: string; credits_amount: number }
         Returns: Json
       }
+      assign_player_number: {
+        Args: { room_id_param: string; player_id_param: string }
+        Returns: number
+      }
       cleanup_inactive_rooms: {
         Args: Record<PropertyKey, never>
         Returns: undefined
