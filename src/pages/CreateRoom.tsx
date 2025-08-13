@@ -20,37 +20,11 @@ function CreateRoomContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [showCreditModal, setShowCreditModal] = useState(false);
-  const [needsCreditConsumption, setNeedsCreditConsumption] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
   const { credits, consumeCredit } = useCredits();
   const { t } = useTranslation();
-
-  // Handle credit consumption when room is created
-  useEffect(() => {
-    const consumeCreditForRoom = async () => {
-      if (room?.id && needsCreditConsumption) {
-        setNeedsCreditConsumption(false);
-        
-        const consumeResult = await consumeCredit(room.id);
-        
-        if (!consumeResult.success) {
-          // Handle credit consumption failure
-          if (consumeResult.error === 'insufficient_credits') {
-            toast.error(t('errors.insufficientCredits', 'Créditos insuficientes'));
-            setShowCreditModal(true);
-          } else if (consumeResult.error === 'session_already_active') {
-            toast.error(t('errors.sessionAlreadyActive', 'Ya tienes una sesión activa'));
-          } else {
-            toast.error(t('errors.creditConsumption', 'Error al procesar créditos'));
-          }
-        }
-      }
-    };
-
-    consumeCreditForRoom();
-  }, [room?.id, needsCreditConsumption, consumeCredit, t]);
 
   const handleCreateRoom = async (): Promise<void> => {
     console.log('🚀 Starting room creation process', { 
@@ -69,12 +43,36 @@ function CreateRoomContent() {
 
     setIsCreating(true);
     try {
-      console.log('📞 Calling createRoom function...');
+      // Step 1: Create the room
+      console.log('📞 Creating room...');
       const code = await createRoom(level, user?.id);
       console.log('✅ Room created successfully', { code });
       setRoomCode(code);
-      setNeedsCreditConsumption(true); // Flag to consume credit once room is set
-      toast.success(t('messages.roomCreated'));
+      
+      // Step 2: Consume credit immediately
+      if (room?.id) {
+        console.log('💳 Consuming credit for room:', room.id);
+        try {
+          const consumeResult = await consumeCredit(room.id);
+          if (consumeResult.success) {
+            console.log('✅ Credit consumed successfully');
+            toast.success(t('messages.roomCreated'));
+          } else {
+            console.warn('⚠️ Credit consumption failed:', consumeResult.error);
+            // Room is created but credit consumption failed
+            if (consumeResult.error === 'insufficient_credits') {
+              setShowCreditModal(true);
+            }
+            toast.success(t('messages.roomCreated')); // Still show success for room creation
+          }
+        } catch (creditError) {
+          console.error('❌ Credit consumption error:', creditError);
+          toast.success(t('messages.roomCreated')); // Still show success for room creation
+        }
+      } else {
+        console.log('✅ Room created, credit consumption will happen automatically');
+        toast.success(t('messages.roomCreated'));
+      }
     } catch (error) {
       console.error('❌ Room creation failed:', error);
       

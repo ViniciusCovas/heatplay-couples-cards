@@ -30,11 +30,21 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
 
   // Start countdown when both players are ready
   useEffect(() => {
+    console.log('WaitingRoom: Checking participants for countdown', { 
+      participantCount: participants.length, 
+      participants: participants.map(p => ({ id: p.player_id, ready: p.is_ready, number: p.player_number })),
+      currentCountdown: countdown 
+    });
+    
     if (participants.length === 2 && participants.every(p => p.is_ready)) {
       if (countdown === null) {
+        console.log('WaitingRoom: Starting countdown');
         setCountdown(5);
       }
     } else {
+      if (countdown !== null) {
+        console.log('WaitingRoom: Stopping countdown');
+      }
       setCountdown(null);
     }
   }, [participants, countdown]);
