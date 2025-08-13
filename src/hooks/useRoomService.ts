@@ -28,6 +28,14 @@ export interface RoomParticipant {
   player_number: number | null; // Matches database schema - can be null
 }
 
+interface JoinRoomByCodeResult {
+  success: boolean;
+  room_id?: string;
+  player_number?: number;
+  already_joined?: boolean;
+  error?: string;
+}
+
 interface UseRoomServiceReturn {
   room: GameRoom | null;
   participants: RoomParticipant[];
@@ -151,8 +159,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // 1) Use the new secure RPC to find and join by code atomically
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('join_room_by_code', {
+      // 1) Use the new secure RPC to find and join by code atomically (typed)
+      const { data: rpcResult, error: rpcError } = await supabase.rpc<JoinRoomByCodeResult>('join_room_by_code', {
         room_code_param: roomCode,
         player_id_param: effectivePlayerId
       });
