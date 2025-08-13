@@ -206,37 +206,73 @@ export const useRoomService = (): UseRoomServiceReturn => {
         alreadyJoined 
       });
 
-      // 2) Load the room details with comprehensive error handling
+      // 2) Load the room details with comprehensive error handling and retry logic
       logger.debug('📡 Loading room details...');
-      const { data: roomData, error: roomError } = await supabase
-        .from('game_rooms')
-        .select('*')
-        .eq('id', joinedRoomId)
-        .maybeSingle();
+      let roomData: any = null;
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries && !roomData) {
+        const { data, error: roomError } = await supabase
+          .from('game_rooms')
+          .select('*')
+          .eq('id', joinedRoomId)
+          .maybeSingle();
 
-      if (roomError) {
-        logger.error('❌ Failed to load room after join:', roomError);
-        throw new Error('Failed to load room details. Please try again.');
-      }
+        if (roomError) {
+          logger.error(`❌ Failed to load room after join (attempt ${retryCount + 1}):`, roomError);
+          if (retryCount === maxRetries - 1) {
+            throw new Error(`Failed to load room details after ${maxRetries} attempts. Please try again.`);
+          }
+          retryCount++;
+          // Wait before retry with exponential backoff
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+          continue;
+        }
 
-      if (!roomData) {
-        logger.error('❌ Room not found after successful join');
-        throw new Error('Room not found after joining. Please try again.');
+        if (!data) {
+          logger.error(`❌ Room not found after successful join (attempt ${retryCount + 1})`);
+          if (retryCount === maxRetries - 1) {
+            throw new Error('Room not found after joining. Please try again.');
+          }
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+          continue;
+        }
+
+        roomData = data;
+        logger.debug('✅ Room data loaded successfully:', roomData);
       }
 
       // 3) Load participants with retry logic
       logger.debug('👥 Loading participants...');
-      const { data: participantsData, error: participantsError } = await supabase
-        .from('room_participants')
-        .select('*, player_number')
-        .eq('room_id', joinedRoomId);
+      let participantsData: any = null;
+      retryCount = 0;
+      
+      while (retryCount < maxRetries) {
+        const { data, error: participantsError } = await supabase
+          .from('room_participants')
+          .select('*, player_number')
+          .eq('room_id', joinedRoomId);
 
-      if (participantsError) {
-        logger.warn('⚠️ Could not load participants after join:', participantsError);
-        // Don't fail completely, participants will be loaded via real-time updates
-      } else if (participantsData) {
-        logger.debug('👥 Participants loaded:', participantsData);
-        setParticipants(participantsData as RoomParticipant[]);
+        if (participantsError) {
+          logger.warn(`⚠️ Could not load participants after join (attempt ${retryCount + 1}):`, participantsError);
+          if (retryCount === maxRetries - 1) {
+            logger.warn('⚠️ Max retries reached for participants, will use real-time updates');
+            break;
+          }
+          retryCount++;
+          await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
+          continue;
+        } else if (data) {
+          participantsData = data;
+          logger.debug('👥 Participants loaded:', participantsData);
+          setParticipants(participantsData as RoomParticipant[]);
+          break;
+        }
+        
+        retryCount++;
+        await new Promise(resolve => setTimeout(resolve, 500 * retryCount));
       }
 
       // 4) Update local state
@@ -260,7 +296,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         logger.debug('🎯 Player number assigned:', assignedPlayerNumber);
       } else if (alreadyJoined && participantsData) {
         // Derive from participants if we re-joined
-        const me = participantsData.find(p => p.player_id === effectivePlayerId);
+        const me = participantsData.find((p: RoomParticipant) => p.player_id === effectivePlayerId);
         if (me && (me.player_number === 1 || me.player_number === 2)) {
           setPlayerNumber(me.player_number as 1 | 2);
           logger.debug('🎯 Player number derived from participants:', me.player_number);
@@ -277,9 +313,28 @@ export const useRoomService = (): UseRoomServiceReturn => {
       return true;
     } catch (error) {
       logger.error('💥 Unexpected error joining room:', error);
+      
+      // Enhanced error logging for debugging
       if (error instanceof Error) {
-        throw error; // Re-throw our custom errors
+        logger.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+          roomCode,
+          effectivePlayerId,
+          isAuthenticated: !!user?.id
+        });
+        throw error; // Re-throw our custom errors with original message
       }
+      
+      // Log unknown error types
+      logger.error('Unknown error type:', {
+        error,
+        type: typeof error,
+        roomCode,
+        effectivePlayerId
+      });
+      
       throw new Error('Unexpected error joining room. Please try again.');
     }
   }, [effectivePlayerId, user?.id]);

@@ -29,19 +29,33 @@ export default function JoinRoom() {
     }
 
     setIsLoading(true);
+    console.log('🔗 Starting room join process...', { roomCode: roomCode.toUpperCase() });
     
     try {
       const success = await joinRoom(roomCode.toUpperCase());
+      console.log('✅ Room join result:', { success });
       
       if (success) {
         toast.success(t('joinRoom.success.connected'));
+        console.log('🎉 Successfully joined room, showing success message');
       } else {
+        console.warn('❌ Join returned false (invalid room code)');
         toast.error(t('joinRoom.errors.invalidCode'));
       }
     } catch (error) {
-      toast.error(t('joinRoom.errors.connectionError'));
+      console.error('💥 Room join error:', error);
+      
+      // Show specific error message if available
+      if (error instanceof Error) {
+        console.error('Error details:', { message: error.message, stack: error.stack });
+        toast.error(error.message);
+      } else {
+        console.error('Unknown error type:', error);
+        toast.error(t('joinRoom.errors.connectionError'));
+      }
     } finally {
       setIsLoading(false);
+      console.log('🏁 Room join process completed');
     }
   };
 
