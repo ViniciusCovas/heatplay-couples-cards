@@ -568,6 +568,10 @@ export type Database = {
         Args: { room_id_param: string; user_id_param: string }
         Returns: boolean
       }
+      join_room_by_code: {
+        Args: { room_code_param: string; player_id_param: string }
+        Returns: Json
+      }
       normalize_used_cards: {
         Args: Record<PropertyKey, never>
         Returns: undefined
