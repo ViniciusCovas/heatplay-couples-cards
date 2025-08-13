@@ -147,6 +147,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     logger.debug('Attempting to join room via RPC', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id });
 
     if (!effectivePlayerId) {
+      logger.error('Player ID not available for room join');
       throw new Error('Player ID not available');
     }
 
@@ -165,56 +166,81 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
+      logger.debug('🚪 Calling join_room_by_code RPC...', { roomCode, effectivePlayerId });
+
       // 1) Use the secure RPC to find and join by code atomically
       const { data: rpcRaw, error: rpcError } = await supabase.rpc('join_room_by_code', {
-        room_code_param: roomCode,
+        room_code_param: roomCode.trim().toUpperCase(),
         player_id_param: effectivePlayerId
       });
 
       if (rpcError) {
-        console.error('❌ RPC join_room_by_code failed:', rpcError);
-        return false;
+        logger.error('❌ RPC join_room_by_code failed:', rpcError);
+        throw new Error(`Failed to join room: ${rpcError.message}`);
       }
+
+      logger.debug('📥 RPC response received:', rpcRaw);
 
       if (!isJoinRoomByCodeResult(rpcRaw) || rpcRaw.success !== true) {
-        console.warn('Join RPC returned unsuccessful or unexpected result', rpcRaw);
-        return false;
+        const error = (rpcRaw as any)?.error || 'Unknown error';
+        logger.warn('Join RPC unsuccessful:', { result: rpcRaw, error });
+        
+        if (error === 'room_not_found') {
+          throw new Error('Room not found. Please check the room code.');
+        } else if (error === 'room_full') {
+          throw new Error('Room is full. Please try a different room.');
+        } else if (error === 'room_closed') {
+          throw new Error('Room is no longer accepting players.');
+        }
+        
+        throw new Error('Failed to join room. Please try again.');
       }
 
-      const joinedRoomId = rpcRaw.room_id as string | undefined;
-      const assignedPlayerNumber = (rpcRaw.player_number as number | undefined) ?? undefined;
+      const joinedRoomId = rpcRaw.room_id as string;
+      const assignedPlayerNumber = rpcRaw.player_number as number;
       const alreadyJoined = Boolean(rpcRaw.already_joined);
 
-      if (!joinedRoomId) {
-        console.warn('Join RPC did not return room_id');
-        return false;
-      }
+      logger.debug('✅ RPC join successful:', { 
+        roomId: joinedRoomId, 
+        playerNumber: assignedPlayerNumber, 
+        alreadyJoined 
+      });
 
-      // 2) Load the room details (RLS allows discovering open rooms)
+      // 2) Load the room details with comprehensive error handling
+      logger.debug('📡 Loading room details...');
       const { data: roomData, error: roomError } = await supabase
         .from('game_rooms')
         .select('*')
         .eq('id', joinedRoomId)
         .maybeSingle();
 
-      if (roomError || !roomData) {
-        console.warn('Could not load room after join (RLS or not open):', roomError);
-        return false;
+      if (roomError) {
+        logger.error('❌ Failed to load room after join:', roomError);
+        throw new Error('Failed to load room details. Please try again.');
       }
 
-      // 3) Load participants now that we joined (RLS allows viewing participants of open rooms)
+      if (!roomData) {
+        logger.error('❌ Room not found after successful join');
+        throw new Error('Room not found after joining. Please try again.');
+      }
+
+      // 3) Load participants with retry logic
+      logger.debug('👥 Loading participants...');
       const { data: participantsData, error: participantsError } = await supabase
         .from('room_participants')
         .select('*, player_number')
         .eq('room_id', joinedRoomId);
 
       if (participantsError) {
-        console.warn('Could not load participants after join:', participantsError);
+        logger.warn('⚠️ Could not load participants after join:', participantsError);
+        // Don't fail completely, participants will be loaded via real-time updates
       } else if (participantsData) {
+        logger.debug('👥 Participants loaded:', participantsData);
         setParticipants(participantsData as RoomParticipant[]);
       }
 
-      setRoom({
+      // 4) Update local state
+      const roomState: GameRoom = {
         id: roomData.id,
         room_code: roomData.room_code,
         level: roomData.level || 1,
@@ -223,29 +249,38 @@ export const useRoomService = (): UseRoomServiceReturn => {
         created_at: roomData.created_at,
         started_at: roomData.started_at || undefined,
         finished_at: roomData.finished_at || undefined
-      });
+      };
+
+      setRoom(roomState);
       setIsConnected(true);
 
+      // 5) Set player number
       if (assignedPlayerNumber === 1 || assignedPlayerNumber === 2) {
         setPlayerNumber(assignedPlayerNumber as 1 | 2);
-      } else if (alreadyJoined) {
+        logger.debug('🎯 Player number assigned:', assignedPlayerNumber);
+      } else if (alreadyJoined && participantsData) {
         // Derive from participants if we re-joined
-        const me = (participantsData as RoomParticipant[] | undefined)?.find(p => p.player_id === effectivePlayerId);
+        const me = participantsData.find(p => p.player_id === effectivePlayerId);
         if (me && (me.player_number === 1 || me.player_number === 2)) {
           setPlayerNumber(me.player_number as 1 | 2);
+          logger.debug('🎯 Player number derived from participants:', me.player_number);
         }
       }
 
-      logger.debug('✅ Joined room successfully via RPC', {
-        roomId: joinedRoomId,
+      logger.debug('🎉 Room join completed successfully:', {
+        roomCode: roomState.room_code,
+        status: roomState.status,
         playerNumber: assignedPlayerNumber,
-        alreadyJoined
+        participantCount: participantsData?.length || 0
       });
 
       return true;
     } catch (error) {
-      console.error('Unexpected error joining room:', error);
-      return false;
+      logger.error('💥 Unexpected error joining room:', error);
+      if (error instanceof Error) {
+        throw error; // Re-throw our custom errors
+      }
+      throw new Error('Unexpected error joining room. Please try again.');
     }
   }, [effectivePlayerId, user?.id]);
 
