@@ -493,6 +493,10 @@ export type Database = {
         Args: { user_id_param: string; credits_amount: number }
         Returns: Json
       }
+      anonymous_can_access_room: {
+        Args: { room_id_param: string; player_id_param: string }
+        Returns: boolean
+      }
       assign_player_number: {
         Args: { room_id_param: string; player_id_param: string }
         Returns: number
