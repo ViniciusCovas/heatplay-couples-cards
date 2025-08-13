@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +46,9 @@ export const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => 
           <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {t('auth.modal.title', 'Sign in to Continue')}
           </DialogTitle>
+          <DialogDescription className="text-center text-muted-foreground">
+            {t('auth.modal.subtitle', 'Quick and secure authentication to create your room')}
+          </DialogDescription>
         </DialogHeader>
         
         <Card className="border-0 shadow-none">
@@ -54,9 +57,6 @@ export const AuthModal = ({ open, onOpenChange, onSuccess }: AuthModalProps) => 
               <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-primary" />
               </div>
-              <p className="text-muted-foreground">
-                {t('auth.modal.subtitle', 'Quick and secure authentication to create your room')}
-              </p>
             </div>
 
             <Button 
