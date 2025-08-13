@@ -587,6 +587,10 @@ export type Database = {
           action_taken: string
         }[]
       }
+      room_is_open: {
+        Args: { room_id_param: string }
+        Returns: boolean
+      }
       update_user_activity: {
         Args: { user_id_param: string }
         Returns: undefined
