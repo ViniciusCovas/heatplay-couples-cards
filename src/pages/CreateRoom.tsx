@@ -49,29 +49,24 @@ function CreateRoomContent() {
       console.log('✅ Room created successfully', { code });
       setRoomCode(code);
       
-      // Step 2: Consume credit immediately
-      if (room?.id) {
-        console.log('💳 Consuming credit for room:', room.id);
-        try {
-          const consumeResult = await consumeCredit(room.id);
-          if (consumeResult.success) {
-            console.log('✅ Credit consumed successfully');
-            toast.success(t('messages.roomCreated'));
-          } else {
-            console.warn('⚠️ Credit consumption failed:', consumeResult.error);
-            // Room is created but credit consumption failed
-            if (consumeResult.error === 'insufficient_credits') {
-              setShowCreditModal(true);
-            }
-            toast.success(t('messages.roomCreated')); // Still show success for room creation
+      // Step 2: Consume credit immediately using room code
+      console.log('💳 Consuming credit for room code:', code);
+      try {
+        const consumeResult = await consumeCredit(code);
+        if (consumeResult.success) {
+          console.log('✅ Credit consumed successfully');
+          toast.success(t('messages.roomCreated'));
+        } else {
+          console.warn('⚠️ Credit consumption failed:', consumeResult.error);
+          // Room is created but credit consumption failed
+          if (consumeResult.error === 'insufficient_credits') {
+            setShowCreditModal(true);
           }
-        } catch (creditError) {
-          console.error('❌ Credit consumption error:', creditError);
           toast.success(t('messages.roomCreated')); // Still show success for room creation
         }
-      } else {
-        console.log('✅ Room created, credit consumption will happen automatically');
-        toast.success(t('messages.roomCreated'));
+      } catch (creditError) {
+        console.error('❌ Credit consumption error:', creditError);
+        toast.success(t('messages.roomCreated')); // Still show success for room creation
       }
     } catch (error) {
       console.error('❌ Room creation failed:', error);

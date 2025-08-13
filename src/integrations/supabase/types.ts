@@ -505,6 +505,10 @@ export type Database = {
         Args: { room_id_param: string; user_id_param: string }
         Returns: Json
       }
+      consume_credit_for_room: {
+        Args: { room_code_param: string; user_id_param: string }
+        Returns: Json
+      }
       create_room_and_join: {
         Args: { level_param: number; selected_language_param?: string }
         Returns: {
