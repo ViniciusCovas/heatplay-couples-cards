@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -34,6 +35,11 @@ interface JoinRoomByCodeResult {
   player_number?: number;
   already_joined?: boolean;
   error?: string;
+}
+
+// Type guard to narrow RPC result safely
+const isJoinRoomByCodeResult = (data: unknown): data is JoinRoomByCodeResult => {
+  return !!data && typeof data === 'object' && 'success' in (data as any);
 }
 
 interface UseRoomServiceReturn {
@@ -159,8 +165,8 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // 1) Use the new secure RPC to find and join by code atomically (typed)
-      const { data: rpcResult, error: rpcError } = await supabase.rpc<JoinRoomByCodeResult>('join_room_by_code', {
+      // 1) Use the secure RPC to find and join by code atomically
+      const { data: rpcRaw, error: rpcError } = await supabase.rpc('join_room_by_code', {
         room_code_param: roomCode,
         player_id_param: effectivePlayerId
       });
@@ -170,14 +176,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return false;
       }
 
-      if (!rpcResult || rpcResult.success !== true) {
-        console.warn('Join RPC returned unsuccessful result', rpcResult);
+      if (!isJoinRoomByCodeResult(rpcRaw) || rpcRaw.success !== true) {
+        console.warn('Join RPC returned unsuccessful or unexpected result', rpcRaw);
         return false;
       }
 
-      const joinedRoomId = rpcResult.room_id as string | undefined;
-      const assignedPlayerNumber = (rpcResult.player_number as number | undefined) ?? undefined;
-      const alreadyJoined = Boolean(rpcResult.already_joined);
+      const joinedRoomId = rpcRaw.room_id as string | undefined;
+      const assignedPlayerNumber = (rpcRaw.player_number as number | undefined) ?? undefined;
+      const alreadyJoined = Boolean(rpcRaw.already_joined);
 
       if (!joinedRoomId) {
         console.warn('Join RPC did not return room_id');
