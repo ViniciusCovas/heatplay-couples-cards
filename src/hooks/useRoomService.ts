@@ -327,14 +327,18 @@ export const useRoomService = (): UseRoomServiceReturn => {
         },
         async () => {
           // Refresh participants
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('room_participants')
             .select('*, player_number')
             .eq('room_id', room.id);
           
-          if (data) {
+          if (error) {
+            logger.warn('Error refreshing participants via realtime', error);
+            setIsConnected(false);
+          } else if (data) {
             logger.debug('Participants updated via realtime', { data });
             setParticipants(data as RoomParticipant[]);
+            setIsConnected(true);
           }
         }
       )
@@ -354,7 +358,10 @@ export const useRoomService = (): UseRoomServiceReturn => {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        logger.debug('Room channel subscription status', { status, roomId: room.id });
+        setIsConnected(status === 'SUBSCRIBED');
+      });
 
     setChannel(roomChannel);
 

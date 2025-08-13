@@ -115,7 +115,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
             </h3>
             <div className="space-y-2">
               {[1, 2].map((playerNum) => {
-                const participant = participants[playerNum - 1];
+                const participant = participants.find(p => p.player_number === playerNum);
                 return (
                   <div
                     key={playerNum}
