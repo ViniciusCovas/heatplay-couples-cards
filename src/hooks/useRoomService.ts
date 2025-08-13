@@ -26,7 +26,7 @@ export interface RoomParticipant {
   is_ready: boolean;
   joined_at: string;
   last_activity: string;
-  player_number: 1 | 2; // Añadido para identificar claramente los jugadores
+  player_number: number | null; // Matches database schema - can be null
 }
 
 interface UseRoomServiceReturn {
@@ -397,7 +397,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
     
     const participant = participants.find(p => p.player_id === effectivePlayerId);
-    const newPlayerNumber = participant?.player_number || null;
+    const newPlayerNumber = participant?.player_number as (1 | 2 | null) || null;
     
     logger.debug('Player number calculation', {
       effectivePlayerId,

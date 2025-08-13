@@ -42,7 +42,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   }, [gameState, navigate, roomCode]);
 
   // Get current player number for individual response tracking
-  const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
+  const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number as (1 | 2 | null) || null;
 
   const handleSelect = (isClose: boolean) => {
     logger.debug('ProximitySelector option selected', { isClose });
