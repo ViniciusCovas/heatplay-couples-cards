@@ -10,13 +10,29 @@ import { supabase } from '@/integrations/supabase/client';
 export const usePlayerId = () => {
   const [playerId, setPlayerId] = useState<string>('');
   const [isReady, setIsReady] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
 
   useEffect(() => {
     let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
 
     const init = async () => {
+      setIsInitializing(true);
+      
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        // Wait a bit for auth state to stabilize
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error && retryCount < maxRetries) {
+          logger.warn(`Auth check failed, retrying... (${retryCount + 1}/${maxRetries})`, error);
+          retryCount++;
+          setTimeout(init, 500 * retryCount); // Exponential backoff
+          return;
+        }
+
         let resolvedPlayerId: string | null = null;
 
         if (user?.id) {
@@ -40,15 +56,24 @@ export const usePlayerId = () => {
         if (isMounted && resolvedPlayerId) {
           setPlayerId(resolvedPlayerId);
           setIsReady(true);
+          setIsInitializing(false);
         }
       } catch (error) {
         logger.error('Error initializing player ID', error);
-        // Fallback to anonymous ID generation
+        // Fallback to anonymous ID generation with retry
+        if (retryCount < maxRetries) {
+          retryCount++;
+          logger.warn(`Retrying player ID initialization (${retryCount}/${maxRetries})`);
+          setTimeout(init, 500 * retryCount);
+          return;
+        }
+        
         const fallbackId = 'player_' + Math.random().toString(36).substr(2, 12);
         localStorage.setItem('player_id', fallbackId);
         if (isMounted) {
           setPlayerId(fallbackId);
           setIsReady(true);
+          setIsInitializing(false);
         }
       }
     };
@@ -82,5 +107,5 @@ export const usePlayerId = () => {
     };
   }, []);
 
-  return { playerId, isReady };
+  return { playerId, isReady: isReady && !isInitializing };
 };

@@ -19,6 +19,7 @@ const ProximitySelection = () => {
   const { room, participants, joinRoom, isConnected } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { gameState } = useGameSync(room?.id || null, playerId);
+  const [isSystemReady, setIsSystemReady] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -34,13 +35,28 @@ const ProximitySelection = () => {
     }
   }, [roomCode, navigate]);
 
+  // System readiness check - ensure all dependencies are ready
+  useEffect(() => {
+    const checkSystemReady = () => {
+      if (playerIdReady && playerId) {
+        setIsSystemReady(true);
+        logger.debug('System ready for room operations', { playerId, playerIdReady });
+      } else {
+        setIsSystemReady(false);
+        logger.debug('System not ready', { playerId, playerIdReady });
+      }
+    };
+
+    checkSystemReady();
+  }, [playerId, playerIdReady]);
+
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
-      // Wait for playerId to be available before attempting to join
-      if (roomCode && !isConnected && !room && retryCount < maxRetries && playerId && playerIdReady) {
+      // Wait for system to be fully ready before attempting to join
+      if (roomCode && !isConnected && !room && retryCount < maxRetries && isSystemReady) {
         logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode, 'Player ID:', playerId);
         setIsRetrying(true);
         
@@ -89,7 +105,7 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, playerId, playerIdReady]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isSystemReady]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -106,13 +122,13 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
-  // Show loading if we don't have playerId, room yet, are retrying, or participants aren't loaded
-  if (!playerId || !playerIdReady || !room || isRetrying || participants.length === 0) {
+  // Show loading if system isn't ready, room isn't loaded, or we're retrying
+  if (!isSystemReady || !room || isRetrying || participants.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
-            {!playerId || !playerIdReady
+            {!isSystemReady
               ? "Initializing player..."
               : isRetrying 
                 ? t('proximitySelection.errors.connectingAttempt', { current: retryCount + 1, max: maxRetries })

@@ -50,10 +50,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
   const { playerId: localPlayerId, isReady: playerIdReady } = usePlayerId();
   const { i18n } = useTranslation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   // Support hybrid authentication: authenticated users for room creation, anonymous users for joining
   const effectivePlayerId = user?.id || localPlayerId;
+  const isPlayerReady = playerIdReady && !authLoading && !!effectivePlayerId;
 
   const generateRoomCode = (): string => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -131,10 +132,22 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [user?.id, effectivePlayerId, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Attempting to join room', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id, playerIdReady });
+    logger.debug('Attempting to join room', { 
+      roomCode, 
+      effectivePlayerId, 
+      isAuthenticated: !!user?.id, 
+      playerIdReady, 
+      authLoading,
+      isPlayerReady 
+    });
 
-    if (!effectivePlayerId || !playerIdReady) {
-      logger.error('Player ID not available or not ready', { effectivePlayerId, playerIdReady });
+    if (!isPlayerReady) {
+      logger.error('Player state not ready for room joining', { 
+        effectivePlayerId, 
+        playerIdReady, 
+        authLoading,
+        hasUser: !!user?.id 
+      });
       throw new Error('Player ID not available');
     }
     
@@ -252,7 +265,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       console.error('Unexpected error joining room:', error);
       return false;
     }
-  }, [effectivePlayerId, user?.id, playerIdReady]);
+  }, [effectivePlayerId, user?.id, isPlayerReady]);
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {
