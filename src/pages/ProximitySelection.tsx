@@ -25,6 +25,7 @@ const ProximitySelection = () => {
   // Auto-join room state
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [hasAttemptedJoin, setHasAttemptedJoin] = useState(false);
   const maxRetries = 3;
 
   useEffect(() => {
@@ -40,29 +41,37 @@ const ProximitySelection = () => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
-      // Check if we're already a participant in this room to avoid duplicate joins
+      // Check if we're already a participant in this room or already attempted join
       const isAlreadyParticipant = participants.some(p => p.player_id === playerId);
       
-      // Wait for player ID to be ready before attempting to join
-      // Don't auto-join if already connected, already a participant, or player ID not ready
-      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && !isAlreadyParticipant && retryCount < maxRetries) {
-        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, { roomCode, playerId, isAlreadyParticipant });
+      // Skip if we already have a room/connection, already attempted join, or conditions not met
+      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && !isAlreadyParticipant && !hasAttemptedJoin && retryCount < maxRetries) {
+        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER):`, { 
+          roomCode, 
+          playerId, 
+          isAlreadyParticipant,
+          hasAttemptedJoin,
+          retryCount
+        });
+        
         setIsRetrying(true);
+        setHasAttemptedJoin(true); // Mark that we've attempted to join
         
         try {
           const success = await joinRoom(roomCode);
           if (success) {
-            logger.debug('Successfully joined room');
+            logger.debug('✅ Successfully joined room, stopping retries');
             setRetryCount(0);
             setIsRetrying(false);
           } else {
-            logger.debug(`Failed to join room (attempt ${retryCount + 1})`);
+            logger.debug(`❌ Failed to join room (attempt ${retryCount + 1})`);
             setRetryCount(prev => prev + 1);
             
-            // Retry after 2 seconds
+            // Retry after 2 seconds only if not at max retries
             if (retryCount + 1 < maxRetries) {
               retryTimeout = setTimeout(() => {
                 setIsRetrying(false);
+                setHasAttemptedJoin(false); // Allow retry
               }, 2000);
             } else {
               setIsRetrying(false);
@@ -74,7 +83,7 @@ const ProximitySelection = () => {
             }
           }
         } catch (error) {
-          logger.error(`Auto-join error (attempt ${retryCount + 1}):`, error);
+          logger.error(`❌ Auto-join error (attempt ${retryCount + 1}):`, error);
           setRetryCount(prev => prev + 1);
           setIsRetrying(false);
           
@@ -84,6 +93,9 @@ const ProximitySelection = () => {
               description: t('proximitySelection.errors.verifyRoomCode'),
               variant: "destructive"
             });
+          } else {
+            // Allow retry for legitimate errors
+            setHasAttemptedJoin(false);
           }
         }
       }
@@ -94,7 +106,17 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId, participants]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId, hasAttemptedJoin]);
+
+  // Reset join attempt state when participants change (successful join detected)
+  useEffect(() => {
+    if (participants.some(p => p.player_id === playerId) && hasAttemptedJoin) {
+      logger.debug('🎯 Player found in participants, resetting join attempt state');
+      setHasAttemptedJoin(false);
+      setRetryCount(0);
+      setIsRetrying(false);
+    }
+  }, [participants, playerId, hasAttemptedJoin]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
