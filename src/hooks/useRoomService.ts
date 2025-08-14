@@ -381,21 +381,19 @@ export const useRoomService = (): UseRoomServiceReturn => {
     if (!room) return;
 
     try {
-      logger.debug('🎮 Starting game - updating room status and phase', { roomId: room.id, roomCode: room.room_code });
+      logger.debug('🎮 Starting game - updating phase to proximity-selection', { roomId: room.id, roomCode: room.room_code });
       
-      // Update room to playing status and proximity-selection phase in one atomic operation
+      // Only update the phase since status and started_at are handled by consume_credit_for_room
       await supabase
         .from('game_rooms')
         .update({ 
-          status: 'playing',
-          current_phase: 'proximity-selection',
-          started_at: new Date().toISOString()
+          current_phase: 'proximity-selection'
         })
         .eq('id', room.id);
       
-      logger.debug('✅ Game started successfully - room is now playing with proximity-selection phase');
+      logger.debug('✅ Game phase updated to proximity-selection');
     } catch (error) {
-      logger.error('❌ Error starting game:', error);
+      logger.error('❌ Error updating game phase:', error);
       throw error; // Re-throw to handle in UI
     }
   }, [room]);
