@@ -48,7 +48,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
-  const localPlayerId = usePlayerId();
+  const { playerId: localPlayerId, isReady: playerIdReady } = usePlayerId();
   const { i18n } = useTranslation();
   const { user } = useAuth();
 
@@ -131,9 +131,10 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [user?.id, effectivePlayerId, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Attempting to join room', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id });
+    logger.debug('Attempting to join room', { roomCode, effectivePlayerId, isAuthenticated: !!user?.id, playerIdReady });
 
-    if (!effectivePlayerId) {
+    if (!effectivePlayerId || !playerIdReady) {
+      logger.error('Player ID not available or not ready', { effectivePlayerId, playerIdReady });
       throw new Error('Player ID not available');
     }
     
@@ -251,7 +252,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       console.error('Unexpected error joining room:', error);
       return false;
     }
-  }, [effectivePlayerId, user?.id]);
+  }, [effectivePlayerId, user?.id, playerIdReady]);
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {

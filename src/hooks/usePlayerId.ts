@@ -9,34 +9,47 @@ import { supabase } from '@/integrations/supabase/client';
  */
 export const usePlayerId = () => {
   const [playerId, setPlayerId] = useState<string>('');
+  const [isReady, setIsReady] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
 
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      let resolvedPlayerId: string | null = null;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        let resolvedPlayerId: string | null = null;
 
-      if (user?.id) {
-        // Authenticated user - use their auth ID
-        resolvedPlayerId = user.id;
-        localStorage.setItem('player_id', resolvedPlayerId);
-        logger.debug('Using authenticated user id as player id', { resolvedPlayerId });
-      } else {
-        // Anonymous user - use stored/random ID for room joining
-        let storedPlayerId = localStorage.getItem('player_id');
-        logger.debug('Stored player ID', { storedPlayerId });
-        
-        if (!storedPlayerId) {
-          storedPlayerId = 'player_' + Math.random().toString(36).substr(2, 12);
-          localStorage.setItem('player_id', storedPlayerId);
-          logger.debug('Generated new player ID for anonymous user', { storedPlayerId });
+        if (user?.id) {
+          // Authenticated user - use their auth ID
+          resolvedPlayerId = user.id;
+          localStorage.setItem('player_id', resolvedPlayerId);
+          logger.debug('Using authenticated user id as player id', { resolvedPlayerId });
+        } else {
+          // Anonymous user - use stored/random ID for room joining
+          let storedPlayerId = localStorage.getItem('player_id');
+          logger.debug('Stored player ID', { storedPlayerId });
+          
+          if (!storedPlayerId) {
+            storedPlayerId = 'player_' + Math.random().toString(36).substr(2, 12);
+            localStorage.setItem('player_id', storedPlayerId);
+            logger.debug('Generated new player ID for anonymous user', { storedPlayerId });
+          }
+          resolvedPlayerId = storedPlayerId;
         }
-        resolvedPlayerId = storedPlayerId;
-      }
 
-      if (isMounted && resolvedPlayerId) {
-        setPlayerId(resolvedPlayerId);
+        if (isMounted && resolvedPlayerId) {
+          setPlayerId(resolvedPlayerId);
+          setIsReady(true);
+        }
+      } catch (error) {
+        logger.error('Error initializing player ID', error);
+        // Fallback to anonymous ID generation
+        const fallbackId = 'player_' + Math.random().toString(36).substr(2, 12);
+        localStorage.setItem('player_id', fallbackId);
+        if (isMounted) {
+          setPlayerId(fallbackId);
+          setIsReady(true);
+        }
       }
     };
 
@@ -69,5 +82,5 @@ export const usePlayerId = () => {
     };
   }, []);
 
-  return playerId;
+  return { playerId, isReady };
 };

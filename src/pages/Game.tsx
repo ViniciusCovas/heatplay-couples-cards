@@ -36,7 +36,7 @@ const Game = () => {
     joinRoom, 
     isConnected 
   } = useRoomService();
-  const playerId = usePlayerId();
+  const { playerId, isReady: playerIdReady } = usePlayerId();
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
@@ -292,7 +292,7 @@ const Game = () => {
             .is('evaluation', null)
             .order('created_at', { ascending: false })
             .limit(1)
-            .single();
+            .maybeSingle();
 
           if (error) {
             logger.error('Error fetching response for evaluation', error);

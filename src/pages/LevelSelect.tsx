@@ -31,7 +31,7 @@ const LevelSelect = () => {
   const roomCode = searchParams.get('room');
   const { i18n, t } = useTranslation();
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
-  const playerId = usePlayerId();
+  const { playerId, isReady: playerIdReady } = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
   // Remove unused imports and methods since we're now fully automatic
   const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, levelsMismatch } = useLevelSelection(room?.id || null, playerId);
@@ -213,7 +213,7 @@ const LevelSelect = () => {
     };
 
     // Only fetch levels when we have both language and playerId
-    if (i18n.language && playerId) {
+    if (i18n.language && playerId && playerIdReady) {
       fetchLevels();
     } else {
       logger.debug('Waiting for language and playerId before fetching levels:', { 
@@ -221,7 +221,7 @@ const LevelSelect = () => {
         playerId 
       });
     }
-  }, [i18n.language, playerId, t]);
+  }, [i18n.language, playerId, playerIdReady, t]);
 
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
@@ -278,11 +278,11 @@ const LevelSelect = () => {
   // Auto-join room if not connected
   useEffect(() => {
     // Wait for playerId to be available before attempting to join
-    if (roomCode && !isConnected && !room && playerId) {
+    if (roomCode && !isConnected && !room && playerId && playerIdReady) {
       logger.debug('Auto-joining room from LevelSelect:', roomCode, 'Player ID:', playerId);
       joinRoom(roomCode);
     }
-  }, [roomCode, isConnected, room, joinRoom, playerId]);
+  }, [roomCode, isConnected, room, joinRoom, playerId, playerIdReady]);
 
   // Show loading or connection status
   if (loading) {
@@ -295,7 +295,7 @@ const LevelSelect = () => {
     );
   }
 
-  if (!playerId) {
+  if (!playerId || !playerIdReady) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -401,7 +401,7 @@ const LevelSelect = () => {
         <div className="space-y-4">
         {levels.map((level) => {
             const isSelected = votedLevel === level.id;
-            const isDisabled = !playerId || isWaitingForPartner || agreedLevel !== null || levelsMismatch;
+            const isDisabled = !playerId || !playerIdReady || isWaitingForPartner || agreedLevel !== null || levelsMismatch;
             const isMismatched = levelsMismatch && isSelected;
             
             return (
