@@ -159,8 +159,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
 
     switch (action.action_type) {
       case 'proximity_answer':
-        if (action.action_data?.bothResponded) {
-          showToast(t('game.notifications.bothPlayersResponded'), 'success');
+        if (action.action_data?.singlePlayerAdvancement) {
+          showToast(t('game.notifications.proximitySelectedAdvancing'), 'success');
         } else {
           showToast(t('game.notifications.partnerAnswered'), 'success');
         }

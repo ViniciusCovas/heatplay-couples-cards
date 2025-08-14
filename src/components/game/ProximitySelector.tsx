@@ -27,23 +27,19 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   const [isConfirmed, setIsConfirmed] = useState(false);
   const { t } = useTranslation();
 
-  // Handle automatic navigation when both players have answered
+  // Handle automatic navigation when phase changes to level-selection
   useEffect(() => {
     logger.debug('ProximitySelector state check', { 
-      player1_response: gameState?.player1_proximity_response,
-      player2_response: gameState?.player2_proximity_response,
-      current_phase: gameState?.current_phase
+      current_phase: gameState?.current_phase,
+      isConfirmed
     });
     
-    // Only navigate when BOTH players have answered proximity question
-    const bothPlayersAnswered = gameState?.player1_proximity_response !== null && 
-                               gameState?.player2_proximity_response !== null;
-    
-    if (bothPlayersAnswered && gameState?.current_phase === 'level-selection') {
-      logger.debug('Both players answered proximity, navigating to level select');
+    // Navigate immediately when phase advances to level-selection
+    if (gameState?.current_phase === 'level-selection') {
+      logger.debug('Phase advanced to level-selection, navigating both players');
       navigate(`/level-select?room=${roomCode}`);
     }
-  }, [gameState, navigate, roomCode]);
+  }, [gameState?.current_phase, navigate, roomCode]);
 
   // Get current player number for individual response tracking
   const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
@@ -105,16 +101,12 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
         isClose: selectedOption, 
         playerNumber: proximityResult.player_number,
         playerId,
-        bothResponded: proximityResult.both_responded
+        singlePlayerAdvancement: proximityResult.single_player_advancement
       });
       
-      // If both players responded, the database has already advanced the phase
+      // Database has already advanced the phase immediately
       // The useEffect will handle navigation when gameState updates
-      if (proximityResult.both_responded) {
-        logger.debug('Both players responded - database advanced to level selection');
-      } else {
-        logger.debug('Waiting for other player to respond');
-      }
+      logger.debug('Single player responded - database advanced to level selection immediately');
       
     } catch (error) {
       logger.error('Error confirming proximity selection', error);
@@ -165,10 +157,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
               {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {gameState?.player1_proximity_response !== null && gameState?.player2_proximity_response !== null
-                ? t('proximitySelector.bothResponded') 
-                : t('proximitySelector.waitingForPartner')
-              }
+              {t('proximitySelector.advancing')}
             </p>
           </div>
         ) : (
