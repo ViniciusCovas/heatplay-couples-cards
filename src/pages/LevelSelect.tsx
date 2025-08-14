@@ -194,11 +194,12 @@ const LevelSelect = () => {
 
   // Auto-join room if not connected
   useEffect(() => {
-    if (roomCode && !isConnected && !room) {
-      logger.debug('Auto-joining room from LevelSelect:', roomCode);
+    // Wait for playerId to be available before attempting to join
+    if (roomCode && !isConnected && !room && playerId) {
+      logger.debug('Auto-joining room from LevelSelect:', roomCode, 'Player ID:', playerId);
       joinRoom(roomCode);
     }
-  }, [roomCode, isConnected, room, joinRoom]);
+  }, [roomCode, isConnected, room, joinRoom, playerId]);
 
   // Show loading or connection status
   if (loading) {
@@ -206,6 +207,16 @@ const LevelSelect = () => {
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-4">
           <p className="text-muted-foreground">{t('loading.levels', 'Loading levels...')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!playerId) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">Initializing player...</p>
         </div>
       </div>
     );
@@ -307,7 +318,7 @@ const LevelSelect = () => {
         <div className="space-y-4">
         {levels.map((level) => {
             const isSelected = votedLevel === level.id;
-            const isDisabled = isWaitingForPartner || agreedLevel !== null || levelsMismatch;
+            const isDisabled = !playerId || isWaitingForPartner || agreedLevel !== null || levelsMismatch;
             const isMismatched = levelsMismatch && isSelected;
             
             return (
