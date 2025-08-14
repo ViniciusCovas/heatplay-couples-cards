@@ -61,6 +61,9 @@ const LevelSelect = () => {
   // Fetch levels from database
   useEffect(() => {
     const fetchLevels = async () => {
+      logger.debug('Starting level fetch for Player ID:', playerId, 'Language:', i18n.language);
+      setLoading(true);
+      
       try {
         logger.debug('Fetching levels for language:', i18n.language);
         const { data: levelsData, error: levelsError } = await supabase
@@ -70,75 +73,155 @@ const LevelSelect = () => {
           .eq('language', i18n.language)
           .order('sort_order');
 
-        logger.debug('Levels query result:', { levelsData, levelsError, count: levelsData?.length });
+        logger.debug('Levels query result:', { 
+          levelsData, 
+          levelsError, 
+          count: levelsData?.length,
+          playerId,
+          language: i18n.language 
+        });
 
-        if (levelsError) throw levelsError;
+        if (levelsError) {
+          logger.error('Database error fetching levels:', levelsError);
+          throw levelsError;
+        }
 
-        // Get question counts for each level
+        if (!levelsData || levelsData.length === 0) {
+          logger.warn('No levels found for language:', i18n.language);
+          throw new Error('No levels found');
+        }
+
+        // Get question counts for each level with better error handling
         const levelsWithCounts = await Promise.all(
           levelsData.map(async (level) => {
-            const { count } = await supabase
-              .from('questions')
-              .select('*', { count: 'exact', head: true })
-              .eq('level_id', level.id)
-              .eq('language', i18n.language)
-              .eq('is_active', true);
+            try {
+              const { count, error: countError } = await supabase
+                .from('questions')
+                .select('*', { count: 'exact', head: true })
+                .eq('level_id', level.id)
+                .eq('language', i18n.language)
+                .eq('is_active', true);
 
-            // Check if icon is emoji or lucide icon name
-            const getIconDisplay = (iconStr: string) => {
-              if (!iconStr) return { type: 'lucide', component: Heart, emoji: null };
-              
-              // Check if it's an emoji (contains non-ASCII characters or common emoji patterns)
-              const isEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|❤️|💖|🔥|💪|⚡|🎯|💎|🌟/u.test(iconStr);
-              
-              if (isEmoji) {
-                return { type: 'emoji', component: null, emoji: iconStr };
-              } else {
-                // Try to find the icon in lucide-react
-                const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
-                const component = (LucideReact as any)[iconName] || Heart;
-                return { type: 'lucide', component, emoji: null };
+              if (countError) {
+                logger.warn('Error getting question count for level:', level.id, countError);
               }
-            };
 
-            const iconDisplay = getIconDisplay(level.icon || '');
+              // Check if icon is emoji or lucide icon name
+              const getIconDisplay = (iconStr: string) => {
+                if (!iconStr) return { type: 'lucide', component: Heart, emoji: null };
+                
+                // Check if it's an emoji (contains non-ASCII characters or common emoji patterns)
+                const isEmoji = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|❤️|💖|🔥|💪|⚡|🎯|💎|🌟/u.test(iconStr);
+                
+                if (isEmoji) {
+                  return { type: 'emoji', component: null, emoji: iconStr };
+                } else {
+                  // Try to find the icon in lucide-react
+                  const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
+                  const component = (LucideReact as any)[iconName] || Heart;
+                  return { type: 'lucide', component, emoji: null };
+                }
+              };
 
-            return {
-              id: level.sort_order, // Use sort_order as id for compatibility
-              title: level.name,
-              description: level.description || '',
-              iconDisplay,
-              color: level.color ? `text-[${level.color}]` : "text-primary",
-              bgColor: level.bg_color || "bg-primary/10",
-              cards: count || 0,
-              database_id: level.id // Keep reference to actual database ID
-            };
+              const iconDisplay = getIconDisplay(level.icon || '');
+
+              return {
+                id: level.sort_order, // Use sort_order as id for compatibility
+                title: level.name,
+                description: level.description || '',
+                iconDisplay,
+                color: level.color ? `text-[${level.color}]` : "text-primary",
+                bgColor: level.bg_color || "bg-primary/10",
+                cards: count || 0,
+                database_id: level.id // Keep reference to actual database ID
+              };
+            } catch (levelError) {
+              logger.error('Error processing level:', level.id, levelError);
+              // Return fallback for this level
+              return {
+                id: level.sort_order,
+                title: level.name || 'Level',
+                description: level.description || 'Connection level',
+                iconDisplay: { type: 'lucide', component: Heart, emoji: null },
+                color: "text-primary",
+                bgColor: "bg-primary/10",
+                cards: 5,
+                database_id: level.id
+              };
+            }
           })
         );
 
         logger.debug('Final levels with counts:', levelsWithCounts);
+        
+        if (levelsWithCounts.length === 0) {
+          throw new Error('No processed levels available');
+        }
+        
         setLevels(levelsWithCounts);
+        
       } catch (error) {
-        logger.error('Error fetching levels:', error);
-        // Fallback to default levels if database fails
-        setLevels([
+        logger.error('Error fetching levels - using fallback:', error);
+        
+        // Comprehensive fallback levels to ensure UI always works
+        const fallbackLevels = [
           {
             id: 1,
-            title: t('level.basic.title', 'Basic'),
-            description: t('level.basic.description', 'Simple questions to get to know each other better'),
+            title: t('level.spark.title', 'Spark'),
+            description: t('level.spark.description', 'Light conversation starters'),
+            iconDisplay: { type: 'emoji', component: null, emoji: '✨' },
+            color: "text-yellow-600",
+            bgColor: "bg-yellow-100",
+            cards: 10
+          },
+          {
+            id: 2,
+            title: t('level.connection.title', 'Connection'),
+            description: t('level.connection.description', 'Deeper personal sharing'),
             iconDisplay: { type: 'lucide', component: Heart, emoji: null },
-            color: "text-primary",
-            bgColor: "bg-primary/10",
-            cards: 5
+            color: "text-pink-600",
+            bgColor: "bg-pink-100",
+            cards: 15
+          },
+          {
+            id: 3,
+            title: t('level.fire.title', 'Fire'),
+            description: t('level.fire.description', 'Intimate and meaningful topics'),
+            iconDisplay: { type: 'emoji', component: null, emoji: '🔥' },
+            color: "text-red-600",
+            bgColor: "bg-red-100",
+            cards: 20
+          },
+          {
+            id: 4,
+            title: t('level.nofilter.title', 'No Filter'),
+            description: t('level.nofilter.description', 'Raw and unfiltered conversation'),
+            iconDisplay: { type: 'lucide', component: AlertTriangle, emoji: null },
+            color: "text-purple-600",
+            bgColor: "bg-purple-100",
+            cards: 25
           }
-        ]);
+        ];
+        
+        setLevels(fallbackLevels);
+        logger.debug('Set fallback levels:', fallbackLevels);
+        
       } finally {
         setLoading(false);
+        logger.debug('Level fetching completed for Player ID:', playerId);
       }
     };
 
-    fetchLevels();
-  }, [i18n.language]);
+    // Only fetch levels when we have both language and playerId
+    if (i18n.language && playerId) {
+      fetchLevels();
+    } else {
+      logger.debug('Waiting for language and playerId before fetching levels:', { 
+        language: i18n.language, 
+        playerId 
+      });
+    }
+  }, [i18n.language, playerId, t]);
 
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
