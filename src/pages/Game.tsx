@@ -760,15 +760,15 @@ const Game = () => {
     // Use deterministic card selection based on database state
     const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
     
-    // FIX: Determine who should answer next based on who answered the previous question
-    // currentTurn is the evaluator, so the answerer was the other player
-    // The next answerer should be the current evaluator (who just finished evaluating)
-    const nextTurn = currentTurn; // The evaluator becomes the next answerer
+    // FIX: Determine who should answer next based on proper turn alternation
+    // currentTurn is the evaluator who just finished evaluating
+    // The next answerer should be the OPPOSITE player (proper alternation)
+    const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
     
     logger.debug('Turn switching logic', {
       currentTurn: currentTurn,
       nextTurn: nextTurn,
-      explanation: `${currentTurn} just evaluated, so ${nextTurn} will answer next`
+      explanation: `${currentTurn} just evaluated, now ${nextTurn} will answer next (proper alternation)`
     });
     
     if (nextCard) {

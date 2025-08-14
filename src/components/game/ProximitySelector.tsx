@@ -30,13 +30,17 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   // Handle automatic navigation when both players have answered
   useEffect(() => {
     logger.debug('ProximitySelector state check', { 
-      proximity_answered: gameState?.proximity_question_answered,
+      player1_response: gameState?.player1_proximity_response,
+      player2_response: gameState?.player2_proximity_response,
       current_phase: gameState?.current_phase
     });
     
-    // Navigate when both players have answered
-    if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-selection') {
-      logger.debug('Both players answered, navigating to level select');
+    // Only navigate when BOTH players have answered proximity question
+    const bothPlayersAnswered = gameState?.player1_proximity_response !== null && 
+                               gameState?.player2_proximity_response !== null;
+    
+    if (bothPlayersAnswered && gameState?.current_phase === 'level-selection') {
+      logger.debug('Both players answered proximity, navigating to level select');
       navigate(`/level-select?room=${roomCode}`);
     }
   }, [gameState, navigate, roomCode]);
@@ -102,14 +106,26 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
       // Update individual player response based on player number
       const updates: any = {
         proximity_response: selectedOption, // Keep legacy field for backward compatibility
-        proximity_question_answered: true, // Set this immediately like the original logic
-        current_phase: 'level-selection' // Advance immediately like the original logic
       };
       
       if (playerNumber === 1) {
         updates.player1_proximity_response = selectedOption;
       } else {
         updates.player2_proximity_response = selectedOption;
+      }
+      
+      // Check if this will be the second player to respond
+      const otherPlayerResponded = playerNumber === 1 
+        ? gameState?.player2_proximity_response !== null
+        : gameState?.player1_proximity_response !== null;
+      
+      // Only advance to next phase if both players have now responded
+      if (otherPlayerResponded) {
+        updates.proximity_question_answered = true;
+        updates.current_phase = 'level-selection';
+        logger.debug('Both players responded - advancing to level selection');
+      } else {
+        logger.debug('Waiting for other player to respond');
       }
       
       logger.debug('Updating game state', updates);

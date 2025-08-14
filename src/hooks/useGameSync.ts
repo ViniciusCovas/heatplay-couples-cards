@@ -160,6 +160,32 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
     switch (action.action_type) {
       case 'proximity_answer':
         showToast(t('game.notifications.partnerAnswered'), 'success');
+        // Force refresh of game state to ensure sync
+        if (action.room_id) {
+          const { data: room, error } = await supabase
+            .from('game_rooms')
+            .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language, current_card_ai_reasoning, current_card_ai_target_area, current_card_selection_method')
+            .eq('id', action.room_id)
+            .single();
+          
+          if (!error && room) {
+            setGameState({
+              current_phase: (room.current_phase as GameState['current_phase']) || 'proximity-selection',
+              proximity_question_answered: room.proximity_question_answered || false,
+              proximity_response: room.proximity_response,
+              player1_proximity_response: room.player1_proximity_response,
+              player2_proximity_response: room.player2_proximity_response,
+              current_turn: (room.current_turn as GameState['current_turn']) || 'player1',
+              current_card: room.current_card,
+              current_card_index: room.current_card_index || 0,
+              used_cards: room.used_cards || [],
+              selected_language: room.selected_language || undefined,
+              current_card_ai_reasoning: room.current_card_ai_reasoning || undefined,
+              current_card_ai_target_area: room.current_card_ai_target_area || undefined,
+              current_card_selection_method: room.current_card_selection_method || undefined
+            });
+          }
+        }
         break;
       case 'navigate_to_level_select':
         showToast(t('game.notifications.navigatingToLevelSelect'), 'success');
