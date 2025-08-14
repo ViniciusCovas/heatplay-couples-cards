@@ -81,22 +81,20 @@ function CreateRoomContent() {
 
   const handleGameStart = async (): Promise<void> => {
     try {
-      // Step 1: Consume credit when both players are ready to start
-      console.log('💳 Consuming credit for room code:', roomCode);
+      // Atomically consume credit and start game (sets room status to 'playing' and phase to 'proximity-selection')
+      console.log('💳 Consuming credit and starting game for room code:', roomCode);
       const consumeResult = await consumeCredit(roomCode);
       if (consumeResult.success) {
-        console.log('✅ Credit consumed successfully');
+        console.log('✅ Credit consumed and game started successfully');
+        navigate(`/proximity-selection?room=${roomCode}`);
       } else {
         console.warn('⚠️ Credit consumption failed:', consumeResult.error);
         if (consumeResult.error === 'insufficient_credits') {
           setShowCreditModal(true);
           return; // Don't start game without credits
         }
+        toast.error('Error starting game. Please try again.');
       }
-      
-      // Step 2: Start the game
-      await startGame();
-      navigate(`/proximity-selection?room=${roomCode}`);
     } catch (error) {
       console.error('❌ Error starting game:', error);
       toast.error('Error starting game. Please try again.');
