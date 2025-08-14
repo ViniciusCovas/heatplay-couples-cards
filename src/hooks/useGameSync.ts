@@ -159,8 +159,13 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
 
     switch (action.action_type) {
       case 'proximity_answer':
-        showToast(t('game.notifications.partnerAnswered'), 'success');
-        // Force refresh of game state to ensure sync
+        if (action.action_data?.bothResponded) {
+          showToast(t('game.notifications.bothPlayersResponded'), 'success');
+        } else {
+          showToast(t('game.notifications.partnerAnswered'), 'success');
+        }
+        
+        // Always force refresh of game state after proximity answer
         if (action.room_id) {
           const { data: room, error } = await supabase
             .from('game_rooms')

@@ -568,6 +568,14 @@ export type Database = {
         }
         Returns: Json
       }
+      handle_proximity_response: {
+        Args: {
+          is_close_param: boolean
+          player_id_param: string
+          room_id_param: string
+        }
+        Returns: Json
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

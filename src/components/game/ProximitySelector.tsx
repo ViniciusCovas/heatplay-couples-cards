@@ -74,72 +74,47 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
     setWaitingForPartner(true);
 
     try {
-      let playerNumber = currentPlayerNumber;
+      // Use atomic database function to handle proximity response
+      const { data: result, error } = await supabase.rpc('handle_proximity_response', {
+        room_id_param: room.id,
+        player_id_param: playerId,
+        is_close_param: selectedOption
+      });
       
-      // If we can't get the player number from participants, use database fallback
-      if (!playerNumber) {
-        logger.debug('Player number not found in participants, using database fallback');
-        
-        const { data: dbPlayerNumber, error } = await supabase.rpc('get_player_number', {
-          room_id_param: room.id,
-          player_id_param: playerId
-        });
-        
-        if (error) {
-          logger.error('Database fallback failed', error);
-          setWaitingForPartner(false);
-          setIsConfirmed(false);
-          return;
-        }
-        
-        playerNumber = dbPlayerNumber as 1 | 2;
-        logger.debug('Got player number from database', { playerNumber });
-      }
-      
-      if (!playerNumber || (playerNumber !== 1 && playerNumber !== 2)) {
-        logger.error('Could not determine valid player number');
+      if (error) {
+        logger.error('Database proximity response failed', error);
         setWaitingForPartner(false);
         setIsConfirmed(false);
         return;
       }
-
-      // Update individual player response based on player number
-      const updates: any = {
-        proximity_response: selectedOption, // Keep legacy field for backward compatibility
-      };
       
-      if (playerNumber === 1) {
-        updates.player1_proximity_response = selectedOption;
-      } else {
-        updates.player2_proximity_response = selectedOption;
+      logger.debug('Proximity response result', result);
+      
+      // Type guard and validation for result
+      const proximityResult = result as any;
+      
+      if (!proximityResult || !proximityResult.success) {
+        logger.error('Proximity response failed', proximityResult?.error || 'Unknown error');
+        setWaitingForPartner(false);
+        setIsConfirmed(false);
+        return;
       }
       
-      // Check if this will be the second player to respond
-      const otherPlayerResponded = playerNumber === 1 
-        ? gameState?.player2_proximity_response !== null
-        : gameState?.player1_proximity_response !== null;
+      // Send sync action to notify other player
+      await syncAction('proximity_answer', { 
+        isClose: selectedOption, 
+        playerNumber: proximityResult.player_number,
+        playerId,
+        bothResponded: proximityResult.both_responded
+      });
       
-      // Only advance to next phase if both players have now responded
-      if (otherPlayerResponded) {
-        updates.proximity_question_answered = true;
-        updates.current_phase = 'level-selection';
-        logger.debug('Both players responded - advancing to level selection');
+      // If both players responded, the database has already advanced the phase
+      // The useEffect will handle navigation when gameState updates
+      if (proximityResult.both_responded) {
+        logger.debug('Both players responded - database advanced to level selection');
       } else {
         logger.debug('Waiting for other player to respond');
       }
-      
-      logger.debug('Updating game state', updates);
-      await updateGameState(updates);
-      
-      // Send sync action to notify other player
-      logger.debug('Sending proximity sync action');
-      await syncAction('proximity_answer', { 
-        isClose: selectedOption, 
-        playerNumber,
-        playerId 
-      });
-      
-      logger.debug('Proximity selection confirmed successfully');
       
     } catch (error) {
       logger.error('Error confirming proximity selection', error);
@@ -190,7 +165,10 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
               {t('proximitySelector.confirmed')}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {t('proximitySelector.advancing')}
+              {gameState?.player1_proximity_response !== null && gameState?.player2_proximity_response !== null
+                ? t('proximitySelector.bothResponded') 
+                : t('proximitySelector.waitingForPartner')
+              }
             </p>
           </div>
         ) : (
