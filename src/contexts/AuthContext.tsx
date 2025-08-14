@@ -74,8 +74,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        logger.debug('Auth state change', { event, hasSession: !!session, hasUser: !!session?.user });
-        
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -92,37 +90,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }, 0);
         } else {
           setProfile(null);
-          // On token expiry, log the issue but don't force logout
-          if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_OUT') {
-            logger.debug('Auth session ended', { event });
-          }
         }
         
         setLoading(false);
       }
     );
 
-    // Get initial session with retry logic
-    const getInitialSession = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          logger.warn('Error getting initial session', error);
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          fetchProfile(session.user.id);
-        }
-        setLoading(false);
-      } catch (error) {
-        logger.error('Failed to get initial session', error);
-        setLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
       }
-    };
-
-    getInitialSession();
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);

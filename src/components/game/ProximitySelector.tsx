@@ -20,7 +20,7 @@ interface ProximitySelectorProps {
 
 export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, participants }: ProximitySelectorProps) => {
   const navigate = useNavigate();
-  const { playerId, isLoading: isPlayerIdLoading } = usePlayerId();
+  const playerId = usePlayerId();
   const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
   const [selectedOption, setSelectedOption] = useState<boolean | null>(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
@@ -42,7 +42,7 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   }, [gameState, navigate, roomCode]);
 
   // Get current player number for individual response tracking
-  const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number as (1 | 2 | null) || null;
+  const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
 
   const handleSelect = (isClose: boolean) => {
     logger.debug('ProximitySelector option selected', { isClose });

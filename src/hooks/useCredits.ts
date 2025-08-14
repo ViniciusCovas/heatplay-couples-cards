@@ -49,18 +49,6 @@ export const creditPackages: CreditPackage[] = [
   }
 ];
 
-// Type guard for credit consumption result
-interface CreditConsumptionResult {
-  success: boolean;
-  error?: string;
-  new_balance?: number;
-  room_id?: string;
-}
-
-const isCreditConsumptionResult = (data: unknown): data is CreditConsumptionResult => {
-  return !!data && typeof data === 'object' && 'success' in (data as any);
-};
-
 export const useCredits = () => {
   const { user } = useAuth();
   const [credits, setCredits] = useState(0);
@@ -140,42 +128,27 @@ export const useCredits = () => {
     return false;
   };
 
-  const consumeCredit = async (roomCodeOrId: string): Promise<{ success: boolean; error?: string; new_balance?: number }> => {
-    if (!user) {
-      return { success: false, error: 'not_authenticated' };
-    }
+  const consumeCredit = async (roomId: string) => {
+    if (!user) return { success: false, error: 'not_authenticated' };
 
     try {
-      // Try using the new room code-based function first
-      const { data, error } = await supabase.rpc('consume_credit_for_room', {
-        room_code_param: roomCodeOrId,
+      const { data, error } = await supabase.rpc('consume_credit', {
+        room_id_param: roomId,
         user_id_param: user.id
       });
 
-      if (error) {
-        console.error('Error consuming credit:', error);
-        return { success: false, error: error.message };
-      }
+      if (error) throw error;
 
-      if (!isCreditConsumptionResult(data)) {
-        return { success: false, error: 'invalid_response' };
-      }
-
-      if (data.success) {
-        await fetchCredits(); // Refresh credit balance
-        return { 
-          success: true, 
-          new_balance: data.new_balance 
-        };
+      const result = data as any;
+      if (result?.success) {
+        setCredits(result.new_balance);
+        return { success: true, sessionId: result.session_id };
       } else {
-        return { 
-          success: false, 
-          error: data.error || 'unknown_error' 
-        };
+        return { success: false, error: result?.error, balance: result?.balance };
       }
     } catch (error) {
-      console.error('Unexpected error consuming credit:', error);
-      return { success: false, error: 'network_error' };
+      logger.error('Error consuming credit', error);
+      return { success: false, error: 'server_error' };
     }
   };
 

@@ -20,11 +20,37 @@ function CreateRoomContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [needsCreditConsumption, setNeedsCreditConsumption] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
   const { credits, consumeCredit } = useCredits();
   const { t } = useTranslation();
+
+  // Handle credit consumption when room is created
+  useEffect(() => {
+    const consumeCreditForRoom = async () => {
+      if (room?.id && needsCreditConsumption) {
+        setNeedsCreditConsumption(false);
+        
+        const consumeResult = await consumeCredit(room.id);
+        
+        if (!consumeResult.success) {
+          // Handle credit consumption failure
+          if (consumeResult.error === 'insufficient_credits') {
+            toast.error(t('errors.insufficientCredits', 'Créditos insuficientes'));
+            setShowCreditModal(true);
+          } else if (consumeResult.error === 'session_already_active') {
+            toast.error(t('errors.sessionAlreadyActive', 'Ya tienes una sesión activa'));
+          } else {
+            toast.error(t('errors.creditConsumption', 'Error al procesar créditos'));
+          }
+        }
+      }
+    };
+
+    consumeCreditForRoom();
+  }, [room?.id, needsCreditConsumption, consumeCredit, t]);
 
   const handleCreateRoom = async (): Promise<void> => {
     console.log('🚀 Starting room creation process', { 
@@ -43,14 +69,11 @@ function CreateRoomContent() {
 
     setIsCreating(true);
     try {
-      // Step 1: Create the room
-      console.log('📞 Creating room...');
+      console.log('📞 Calling createRoom function...');
       const code = await createRoom(level, user?.id);
       console.log('✅ Room created successfully', { code });
       setRoomCode(code);
-      
-      // Step 2: Show success immediately, defer credit consumption until both players join
-      console.log('✅ Room created, deferring credit consumption until game starts');
+      setNeedsCreditConsumption(true); // Flag to consume credit once room is set
       toast.success(t('messages.roomCreated'));
     } catch (error) {
       console.error('❌ Room creation failed:', error);
@@ -80,25 +103,8 @@ function CreateRoomContent() {
   };
 
   const handleGameStart = async (): Promise<void> => {
-    try {
-      // Atomically consume credit and start game (sets room status to 'playing' and phase to 'proximity-selection')
-      console.log('💳 Consuming credit and starting game for room code:', roomCode);
-      const consumeResult = await consumeCredit(roomCode);
-      if (consumeResult.success) {
-        console.log('✅ Credit consumed and game started successfully');
-        navigate(`/proximity-selection?room=${roomCode}`);
-      } else {
-        console.warn('⚠️ Credit consumption failed:', consumeResult.error);
-        if (consumeResult.error === 'insufficient_credits') {
-          setShowCreditModal(true);
-          return; // Don't start game without credits
-        }
-        toast.error('Error starting game. Please try again.');
-      }
-    } catch (error) {
-      console.error('❌ Error starting game:', error);
-      toast.error('Error starting game. Please try again.');
-    }
+    await startGame(); // Espera a que startGame() termine
+    navigate(`/proximity-selection?room=${roomCode}`);
   };
 
   const handleLeaveRoom = (): void => {

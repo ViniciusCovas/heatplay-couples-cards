@@ -36,7 +36,7 @@ const Game = () => {
     joinRoom, 
     isConnected 
   } = useRoomService();
-  const { playerId, isLoading: isPlayerIdLoading } = usePlayerId();
+  const playerId = usePlayerId();
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
@@ -95,14 +95,12 @@ const Game = () => {
   }, [currentLevel]);
 
   // Auto-join room if we have a roomCode but aren't connected
-  // ONLY for players trying to join (not room creators)
   useEffect(() => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
-      // Wait for player ID to be ready before attempting to join
-      if (roomCode && !isConnected && !room && !isPlayerIdLoading && playerId && retryCount < maxRetries) {
-        logger.debug(`🔗 Auto-joining room attempt ${retryCount + 1} (ROOM JOINER)`, { roomCode, playerId });
+      if (roomCode && !isConnected && !room && retryCount < maxRetries) {
+        logger.debug(`Auto-joining room attempt ${retryCount + 1}`, { roomCode });
         setIsRetrying(true);
         
         try {
@@ -150,7 +148,7 @@ const Game = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isPlayerIdLoading, playerId]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount]);
 
   // Manual retry function
   const handleRetryConnection = () => {

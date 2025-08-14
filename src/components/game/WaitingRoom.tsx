@@ -28,31 +28,13 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
     }
   };
 
-  // Start countdown when both players are ready and connected
+  // Start countdown when both players are ready
   useEffect(() => {
-    const validParticipants = participants.filter(p => 
-      p.player_number !== null && 
-      p.is_ready === true
-    );
-    
-    console.log('WaitingRoom: Checking participants for countdown', { 
-      totalParticipants: participants.length,
-      validParticipants: validParticipants.length, 
-      participants: participants.map(p => ({ 
-        id: p.player_id, 
-        ready: p.is_ready, 
-        number: p.player_number,
-        valid: p.player_number !== null && p.is_ready 
-      })),
-      currentCountdown: countdown 
-    });
-    
-    // Only start countdown when we have exactly 2 valid participants
-    if (validParticipants.length === 2 && countdown === null) {
-      console.log('🎯 WaitingRoom: Both players connected and ready - starting countdown');
-      setCountdown(5);
-    } else if (validParticipants.length < 2 && countdown !== null) {
-      console.log('⏹️ WaitingRoom: Not enough players - stopping countdown');
+    if (participants.length === 2 && participants.every(p => p.is_ready)) {
+      if (countdown === null) {
+        setCountdown(5);
+      }
+    } else {
       setCountdown(null);
     }
   }, [participants, countdown]);
@@ -133,7 +115,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
             </h3>
             <div className="space-y-2">
               {[1, 2].map((playerNum) => {
-                const participant = participants.find(p => p.player_number === playerNum);
+                const participant = participants[playerNum - 1];
                 return (
                   <div
                     key={playerNum}

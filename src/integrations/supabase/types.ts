@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
+  // Allows to automatically instanciate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -490,16 +490,8 @@ export type Database = {
     }
     Functions: {
       add_credits: {
-        Args: { credits_amount: number; user_id_param: string }
+        Args: { user_id_param: string; credits_amount: number }
         Returns: Json
-      }
-      anonymous_can_access_room: {
-        Args: { player_id_param: string; room_id_param: string }
-        Returns: boolean
-      }
-      assign_player_number: {
-        Args: { player_id_param: string; room_id_param: string }
-        Returns: number
       }
       cleanup_inactive_rooms: {
         Args: Record<PropertyKey, never>
@@ -507,10 +499,6 @@ export type Database = {
       }
       consume_credit: {
         Args: { room_id_param: string; user_id_param: string }
-        Returns: Json
-      }
-      consume_credit_for_room: {
-        Args: { room_code_param: string; user_id_param: string }
         Returns: Json
       }
       create_room_and_join: {
@@ -523,29 +511,29 @@ export type Database = {
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
         Returns: {
-          action_taken: string
           room_id: string
+          action_taken: string
         }[]
       }
       get_player_number: {
-        Args: { player_id_param: string; room_id_param: string }
+        Args: { room_id_param: string; player_id_param: string }
         Returns: number
       }
       get_random_questions_for_level: {
         Args: {
-          language_param?: string
           level_id_param: string
+          language_param?: string
           limit_param?: number
         }
         Returns: {
-          category: string
-          created_at: string
           id: string
-          is_active: boolean
-          language: string
-          level_id: string
           text: string
+          category: string
+          level_id: string
+          language: string
+          created_at: string
           updated_at: string
+          is_active: boolean
         }[]
       }
       get_used_question_ids: {
@@ -562,8 +550,8 @@ export type Database = {
       }
       handle_level_selection: {
         Args: {
-          player_id_param: string
           room_id_param: string
+          player_id_param: string
           selected_level_param: number
         }
         Returns: Json
@@ -576,17 +564,9 @@ export type Database = {
         Args: { room_id_param: string; user_id_param: string }
         Returns: boolean
       }
-      join_room_by_code: {
-        Args: { player_id_param: string; room_code_param: string }
-        Returns: Json
-      }
       normalize_used_cards: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      player_participates_in_room: {
-        Args: { player_id_param: string; room_id_param: string }
-        Returns: boolean
       }
       promote_to_admin: {
         Args: { user_email: string }
@@ -595,13 +575,9 @@ export type Database = {
       repair_stuck_evaluations: {
         Args: Record<PropertyKey, never>
         Returns: {
-          action_taken: string
           room_id: string
+          action_taken: string
         }[]
-      }
-      room_is_open: {
-        Args: { room_id_param: string }
-        Returns: boolean
       }
       update_user_activity: {
         Args: { user_id_param: string }
