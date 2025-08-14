@@ -39,8 +39,9 @@ const ProximitySelection = () => {
     let retryTimeout: NodeJS.Timeout;
     
     const autoJoinRoom = async () => {
-      if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode);
+      // Wait for playerId to be available before attempting to join
+      if (roomCode && !isConnected && !room && retryCount < maxRetries && playerId) {
+        logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode, 'Player ID:', playerId);
         setIsRetrying(true);
         
         try {
@@ -88,7 +89,7 @@ const ProximitySelection = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, playerId]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -105,15 +106,17 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
-  // Show loading if we don't have room yet, are retrying, or participants aren't loaded
-  if (!room || isRetrying || participants.length === 0) {
+  // Show loading if we don't have playerId, room yet, are retrying, or participants aren't loaded
+  if (!playerId || !room || isRetrying || participants.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
-            {isRetrying 
-              ? t('proximitySelection.errors.connectingAttempt', { current: retryCount + 1, max: maxRetries })
-              : t('proximitySelection.errors.loadingRoom')
+            {!playerId 
+              ? "Initializing player..."
+              : isRetrying 
+                ? t('proximitySelection.errors.connectingAttempt', { current: retryCount + 1, max: maxRetries })
+                : t('proximitySelection.errors.loadingRoom')
             }
           </p>
           {retryCount >= maxRetries && (
