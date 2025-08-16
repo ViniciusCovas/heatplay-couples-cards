@@ -82,7 +82,7 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
     loadGameState();
   }, [roomId]);
 
-  // Listen to real-time game sync updates
+  // Enhanced real-time game sync with connection monitoring
   useEffect(() => {
     if (!roomId) return;
 
@@ -99,8 +99,14 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         (payload) => {
           const action = payload.new as GameSyncAction;
           
-          // Only process actions from other players
-          if (action.triggered_by === playerId) return;
+          // Process all actions but show different feedback for own vs partner actions
+          const isOwnAction = action.triggered_by === playerId;
+          logger.debug('Received game sync action', { 
+            action: action.action_type, 
+            triggeredBy: action.triggered_by, 
+            isOwnAction,
+            playerId 
+          });
 
           handleSyncAction(action);
         }
@@ -115,6 +121,8 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         },
         (payload) => {
           const updatedRoom = payload.new as any;
+          logger.debug('Room state updated', { updatedRoom });
+          
           setGameState({
             current_phase: (updatedRoom.current_phase as GameState['current_phase']) || 'proximity-selection',
             proximity_question_answered: updatedRoom.proximity_question_answered || false,
@@ -132,11 +140,36 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
           });
         }
       )
-      .subscribe();
+      .on('presence', { event: 'sync' }, () => {
+        logger.debug('Presence sync - checking connection state');
+      })
+      .subscribe((status) => {
+        logger.debug('Channel subscription status:', status);
+        
+        if (status === 'SUBSCRIBED') {
+          // Update connection state when successfully subscribed
+          syncConnectionState();
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
+  }, [roomId, playerId]);
+
+  // Connection state sync function
+  const syncConnectionState = useCallback(async () => {
+    if (!roomId || !playerId) return;
+    
+    try {
+      await supabase.rpc('sync_game_state_reliably', {
+        room_id_param: roomId,
+        player_id_param: playerId
+      });
+      logger.debug('Connection state synced');
+    } catch (error) {
+      logger.warn('Failed to sync connection state:', error);
+    }
   }, [roomId, playerId]);
 
   const handleSyncAction = async (action: GameSyncAction) => {
@@ -212,7 +245,26 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         }
         break;
       case 'evaluation_submit':
-        showToast(t('game.notifications.evaluationCompleted'));
+        // Enhanced evaluation feedback - notify the original responder
+        const isMyResponse = action.action_data?.responding_player_id === playerId;
+        
+        if (isMyResponse) {
+          showToast(t('game.notifications.yourResponseWasEvaluated'), 'success');
+          
+          // Dispatch detailed evaluation event for the responder
+          window.dispatchEvent(new CustomEvent('evaluationReceived', {
+            detail: {
+              evaluation: action.action_data.evaluation,
+              question: action.action_data.question,
+              response: action.action_data.response,
+              evaluator: action.action_data.evaluation_by,
+              round: action.action_data.round_number
+            }
+          }));
+        } else {
+          showToast(t('game.notifications.evaluationCompleted'));
+        }
+        
         if (action.action_data?.nextCard) {
           setTimeout(() => showToast(t('game.notifications.newCardAvailable')), 500);
         }

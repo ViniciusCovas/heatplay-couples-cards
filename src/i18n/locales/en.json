@@ -256,6 +256,7 @@
       "newCardRevealed": "New card revealed",
       "partnerSubmittedResponse": "Your partner submitted their response. It's your turn to evaluate.",
       "evaluationCompleted": "Evaluation completed",
+      "yourResponseWasEvaluated": "Your response received feedback!",
       "newCardAvailable": "New card available",
       "levelChanged": "Level changed to {{level}}",
       "partnerWantsLevelChange": "Your partner wants to change level",

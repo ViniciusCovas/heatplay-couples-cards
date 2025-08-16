@@ -611,6 +611,10 @@ export type Database = {
         Args: { room_id_param: string }
         Returns: boolean
       }
+      sync_game_state_reliably: {
+        Args: { player_id_param: string; room_id_param: string }
+        Returns: Json
+      }
       update_user_activity: {
         Args: { user_id_param: string }
         Returns: undefined

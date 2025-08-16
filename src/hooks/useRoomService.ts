@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
@@ -26,7 +25,7 @@ export interface RoomParticipant {
   is_ready: boolean;
   joined_at: string;
   last_activity: string;
-  player_number: 1 | 2; // Añadido para identificar claramente los jugadores
+  player_number: 1 | 2; // Added to clearly identify players
 }
 
 interface UseRoomServiceReturn {
@@ -166,89 +165,57 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // Find the room - note: current RLS allows only hosts/participants to SELECT.
-      // If the user isn't host/participant yet, this may return null due to policies.
+      // Use the fallback join_room_by_code function (existing stable RPC)
+      console.log('🚀 Using join_room_by_code RPC for reliable joining...');
+      const { data: joinResult, error: rpcError } = await supabase.rpc('join_room_by_code', {
+        room_code_param: roomCode,
+        player_id_param: effectivePlayerId
+      });
+
+      if (rpcError) {
+        console.error('❌ RPC join_room_by_code failed:', rpcError);
+        return false;
+      }
+
+      if (!joinResult || typeof joinResult !== 'object' || !('success' in joinResult) || !joinResult.success) {
+        console.warn('❌ Room join unsuccessful:', joinResult);
+        return false;
+      }
+
+      console.log('✅ Successfully joined room via RPC:', joinResult);
+
+      const roomId = (joinResult as any).room_id;
+      if (!roomId) {
+        console.error('❌ No room_id in join result');
+        return false;
+      }
+
+      // Load full room data
       const { data: roomData, error: roomError } = await supabase
         .from('game_rooms')
         .select('*')
-        .eq('room_code', roomCode)
-        .in('status', ['waiting', 'playing'])
-        .maybeSingle();
+        .eq('id', roomId)
+        .single();
 
-      if (roomError) {
-        console.warn('Room lookup error (likely RLS if not participant/host):', roomError);
-      }
-      if (!roomData) {
-        // As a fallback, attempt to join directly; if insert succeeds, we can then load data.
-        console.log('Room not visible; attempting direct join insert with provided code (will fail if room doesn\'t exist)');
-        // We can’t insert without room id, so bail out here until policies allow room discovery.
+      if (roomError || !roomData) {
+        console.error('❌ Failed to load room data after join:', roomError);
         return false;
       }
 
-      // Load participants to check if user already in room (only visible if already a participant/host)
-      const { data: existingParticipants, error: participantsError } = await supabase
+      // Load participants
+      const { data: participantsData, error: participantsError } = await supabase
         .from('room_participants')
         .select('*, player_number')
-        .eq('room_id', roomData.id);
+        .eq('room_id', roomId);
 
       if (participantsError) {
-        console.warn('Participants lookup error (likely RLS until joined):', participantsError);
-      }
-
-      const existing = (existingParticipants || []) as RoomParticipant[];
-      const alreadyInRoom = existing.some(p => p.player_id === effectivePlayerId);
-
-      if (alreadyInRoom) {
-        setParticipants(existing);
-        setRoom({
-          id: roomData.id,
-          room_code: roomData.room_code,
-          level: roomData.level || 1,
-          status: roomData.status as 'waiting' | 'playing' | 'finished',
-          created_by: roomData.created_by || undefined,
-          created_at: roomData.created_at,
-          started_at: roomData.started_at || undefined,
-          finished_at: roomData.finished_at || undefined
-        });
-        setIsConnected(true);
-        return true;
-      }
-
-      // If we can see existing participants and it's already full
-      if (existing && existing.length >= 2) {
-        return false; // Room is full
-      }
-
-      // Determine player number (2 if someone else is there, 1 if empty)
-      const playerNumber = existing.length > 0 ? 2 : 1;
-
-      // Join the room - works for both authenticated and anonymous users
-      const { error: joinError } = await supabase
-        .from('room_participants')
-        .insert({
-          room_id: roomData.id,
-          player_id: effectivePlayerId,
-          is_ready: true,
-          player_number: playerNumber
-        });
-
-      if (joinError) {
-        console.error('❌ Join failed (RLS or constraints):', joinError);
-        return false;
-      }
-
-      // Load participants after joining (now permitted by RLS)
-      const { data: participantsData, error: loadParticipantsError } = await supabase
-        .from('room_participants')
-        .select('*, player_number')
-        .eq('room_id', roomData.id);
-
-      if (loadParticipantsError) {
-        console.warn('Could not load participants after join:', loadParticipantsError);
+        console.warn('⚠️ Could not load participants after join:', participantsError);
       } else if (participantsData) {
         setParticipants(participantsData as RoomParticipant[]);
+        logger.debug('Participants loaded after join', { participantsData });
       }
 
+      // Set room state
       setRoom({
         id: roomData.id,
         room_code: roomData.room_code,
@@ -260,12 +227,35 @@ export const useRoomService = (): UseRoomServiceReturn => {
         finished_at: roomData.finished_at || undefined
       });
       setIsConnected(true);
+
+      // Sync game state to ensure consistency
+      await syncGameStateReliably(roomId, effectivePlayerId);
+
       return true;
     } catch (error) {
-      console.error('Unexpected error joining room:', error);
+      console.error('❌ Unexpected error joining room:', error);
       return false;
     }
   }, [effectivePlayerId, user?.id, isPlayerReady]);
+
+  // Add reliable game state sync function
+  const syncGameStateReliably = useCallback(async (roomId: string, playerId: string) => {
+    try {
+      const { data: syncResult, error } = await supabase.rpc('sync_game_state_reliably', {
+        room_id_param: roomId,
+        player_id_param: playerId
+      });
+
+      if (error) {
+        console.warn('⚠️ Game state sync failed:', error);
+        return;
+      }
+
+      logger.debug('✅ Game state synced reliably:', syncResult);
+    } catch (error) {
+      console.warn('⚠️ Game state sync error:', error);
+    }
+  }, []);
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {
