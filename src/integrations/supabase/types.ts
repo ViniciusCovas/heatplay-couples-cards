@@ -531,6 +531,10 @@ export type Database = {
         Args: { player_id_param: string; room_id_param: string }
         Returns: number
       }
+      check_room_credit_status: {
+        Args: { room_code_param: string }
+        Returns: Json
+      }
       cleanup_inactive_rooms: {
         Args: Record<PropertyKey, never>
         Returns: undefined

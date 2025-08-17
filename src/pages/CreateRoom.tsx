@@ -198,10 +198,8 @@ function CreateRoomContent() {
         open={showCreditModal}
         onOpenChange={setShowCreditModal}
         onPurchaseComplete={() => {
-          // After purchase, try creating room again
-          setTimeout(() => {
-            handleCreateRoom();
-          }, 1000);
+          setShowCreditModal(false);
+          // Don't auto-create room, let user click button again
         }}
       />
     </div>
