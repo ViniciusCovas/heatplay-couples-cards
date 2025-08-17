@@ -23,10 +23,7 @@ const ProximitySelection = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // Auto-join room state
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const maxRetries = 3;
+  // Room joining is now handled by centralized useRoomManager in App.tsx
 
   useEffect(() => {
     if (!roomCode) {
@@ -50,60 +47,7 @@ const ProximitySelection = () => {
     checkSystemReady();
   }, [playerId, playerIdReady]);
 
-  // Auto-join room if we have a roomCode but aren't connected
-  useEffect(() => {
-    const autoJoinRoom = async () => {
-      // Wait for system to be fully ready before attempting to join
-      if (roomCode && !isConnected && !room && isSystemReady) {
-        logger.debug('Auto-joining room from ProximitySelection:', roomCode, 'Player ID:', playerId);
-        setIsRetrying(true);
-        
-        try {
-          const success = await joinRoom(roomCode);
-          if (success) {
-            logger.debug('Successfully joined room');
-            setIsRetrying(false);
-          } else {
-            setIsRetrying(false);
-            toast({
-              title: t('proximitySelection.errors.roomNotFound'),
-              description: t('proximitySelection.errors.roomNotFoundDescription'),
-              variant: "destructive"
-            });
-            navigate('/', { replace: true });
-          }
-        } catch (error) {
-          logger.error('Auto-join error from ProximitySelection:', error);
-          setIsRetrying(false);
-          
-          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
-          
-          if (errorMessage === 'room_full') {
-            toast({
-              title: t('proximitySelection.errors.roomFull'),
-              description: t('proximitySelection.errors.roomFullDescription'),
-              variant: "destructive"
-            });
-          } else if (errorMessage === 'room_not_found') {
-            toast({
-              title: t('proximitySelection.errors.roomNotFound'),
-              description: t('proximitySelection.errors.roomNotFoundDescription'),
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: t('proximitySelection.errors.connectionError'),
-              description: t('proximitySelection.errors.verifyRoomCode'),
-              variant: "destructive"
-            });
-          }
-          navigate('/', { replace: true });
-        }
-      }
-    };
-    
-    autoJoinRoom();
-  }, [roomCode, isConnected, room, joinRoom, isSystemReady, toast, t, navigate, playerId]);
+  // Room joining is now handled by centralized useRoomManager in App.tsx
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -120,17 +64,15 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
-  // Show loading if system isn't ready, room isn't loaded, or we're retrying
-  if (!isSystemReady || !room || isRetrying || participants.length === 0) {
+  // Show loading if system isn't ready, room isn't loaded
+  if (!isSystemReady || !room || participants.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
             {!isSystemReady
               ? "Initializing player..."
-              : isRetrying 
-                ? "Checking room availability..."
-                : t('proximitySelection.errors.loadingRoom')
+              : t('proximitySelection.errors.loadingRoom')
             }
           </p>
           <Button onClick={handleGoBack} variant="outline">

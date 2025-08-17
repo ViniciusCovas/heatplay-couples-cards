@@ -26,11 +26,15 @@ import NotFound from "./pages/NotFound";
 import { AuthProvider } from "./contexts/AuthContext";
 import AdminGuard from "./components/auth/AdminGuard";
 import { AppHeader } from "./components/navigation/AppHeader";
+import { useRoomManager } from "./hooks/useRoomManager";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const location = useLocation();
+  
+  // Initialize centralized room manager
+  useRoomManager();
   
   // Pages that shouldn't show the header
   const noHeaderPages = ['/game', '/admin-panel-secret', '/admin/levels', '/admin/questions-bulk', '/admin/questions-manual'];

@@ -277,52 +277,7 @@ const LevelSelect = () => {
   }, [agreedLevel, navigate, roomCode, room?.id]);
 
 
-  // Auto-join room if not connected
-  useEffect(() => {
-    const autoJoinRoom = async () => {
-      if (roomCode && !isConnected && !room && playerId && playerIdReady) {
-        logger.debug('Auto-joining room from LevelSelect:', roomCode, 'Player ID:', playerId);
-        
-        try {
-          const success = await joinRoom(roomCode);
-          if (!success) {
-            toast({
-              title: t('levelSelect.errors.roomNotFound'),
-              description: t('levelSelect.errors.roomNotFoundDescription'),
-              variant: "destructive"
-            });
-            navigate('/', { replace: true });
-          }
-        } catch (error) {
-          logger.error('Auto-join error from LevelSelect:', error);
-          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
-          
-          if (errorMessage === 'room_full') {
-            toast({
-              title: t('levelSelect.errors.roomFull'),
-              description: t('levelSelect.errors.roomFullDescription'),
-              variant: "destructive"
-            });
-          } else if (errorMessage === 'room_not_found') {
-            toast({
-              title: t('levelSelect.errors.roomNotFound'),
-              description: t('levelSelect.errors.roomNotFoundDescription'),
-              variant: "destructive"
-            });
-          } else {
-            toast({
-              title: t('levelSelect.errors.connectionError'),
-              description: t('levelSelect.errors.verifyRoomCode'),
-              variant: "destructive"
-            });
-          }
-          navigate('/', { replace: true });
-        }
-      }
-    };
-
-    autoJoinRoom();
-  }, [roomCode, isConnected, room, joinRoom, playerId, playerIdReady, toast, t, navigate]);
+  // Room joining is now handled by centralized useRoomManager in App.tsx
 
   // Show loading or connection status
   if (loading) {

@@ -48,11 +48,6 @@ const Game = () => {
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
-  
-  // Auto-join room state
-  const [retryCount, setRetryCount] = useState(0);
-  const [isRetrying, setIsRetrying] = useState(false);
-  const maxRetries = 3;
 
   // Game state
   const [currentCard, setCurrentCard] = useState(''); // This stores the question ID
@@ -94,83 +89,10 @@ const Game = () => {
     logger.debug('Local game state reset for new level (AI info preserved)', { currentLevel });
   }, [currentLevel]);
 
-  // Auto-join room if we have a roomCode but aren't connected
-  useEffect(() => {
-    let retryTimeout: NodeJS.Timeout;
-    
-    const autoJoinRoom = async () => {
-      if (roomCode && !isConnected && !room && retryCount < maxRetries) {
-        logger.debug(`Auto-joining room attempt ${retryCount + 1}`, { roomCode });
-        setIsRetrying(true);
-        
-        try {
-          const success = await joinRoom(roomCode);
-          if (success) {
-            logger.info('Successfully joined room');
-            setRetryCount(0);
-            setIsRetrying(false);
-          } else {
-            logger.warn(`Failed to join room (attempt ${retryCount + 1})`);
-            setRetryCount(prev => prev + 1);
-            setIsRetrying(false);
-            
-            // Show "room not found" after first attempt
-            if (retryCount + 1 >= maxRetries) {
-              toast({
-                title: t('game.errors.connectionError'),
-                description: t('game.errors.roomNotFound'),
-                variant: "destructive"
-              });
-              // Clear room code from URL and navigate home
-              navigate('/', { replace: true });
-            }
-          }
-        } catch (error) {
-          logger.error(`Auto-join error (attempt ${retryCount + 1})`, error);
-          setRetryCount(prev => prev + 1);
-          setIsRetrying(false);
-          
-          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
-          
-          if (errorMessage === 'room_full') {
-            toast({
-              title: t('game.errors.roomFull'),
-              description: t('game.errors.roomFullDescription'),
-              variant: "destructive"
-            });
-            // Clear room code and navigate to home
-            navigate('/', { replace: true });
-          } else if (errorMessage === 'room_not_found') {
-            toast({
-              title: t('game.errors.roomNotFound'),
-              description: t('game.errors.roomNotFoundDescription'),
-              variant: "destructive"
-            });
-            navigate('/', { replace: true });
-          } else if (retryCount + 1 >= maxRetries) {
-            toast({
-              title: t('game.errors.connectionError'),
-              description: t('game.errors.verifyRoomCode'),
-              variant: "destructive"
-            });
-            navigate('/', { replace: true });
-          }
-        }
-      }
-    };
-    
-    autoJoinRoom();
-    
-    return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
-    };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, navigate, toast, t]);
+  // Room joining is now handled by centralized useRoomManager in App.tsx
+  // This component only focuses on game logic
 
-  // Manual retry function
-  const handleRetryConnection = () => {
-    setRetryCount(0);
-    setIsRetrying(true);
-  };
+  // Connection retry removed - centralized room manager handles this
   
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
@@ -1072,40 +994,19 @@ const Game = () => {
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-heading text-foreground">
-              {isRetrying ? t('game.retryingConnection') : t('game.connectingToRoom')}
+              {t('game.connectingToRoom')}
             </h2>
             <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>
-            {retryCount > 0 && (
-              <p className="text-xs text-orange-500">
-                {t('game.attempt', { current: retryCount, max: maxRetries })}
-              </p>
-            )}
           </div>
           
-          {retryCount >= maxRetries && (
-            <div className="space-y-4">
-              <p className="text-sm text-destructive">
-                {t('game.connectionFailed')}
-              </p>
-              <div className="space-y-2">
-                <Button 
-                  onClick={handleRetryConnection}
-                  className="w-full"
-                  disabled={isRetrying}
-                >
-                  {isRetrying ? t('game.retrying') : t('game.retryConnection')}
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={() => navigate('/')}
-                  className="w-full"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  {t('common.backToHome')}
-                </Button>
-              </div>
-            </div>
-          )}
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/')}
+            className="w-full"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            {t('common.backToHome')}
+          </Button>
         </div>
       </div>
     );
