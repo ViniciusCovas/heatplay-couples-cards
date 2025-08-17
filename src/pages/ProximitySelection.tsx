@@ -52,60 +52,58 @@ const ProximitySelection = () => {
 
   // Auto-join room if we have a roomCode but aren't connected
   useEffect(() => {
-    let retryTimeout: NodeJS.Timeout;
-    
     const autoJoinRoom = async () => {
       // Wait for system to be fully ready before attempting to join
-      if (roomCode && !isConnected && !room && retryCount < maxRetries && isSystemReady) {
-        logger.debug(`Auto-joining room attempt ${retryCount + 1}:`, roomCode, 'Player ID:', playerId);
+      if (roomCode && !isConnected && !room && isSystemReady) {
+        logger.debug('Auto-joining room from ProximitySelection:', roomCode, 'Player ID:', playerId);
         setIsRetrying(true);
         
         try {
           const success = await joinRoom(roomCode);
           if (success) {
             logger.debug('Successfully joined room');
-            setRetryCount(0);
             setIsRetrying(false);
           } else {
-            logger.debug(`Failed to join room (attempt ${retryCount + 1})`);
-            setRetryCount(prev => prev + 1);
-            
-            // Retry after 2 seconds
-            if (retryCount + 1 < maxRetries) {
-              retryTimeout = setTimeout(() => {
-                setIsRetrying(false);
-              }, 2000);
-            } else {
-              setIsRetrying(false);
-              toast({
-                title: t('proximitySelection.errors.connectionError'),
-                description: t('proximitySelection.errors.connectionFailed', { roomCode, maxRetries }),
-                variant: "destructive"
-              });
-            }
+            setIsRetrying(false);
+            toast({
+              title: t('proximitySelection.errors.roomNotFound'),
+              description: t('proximitySelection.errors.roomNotFoundDescription'),
+              variant: "destructive"
+            });
+            navigate('/', { replace: true });
           }
         } catch (error) {
-          logger.error(`Auto-join error (attempt ${retryCount + 1}):`, error);
-          setRetryCount(prev => prev + 1);
+          logger.error('Auto-join error from ProximitySelection:', error);
           setIsRetrying(false);
           
-          if (retryCount + 1 >= maxRetries) {
+          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
+          
+          if (errorMessage === 'room_full') {
+            toast({
+              title: t('proximitySelection.errors.roomFull'),
+              description: t('proximitySelection.errors.roomFullDescription'),
+              variant: "destructive"
+            });
+          } else if (errorMessage === 'room_not_found') {
+            toast({
+              title: t('proximitySelection.errors.roomNotFound'),
+              description: t('proximitySelection.errors.roomNotFoundDescription'),
+              variant: "destructive"
+            });
+          } else {
             toast({
               title: t('proximitySelection.errors.connectionError'),
               description: t('proximitySelection.errors.verifyRoomCode'),
               variant: "destructive"
             });
           }
+          navigate('/', { replace: true });
         }
       }
     };
     
     autoJoinRoom();
-    
-    return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
-    };
-  }, [roomCode, isConnected, room, joinRoom, retryCount, toast, t, isSystemReady]);
+  }, [roomCode, isConnected, room, joinRoom, isSystemReady, toast, t, navigate, playerId]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -131,15 +129,13 @@ const ProximitySelection = () => {
             {!isSystemReady
               ? "Initializing player..."
               : isRetrying 
-                ? t('proximitySelection.errors.connectingAttempt', { current: retryCount + 1, max: maxRetries })
+                ? "Checking room availability..."
                 : t('proximitySelection.errors.loadingRoom')
             }
           </p>
-          {retryCount >= maxRetries && (
-            <Button onClick={handleGoBack} variant="outline">
-              {t('proximitySelection.errors.backToHome')}
-            </Button>
-          )}
+          <Button onClick={handleGoBack} variant="outline">
+            {t('proximitySelection.errors.backToHome')}
+          </Button>
         </Card>
       </div>
     );

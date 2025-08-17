@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
 import * as LucideReact from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "@/hooks/use-toast";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,7 @@ const LevelSelect = () => {
   const location = useLocation();
   const roomCode = searchParams.get('room');
   const { i18n, t } = useTranslation();
+  const { toast } = useToast();
   const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
@@ -277,12 +279,50 @@ const LevelSelect = () => {
 
   // Auto-join room if not connected
   useEffect(() => {
-    // Wait for playerId to be available before attempting to join
-    if (roomCode && !isConnected && !room && playerId && playerIdReady) {
-      logger.debug('Auto-joining room from LevelSelect:', roomCode, 'Player ID:', playerId);
-      joinRoom(roomCode);
-    }
-  }, [roomCode, isConnected, room, joinRoom, playerId, playerIdReady]);
+    const autoJoinRoom = async () => {
+      if (roomCode && !isConnected && !room && playerId && playerIdReady) {
+        logger.debug('Auto-joining room from LevelSelect:', roomCode, 'Player ID:', playerId);
+        
+        try {
+          const success = await joinRoom(roomCode);
+          if (!success) {
+            toast({
+              title: t('levelSelect.errors.roomNotFound'),
+              description: t('levelSelect.errors.roomNotFoundDescription'),
+              variant: "destructive"
+            });
+            navigate('/', { replace: true });
+          }
+        } catch (error) {
+          logger.error('Auto-join error from LevelSelect:', error);
+          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
+          
+          if (errorMessage === 'room_full') {
+            toast({
+              title: t('levelSelect.errors.roomFull'),
+              description: t('levelSelect.errors.roomFullDescription'),
+              variant: "destructive"
+            });
+          } else if (errorMessage === 'room_not_found') {
+            toast({
+              title: t('levelSelect.errors.roomNotFound'),
+              description: t('levelSelect.errors.roomNotFoundDescription'),
+              variant: "destructive"
+            });
+          } else {
+            toast({
+              title: t('levelSelect.errors.connectionError'),
+              description: t('levelSelect.errors.verifyRoomCode'),
+              variant: "destructive"
+            });
+          }
+          navigate('/', { replace: true });
+        }
+      }
+    };
+
+    autoJoinRoom();
+  }, [roomCode, isConnected, room, joinRoom, playerId, playerIdReady, toast, t, navigate]);
 
   // Show loading or connection status
   if (loading) {

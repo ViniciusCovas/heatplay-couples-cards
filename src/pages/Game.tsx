@@ -112,19 +112,17 @@ const Game = () => {
           } else {
             logger.warn(`Failed to join room (attempt ${retryCount + 1})`);
             setRetryCount(prev => prev + 1);
+            setIsRetrying(false);
             
-            // Retry after 2 seconds
-            if (retryCount + 1 < maxRetries) {
-              retryTimeout = setTimeout(() => {
-                setIsRetrying(false);
-              }, 2000);
-            } else {
-              setIsRetrying(false);
-            toast({
-              title: t('game.errors.connectionError'),
-              description: t('game.errors.connectionFailed', { roomCode, maxRetries }),
-              variant: "destructive"
-            });
+            // Show "room not found" after first attempt
+            if (retryCount + 1 >= maxRetries) {
+              toast({
+                title: t('game.errors.connectionError'),
+                description: t('game.errors.roomNotFound'),
+                variant: "destructive"
+              });
+              // Clear room code from URL and navigate home
+              navigate('/', { replace: true });
             }
           }
         } catch (error) {
@@ -132,12 +130,30 @@ const Game = () => {
           setRetryCount(prev => prev + 1);
           setIsRetrying(false);
           
-          if (retryCount + 1 >= maxRetries) {
+          const errorMessage = error instanceof Error ? error.message : 'unknown_error';
+          
+          if (errorMessage === 'room_full') {
+            toast({
+              title: t('game.errors.roomFull'),
+              description: t('game.errors.roomFullDescription'),
+              variant: "destructive"
+            });
+            // Clear room code and navigate to home
+            navigate('/', { replace: true });
+          } else if (errorMessage === 'room_not_found') {
+            toast({
+              title: t('game.errors.roomNotFound'),
+              description: t('game.errors.roomNotFoundDescription'),
+              variant: "destructive"
+            });
+            navigate('/', { replace: true });
+          } else if (retryCount + 1 >= maxRetries) {
             toast({
               title: t('game.errors.connectionError'),
               description: t('game.errors.verifyRoomCode'),
               variant: "destructive"
             });
+            navigate('/', { replace: true });
           }
         }
       }
@@ -148,7 +164,7 @@ const Game = () => {
     return () => {
       if (retryTimeout) clearTimeout(retryTimeout);
     };
-  }, [roomCode, isConnected, room, joinRoom, retryCount]);
+  }, [roomCode, isConnected, room, joinRoom, retryCount, navigate, toast, t]);
 
   // Manual retry function
   const handleRetryConnection = () => {

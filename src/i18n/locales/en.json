@@ -188,6 +188,10 @@
       "connectionError": "Connection Error",
       "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
       "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "roomFull": "Room is Full",
+      "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
+      "roomNotFound": "Room Not Found",
+      "roomNotFoundDescription": "The room code you entered doesn't exist or has expired.",
       "connectionLost": "Could not establish connection to room. Please try again.",
       "responseSaveFailed": "Could not save response. Please try again.",
       "evaluationSaveFailed": "Could not save evaluation. Please try again.",
@@ -270,9 +274,23 @@
       "connectionError": "Connection Error",
       "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
       "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "roomFull": "Room is Full",
+      "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
+      "roomNotFound": "Room Not Found",
+      "roomNotFoundDescription": "The room code you entered doesn't exist or has expired.",
       "loadingRoom": "Loading room...",
       "connectingAttempt": "Connecting to room... (Attempt {{current}}/{{max}})",
       "backToHome": "Back to home"
+    }
+  },
+  "levelSelect": {
+    "errors": {
+      "connectionError": "Connection Error",
+      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "roomFull": "Room is Full",
+      "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
+      "roomNotFound": "Room Not Found",
+      "roomNotFoundDescription": "The room code you entered doesn't exist or has expired."
     }
   },
   "levels": {
