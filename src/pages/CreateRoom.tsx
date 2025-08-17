@@ -102,7 +102,8 @@ function CreateRoomContent() {
   const handleGameStart = async (): Promise<void> => {
     try {
       await startGame(); // Start the game (credit already consumed during room creation)
-      navigate(`/proximity-selection?room=${roomCode}`);
+      // Navigate without room code in URL to prevent global room manager conflicts
+      navigate('/proximity-selection', { state: { roomCode, isCreator: true } });
     } catch (error) {
       console.error('❌ Error starting game:', error);
       toast.error('Error starting game');

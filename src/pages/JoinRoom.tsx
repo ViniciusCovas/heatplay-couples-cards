@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,16 +14,29 @@ export default function JoinRoom() {
   const [roomCode, setRoomCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { room, participants, joinRoom, leaveRoom, startGame } = useRoomService();
   const { t } = useTranslation();
 
-  const handleJoinRoom = async (): Promise<void> => {
-    if (!roomCode.trim()) {
+  // Handle URL room parameter for direct joins
+  useEffect(() => {
+    const urlRoomCode = searchParams.get('room');
+    if (urlRoomCode && !room) {
+      setRoomCode(urlRoomCode.toUpperCase());
+      // Auto-join if room code is in URL
+      handleJoinRoom(urlRoomCode);
+    }
+  }, [searchParams]);
+
+  const handleJoinRoom = async (codeToJoin?: string): Promise<void> => {
+    const code = codeToJoin || roomCode;
+
+    if (!code.trim()) {
       toast.error(t('joinRoom.errors.enterCode'));
       return;
     }
 
-    if (roomCode.length !== 6) {
+    if (code.length !== 6) {
       toast.error(t('joinRoom.errors.invalidLength'));
       return;
     }
@@ -31,10 +44,11 @@ export default function JoinRoom() {
     setIsLoading(true);
     
     try {
-      const success = await joinRoom(roomCode.toUpperCase());
+      const success = await joinRoom(code.toUpperCase());
       
       if (success) {
         toast.success(t('joinRoom.success.connected'));
+        if (!codeToJoin) setRoomCode(code); // Only update state if manual input
       } else {
         toast.error(t('joinRoom.errors.invalidCode'));
       }
@@ -55,7 +69,7 @@ export default function JoinRoom() {
 
   const handleGameStart = async (): Promise<void> => {
     await startGame(); // Espera a que startGame() termine
-    navigate(`/proximity-selection?room=${roomCode}`);
+    navigate('/proximity-selection', { state: { roomCode: room?.room_code, isCreator: false } });
   };
 
   const handleLeaveRoom = (): void => {
@@ -144,7 +158,7 @@ export default function JoinRoom() {
             </div>
 
             <Button 
-              onClick={handleJoinRoom}
+              onClick={() => handleJoinRoom()}
               className="w-full h-12 text-lg font-semibold btn-gradient-primary"
               disabled={isLoading || roomCode.length !== 6}
             >

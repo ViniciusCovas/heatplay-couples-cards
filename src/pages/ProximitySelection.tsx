@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useRoomService } from '@/hooks/useRoomService';
 import { useGameSync } from '@/hooks/useGameSync';
 import { usePlayerId } from '@/hooks/usePlayerId';
@@ -17,8 +17,8 @@ import { supabase } from '@/integrations/supabase/client';
 const ProximitySelection = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const roomCode = searchParams.get('room');
-  const { room, participants, isConnected } = useRoomService();
+  const location = useLocation();
+  const { room, participants, isConnected, joinRoom } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { user } = useAuth();
   const { gameState } = useGameSync(room?.id || null, playerId);
@@ -27,7 +27,18 @@ const ProximitySelection = () => {
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // ProximitySelection handles room creators differently - no join needed
+  // Get room info from navigation state or URL params
+  const stateRoomCode = location.state?.roomCode;
+  const urlRoomCode = searchParams.get('room');
+  const isCreator = location.state?.isCreator || false;
+  const roomCode = stateRoomCode || urlRoomCode;
+
+  logger.debug('ProximitySelection initialized', {
+    stateRoomCode,
+    urlRoomCode,
+    isCreator,
+    finalRoomCode: roomCode
+  });
 
   useEffect(() => {
     if (!roomCode) {
@@ -51,9 +62,9 @@ const ProximitySelection = () => {
     checkSystemReady();
   }, [playerId, playerIdReady]);
 
-  // Load room data for creators (who don't go through join flow)
+  // Handle room joining for non-creators or load room data for creators
   useEffect(() => {
-    const loadRoomData = async () => {
+    const handleRoomAccess = async () => {
       if (!roomCode || !isSystemReady) return;
       
       try {
@@ -63,31 +74,51 @@ const ProximitySelection = () => {
           return;
         }
         
-        // Load room data directly for creators
-        const { data: roomData } = await supabase
-          .from('game_rooms')
-          .select('*')
-          .eq('room_code', roomCode)
-          .single();
-          
-        if (roomData) {
-          logger.debug('Room data loaded for creator', { roomData });
-          setIsRoomLoaded(true);
+        if (isCreator) {
+          // For creators, just load room data directly
+          const { data: roomData } = await supabase
+            .from('game_rooms')
+            .select('*')
+            .eq('room_code', roomCode)
+            .single();
+            
+          if (roomData) {
+            logger.debug('Room data loaded for creator', { roomData });
+            setIsRoomLoaded(true);
+          }
+        } else {
+          // For joiners, attempt to join the room
+          logger.debug('Attempting to join room for non-creator', { roomCode });
+          const success = await joinRoom(roomCode);
+          if (success) {
+            setIsRoomLoaded(true);
+          } else {
+            toast({
+              title: t('proximitySelection.errors.joinFailed'),
+              description: t('proximitySelection.errors.invalidCode'),
+            });
+            navigate('/');
+          }
         }
       } catch (error) {
-        logger.warn('Error loading room data', error);
+        logger.warn('Error handling room access', error);
+        toast({
+          title: t('proximitySelection.errors.loadingFailed'),
+          description: t('proximitySelection.errors.tryAgain'),
+        });
+        navigate('/');
       }
     };
     
-    loadRoomData();
-  }, [roomCode, isSystemReady, room]);
+    handleRoomAccess();
+  }, [roomCode, isSystemReady, room, isCreator]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
     if (gameState?.proximity_question_answered && gameState?.current_phase === 'level-selection') {
-      navigate(`/level-select?room=${roomCode}`);
+      navigate('/level-select', { state: { roomCode, isCreator } });
     }
-  }, [gameState, navigate, roomCode]);
+  }, [gameState, navigate, roomCode, isCreator]);
 
   const handleProximitySelect = (isClose: boolean) => {
     logger.debug('Proximity selected:', isClose);
