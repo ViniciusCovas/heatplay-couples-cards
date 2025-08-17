@@ -11,19 +11,23 @@ import { ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { logger } from '@/utils/logger';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const ProximitySelection = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const roomCode = searchParams.get('room');
-  const { room, participants, joinRoom, isConnected } = useRoomService();
+  const { room, participants, isConnected } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
+  const { user } = useAuth();
   const { gameState } = useGameSync(room?.id || null, playerId);
   const [isSystemReady, setIsSystemReady] = useState(false);
+  const [isRoomLoaded, setIsRoomLoaded] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // Room joining is now handled by centralized useRoomManager in App.tsx
+  // ProximitySelection handles room creators differently - no join needed
 
   useEffect(() => {
     if (!roomCode) {
@@ -47,7 +51,36 @@ const ProximitySelection = () => {
     checkSystemReady();
   }, [playerId, playerIdReady]);
 
-  // Room joining is now handled by centralized useRoomManager in App.tsx
+  // Load room data for creators (who don't go through join flow)
+  useEffect(() => {
+    const loadRoomData = async () => {
+      if (!roomCode || !isSystemReady) return;
+      
+      try {
+        // Check if we already have room data
+        if (room && room.room_code === roomCode) {
+          setIsRoomLoaded(true);
+          return;
+        }
+        
+        // Load room data directly for creators
+        const { data: roomData } = await supabase
+          .from('game_rooms')
+          .select('*')
+          .eq('room_code', roomCode)
+          .single();
+          
+        if (roomData) {
+          logger.debug('Room data loaded for creator', { roomData });
+          setIsRoomLoaded(true);
+        }
+      } catch (error) {
+        logger.warn('Error loading room data', error);
+      }
+    };
+    
+    loadRoomData();
+  }, [roomCode, isSystemReady, room]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -64,14 +97,16 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
-  // Show loading if system isn't ready, room isn't loaded
-  if (!isSystemReady || !room || participants.length === 0) {
+  // Show loading if system isn't ready or room isn't loaded
+  if (!isSystemReady || !isRoomLoaded || !room) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
             {!isSystemReady
               ? "Initializing player..."
+              : !isRoomLoaded
+              ? "Loading room data..."
               : t('proximitySelection.errors.loadingRoom')
             }
           </p>

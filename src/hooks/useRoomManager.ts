@@ -63,6 +63,25 @@ export const useRoomManager = () => {
       return true;
     }
     
+    // Check if we're the room creator/host - skip join if we are
+    if (room && room.room_code === roomCode) {
+      try {
+        const { data: roomCheck } = await supabase
+          .from('game_rooms')
+          .select('host_user_id, created_by')
+          .eq('room_code', roomCode)
+          .single();
+          
+        if (roomCheck && (roomCheck.host_user_id === playerId || roomCheck.created_by === playerId)) {
+          logger.debug('Skipping join - user is room creator', { roomCode, playerId });
+          setState(prev => ({ ...prev, hasJoinedSuccessfully: true, lastProcessedRoomCode: roomCode }));
+          return true;
+        }
+      } catch (error) {
+        logger.warn('Error checking room creator status', error);
+      }
+    }
+    
     // Additional safety check: if we're already participants in this room, don't join again
     if (room && playerId) {
       try {

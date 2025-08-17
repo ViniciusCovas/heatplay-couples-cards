@@ -50,9 +50,26 @@ function CreateRoomContent() {
       const code = await createRoom(level, user?.id);
       console.log('✅ Room created successfully', { code });
       
-      // Room creation already includes credit consumption via create_room_and_join RPC
-      // No need to call consumeCredit again - the user is already participant #1
-      console.log('✅ Credit will be consumed when game starts');
+      // Consume credit immediately after room creation
+      console.log('💰 Consuming credit for room', { code });
+      const consumeResult = await consumeCredit(code);
+      
+      if (!consumeResult.success) {
+        console.error('❌ Credit consumption failed', consumeResult);
+        if (room) {
+          await leaveRoom();
+        }
+        
+        if (consumeResult.error === 'insufficient_credits') {
+          toast.error(t('errors.insufficientCredits', 'Créditos insuficientes'));
+          setShowCreditModal(true);
+        } else {
+          toast.error(t('errors.creditConsumption', 'Error al procesar créditos'));
+        }
+        return;
+      }
+      
+      console.log('✅ Credit consumed successfully');
       setRoomCode(code);
       toast.success(t('messages.roomCreated'));
     } catch (error) {
@@ -84,23 +101,7 @@ function CreateRoomContent() {
 
   const handleGameStart = async (): Promise<void> => {
     try {
-      // Consume credit before starting the game
-      console.log('💰 Consuming credit for room at game start', { roomCode });
-      const consumeResult = await consumeCredit(roomCode);
-      
-      if (!consumeResult.success) {
-        console.error('❌ Credit consumption failed at game start', consumeResult);
-        if (consumeResult.error === 'insufficient_credits') {
-          toast.error(t('errors.insufficientCredits', 'Créditos insuficientes'));
-          setShowCreditModal(true);
-        } else {
-          toast.error(t('errors.creditConsumption', 'Error al procesar créditos'));
-        }
-        return;
-      }
-      
-      console.log('✅ Credit consumed at game start');
-      await startGame(); // Start the game
+      await startGame(); // Start the game (credit already consumed during room creation)
       navigate(`/proximity-selection?room=${roomCode}`);
     } catch (error) {
       console.error('❌ Error starting game:', error);
