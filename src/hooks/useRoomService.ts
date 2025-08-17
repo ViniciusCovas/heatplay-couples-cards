@@ -140,14 +140,21 @@ export const useRoomService = (): UseRoomServiceReturn => {
       isPlayerReady 
     });
 
+    // Wait briefly for player readiness if needed
     if (!isPlayerReady) {
-      logger.error('Player state not ready for room joining', { 
-        effectivePlayerId, 
-        playerIdReady, 
-        authLoading,
-        hasUser: !!user?.id 
-      });
-      throw new Error('Player ID not available');
+      // Try refreshing session one time
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session && !effectivePlayerId) {
+          logger.error('Player state not ready for room joining', { 
+            effectivePlayerId, playerIdReady, authLoading, hasUser: !!user?.id 
+          });
+          throw new Error('player_not_ready');
+        }
+      } catch (err) {
+        logger.error('Error refreshing session during join attempt', err);
+        throw new Error('player_not_ready');
+      }
     }
     
     try {
@@ -165,20 +172,46 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // Use the fallback join_room_by_code function (existing stable RPC)
+      // Use join_room_by_code RPC with retry logic
       console.log('🚀 Using join_room_by_code RPC for reliable joining...');
-      const { data: joinResult, error: rpcError } = await supabase.rpc('join_room_by_code', {
-        room_code_param: roomCode,
-        player_id_param: effectivePlayerId
-      });
+      
+      const maxAttempts = 2;
+      let attempt = 0;
+      let joinResult: any = null;
+      let rpcError: any = null;
+
+      while (attempt < maxAttempts) {
+        attempt += 1;
+        const res = await supabase.rpc('join_room_by_code', {
+          room_code_param: roomCode,
+          player_id_param: effectivePlayerId
+        });
+        joinResult = res.data;
+        rpcError = res.error;
+        
+        if (rpcError) {
+          logger.warn('RPC join_room_by_code attempt failed', { attempt, rpcError });
+          await new Promise((r) => setTimeout(r, 150)); // small backoff
+          continue;
+        }
+        break;
+      }
 
       if (rpcError) {
-        console.error('❌ RPC join_room_by_code failed:', rpcError);
+        console.error('❌ RPC join_room_by_code failed after retries:', rpcError);
         return false;
       }
 
       if (!joinResult || typeof joinResult !== 'object' || !('success' in joinResult) || !joinResult.success) {
+        const knownError = (joinResult && joinResult.error) ? joinResult.error : 'unknown';
         console.warn('❌ Room join unsuccessful:', joinResult);
+        
+        if (knownError === 'room_full') {
+          throw new Error('room_full');
+        }
+        if (knownError === 'room_not_found') {
+          throw new Error('room_not_found');
+        }
         return false;
       }
 
@@ -232,7 +265,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
       await syncGameStateReliably(roomId, effectivePlayerId);
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      // Allow callers to handle specific errors
+      if (error?.message === 'room_full' || error?.message === 'room_not_found' || error?.message === 'player_not_ready') {
+        throw error;
+      }
       console.error('❌ Unexpected error joining room:', error);
       return false;
     }

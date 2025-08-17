@@ -41,6 +41,36 @@ export type Database = {
         }
         Relationships: []
       }
+      connection_states: {
+        Row: {
+          connection_status: string
+          created_at: string
+          id: string
+          last_ping: string
+          player_id: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          connection_status?: string
+          created_at?: string
+          id?: string
+          last_ping?: string
+          player_id: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          connection_status?: string
+          created_at?: string
+          id?: string
+          last_ping?: string
+          player_id?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credits: {
         Row: {
           balance: number

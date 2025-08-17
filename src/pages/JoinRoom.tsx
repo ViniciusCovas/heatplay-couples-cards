@@ -38,8 +38,16 @@ export default function JoinRoom() {
       } else {
         toast.error(t('joinRoom.errors.invalidCode'));
       }
-    } catch (error) {
-      toast.error(t('joinRoom.errors.connectionError'));
+    } catch (error: any) {
+      if (error.message === 'room_full') {
+        toast.error('Room is full. Try another code or create a new room.');
+      } else if (error.message === 'room_not_found') {
+        toast.error(t('joinRoom.errors.invalidCode'));
+      } else if (error.message === 'player_not_ready') {
+        toast.error('Authentication not ready. Please refresh and try again.');
+      } else {
+        toast.error(t('joinRoom.errors.connectionError'));
+      }
     } finally {
       setIsLoading(false);
     }

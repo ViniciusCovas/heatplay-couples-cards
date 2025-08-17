@@ -24,15 +24,21 @@ export const useConnectionMonitor = (
     connectionStatus: 'disconnected'
   });
 
-  // Update connection status in database
+  // Update connection status in database using the connection_states table
   const updateConnectionStatus = useCallback(async (status: 'connected' | 'disconnected' | 'reconnecting') => {
     if (!roomId || !playerId) return;
 
     try {
-      await supabase.rpc('sync_game_state_reliably', {
+      // Use the sync function to update connection state
+      const { data, error } = await supabase.rpc('sync_game_state_reliably', {
         room_id_param: roomId,
         player_id_param: playerId
       });
+
+      if (error) {
+        logger.error('Failed to sync connection state', error);
+        return;
+      }
 
       setConnectionState(prev => ({
         ...prev,
@@ -41,46 +47,52 @@ export const useConnectionMonitor = (
         isConnected: status === 'connected'
       }));
 
-      logger.debug('Connection status updated', { status, roomId, playerId });
+      logger.debug('Connection status updated via sync', { status, roomId, playerId, syncResult: data });
     } catch (error) {
       logger.error('Failed to update connection status', error);
     }
   }, [roomId, playerId]);
 
-  // Periodic connection health check
+  // Periodic connection health check using connection_states table
   useEffect(() => {
     if (!roomId || !playerId) return;
 
     const pingInterval = setInterval(async () => {
       try {
-      // Use RPC to check connection state since table might not be in types
-      const { data, error } = await supabase.rpc('sync_game_state_reliably', {
-        room_id_param: roomId,
-        player_id_param: playerId
-      });
+        // Use the sync function to maintain connection health
+        const { data, error } = await supabase.rpc('sync_game_state_reliably', {
+          room_id_param: roomId,
+          player_id_param: playerId
+        });
 
-      if (error) {
-        logger.warn('Connection state check failed:', error);
+        if (error) {
+          logger.warn('Connection health check failed:', error);
+          setConnectionState(prev => ({
+            ...prev,
+            connectionStatus: 'disconnected',
+            isConnected: false
+          }));
+          return;
+        }
+
+        if (data && typeof data === 'object' && 'success' in data && data.success) {
+          setConnectionState(prev => ({
+            ...prev,
+            connectionStatus: 'connected',
+            lastPing: new Date(),
+            isConnected: true
+          }));
+          logger.debug('Connection health check successful', { roomId, playerId });
+        }
+      } catch (error) {
+        logger.error('Connection monitoring error:', error);
         setConnectionState(prev => ({
           ...prev,
           connectionStatus: 'disconnected',
           isConnected: false
         }));
-        return;
       }
-
-      if (data && typeof data === 'object' && 'success' in data && data.success) {
-        setConnectionState(prev => ({
-          ...prev,
-          connectionStatus: 'connected',
-          lastPing: new Date(),
-          isConnected: true
-        }));
-      }
-      } catch (error) {
-        logger.error('Connection monitoring error:', error);
-      }
-    }, 5000); // Check every 5 seconds
+    }, 10000); // Check every 10 seconds (reduced frequency)
 
     return () => clearInterval(pingInterval);
   }, [roomId, playerId]);
