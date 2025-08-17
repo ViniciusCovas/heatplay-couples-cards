@@ -5,6 +5,7 @@ import { usePlayerId } from './usePlayerId';
 import { useToast } from './use-toast';
 import { useTranslation } from 'react-i18next';
 import { logger } from '@/utils/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RoomManagerState {
   isJoining: boolean;
@@ -60,6 +61,26 @@ export const useRoomManager = () => {
       logger.debug('Already connected to target room', { roomCode, currentRoom: room.room_code });
       setState(prev => ({ ...prev, hasJoinedSuccessfully: true, lastProcessedRoomCode: roomCode }));
       return true;
+    }
+    
+    // Additional safety check: if we're already participants in this room, don't join again
+    if (room && playerId) {
+      try {
+        const { data: participantCheck } = await supabase
+          .from('room_participants')
+          .select('player_id')
+          .eq('room_id', room.id)
+          .eq('player_id', playerId)
+          .maybeSingle();
+          
+        if (participantCheck) {
+          logger.debug('Already a participant in this room', { roomCode, playerId });
+          setState(prev => ({ ...prev, hasJoinedSuccessfully: true, lastProcessedRoomCode: roomCode }));
+          return true;
+        }
+      } catch (error) {
+        logger.warn('Error checking participant status', error);
+      }
     }
 
     // Check readiness
