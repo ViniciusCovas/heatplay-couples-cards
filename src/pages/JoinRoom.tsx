@@ -13,23 +13,38 @@ import { Logo } from '@/components/ui/animated-logo';
 export default function JoinRoom() {
   const [roomCode, setRoomCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [hasProcessedUrl, setHasProcessedUrl] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { room, participants, joinRoom, leaveRoom, startGame } = useRoomService();
   const { t } = useTranslation();
 
-  // Handle URL room parameter for direct joins
+  // Handle URL room parameter for direct joins with race condition prevention
   useEffect(() => {
     const urlRoomCode = searchParams.get('room');
-    if (urlRoomCode && !room) {
+    
+    if (urlRoomCode && !room && !hasProcessedUrl && !isJoining) {
+      setHasProcessedUrl(true);
       setRoomCode(urlRoomCode.toUpperCase());
       // Auto-join if room code is in URL
       handleJoinRoom(urlRoomCode);
     }
-  }, [searchParams]);
+    
+    // Reset when URL room parameter is removed
+    if (!urlRoomCode && hasProcessedUrl) {
+      setHasProcessedUrl(false);
+    }
+  }, [searchParams.get('room'), room, hasProcessedUrl, isJoining]);
 
   const handleJoinRoom = async (codeToJoin?: string): Promise<void> => {
     const code = codeToJoin || roomCode;
+
+    // Prevent duplicate calls
+    if (isJoining) {
+      console.log('🔒 Room join already in progress, skipping duplicate call');
+      return;
+    }
 
     if (!code.trim()) {
       toast.error(t('joinRoom.errors.enterCode'));
@@ -42,17 +57,23 @@ export default function JoinRoom() {
     }
 
     setIsLoading(true);
+    setIsJoining(true);
     
     try {
+      console.log('🚀 Attempting to join room:', code);
       const success = await joinRoom(code.toUpperCase());
       
       if (success) {
+        console.log('✅ Successfully joined room');
         toast.success(t('joinRoom.success.connected'));
         if (!codeToJoin) setRoomCode(code); // Only update state if manual input
       } else {
+        console.log('❌ Room join unsuccessful');
         toast.error(t('joinRoom.errors.invalidCode'));
+        setHasProcessedUrl(false); // Reset to allow retry
       }
     } catch (error: any) {
+      console.log('❌ Room join error:', error.message);
       if (error.message === 'room_full') {
         toast.error('Room is full. Try another code or create a new room.');
       } else if (error.message === 'room_not_found') {
@@ -62,8 +83,10 @@ export default function JoinRoom() {
       } else {
         toast.error(t('joinRoom.errors.connectionError'));
       }
+      setHasProcessedUrl(false); // Reset to allow retry
     } finally {
       setIsLoading(false);
+      setIsJoining(false);
     }
   };
 
@@ -160,9 +183,9 @@ export default function JoinRoom() {
             <Button 
               onClick={() => handleJoinRoom()}
               className="w-full h-12 text-lg font-semibold btn-gradient-primary"
-              disabled={isLoading || roomCode.length !== 6}
+              disabled={isLoading || isJoining || roomCode.length !== 6}
             >
-              {isLoading ? (
+              {isLoading || isJoining ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                   {t('joinRoom.connecting')}
