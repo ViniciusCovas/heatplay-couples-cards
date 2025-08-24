@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useRoomService } from '@/hooks/useRoomService';
 import { useGameSync } from '@/hooks/useGameSync';
@@ -25,7 +25,7 @@ const ProximitySelection = () => {
   const [isSystemReady, setIsSystemReady] = useState(false);
   const [isRoomLoaded, setIsRoomLoaded] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-  const [hasProcessedUrl, setHasProcessedUrl] = useState(false);
+  const hasProcessedUrlRef = useRef(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -68,10 +68,10 @@ const ProximitySelection = () => {
   useEffect(() => {
     const handleRoomAccess = async () => {
       // Prevent race conditions and duplicate calls
-      if (!roomCode || !isSystemReady || isJoining || hasProcessedUrl) return;
+      if (!roomCode || !isSystemReady || isJoining || hasProcessedUrlRef.current) return;
       
       // Prevent duplicate processing
-      setHasProcessedUrl(true);
+      hasProcessedUrlRef.current = true;
       setIsJoining(true);
       
       try {
@@ -123,7 +123,14 @@ const ProximitySelection = () => {
     };
     
     handleRoomAccess();
-  }, [roomCode, isSystemReady, room?.room_code, isCreator, isJoining, hasProcessedUrl]);
+    
+    // Cleanup function
+    return () => {
+      if (roomCode) {
+        hasProcessedUrlRef.current = false;
+      }
+    };
+  }, [roomCode, isSystemReady, room?.room_code, isCreator]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
