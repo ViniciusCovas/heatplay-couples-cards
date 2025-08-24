@@ -35,6 +35,7 @@ interface UseRoomServiceReturn {
   playerNumber: 1 | 2 | null; // Added as stable state
   createRoom: (level: number, userId?: string) => Promise<string>;
   joinRoom: (roomCode: string) => Promise<boolean>;
+  syncRoomState: (roomCode: string) => Promise<boolean>; // Added for creators
   leaveRoom: () => Promise<void>;
   startGame: () => Promise<void>;
   updateRoomStatus: (status: 'waiting' | 'playing' | 'finished') => Promise<void>;
@@ -275,6 +276,75 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
   }, [effectivePlayerId, user?.id, isPlayerReady]);
 
+  const syncRoomState = useCallback(async (roomCode: string): Promise<boolean> => {
+    logger.debug('Syncing room state for creator', { roomCode, effectivePlayerId });
+
+    if (!effectivePlayerId) {
+      logger.error('No effective player ID for room state sync');
+      return false;
+    }
+
+    try {
+      // Find room by code that the user already participates in
+      const { data: roomData, error: roomError } = await supabase
+        .from('game_rooms')
+        .select('*')
+        .eq('room_code', roomCode)
+        .eq('status', 'waiting')
+        .single();
+
+      if (roomError || !roomData) {
+        logger.error('Failed to find room for sync', { roomCode, roomError });
+        return false;
+      }
+
+      // Verify user is already a participant
+      const { data: participantData, error: participantError } = await supabase
+        .from('room_participants')
+        .select('*')
+        .eq('room_id', roomData.id)
+        .eq('player_id', effectivePlayerId)
+        .single();
+
+      if (participantError || !participantData) {
+        logger.error('User not found as participant in room', { roomCode, effectivePlayerId });
+        return false;
+      }
+
+      // Load all participants
+      const { data: allParticipants, error: allParticipantsError } = await supabase
+        .from('room_participants')
+        .select('*, player_number')
+        .eq('room_id', roomData.id);
+
+      if (allParticipantsError) {
+        logger.warn('Could not load all participants during sync', allParticipantsError);
+      } else if (allParticipants) {
+        setParticipants(allParticipants as RoomParticipant[]);
+        logger.debug('Participants synced', { allParticipants });
+      }
+
+      // Set room state
+      setRoom({
+        id: roomData.id,
+        room_code: roomData.room_code,
+        level: roomData.level || 1,
+        status: roomData.status as 'waiting' | 'playing' | 'finished',
+        created_by: roomData.created_by || undefined,
+        created_at: roomData.created_at,
+        started_at: roomData.started_at || undefined,
+        finished_at: roomData.finished_at || undefined
+      });
+      setIsConnected(true);
+
+      logger.debug('Room state synced successfully', { roomId: roomData.id });
+      return true;
+    } catch (error) {
+      logger.error('Error syncing room state', error);
+      return false;
+    }
+  }, [effectivePlayerId]);
+
   // Add reliable game state sync function
   const syncGameStateReliably = useCallback(async (roomId: string, playerId: string) => {
     try {
@@ -458,6 +528,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     playerNumber,
     createRoom,
     joinRoom,
+    syncRoomState,
     leaveRoom,
     startGame,
     updateRoomStatus,

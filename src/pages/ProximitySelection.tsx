@@ -18,7 +18,7 @@ const ProximitySelection = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const { room, participants, isConnected, joinRoom } = useRoomService();
+  const { room, participants, isConnected, joinRoom, syncRoomState } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { user } = useAuth();
   const { gameState } = useGameSync(room?.id || null, playerId);
@@ -84,15 +84,19 @@ const ProximitySelection = () => {
         logger.debug('Processing room access', { roomCode, isCreator, isJoining: true });
         
         if (isCreator) {
-          // For creators, attempt to join to sync room state properly
-          logger.debug('Creator joining room to sync state', { roomCode });
-          const success = await joinRoom(roomCode);
+          // For creators, sync room state without joining (they're already participants)
+          logger.debug('Creator syncing room state', { roomCode });
+          const success = await syncRoomState(roomCode);
           if (success) {
             setIsRoomLoaded(true);
             logger.debug('Creator successfully synced room state');
           } else {
             logger.warn('Creator failed to sync room state');
-            setIsRoomLoaded(true); // Still proceed for creators
+            toast({
+              title: t('proximitySelection.errors.loadingFailed'),
+              description: t('proximitySelection.errors.tryAgain'),
+            });
+            navigate('/');
           }
         } else {
           // For joiners, attempt to join the room
