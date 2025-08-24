@@ -280,7 +280,11 @@
       "roomNotFoundDescription": "The room code you entered doesn't exist or has expired.",
       "loadingRoom": "Loading room...",
       "connectingAttempt": "Connecting to room... (Attempt {{current}}/{{max}})",
-      "backToHome": "Back to home"
+      "backToHome": "Back to home",
+      "joinFailed": "Failed to join room",
+      "invalidCode": "Invalid room code. Please check and try again.",
+      "loadingFailed": "Failed to load room",
+      "tryAgain": "Please try again later"
     }
   },
   "levelSelect": {

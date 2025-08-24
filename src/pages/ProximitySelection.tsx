@@ -24,6 +24,8 @@ const ProximitySelection = () => {
   const { gameState } = useGameSync(room?.id || null, playerId);
   const [isSystemReady, setIsSystemReady] = useState(false);
   const [isRoomLoaded, setIsRoomLoaded] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const [hasProcessedUrl, setHasProcessedUrl] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
 
@@ -62,10 +64,15 @@ const ProximitySelection = () => {
     checkSystemReady();
   }, [playerId, playerIdReady]);
 
-  // Handle room joining for non-creators or load room data for creators
+  // Handle room joining for non-creators or load room data for creators with race condition prevention
   useEffect(() => {
     const handleRoomAccess = async () => {
-      if (!roomCode || !isSystemReady) return;
+      // Prevent race conditions and duplicate calls
+      if (!roomCode || !isSystemReady || isJoining || hasProcessedUrl) return;
+      
+      // Prevent duplicate processing
+      setHasProcessedUrl(true);
+      setIsJoining(true);
       
       try {
         // Check if we already have room data
@@ -74,25 +81,28 @@ const ProximitySelection = () => {
           return;
         }
         
+        logger.debug('Processing room access', { roomCode, isCreator, isJoining: true });
+        
         if (isCreator) {
-          // For creators, just load room data directly
-          const { data: roomData } = await supabase
-            .from('game_rooms')
-            .select('*')
-            .eq('room_code', roomCode)
-            .single();
-            
-          if (roomData) {
-            logger.debug('Room data loaded for creator', { roomData });
-            setIsRoomLoaded(true);
-          }
-        } else {
-          // For joiners, attempt to join the room
-          logger.debug('Attempting to join room for non-creator', { roomCode });
+          // For creators, attempt to join to sync room state properly
+          logger.debug('Creator joining room to sync state', { roomCode });
           const success = await joinRoom(roomCode);
           if (success) {
             setIsRoomLoaded(true);
+            logger.debug('Creator successfully synced room state');
           } else {
+            logger.warn('Creator failed to sync room state');
+            setIsRoomLoaded(true); // Still proceed for creators
+          }
+        } else {
+          // For joiners, attempt to join the room
+          logger.debug('Joiner attempting to join room', { roomCode });
+          const success = await joinRoom(roomCode);
+          if (success) {
+            setIsRoomLoaded(true);
+            logger.debug('Joiner successfully joined room');
+          } else {
+            logger.warn('Joiner failed to join room');
             toast({
               title: t('proximitySelection.errors.joinFailed'),
               description: t('proximitySelection.errors.invalidCode'),
@@ -107,11 +117,13 @@ const ProximitySelection = () => {
           description: t('proximitySelection.errors.tryAgain'),
         });
         navigate('/');
+      } finally {
+        setIsJoining(false);
       }
     };
     
     handleRoomAccess();
-  }, [roomCode, isSystemReady, room, isCreator]);
+  }, [roomCode, isSystemReady, room?.room_code, isCreator, isJoining, hasProcessedUrl]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered
@@ -129,18 +141,34 @@ const ProximitySelection = () => {
   };
 
   // Show loading if system isn't ready or room isn't loaded
-  if (!isSystemReady || !isRoomLoaded || !room) {
+  if (!isSystemReady || !isRoomLoaded || isJoining) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
             {!isSystemReady
               ? "Initializing player..."
+              : isJoining
+              ? `${isCreator ? 'Syncing' : 'Joining'} room...`
               : !isRoomLoaded
               ? "Loading room data..."
               : t('proximitySelection.errors.loadingRoom')
             }
           </p>
+          <Button onClick={handleGoBack} variant="outline">
+            {t('proximitySelection.errors.backToHome')}
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show loading if room data is not available yet (fallback)
+  if (!room) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+        <Card className="p-6 text-center space-y-4">
+          <p>Waiting for room data...</p>
           <Button onClick={handleGoBack} variant="outline">
             {t('proximitySelection.errors.backToHome')}
           </Button>

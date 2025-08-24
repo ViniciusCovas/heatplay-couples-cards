@@ -270,7 +270,11 @@
       "verifyRoomCode": "No se pudo conectar a la sala. Por favor verifica el código de la sala.",
       "loadingRoom": "Cargando sala...",
       "connectingAttempt": "Conectando a la sala... (Intento {{current}}/{{max}})",
-      "backToHome": "Volver al inicio"
+      "backToHome": "Volver al inicio",
+      "joinFailed": "Error al unirse a la sala",
+      "invalidCode": "Código de sala inválido. Por favor verifica e intenta de nuevo.",
+      "loadingFailed": "Error al cargar la sala",
+      "tryAgain": "Por favor intenta de nuevo más tarde"
     }
   },
   "levels": {
