@@ -146,8 +146,10 @@
     "bothAnswered": "Tous les deux ont répondu ! ✓",
     "processing": "Traitement...",
     "pleaseWait": "Veuillez patienter un moment",
-    "advancing": "En cours...",
-    "preparing": "Préparation de la connexion..."
+    "advancing": "Avancement vers la sélection de niveau...",
+    "preparing": "Préparation de la connexion...",
+    "loading": "Connexion...",
+    "waitingConnection": "En attente de connexion..."
   },
   "levelSelect": {
     "title": "Cartes Intimes",

@@ -146,8 +146,10 @@
     "bothAnswered": "Ambos responderam! ✓",
     "processing": "Processando...",
     "pleaseWait": "Por favor aguarde um momento",
-    "advancing": "Avançando...",
-    "preparing": "Preparando para conectar..."
+    "advancing": "Avançando para seleção de nível...",
+    "preparing": "Preparando para conectar...",
+    "loading": "Conectando...",
+    "waitingConnection": "Aguardando conexão..."
   },
   "levelSelect": {
     "title": "Cartas Íntimas",

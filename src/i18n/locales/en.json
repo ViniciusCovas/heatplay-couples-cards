@@ -147,8 +147,10 @@
     "bothAnswered": "Both answered! ✓",
     "processing": "Processing...",
     "pleaseWait": "Please wait a moment",
-    "advancing": "Advancing...",
-    "preparing": "Preparing to connect..."
+    "advancing": "Advancing to level selection...",
+    "preparing": "Preparing to connect...",
+    "loading": "Connecting...",
+    "waitingConnection": "Waiting for connection..."
   },
   "levelSelect": {
     "title": "Intimate Cards",

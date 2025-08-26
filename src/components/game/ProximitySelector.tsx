@@ -31,15 +31,44 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
   useEffect(() => {
     logger.debug('ProximitySelector state check', { 
       current_phase: gameState?.current_phase,
-      isConfirmed
+      isConfirmed,
+      waitingForPartner
     });
     
     // Navigate immediately when phase advances to level-selection
     if (gameState?.current_phase === 'level-selection') {
       logger.debug('Phase advanced to level-selection, navigating both players');
-      navigate(`/level-select?room=${roomCode}`);
+      // Add small delay to ensure UI state is clean before navigation
+      setTimeout(() => {
+        navigate(`/level-select?room=${roomCode}`);
+      }, 500);
     }
-  }, [gameState?.current_phase, navigate, roomCode]);
+  }, [gameState?.current_phase, navigate, roomCode, isConfirmed, waitingForPartner]);
+
+  // Fallback navigation mechanism if real-time sync fails
+  useEffect(() => {
+    if (!isConfirmed || !room?.id) return;
+    
+    const fallbackCheck = setTimeout(async () => {
+      try {
+        // Direct database check as fallback
+        const { data: roomData, error } = await supabase
+          .from('game_rooms')
+          .select('current_phase')
+          .eq('id', room.id)
+          .single();
+          
+        if (!error && roomData?.current_phase === 'level-selection') {
+          logger.debug('Fallback navigation triggered - phase is level-selection');
+          navigate(`/level-select?room=${roomCode}`);
+        }
+      } catch (error) {
+        logger.warn('Fallback navigation check failed', error);
+      }
+    }, 3000); // 3 second fallback
+    
+    return () => clearTimeout(fallbackCheck);
+  }, [isConfirmed, room?.id, roomCode, navigate]);
 
   // Get current player number for individual response tracking
   const currentPlayerNumber = participants.find(p => p.player_id === playerId)?.player_number;
