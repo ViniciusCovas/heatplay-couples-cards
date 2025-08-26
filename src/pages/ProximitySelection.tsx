@@ -33,12 +33,14 @@ const ProximitySelection = () => {
   const stateRoomCode = location.state?.roomCode;
   const urlRoomCode = searchParams.get('room');
   const isCreator = location.state?.isCreator || false;
+  const alreadyJoined = location.state?.alreadyJoined || false; // Flag from JoinRoom
   const roomCode = stateRoomCode || urlRoomCode;
 
   logger.debug('ProximitySelection initialized', {
     stateRoomCode,
     urlRoomCode,
     isCreator,
+    alreadyJoined,
     finalRoomCode: roomCode
   });
 
@@ -70,18 +72,29 @@ const ProximitySelection = () => {
       // Prevent race conditions and duplicate calls
       if (!roomCode || !isSystemReady || isJoining || hasProcessedUrlRef.current) return;
       
+      // Check if we already have room data and are connected
+      if (room && room.room_code === roomCode && participants.some(p => p.player_id === playerId)) {
+        logger.debug('Player already connected to room, skipping join/sync', { 
+          roomCode, 
+          playerId, 
+          participantsCount: participants.length 
+        });
+        setIsRoomLoaded(true);
+        return;
+      }
+      
       // Prevent duplicate processing
       hasProcessedUrlRef.current = true;
       setIsJoining(true);
       
       try {
-        // Check if we already have room data
-        if (room && room.room_code === roomCode) {
-          setIsRoomLoaded(true);
-          return;
-        }
-        
-        logger.debug('Processing room access', { roomCode, isCreator, isJoining: true });
+        logger.debug('Processing room access', { 
+          roomCode, 
+          isCreator, 
+          alreadyJoined, 
+          hasRoomData: !!room,
+          participantsCount: participants.length
+        });
         
         if (isCreator) {
           // For creators, sync room state without joining (they're already participants)
@@ -98,15 +111,30 @@ const ProximitySelection = () => {
             });
             navigate('/');
           }
+        } else if (alreadyJoined) {
+          // Player already joined successfully from JoinRoom, just sync state
+          logger.debug('Player already joined from JoinRoom, syncing state only', { roomCode });
+          const success = await syncRoomState(roomCode);
+          if (success) {
+            setIsRoomLoaded(true);
+            logger.debug('Successfully synced room state for already-joined player');
+          } else {
+            logger.warn('Failed to sync room state for already-joined player');
+            toast({
+              title: t('proximitySelection.errors.loadingFailed'),
+              description: t('proximitySelection.errors.tryAgain'),
+            });
+            navigate('/');
+          }
         } else {
-          // For joiners, attempt to join the room
-          logger.debug('Joiner attempting to join room', { roomCode });
+          // For direct URL access (not from JoinRoom), attempt to join the room
+          logger.debug('Direct URL access - attempting to join room', { roomCode });
           const success = await joinRoom(roomCode);
           if (success) {
             setIsRoomLoaded(true);
-            logger.debug('Joiner successfully joined room');
+            logger.debug('Successfully joined room via direct access');
           } else {
-            logger.warn('Joiner failed to join room');
+            logger.warn('Failed to join room via direct access');
             toast({
               title: t('proximitySelection.errors.joinFailed'),
               description: t('proximitySelection.errors.invalidCode'),
@@ -134,7 +162,7 @@ const ProximitySelection = () => {
         hasProcessedUrlRef.current = false;
       }
     };
-  }, [roomCode, isSystemReady, room?.room_code, isCreator]);
+  }, [roomCode, isSystemReady, room?.room_code, isCreator, alreadyJoined, participants, playerId]);
 
   useEffect(() => {
     // Navigate to level select when proximity question is answered

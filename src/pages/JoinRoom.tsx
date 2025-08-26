@@ -92,7 +92,13 @@ export default function JoinRoom() {
 
   const handleGameStart = async (): Promise<void> => {
     await startGame(); // Espera a que startGame() termine
-    navigate('/proximity-selection', { state: { roomCode: room?.room_code, isCreator: false } });
+    navigate('/proximity-selection', { 
+      state: { 
+        roomCode: room?.room_code, 
+        isCreator: false,
+        alreadyJoined: true // Flag to indicate player already joined successfully
+      } 
+    });
   };
 
   const handleLeaveRoom = (): void => {
