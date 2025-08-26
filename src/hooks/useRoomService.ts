@@ -207,13 +207,18 @@ export const useRoomService = (): UseRoomServiceReturn => {
         const knownError = (joinResult && joinResult.error) ? joinResult.error : 'unknown';
         console.warn('❌ Room join unsuccessful:', joinResult);
         
+        // Provide specific error messages for different scenarios
         if (knownError === 'room_full') {
-          throw new Error('room_full');
+          throw new Error('This room is already full. Only 2 players can join a room.');
         }
         if (knownError === 'room_not_found') {
-          throw new Error('room_not_found');
+          throw new Error('Room not found. Please check the room code.');
         }
-        return false;
+        if (knownError === 'room_closed') {
+          throw new Error('This room is no longer accepting new players.');
+        }
+        
+        throw new Error(knownError);
       }
 
       console.log('✅ Successfully joined room via RPC:', joinResult);
@@ -285,18 +290,28 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
 
     try {
-      // Find room by code that the user already participates in
+      // Find room by code that the user already participates in (any active status)
       const { data: roomData, error: roomError } = await supabase
         .from('game_rooms')
         .select('*')
         .eq('room_code', roomCode)
-        .eq('status', 'waiting')
+        .in('status', ['waiting', 'playing'])
         .single();
 
       if (roomError || !roomData) {
-        logger.error('Failed to find room for sync', { roomCode, roomError });
+        logger.error('Failed to find room for sync', { 
+          roomCode, 
+          roomError, 
+          message: 'Room not found or not in active status' 
+        });
         return false;
       }
+
+      logger.debug('Found room for sync', { 
+        roomId: roomData.id, 
+        status: roomData.status,
+        roomCode 
+      });
 
       // Verify user is already a participant
       const { data: participantData, error: participantError } = await supabase
@@ -307,9 +322,19 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .single();
 
       if (participantError || !participantData) {
-        logger.error('User not found as participant in room', { roomCode, effectivePlayerId });
+        logger.error('User not found as participant in room', { 
+          roomCode, 
+          effectivePlayerId, 
+          participantError,
+          message: 'Creator not found in room participants' 
+        });
         return false;
       }
+
+      logger.debug('Creator verified as participant', { 
+        participantId: participantData.id,
+        playerNumber: participantData.player_number 
+      });
 
       // Load all participants
       const { data: allParticipants, error: allParticipantsError } = await supabase
@@ -337,7 +362,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
       });
       setIsConnected(true);
 
-      logger.debug('Room state synced successfully', { roomId: roomData.id });
+      logger.debug('Room state synced successfully', { 
+        roomId: roomData.id, 
+        status: roomData.status,
+        participantsCount: allParticipants?.length || 0 
+      });
       return true;
     } catch (error) {
       logger.error('Error syncing room state', error);
