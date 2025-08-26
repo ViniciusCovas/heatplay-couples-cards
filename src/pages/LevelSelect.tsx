@@ -59,6 +59,7 @@ const LevelSelect = () => {
   const [loading, setLoading] = useState(true);
   const [showMismatchAnimation, setShowMismatchAnimation] = useState(false);
   const [showMatchAnimation, setShowMatchAnimation] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
   // Fetch levels from database
   useEffect(() => {
@@ -225,6 +226,57 @@ const LevelSelect = () => {
     }
   }, [i18n.language, playerId, playerIdReady, t]);
 
+  // Room connection logic (similar to ProximitySelection)
+  useEffect(() => {
+    if (!roomCode || !playerId || !playerIdReady || isJoining) return;
+    
+    const handleRoomAccess = async () => {
+      logger.debug('LevelSelect - handleRoomAccess called', { 
+        roomCode, 
+        playerId, 
+        isConnected, 
+        room: room?.id 
+      });
+      
+      if (isConnected && room) {
+        logger.debug('Already connected to room:', room.id);
+        return;
+      }
+      
+      setIsJoining(true);
+      
+      try {
+        // Try to join the room using the service
+        logger.debug('Attempting to join room via service:', roomCode);
+        const joinSuccess = await joinRoom(roomCode);
+        
+        if (joinSuccess) {
+          logger.debug('Successfully joined room via service');
+        } else {
+          logger.warn('Join room via service returned false');
+          toast({
+            title: t('error.title', 'Error'),
+            description: t('error.roomNotFound', 'Room not found or unable to join'),
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        logger.error('Error in handleRoomAccess:', error);
+        toast({
+          title: t('error.title', 'Error'),
+          description: t('error.connectionFailed', 'Failed to connect to room'),
+          variant: "destructive"
+        });
+      } finally {
+        setIsJoining(false);
+      }
+    };
+    
+    // Small delay to allow other hooks to initialize
+    const timer = setTimeout(handleRoomAccess, 100);
+    return () => clearTimeout(timer);
+  }, [roomCode, playerId, playerIdReady, isConnected, room, joinRoom, isJoining, t, toast]);
+
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
     if (!level) return;
@@ -300,11 +352,19 @@ const LevelSelect = () => {
     );
   }
 
-  if (roomCode && !isConnected && !room) {
+  if (roomCode && (!isConnected || !room || isJoining)) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">{t('connecting.room', 'Connecting to room {{roomCode}}...', { roomCode })}</p>
+          <div className="w-6 h-6 mx-auto">
+            <div className="w-full h-full border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+          </div>
+          <p className="text-muted-foreground">
+            {isJoining 
+              ? t('connecting.joining', 'Joining room {{roomCode}}...', { roomCode })
+              : t('connecting.room', 'Connecting to room {{roomCode}}...', { roomCode })
+            }
+          </p>
           <Button onClick={() => navigate('/')}>{t('button.back_home', 'Back to Home')}</Button>
         </div>
       </div>
