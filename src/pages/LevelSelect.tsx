@@ -32,7 +32,7 @@ const LevelSelect = () => {
   const roomCode = searchParams.get('room');
   const { i18n, t } = useTranslation();
   const { toast } = useToast();
-  const { room, getPlayerNumber, joinRoom, isConnected } = useRoomService();
+  const { room, getPlayerNumber, joinRoom, syncRoomState, isConnected } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
   // Remove unused imports and methods since we're now fully automatic
@@ -226,7 +226,7 @@ const LevelSelect = () => {
     }
   }, [i18n.language, playerId, playerIdReady, t]);
 
-  // Room connection logic (similar to ProximitySelection)
+  // Room connection logic with participant checking
   useEffect(() => {
     if (!roomCode || !playerId || !playerIdReady || isJoining) return;
     
@@ -246,27 +246,91 @@ const LevelSelect = () => {
       setIsJoining(true);
       
       try {
-        // Try to join the room using the service
-        logger.debug('Attempting to join room via service:', roomCode);
-        const joinSuccess = await joinRoom(roomCode);
-        
-        if (joinSuccess) {
-          logger.debug('Successfully joined room via service');
+        // First check if player is already a participant in this room
+        logger.debug('Checking if player is already a participant in room:', roomCode);
+        const { data: existingParticipant, error: participantError } = await supabase
+          .from('room_participants')
+          .select('room_id, player_id, player_number')
+          .eq('player_id', playerId)
+          .eq('room_id', (await supabase
+            .from('game_rooms')
+            .select('id')
+            .eq('room_code', roomCode)
+            .single()).data?.id || '')
+          .maybeSingle();
+
+        if (participantError && participantError.code !== 'PGRST116') {
+          logger.error('Error checking participant status:', participantError);
+        }
+
+        if (existingParticipant) {
+          // Player is already a participant, use syncRoomState instead of joinRoom
+          logger.debug('Player is already a participant, syncing room state');
+          const syncSuccess = await syncRoomState(roomCode);
+          
+          if (syncSuccess) {
+            logger.debug('Successfully synced room state');
+          } else {
+            logger.warn('Sync room state returned false');
+            toast({
+              title: t('error.title', 'Error'),
+              description: t('error.connectionFailed', 'Failed to connect to room'),
+              variant: "destructive"
+            });
+          }
         } else {
-          logger.warn('Join room via service returned false');
+          // Player is not a participant, try to join
+          logger.debug('Player is not a participant, attempting to join room');
+          const joinSuccess = await joinRoom(roomCode);
+          
+          if (joinSuccess) {
+            logger.debug('Successfully joined room');
+          } else {
+            logger.warn('Join room returned false - may be room full');
+            // If join failed due to room being full, try to sync instead
+            // This handles the case where the player was already in the room but state was lost
+            logger.debug('Join failed, attempting to sync room state as fallback');
+            const syncSuccess = await syncRoomState(roomCode);
+            
+            if (!syncSuccess) {
+              toast({
+                title: t('error.title', 'Error'),
+                description: t('error.roomNotFound', 'Room not found or unable to join'),
+                variant: "destructive"
+              });
+            }
+          }
+        }
+      } catch (error: any) {
+        logger.error('Error in handleRoomAccess:', error);
+        
+        // If we get a "room_full" error, try to sync instead
+        if (error?.message?.includes('room_full')) {
+          logger.debug('Room full error, attempting to sync room state');
+          try {
+            const syncSuccess = await syncRoomState(roomCode);
+            if (!syncSuccess) {
+              toast({
+                title: t('error.title', 'Error'),
+                description: t('error.roomFull', 'Room is full. Please try a different room.'),
+                variant: "destructive"
+              });
+            }
+          } catch (syncError) {
+            logger.error('Sync fallback also failed:', syncError);
+            toast({
+              title: t('error.title', 'Error'),
+              description: t('error.connectionFailed', 'Failed to connect to room'),
+              variant: "destructive"
+            });
+          }
+        } else {
           toast({
             title: t('error.title', 'Error'),
-            description: t('error.roomNotFound', 'Room not found or unable to join'),
+            description: t('error.connectionFailed', 'Failed to connect to room'),
             variant: "destructive"
           });
         }
-      } catch (error) {
-        logger.error('Error in handleRoomAccess:', error);
-        toast({
-          title: t('error.title', 'Error'),
-          description: t('error.connectionFailed', 'Failed to connect to room'),
-          variant: "destructive"
-        });
       } finally {
         setIsJoining(false);
       }
@@ -275,7 +339,7 @@ const LevelSelect = () => {
     // Small delay to allow other hooks to initialize
     const timer = setTimeout(handleRoomAccess, 100);
     return () => clearTimeout(timer);
-  }, [roomCode, playerId, playerIdReady, isConnected, room, joinRoom, isJoining, t, toast]);
+  }, [roomCode, playerId, playerIdReady, isConnected, room, joinRoom, syncRoomState, isJoining, t, toast, supabase]);
 
   const handleLevelClick = (levelId: number) => {
     const level = levels.find(l => l.id === levelId);
