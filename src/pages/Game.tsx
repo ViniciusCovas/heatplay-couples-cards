@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowUp, Home, Users, Play, BarChart3, Timer } from "lucide-react";
+import { ArrowUp, Home, Users, Play, BarChart3, Timer, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
@@ -18,6 +18,7 @@ import { calculateConnectionScore, type GameResponse } from "@/utils/connectionA
 import { useRoomService } from "@/hooks/useRoomService";
 import { useGameSync } from "@/hooks/useGameSync";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/utils/logger";
 
@@ -34,9 +35,11 @@ const Game = () => {
     playerNumber,
     updateRoomStatus,
     joinRoom, 
+    syncRoomState,
     isConnected 
   } = useRoomService();
   const { playerId, isReady: playerIdReady } = usePlayerId();
+  const { user, loading: authLoading } = useAuth();
   const { t, i18n } = useTranslation();
   
   // Questions will be loaded from database
@@ -48,6 +51,17 @@ const Game = () => {
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
+
+  // Room connection state management
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+  const [isRoomLoaded, setIsRoomLoaded] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const connectionAttemptRef = useRef(false);
+
+  // System readiness
+  const effectivePlayerId = user?.id || playerId;
+  const isSystemReady = playerIdReady && !authLoading && !!effectivePlayerId;
 
   // Game state
   const [currentCard, setCurrentCard] = useState(''); // This stores the question ID
@@ -67,8 +81,137 @@ const Game = () => {
     room: room?.id,
     gamePhase,
     playerId,
-    playerNumber
+    playerNumber,
+    isSystemReady,
+    isConnected,
+    isJoiningRoom,
+    isRoomLoaded,
+    connectionError
   });
+
+  // Room initialization logic
+  useEffect(() => {
+    const initializeRoomConnection = async () => {
+      if (!roomCode) {
+        setConnectionError(t('game.errors.noRoomCodeInUrl'));
+        return;
+      }
+
+      if (!isSystemReady) {
+        logger.debug('System not ready, delaying room initialization', { playerIdReady, authLoading, effectivePlayerId });
+        return;
+      }
+
+      // Prevent duplicate connection attempts
+      if (connectionAttemptRef.current || (isConnected && room?.id && isRoomLoaded)) {
+        logger.debug('Connection already in progress or established', {
+          connectionAttemptRef: connectionAttemptRef.current,
+          isConnected,
+          roomId: room?.id,
+          isRoomLoaded
+        });
+        return;
+      }
+
+      connectionAttemptRef.current = true;
+      setIsJoiningRoom(true);
+      setConnectionError(null);
+      logger.info('Attempting to initialize room connection', { roomCode, effectivePlayerId });
+
+      try {
+        // Check if player is already a participant
+        const { data: currentRoomData, error: roomFetchError } = await supabase
+          .from('game_rooms')
+          .select('id, room_code, status')
+          .eq('room_code', roomCode)
+          .single();
+
+        if (roomFetchError || !currentRoomData) {
+          throw new Error(t('game.errors.roomNotFound'));
+        }
+
+        const { data: existingParticipant, error: participantError } = await supabase
+          .from('room_participants')
+          .select('*')
+          .eq('room_id', currentRoomData.id)
+          .eq('player_id', effectivePlayerId)
+          .single();
+
+        let success = false;
+        if (existingParticipant) {
+          logger.info('Player is existing participant, syncing room state', { roomCode });
+          success = await syncRoomState(roomCode);
+        } else {
+          logger.info('Player not a participant, joining room', { roomCode });
+          success = await joinRoom(roomCode);
+        }
+
+        if (success) {
+          logger.info('Room connection established successfully');
+          setIsRoomLoaded(true);
+          setRetryCount(0);
+        } else {
+          throw new Error(t('game.errors.failedToEstablishConnection'));
+        }
+      } catch (error: any) {
+        logger.error('Room connection initialization failed', error);
+        setConnectionError(error.message || t('game.errors.roomConnectionFailed'));
+
+        // Retry logic
+        if (retryCount < 3) {
+          const retryDelay = 2000 * (retryCount + 1);
+          logger.warn(`Retrying connection in ${retryDelay / 1000}s. Attempt ${retryCount + 1}/3`);
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            connectionAttemptRef.current = false;
+          }, retryDelay);
+        } else {
+          toast({
+            title: t('common.error'),
+            description: t('game.errors.maxRetriesReached'),
+            variant: "destructive",
+          });
+          setTimeout(() => navigate('/'), 3000);
+        }
+      } finally {
+        if (retryCount >= 3 || connectionError === null) {
+          setIsJoiningRoom(false);
+          connectionAttemptRef.current = false;
+        }
+      }
+    };
+
+    if (!room?.id || !isConnected || !isRoomLoaded) {
+      initializeRoomConnection();
+    }
+
+    return () => {
+      connectionAttemptRef.current = false;
+    };
+  }, [
+    roomCode,
+    isSystemReady,
+    isConnected,
+    room?.id,
+    joinRoom,
+    syncRoomState,
+    navigate,
+    toast,
+    t,
+    retryCount,
+    effectivePlayerId,
+    isRoomLoaded,
+  ]);
+
+  // Track when room connection is established
+  useEffect(() => {
+    if (isConnected && room?.id && !isJoiningRoom) {
+      setIsRoomLoaded(true);
+      logger.info('Room connection confirmed, setting isRoomLoaded to true');
+    } else if (!isConnected || !room?.id) {
+      setIsRoomLoaded(false);
+    }
+  }, [isConnected, room?.id, isJoiningRoom]);
 
   // RESET GAME STATE WHEN LEVEL CHANGES
   useEffect(() => {
@@ -239,7 +382,7 @@ const Game = () => {
 
           if (responseData) {
             // Get partner's name based on their player ID
-            const partnerName = responseData.player_id !== playerId ? 
+            const partnerName = responseData.player_id !== effectivePlayerId ? 
               (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
               t('game.yourResponse');
 
@@ -259,7 +402,7 @@ const Game = () => {
     };
 
     setupEvaluationData();
-  }, [gamePhase, gameState, room, pendingEvaluation, playerId, playerNumber, t]);
+  }, [gamePhase, gameState, room, pendingEvaluation, effectivePlayerId, playerNumber, t]);
   
   // Level up confirmation
   const [showLevelUpConfirmation, setShowLevelUpConfirmation] = useState(false);
@@ -300,6 +443,11 @@ const Game = () => {
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
+      if (!isRoomLoaded || !room?.id) {
+        logger.debug('Skipping question fetch: room not loaded', { isRoomLoaded, roomId: room?.id });
+        return;
+      }
+
       try {
         // Use room's selected language if available, otherwise fall back to UI language
         const gameLanguage = gameState?.selected_language || i18n.language;
@@ -370,7 +518,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, i18n.language, gameState?.current_card, gameState?.selected_language, updateGameState, prevLanguage]);
+  }, [currentLevel, i18n.language, gameState?.current_card, gameState?.selected_language, updateGameState, prevLanguage, isRoomLoaded, room?.id]);
 
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
@@ -458,6 +606,11 @@ const Game = () => {
   // Initialize card only if not set by game state and it's my turn to generate
   useEffect(() => {
     const generateCard = async () => {
+      if (!isRoomLoaded || !room?.id || !isConnected) {
+        logger.debug('Skipping card generation: room not ready', { isRoomLoaded, roomId: room?.id, isConnected });
+        return;
+      }
+
       if (levelCards.length > 0 && 
           !gameState?.current_card && 
           isMyTurn && 
@@ -525,7 +678,7 @@ const Game = () => {
     };
 
     generateCard();
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language]);
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language, isRoomLoaded, isConnected]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
@@ -631,7 +784,7 @@ const Game = () => {
         actualResponseTime, 
         currentCardFromState,
         currentRound,
-        playerId,
+        effectivePlayerId,
         currentTurn,
         aiCardInfo: aiCardInfo,
         selectionMethod: aiCardInfo?.selectionMethod || 'random',
@@ -643,7 +796,7 @@ const Game = () => {
         .from('game_responses')
         .insert({
           room_id: room.id,
-          player_id: playerId,
+          player_id: effectivePlayerId,
           card_id: currentCardFromState,
           response: response,
           response_time: Math.round(actualResponseTime), // Store actual timer-based response time
@@ -776,7 +929,7 @@ const Game = () => {
         .from('game_responses')
         .update({
           evaluation: JSON.stringify(enhancedEvaluation),
-          evaluation_by: playerId
+          evaluation_by: effectivePlayerId
         })
         .eq('id', pendingEvaluation.responseId);
 
@@ -984,29 +1137,43 @@ const Game = () => {
     );
   }
   
-  // Show loading if we're trying to connect to a room
-  if (roomCode && !isConnected && !room) {
+  // Enhanced loading states
+  if (!isRoomLoaded || !room?.id || !isConnected || isJoiningRoom) {
+    let loadingMessage = t('game.connectingToRoom');
+    if (!isSystemReady) {
+      loadingMessage = t('game.initializingPlayer');
+    } else if (isJoiningRoom) {
+      loadingMessage = t('game.joiningRoom');
+    } else if (!isRoomLoaded || !room?.id) {
+      loadingMessage = t('game.loadingGameData');
+    }
+
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center space-y-6 max-w-md">
           <div className="w-20 h-20 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
-            <Users className="w-10 h-10 text-primary animate-pulse" />
+            <Loader2 className="w-10 h-10 text-primary animate-spin" />
           </div>
           <div className="space-y-2">
             <h2 className="text-xl font-heading text-foreground">
-              {t('game.connectingToRoom')}
+              {loadingMessage}
             </h2>
-            <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>
+            {roomCode && <p className="text-sm text-muted-foreground">{t('game.room')}: {roomCode}</p>}
+            {connectionError && (
+              <p className="text-sm text-destructive">{connectionError}</p>
+            )}
           </div>
-          
-          <Button 
-            variant="outline" 
-            onClick={() => navigate('/')}
-            className="w-full"
-          >
-            <Home className="w-4 h-4 mr-2" />
-            {t('common.backToHome')}
-          </Button>
+
+          {(connectionError || retryCount >= 3 || (!isConnected && !isJoiningRoom)) && (
+            <Button
+              variant="outline"
+              onClick={() => navigate('/')}
+              className="w-full"
+            >
+              <Home className="w-4 h-4 mr-2" />
+              {t('common.backToHome')}
+            </Button>
+          )}
         </div>
       </div>
     );
