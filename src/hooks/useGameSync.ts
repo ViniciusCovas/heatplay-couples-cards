@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 interface GameSyncAction {
   id: string;
   room_id: string;
-  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'level_change' | 'navigate_to_level_select' | 'turn_advance' | 'game_finish' | 'change_level_request' | 'level_mismatch' | 'level_change_request';
+  action_type: 'proximity_answer' | 'card_reveal' | 'response_submit' | 'evaluation_submit' | 'evaluation_complete' | 'level_change' | 'navigate_to_level_select' | 'turn_advance' | 'game_finish' | 'change_level_request' | 'level_mismatch' | 'level_change_request';
   action_data: any;
   triggered_by: string;
   created_at: string;
@@ -36,7 +36,7 @@ interface UseGameSyncReturn {
   isLoading: boolean;
 }
 
-export const useGameSync = (roomId: string | null, playerId: string): UseGameSyncReturn => {
+export const useGameSync = (roomId: string | null, playerId: string, playerNumber?: number): UseGameSyncReturn => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { t, i18n } = useTranslation();
@@ -267,6 +267,18 @@ export const useGameSync = (roomId: string | null, playerId: string): UseGameSyn
         
         if (action.action_data?.nextCard) {
           setTimeout(() => showToast(t('game.notifications.newCardAvailable')), 500);
+        }
+        break;
+
+      case 'evaluation_complete':
+        // Database trigger has advanced the game automatically
+        const nextPlayerNumber = action.action_data?.next_player_number;
+        const isMyNextTurn = (playerNumber === nextPlayerNumber);
+        
+        if (isMyNextTurn) {
+          showToast(t('game.notifications.yourTurn'), 'success');
+        } else {
+          showToast(t('game.notifications.waitingForPlayer'));
         }
         break;
       case 'turn_advance':

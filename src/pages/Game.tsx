@@ -47,7 +47,7 @@ const Game = () => {
   const [levelNames, setLevelNames] = useState<Record<number, string>>({});
   
   // Get game sync data
-  const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId);
+  const { gameState, syncAction, updateGameState } = useGameSync(room?.id || null, playerId, playerNumber || undefined);
   
   const roomCode = searchParams.get('room');
   const currentLevel = parseInt(searchParams.get('level') || '1');
@@ -940,8 +940,8 @@ const Game = () => {
 
       logger.info('Evaluation saved successfully with timing context');
 
-      // Call centralized function to advance to next round
-      await advanceToNextRound(pendingEvaluation.question);
+      // Database trigger will handle advancing to next round automatically
+      // No need to call advanceToNextRound() - it would conflict with the trigger
       
       setPendingEvaluation(null);
     } catch (error) {
