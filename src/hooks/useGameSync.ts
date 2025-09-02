@@ -172,8 +172,8 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
     }
   }, [roomId, playerId]);
 
-  const handleSyncAction = async (action: GameSyncAction) => {
-    // Add small delay to prevent notification overlap
+  const handleSyncAction = useCallback(async (action: GameSyncAction) => {
+    // Add debouncing to prevent rapid successive updates
     const showToast = (message: string, type: 'success' | 'info' | 'error' = 'info') => {
       // Dismiss existing toasts and show new one after delay
       setTimeout(() => {
@@ -187,7 +187,7 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
           default:
             toast.info(message);
         }
-      }, 100);
+      }, 150);
     };
 
     switch (action.action_type) {
@@ -329,7 +329,7 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
         window.location.href = `/level-select?room=${action.action_data.roomCode}`;
         break;
     }
-  };
+  }, [roomId, playerId, playerNumber, t]);
 
   const syncAction = useCallback(async (action_type: GameSyncAction['action_type'], action_data: any) => {
     if (!roomId) {

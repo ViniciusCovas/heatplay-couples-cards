@@ -41,11 +41,22 @@ export const ResponseEvaluation = ({
     intimacy: 3,
     surprise: 3
   });
+  const [isClosing, setIsClosing] = useState(false);
 
-  if (!isVisible) return null;
+  if (!isVisible && !isClosing) return null;
 
   const handleSubmit = () => {
+    if (isSubmitting) return; // Prevent double submission
+    logger.debug('ResponseEvaluation: Submitting evaluation', evaluation);
     onSubmitEvaluation(evaluation);
+  };
+
+  const handleCancel = () => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setIsClosing(false);
+      onCancel();
+    }, 200);
   };
 
   const updateEvaluation = (key: keyof EvaluationData, value: number) => {
@@ -88,8 +99,8 @@ export const ResponseEvaluation = ({
   logger.debug('ResponseEvaluation language', { language: i18n.language });
   
   return (
-    <div className="fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-lg p-6 space-y-6 animate-scale-in max-h-[90vh] overflow-y-auto romantic-card">
+    <div className={`fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
+      <Card className={`w-full max-w-lg p-6 space-y-6 max-h-[90vh] overflow-y-auto romantic-card transition-transform duration-200 ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-brand font-semibold text-foreground">
@@ -102,8 +113,9 @@ export const ResponseEvaluation = ({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onCancel}
+            onClick={handleCancel}
             className="h-8 w-8"
+            disabled={isSubmitting}
           >
             <X className="h-4 w-4" />
           </Button>

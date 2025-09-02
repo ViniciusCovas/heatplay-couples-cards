@@ -940,10 +940,19 @@ const Game = () => {
 
       logger.info('Evaluation saved successfully with timing context');
 
+      // Show success feedback immediately
+      toast({
+        title: t('game.evaluation.submitted'),
+        description: t('game.evaluation.processing'),
+        variant: "default",
+      });
+
       // Database trigger will handle advancing to next round automatically
-      // No need to call advanceToNextRound() - it would conflict with the trigger
+      // Delay clearing pendingEvaluation to prevent immediate modal disappearance
+      setTimeout(() => {
+        setPendingEvaluation(null);
+      }, 300);
       
-      setPendingEvaluation(null);
     } catch (error) {
       logger.error('Error submitting evaluation', error);
       toast({
