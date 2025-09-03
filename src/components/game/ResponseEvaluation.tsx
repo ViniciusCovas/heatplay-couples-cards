@@ -47,7 +47,12 @@ export const ResponseEvaluation = ({
 
   const handleSubmit = () => {
     if (isSubmitting) return; // Prevent double submission
-    logger.debug('ResponseEvaluation: Submitting evaluation', evaluation);
+    logger.debug('ResponseEvaluation: Submitting evaluation', {
+      evaluation,
+      playerName,
+      isSubmitting,
+      questionPreview: question.substring(0, 50)
+    });
     onSubmitEvaluation(evaluation);
   };
 

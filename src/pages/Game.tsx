@@ -59,9 +59,20 @@ const Game = () => {
   const [retryCount, setRetryCount] = useState(0);
   const connectionAttemptRef = useRef(false);
 
-  // System readiness
+  // System readiness and player ID resolution
+  // CRITICAL FIX: For anonymous users, always use playerId (not user?.id)
+  // For authenticated users, use their auth ID for database consistency
   const effectivePlayerId = user?.id || playerId;
   const isSystemReady = playerIdReady && !authLoading && !!effectivePlayerId;
+  
+  // Debug logging for player ID resolution
+  logger.debug('Player ID resolution', {
+    userId: user?.id,
+    playerId,
+    effectivePlayerId,
+    isAuthenticated: !!user,
+    isSystemReady
+  });
 
   // Game state
   const [currentCard, setCurrentCard] = useState(''); // This stores the question ID
@@ -911,9 +922,43 @@ const Game = () => {
     setIsSubmitting(true);
 
     try {
-      logger.info('Submitting evaluation with timing context', { 
+      // CRITICAL FIX: Ensure we're using the correct evaluating player ID
+      // The evaluating player should be the one who DIDN'T write the response
+      let evaluatingPlayerId = effectivePlayerId;
+      
+      // Get the response details to find who wrote it
+      const { data: responseData, error: responseError } = await supabase
+        .from('game_responses')
+        .select('player_id')
+        .eq('id', pendingEvaluation.responseId)
+        .single();
+        
+      if (responseError) {
+        logger.error('Error fetching response data', responseError);
+        throw responseError;
+      }
+      
+      // Validate that evaluating player is different from responding player
+      if (responseData?.player_id === effectivePlayerId) {
+        logger.error('Self-evaluation attempt detected', {
+          responsePlayerId: responseData.player_id,
+          evaluatingPlayerId: effectivePlayerId
+        });
+        
+        toast({
+          title: t('common.error'),
+          description: 'Cannot evaluate your own response',
+          variant: "destructive",
+        });
+        return;
+      }
+
+      logger.info('Submitting evaluation with detailed context', { 
         evaluation, 
-        responseId: pendingEvaluation.responseId 
+        responseId: pendingEvaluation.responseId,
+        responsePlayerId: responseData.player_id,
+        evaluatingPlayerId,
+        roomId: room.id
       });
 
       // Enhanced evaluation data to include timing insights
@@ -924,17 +969,39 @@ const Game = () => {
         }
       };
 
-      // Save evaluation to database
+      // Save evaluation to database with improved error handling
       const { error: evaluationError } = await supabase
         .from('game_responses')
         .update({
           evaluation: JSON.stringify(enhancedEvaluation),
-          evaluation_by: effectivePlayerId
+          evaluation_by: evaluatingPlayerId
         })
         .eq('id', pendingEvaluation.responseId);
 
       if (evaluationError) {
-        logger.error('Error saving evaluation', evaluationError);
+        logger.error('Database evaluation error details', {
+          error: evaluationError,
+          code: evaluationError.code,
+          message: evaluationError.message,
+          details: evaluationError.details,
+          hint: evaluationError.hint
+        });
+        
+        // Enhanced error handling for specific database errors
+        if (evaluationError.message?.includes('Player cannot evaluate their own response')) {
+          toast({
+            title: 'Evaluation Error',
+            description: 'You cannot evaluate your own response. Please wait for your partner to evaluate.',
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: 'Database Error',
+            description: `Failed to save evaluation: ${evaluationError.message}`,
+            variant: "destructive",
+          });
+        }
+        
         throw evaluationError;
       }
 
@@ -953,11 +1020,20 @@ const Game = () => {
         setPendingEvaluation(null);
       }, 300);
       
-    } catch (error) {
-      logger.error('Error submitting evaluation', error);
+    } catch (error: any) {
+      logger.error('Comprehensive evaluation submission error', {
+        error,
+        errorMessage: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+        effectivePlayerId,
+        pendingEvaluation,
+        roomId: room?.id
+      });
+      
       toast({
         title: t('common.error'),
-        description: t('game.errors.evaluationSaveFailed'),
+        description: error?.message || t('game.errors.evaluationSaveFailed'),
         variant: "destructive"
       });
     } finally {
