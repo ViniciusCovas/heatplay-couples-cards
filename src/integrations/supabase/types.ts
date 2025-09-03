@@ -69,7 +69,15 @@ export type Database = {
           room_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_connection_states_room_id"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credits: {
         Row: {
@@ -178,6 +186,13 @@ export type Database = {
           selection_method?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_game_responses_room_id"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "game_responses_room_id_fkey"
             columns: ["room_id"]
@@ -303,6 +318,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_game_sync_room_id"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "game_sync_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
@@ -334,6 +356,13 @@ export type Database = {
           selected_level?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_level_selection_votes_room_id"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "level_selection_votes_room_id_fkey"
             columns: ["room_id"]
@@ -498,6 +527,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "fk_room_participants_room_id"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "room_participants_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
@@ -571,6 +607,10 @@ export type Database = {
       assign_player_number: {
         Args: { player_id_param: string; room_id_param: string }
         Returns: number
+      }
+      auto_advance_stuck_evaluations: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       auto_advance_stuck_rooms: {
         Args: Record<PropertyKey, never>
