@@ -21,6 +21,8 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/utils/logger";
+import { useGameRealTimeState } from "@/hooks/useGameRealTimeState";
+import { RealTimeIndicators } from "@/components/game/RealTimeIndicators";
 
 type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
@@ -63,6 +65,12 @@ const Game = () => {
   // CRITICAL FIX: For anonymous users, always use playerId (not user?.id)
   // For authenticated users, use their auth ID for database consistency
   const effectivePlayerId = user?.id || playerId;
+  
+  // Real-time state management
+  const { gameState: realTimeState, forceReconnect, processImmediately } = useGameRealTimeState({
+    roomId: room?.id || null,
+    playerId: effectivePlayerId
+  });
   const isSystemReady = playerIdReady && !authLoading && !!effectivePlayerId;
   
   // Debug logging for player ID resolution
@@ -1276,6 +1284,16 @@ const Game = () => {
               <span className="text-xs font-mono text-muted-foreground">{roomCode}</span>
             </div>
           </div>
+          
+          {/* Real-time Connection Indicators */}
+          <RealTimeIndicators
+            isConnected={realTimeState.isConnected}
+            opponentConnected={realTimeState.opponentConnected}
+            lastPing={realTimeState.lastPing}
+            isWaitingForOpponent={realTimeState.isWaitingForOpponent}
+            timeRemaining={realTimeState.timeRemaining}
+            className="justify-center"
+          />
           
           <div className="space-y-1">
             <h1 className="text-xl font-heading text-foreground">

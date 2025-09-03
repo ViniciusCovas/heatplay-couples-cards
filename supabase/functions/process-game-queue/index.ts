@@ -19,6 +19,20 @@ Deno.serve(async (req) => {
 
     console.log('Processing game flow queue...')
 
+    // First, run automatic recovery for stuck evaluations
+    const { error: recoveryError } = await supabase.rpc('auto_advance_stuck_evaluations')
+    if (recoveryError) {
+      console.error('Error running auto recovery:', recoveryError)
+    } else {
+      console.log('Auto recovery completed successfully')
+    }
+
+    // Run disconnection detection
+    const { error: disconnectionError } = await supabase.rpc('detect_disconnected_players')
+    if (disconnectionError) {
+      console.error('Error detecting disconnected players:', disconnectionError)
+    }
+
     // Process the queue
     const { data: result, error } = await supabase.rpc('process_game_flow_queue')
     
