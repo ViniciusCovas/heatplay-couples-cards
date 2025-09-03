@@ -554,6 +554,10 @@ export type Database = {
           room_code: string
         }[]
       }
+      debug_evaluation_submission: {
+        Args: { player_id_param: string; response_id_param: string }
+        Returns: Json
+      }
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
         Returns: {
