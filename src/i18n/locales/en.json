@@ -230,6 +230,8 @@
       "response": "Response",
       "submit": "Submit Evaluation",
       "note": "Your evaluation helps create a meaningful connection report",
+      "submitted": "Evaluation Submitted!",
+      "processing": "Processing your evaluation...",
       "honesty": "Honesty",
       "attraction": "Attraction",
       "intimacy": "Intimacy",
