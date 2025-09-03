@@ -29,14 +29,29 @@ export const useGameQueueProcessor = (roomId: string | null) => {
     }
   };
 
+  const processImmediately = async () => {
+    if (!roomId) return;
+    
+    // Process queue immediately for real-time response
+    await processQueue();
+    
+    // Also trigger disconnection detection
+    try {
+      await supabase.rpc('detect_disconnected_players');
+      await supabase.rpc('auto_advance_stuck_rooms');
+    } catch (error) {
+      logger.error('Failed to check for stuck rooms:', error);
+    }
+  };
+
   useEffect(() => {
     if (!roomId) return;
 
     // Process queue immediately when room changes
     processQueue();
 
-    // Set up interval to process queue every 5 seconds
-    intervalRef.current = setInterval(processQueue, 5000);
+    // Set up interval to process queue every 2 seconds for real-time games
+    intervalRef.current = setInterval(processQueue, 2000);
 
     return () => {
       if (intervalRef.current) {
@@ -55,5 +70,5 @@ export const useGameQueueProcessor = (roomId: string | null) => {
     };
   }, []);
 
-  return { processQueue };
+  return { processQueue, processImmediately };
 };

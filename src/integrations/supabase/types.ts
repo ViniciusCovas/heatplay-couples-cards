@@ -572,6 +572,10 @@ export type Database = {
         Args: { player_id_param: string; room_id_param: string }
         Returns: number
       }
+      auto_advance_stuck_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       check_room_credit_status: {
         Args: { room_code_param: string }
         Returns: Json
@@ -605,6 +609,10 @@ export type Database = {
           action_taken: string
           room_id: string
         }[]
+      }
+      detect_disconnected_players: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
