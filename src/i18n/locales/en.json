@@ -269,6 +269,10 @@
       "differentLevelsSelected": "You selected different levels. You must select the same level to play.",
       "choosingNewLevel": "Your partner wants to change level. Choosing new level...",
       "actionSyncError": "Error syncing action"
+    },
+    "evaluation": {
+      "submitted": "Evaluation Submitted",
+      "processing": "Please wait while we process your evaluation and prepare the next round..."
     }
   },
   "proximitySelection": {
