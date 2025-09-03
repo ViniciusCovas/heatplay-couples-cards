@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      game_flow_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          processed: boolean
+          processed_at: string | null
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_type: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          room_id?: string
+        }
+        Relationships: []
+      }
       game_responses: {
         Row: {
           ai_reasoning: string | null
@@ -523,6 +556,14 @@ export type Database = {
         Args: { credits_amount: number; user_id_param: string }
         Returns: Json
       }
+      advance_game_to_next_round: {
+        Args: {
+          current_round: number
+          evaluating_player_id: string
+          room_id_param: string
+        }
+        Returns: Json
+      }
       anonymous_can_access_room: {
         Args: { player_id_param: string; room_id_param: string }
         Returns: boolean
@@ -557,6 +598,13 @@ export type Database = {
       debug_evaluation_submission: {
         Args: { player_id_param: string; response_id_param: string }
         Returns: Json
+      }
+      detect_and_fix_stuck_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action_taken: string
+          room_id: string
+        }[]
       }
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
@@ -634,6 +682,13 @@ export type Database = {
         Args: { player_id_param: string; room_id_param: string }
         Returns: boolean
       }
+      process_game_flow_queue: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          error_count: number
+          processed_count: number
+        }[]
+      }
       promote_to_admin: {
         Args: { user_email: string }
         Returns: boolean
@@ -648,6 +703,10 @@ export type Database = {
       room_is_open: {
         Args: { room_id_param: string }
         Returns: boolean
+      }
+      select_next_card_robust: {
+        Args: { current_used_cards?: string[]; room_id_param: string }
+        Returns: string
       }
       sync_game_state_reliably: {
         Args: { player_id_param: string; room_id_param: string }
