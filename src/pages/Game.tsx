@@ -67,7 +67,15 @@ const Game = () => {
   const effectivePlayerId = user?.id || playerId;
   
   // Real-time state management
-  const { gameState: realTimeState, forceReconnect, processImmediately } = useGameRealTimeState({
+  const { 
+    gameState: realTimeState, 
+    forceReconnect, 
+    processImmediately,
+    playerNumber: realTimePlayerNumber,
+    isPlayer1,
+    isPlayer2,
+    playerNumberLoading
+  } = useGameRealTimeState({
     roomId: room?.id || null,
     playerId: effectivePlayerId
   });
@@ -330,13 +338,17 @@ const Game = () => {
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
 
   // Determine if it's my turn based on player number and current turn
-  const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
-                   (currentTurn === 'player2' && playerNumber === 2);
+  // Use the fixed player number from real-time state, fallback to room service
+  const finalPlayerNumber = realTimePlayerNumber ?? playerNumber;
+  const isMyTurn = (currentTurn === 'player1' && finalPlayerNumber === 1) || 
+                   (currentTurn === 'player2' && finalPlayerNumber === 2);
   
   
   logger.debug('Turn logic', { 
     currentTurn, 
     playerNumber, 
+    realTimePlayerNumber,
+    finalPlayerNumber,
     isMyTurn, 
     gamePhase: gameState?.current_phase 
   });
@@ -408,7 +420,7 @@ const Game = () => {
       }
       
       // Sync game phase based on database state and player logic - ONLY source of phase changes
-      const newPhase = deriveLocalPhase(gameState, playerNumber || 1);
+      const newPhase = deriveLocalPhase(gameState, finalPlayerNumber || 1);
       if (newPhase !== gamePhase) {
         logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
@@ -421,20 +433,22 @@ const Game = () => {
         setGamePhase(newPhase);
       }
     }
-  }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
+  }, [gameState, gamePhase, finalPlayerNumber, room?.status, currentCard]);
 
   // Debug effect to track critical state changes
   useEffect(() => {
     logger.debug('Critical state update', { 
       playerNumber, 
+      realTimePlayerNumber,
+      finalPlayerNumber,
       gamePhase,
       currentTurn: gameState?.current_turn,
       currentPhase: gameState?.current_phase,
-      isMyTurn: gameState?.current_turn === `player${playerNumber}`,
+      isMyTurn: gameState?.current_turn === `player${finalPlayerNumber}`,
       participants: participants.length,
       participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
     });
-  }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
+  }, [playerNumber, realTimePlayerNumber, finalPlayerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
