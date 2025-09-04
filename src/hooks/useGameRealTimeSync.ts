@@ -37,6 +37,7 @@ export const useRealTimeGameSync = ({
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isActiveRef = useRef(true);
+  const hasJoinedRef = useRef(false); // Track if we've already shown join notification
 
   // Fast heartbeat system - every 3 seconds
   const sendHeartbeat = useCallback(async () => {
@@ -111,12 +112,14 @@ export const useRealTimeGameSync = ({
         logger.info('Game sync event:', payload);
         onOpponentAction?.(payload.new);
         
-        // Show real-time notifications
+        // Show real-time notifications for opponent actions only
         const actionData = payload.new as any;
-        if (actionData?.action_type === 'response_submit') {
-          toast.info('Your opponent has responded!');
-        } else if (actionData?.action_type === 'evaluation_complete') {
-          toast.success('Evaluation complete - next round!');
+        if (actionData?.triggered_by !== playerId) {
+          if (actionData?.action_type === 'response_submit') {
+            toast.info('Your opponent has responded!');
+          } else if (actionData?.action_type === 'evaluation_complete') {
+            toast.success('Evaluation complete - next round!');
+          }
         }
       })
       .on('postgres_changes', {
@@ -142,17 +145,24 @@ export const useRealTimeGameSync = ({
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
         logger.info('Player joined:', newPresences);
-        // Only show join notification for other players, not self
+        // Only show join notification once per session and for other players
         const otherPlayerJoined = newPresences.some((presence: any) => 
           presence.player_id !== playerId
         );
-        if (otherPlayerJoined) {
+        if (otherPlayerJoined && !hasJoinedRef.current) {
+          hasJoinedRef.current = true;
           toast.info('Player joined the game');
         }
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         logger.info('Player left:', leftPresences);
-        toast.warning('Player left the game');
+        const otherPlayerLeft = leftPresences.some((presence: any) => 
+          presence.player_id !== playerId
+        );
+        if (otherPlayerLeft) {
+          toast.warning('Player left the game');
+          hasJoinedRef.current = false; // Reset for next join
+        }
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
@@ -195,6 +205,7 @@ export const useRealTimeGameSync = ({
     if (!roomId || !playerId) return;
 
     isActiveRef.current = true;
+    hasJoinedRef.current = false; // Reset join tracking
     
     // Setup subscriptions
     const channel = setupRealTimeSubscriptions();
@@ -210,6 +221,7 @@ export const useRealTimeGameSync = ({
 
     return () => {
       isActiveRef.current = false;
+      hasJoinedRef.current = false;
       
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
@@ -231,6 +243,7 @@ export const useRealTimeGameSync = ({
       await supabase.removeChannel(channelRef.current);
     }
     
+    hasJoinedRef.current = false; // Reset join tracking on reconnect
     const newChannel = setupRealTimeSubscriptions();
     if (newChannel) {
       channelRef.current = newChannel;

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -107,6 +107,61 @@ const Game = () => {
     isRoomLoaded,
     connectionError
   });
+
+  // Emergency sync when game state is out of sync
+  const forceGameSync = useCallback(async () => {
+    if (!room?.id || !gameState) return;
+    
+    logger.info('Forcing game state sync', { 
+      dbPhase: gameState.current_phase,
+      dbCard: gameState.current_card,
+      dbTurn: gameState.current_turn,
+      localCard: currentCard,
+      localPhase: gamePhase
+    });
+    
+    // Force immediate sync with database state
+    if (gameState.current_card && gameState.current_card !== currentCard) {
+      setCurrentCard(gameState.current_card);
+      setShowCard(true);
+    }
+    
+    if (gameState.current_phase && gameState.current_phase !== gamePhase) {
+      setGamePhase(gameState.current_phase as GamePhase);
+    }
+    
+    // Process any pending queue items
+    await processImmediately();
+  }, [room?.id, gameState, currentCard, gamePhase, processImmediately]);
+  
+  // Automatic state mismatch detection and correction
+  useEffect(() => {
+    if (!gameState || !room?.id) return;
+    
+    // Check for critical mismatches that need immediate fixing
+    const hasCardMismatch = gameState.current_card && 
+                           gameState.current_card !== currentCard && 
+                           gameState.current_phase === 'card-display';
+                           
+    const hasPhaseMismatch = gameState.current_phase && 
+                            gameState.current_phase !== gamePhase;
+    
+    if (hasCardMismatch || hasPhaseMismatch) {
+      logger.warn('Detected game state mismatch - auto-syncing', {
+        hasCardMismatch,
+        hasPhaseMismatch,
+        dbCard: gameState.current_card,
+        localCard: currentCard,
+        dbPhase: gameState.current_phase,
+        localPhase: gamePhase
+      });
+      
+      // Auto-trigger sync after a short delay to prevent loops
+      setTimeout(() => {
+        forceGameSync();
+      }, 1000);
+    }
+  }, [gameState, currentCard, gamePhase, room?.id, forceGameSync]);
 
   // Room initialization logic
   useEffect(() => {
@@ -328,13 +383,23 @@ const Game = () => {
       // Update turn
       setCurrentTurn(gameState.current_turn);
       
-      // Update card only if it exists in game state
+      // Update card ALWAYS if it exists in game state and differs from current
       if (gameState.current_card && gameState.current_card !== currentCard) {
-        logger.debug('Card updated from game state', { currentCard: gameState.current_card });
+        logger.info('Card updated from game state - syncing UI', { 
+          newCard: gameState.current_card, 
+          oldCard: currentCard,
+          gamePhase: gameState.current_phase 
+        });
         setCurrentCard(gameState.current_card);
         setShowCard(false);
         // FIXED: Changed from 300ms to 700ms to match CSS transition duration
         setTimeout(() => setShowCard(true), 700);
+        
+        // If we're in card-display phase and it's my turn, start the timer
+        if (gameState.current_phase === 'card-display' && isMyTurn) {
+          logger.info('Starting timer for synced card display');
+          setTimeout(() => startTimer(), 700); // Start timer after card animation
+        }
       }
       
       // Update used cards
@@ -1285,15 +1350,27 @@ const Game = () => {
             </div>
           </div>
           
-          {/* Real-time Connection Indicators */}
+          {/* Real-time Connection Indicators - Fixed to use actual connection data */}
           <RealTimeIndicators
-            isConnected={realTimeState.isConnected}
+            isConnected={isConnected && realTimeState.isConnected}
             opponentConnected={realTimeState.opponentConnected}
             lastPing={realTimeState.lastPing}
-            isWaitingForOpponent={realTimeState.isWaitingForOpponent}
+            isWaitingForOpponent={gamePhase === 'evaluation' && !isMyTurn}
             timeRemaining={realTimeState.timeRemaining}
             className="justify-center"
           />
+          
+          {/* Debug sync button - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={forceGameSync}
+              className="text-xs"
+            >
+              Force Sync
+            </Button>
+          )}
           
           <div className="space-y-1">
             <h1 className="text-xl font-heading text-foreground">

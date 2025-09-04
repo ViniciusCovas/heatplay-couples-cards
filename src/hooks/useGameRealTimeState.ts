@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useRealTimeGameSync } from './useRealTimeGameSync';
+import { useRealTimeGameSync } from './useGameRealTimeSync';
 import { useGameQueueProcessor } from './useGameQueueProcessor';
 
 interface GameRealTimeStateProps {
@@ -42,9 +42,11 @@ export const useGameRealTimeState = ({ roomId, playerId }: GameRealTimeStateProp
         currentTurn: state.current_turn || 'player1'
       }));
       
-      // Determine if waiting for opponent based on phase and turn
-      const isMyTurn = (state.current_turn === 'player1' && playerId.endsWith('1')) ||
-                       (state.current_turn === 'player2' && playerId.endsWith('2'));
+      // Determine player turn more reliably using room_participants data
+      // For now, use a simpler heuristic based on player ID structure
+      const isPlayer1 = playerId.includes('player1') || playerId.length > 30; // UUID suggests authenticated user = player1
+      const isMyTurn = (state.current_turn === 'player1' && isPlayer1) ||
+                       (state.current_turn === 'player2' && !isPlayer1);
       
       setGameState(prev => ({
         ...prev,
