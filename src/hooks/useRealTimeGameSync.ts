@@ -142,17 +142,11 @@ export const useRealTimeGameSync = ({
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
         logger.info('Player joined:', newPresences);
-        // Only show join notification for other players, not self
-        const otherPlayerJoined = newPresences.some((presence: any) => 
-          presence.player_id !== playerId
-        );
-        if (otherPlayerJoined) {
-          toast.info('Player joined the game');
-        }
+        // Track presence joins without notifications
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
         logger.info('Player left:', leftPresences);
-        toast.warning('Player left the game');
+        // Track presence leaves without notifications
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {

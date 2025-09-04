@@ -34,34 +34,6 @@ export const RealTimeIndicators: React.FC<RealTimeIndicatorsProps> = ({
 
   return (
     <div className={cn("flex items-center gap-2 p-2", className)}>
-      {/* Your connection status */}
-      <Badge 
-        variant="outline" 
-        className={cn(
-          "flex items-center gap-1 text-xs",
-          getConnectionColor(isConnected)
-        )}
-      >
-        {isConnected ? (
-          <Wifi className="h-3 w-3" />
-        ) : (
-          <WifiOff className="h-3 w-3" />
-        )}
-        You: {isConnected ? 'Connected' : 'Disconnected'}
-      </Badge>
-
-      {/* Opponent connection status */}
-      <Badge 
-        variant="outline" 
-        className={cn(
-          "flex items-center gap-1 text-xs",
-          getConnectionColor(opponentConnected)
-        )}
-      >
-        <User className="h-3 w-3" />
-        Opponent: {opponentConnected ? 'Connected' : 'Disconnected'}
-      </Badge>
-
       {/* Waiting indicator */}
       {isWaitingForOpponent && (
         <Badge variant="outline" className="flex items-center gap-1 text-xs bg-secondary/10 text-secondary border-secondary/20">
