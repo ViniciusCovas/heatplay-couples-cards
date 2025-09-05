@@ -608,16 +608,16 @@ export type Database = {
         Args: { player_id_param: string; room_id_param: string }
         Returns: number
       }
-      auto_advance_stuck_evaluations: {
+      auto_advance_stuck_rooms: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      auto_recover_technical_issues: {
         Args: Record<PropertyKey, never>
         Returns: {
           action_taken: string
           room_id: string
         }[]
-      }
-      auto_advance_stuck_rooms: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
       check_room_credit_status: {
         Args: { room_code_param: string }
