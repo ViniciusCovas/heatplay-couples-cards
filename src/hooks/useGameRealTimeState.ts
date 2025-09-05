@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRealTimeGameSync } from './useGameRealTimeSync';
 import { useGameQueueProcessor } from './useGameQueueProcessor';
-import { usePlayerNumber } from './usePlayerNumber';
 
 interface GameRealTimeStateProps {
   roomId: string | null;
@@ -31,38 +30,32 @@ export const useGameRealTimeState = ({ roomId, playerId }: GameRealTimeStateProp
 
   const [timeoutStart, setTimeoutStart] = useState<Date | null>(null);
 
-  // Get proper player number from database
-  const { playerNumber, isPlayer1, isPlayer2, loading: playerNumberLoading } = usePlayerNumber({ roomId, playerId });
-
   // Use the queue processor for real-time processing
   const { processImmediately } = useGameQueueProcessor(roomId);
 
   // Handle game state changes
   const handleGameStateChange = useCallback((state: any) => {
-    if (state?.current_phase && playerNumber !== null) {
+    if (state?.current_phase) {
       setGameState(prev => ({
         ...prev,
         gamePhase: state.current_phase,
         currentTurn: state.current_turn || 'player1'
       }));
       
-      // Determine if it's my turn using proper player number from database
-      const isMyTurn = (state.current_turn === 'player1' && isPlayer1) ||
-                       (state.current_turn === 'player2' && isPlayer2);
-      
+      // Basic waiting state - simplified without player number dependency
       setGameState(prev => ({
         ...prev,
-        isWaitingForOpponent: state.current_phase === 'evaluation' && !isMyTurn
+        isWaitingForOpponent: state.current_phase === 'evaluation'
       }));
 
       // Start timeout tracking for evaluation phase
-      if (state.current_phase === 'evaluation' && !isMyTurn) {
+      if (state.current_phase === 'evaluation') {
         setTimeoutStart(new Date());
       } else {
         setTimeoutStart(null);
       }
     }
-  }, [playerNumber, isPlayer1, isPlayer2]);
+  }, []);
 
   // Handle connection state changes
   const handleConnectionChange = useCallback((connected: boolean) => {
@@ -132,10 +125,6 @@ export const useGameRealTimeState = ({ roomId, playerId }: GameRealTimeStateProp
     gameState,
     forceReconnect,
     resetTimeout,
-    processImmediately,
-    playerNumber,
-    isPlayer1,
-    isPlayer2,
-    playerNumberLoading
+    processImmediately
   };
 };

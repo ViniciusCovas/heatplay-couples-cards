@@ -70,11 +70,7 @@ const Game = () => {
   const { 
     gameState: realTimeState, 
     forceReconnect, 
-    processImmediately,
-    playerNumber: realTimePlayerNumber,
-    isPlayer1,
-    isPlayer2,
-    playerNumberLoading
+    processImmediately
   } = useGameRealTimeState({
     roomId: room?.id || null,
     playerId: effectivePlayerId
@@ -338,17 +334,14 @@ const Game = () => {
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
 
   // Determine if it's my turn based on player number and current turn
-  // Use the fixed player number from real-time state, fallback to room service
-  const finalPlayerNumber = realTimePlayerNumber ?? playerNumber;
-  const isMyTurn = (currentTurn === 'player1' && finalPlayerNumber === 1) || 
-                   (currentTurn === 'player2' && finalPlayerNumber === 2);
+  // Use single source from useRoomService
+  const isMyTurn = (currentTurn === 'player1' && playerNumber === 1) || 
+                   (currentTurn === 'player2' && playerNumber === 2);
   
   
   logger.debug('Turn logic', { 
     currentTurn, 
-    playerNumber, 
-    realTimePlayerNumber,
-    finalPlayerNumber,
+    playerNumber,
     isMyTurn, 
     gamePhase: gameState?.current_phase 
   });
@@ -420,7 +413,7 @@ const Game = () => {
       }
       
       // Sync game phase based on database state and player logic - ONLY source of phase changes
-      const newPhase = deriveLocalPhase(gameState, finalPlayerNumber || 1);
+      const newPhase = deriveLocalPhase(gameState, playerNumber || 1);
       if (newPhase !== gamePhase) {
         logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
@@ -433,22 +426,20 @@ const Game = () => {
         setGamePhase(newPhase);
       }
     }
-  }, [gameState, gamePhase, finalPlayerNumber, room?.status, currentCard]);
+  }, [gameState, gamePhase, playerNumber, room?.status, currentCard]);
 
   // Debug effect to track critical state changes
   useEffect(() => {
     logger.debug('Critical state update', { 
-      playerNumber, 
-      realTimePlayerNumber,
-      finalPlayerNumber,
+      playerNumber,
       gamePhase,
       currentTurn: gameState?.current_turn,
       currentPhase: gameState?.current_phase,
-      isMyTurn: gameState?.current_turn === `player${finalPlayerNumber}`,
+      isMyTurn: gameState?.current_turn === `player${playerNumber}`,
       participants: participants.length,
       participantsList: participants.map(p => ({ id: p.player_id, number: p.player_number }))
     });
-  }, [playerNumber, realTimePlayerNumber, finalPlayerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
+  }, [playerNumber, participants, gamePhase, gameState?.current_turn, gameState?.current_phase]);
 
   // Set up evaluation data when entering evaluation phase
   useEffect(() => {
@@ -936,65 +927,6 @@ const Game = () => {
     }
   };
 
-  // Centralized function to advance to the next round
-  const advanceToNextRound = async (completedQuestion: string) => {
-    if (!room || !gameState) return;
-
-    logger.info('Advancing to next round after completing', { completedQuestion });
-
-    // Calculate the round number based on current used cards + the completed question
-    const currentUsedCards = gameState.used_cards || [];
-    const nextRoundNumber = currentUsedCards.length + 1;
-    
-    // Use deterministic card selection based on database state
-    const nextCard = getNextCardDeterministic(currentUsedCards, levelCards, nextRoundNumber);
-    
-    // FIX: Determine who should answer next based on proper turn alternation
-    // currentTurn is the evaluator who just finished evaluating
-    // The next answerer should be the OPPOSITE player (proper alternation)
-    const nextTurn: PlayerTurn = currentTurn === 'player1' ? 'player2' : 'player1';
-    
-    logger.debug('Turn switching logic', {
-      currentTurn: currentTurn,
-      nextTurn: nextTurn,
-      explanation: `${currentTurn} just evaluated, now ${nextTurn} will answer next (proper alternation)`
-    });
-    
-    if (nextCard) {
-      // Continue with next question
-      const newUsedCards = [...currentUsedCards, completedQuestion];
-      
-      // IMPORTANT: Clear AI info when advancing to next round for NEW card generation
-      setAiCardInfo(null);
-      
-      logger.info('Moving to next card (deterministic)', {
-        nextCard,
-        nextTurn,
-        newUsedCards: newUsedCards.length,
-        currentLevel,
-        roundNumber: nextRoundNumber
-      });
-      
-      await updateGameState({
-        current_card: nextCard,
-        used_cards: newUsedCards,
-        current_turn: nextTurn,
-        current_phase: 'response-input'
-      });
-      
-      return { nextCard, nextTurn };
-    } else {
-      // No more cards, finish level
-      logger.info('No more cards available - finishing level', { currentLevel });
-      
-      if (currentLevel >= 4) {
-        generateFinalReport();
-      } else {
-        navigate(`/level-select?room=${roomCode}`);
-      }
-      return null;
-    }
-  };
 
   const handleEvaluationSubmit = async (evaluation: EvaluationData) => {
     if (!pendingEvaluation || !room) {
