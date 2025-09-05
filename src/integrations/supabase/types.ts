@@ -610,7 +610,10 @@ export type Database = {
       }
       auto_advance_stuck_evaluations: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: {
+          action_taken: string
+          room_id: string
+        }[]
       }
       auto_advance_stuck_rooms: {
         Args: Record<PropertyKey, never>
@@ -652,7 +655,10 @@ export type Database = {
       }
       detect_disconnected_players: {
         Args: Record<PropertyKey, never>
-        Returns: undefined
+        Returns: {
+          action_taken: string
+          room_id: string
+        }[]
       }
       fix_stuck_evaluation_rooms: {
         Args: Record<PropertyKey, never>
