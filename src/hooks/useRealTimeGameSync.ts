@@ -4,6 +4,13 @@ import { RealtimeChannel } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 
+// Generate unique session ID for this browser session
+const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Notification rate limiting
+const NOTIFICATION_COOLDOWN = 5000; // 5 seconds
+let lastNotificationTime = 0;
+
 interface RealTimeGameSyncProps {
   roomId: string | null;
   playerId: string;
@@ -18,6 +25,14 @@ interface ConnectionState {
   opponentConnected: boolean;
   reconnectAttempts: number;
 }
+
+interface PresenceState {
+  [key: string]: any[];
+}
+
+// Track known players to prevent duplicate join notifications
+const knownPlayersRef: { current: Set<string> } = { current: new Set() };
+const lastPresenceUpdateRef: { current: number } = { current: 0 };
 
 export const useRealTimeGameSync = ({
   roomId,
@@ -37,12 +52,26 @@ export const useRealTimeGameSync = ({
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isActiveRef = useRef(true);
+  const hasTrackedPresenceRef = useRef(false);
 
-  // Fast heartbeat system - every 3 seconds
+  // Rate-limited notification helper
+  const showNotification = useCallback((message: string, type: 'info' | 'success' | 'warning' = 'info') => {
+    const now = Date.now();
+    if (now - lastNotificationTime > NOTIFICATION_COOLDOWN) {
+      lastNotificationTime = now;
+      if (type === 'info') toast.info(message);
+      else if (type === 'success') toast.success(message);
+      else if (type === 'warning') toast.warning(message);
+    }
+  }, []);
+
+  // Optimized heartbeat system - every 10 seconds
   const sendHeartbeat = useCallback(async () => {
     if (!roomId || !playerId || !isActiveRef.current) return;
 
     try {
+      logger.debug(`[${SESSION_ID}] Sending heartbeat for room ${roomId}`);
+      
       const { data, error } = await supabase.rpc('sync_game_state_reliably', {
         room_id_param: roomId,
         player_id_param: playerId
@@ -81,7 +110,7 @@ export const useRealTimeGameSync = ({
       }));
       onConnectionChange?.(false);
     }
-  }, [roomId, playerId, onGameStateChange, onConnectionChange]);
+  }, [roomId, playerId, onGameStateChange, onConnectionChange, showNotification]);
 
   // Setup real-time subscriptions
   const setupRealTimeSubscriptions = useCallback(() => {
@@ -111,12 +140,12 @@ export const useRealTimeGameSync = ({
         logger.info('Game sync event:', payload);
         onOpponentAction?.(payload.new);
         
-        // Show real-time notifications
+        // Show real-time notifications with rate limiting
         const actionData = payload.new as any;
         if (actionData?.action_type === 'response_submit') {
-          toast.info('Your opponent has responded!');
+          showNotification('Your opponent has responded!');
         } else if (actionData?.action_type === 'evaluation_complete') {
-          toast.success('Evaluation complete - next round!');
+          showNotification('Evaluation complete - next round!', 'success');
         }
       })
       .on('postgres_changes', {
@@ -135,28 +164,57 @@ export const useRealTimeGameSync = ({
         }
       })
       .on('presence', { event: 'sync' }, () => {
-        const presenceState = channel.presenceState();
-        const connectedPlayers = Object.keys(presenceState).length;
-        logger.debug(`Connected players: ${connectedPlayers}`);
-        // Don't show notifications on sync events - these fire frequently
+        const presenceState = channel.presenceState() as PresenceState;
+        const now = Date.now();
+        
+        // Debounce presence updates - only process if enough time has passed
+        if (now - lastPresenceUpdateRef.current < 2000) return;
+        lastPresenceUpdateRef.current = now;
+        
+        const currentPlayers = Object.keys(presenceState);
+        logger.debug(`[${SESSION_ID}] Presence sync - players: ${currentPlayers.length}`);
       })
-      .on('presence', { event: 'join' }, ({ newPresences }) => {
-        logger.info('Player joined:', newPresences);
-        // Track presence joins without notifications
+      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+        logger.info(`[${SESSION_ID}] Player joined:`, { key, newPresences });
+        
+        // Only show notification for other players, not this session
+        if (newPresences && newPresences.length > 0) {
+          const joinedPlayer = newPresences[0];
+          const isThisSession = joinedPlayer?.session_id === SESSION_ID;
+          const playerKey = `${key}_${joinedPlayer?.session_id || 'unknown'}`;
+          
+          if (!isThisSession && !knownPlayersRef.current.has(playerKey)) {
+            knownPlayersRef.current.add(playerKey);
+            showNotification('Player joined the game');
+          }
+        }
       })
-      .on('presence', { event: 'leave' }, ({ leftPresences }) => {
-        logger.info('Player left:', leftPresences);
-        // Track presence leaves without notifications
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+        logger.info(`[${SESSION_ID}] Player left:`, { key, leftPresences });
+        
+        // Remove from known players when they leave
+        if (leftPresences && leftPresences.length > 0) {
+          const leftPlayer = leftPresences[0];
+          const playerKey = `${key}_${leftPlayer?.session_id || 'unknown'}`;
+          knownPlayersRef.current.delete(playerKey);
+        }
       })
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') {
-          logger.info('Real-time subscriptions active');
-          // Track presence
-          await channel.track({
-            player_id: playerId,
-            online_at: new Date().toISOString(),
-            status: 'active'
-          });
+          logger.info(`[${SESSION_ID}] Real-time subscriptions active`);
+          
+          // Only track presence once to prevent duplicate join events
+          if (!hasTrackedPresenceRef.current) {
+            hasTrackedPresenceRef.current = true;
+            await channel.track({
+              player_id: playerId,
+              session_id: SESSION_ID,
+              online_at: new Date().toISOString(),
+              status: 'active'
+            });
+            logger.info(`[${SESSION_ID}] Presence tracked for player ${playerId}`);
+          }
+          
           // Send initial heartbeat
           sendHeartbeat();
         }
@@ -196,14 +254,15 @@ export const useRealTimeGameSync = ({
       channelRef.current = channel;
     }
     
-    // Setup fast heartbeat (every 3 seconds)
-    heartbeatRef.current = setInterval(sendHeartbeat, 3000);
+    // Setup optimized heartbeat (every 10 seconds)
+    heartbeatRef.current = setInterval(sendHeartbeat, 10000);
     
     // Setup timeout detection
     setupTimeoutDetection();
 
     return () => {
       isActiveRef.current = false;
+      hasTrackedPresenceRef.current = false;
       
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
@@ -214,6 +273,7 @@ export const useRealTimeGameSync = ({
       }
       
       if (channel) {
+        logger.info(`[${SESSION_ID}] Cleaning up channel for room ${roomId}`);
         supabase.removeChannel(channel);
       }
     };
@@ -221,6 +281,9 @@ export const useRealTimeGameSync = ({
 
   // Manual reconnection
   const forceReconnect = useCallback(async () => {
+    logger.info(`[${SESSION_ID}] Force reconnecting...`);
+    hasTrackedPresenceRef.current = false;
+    
     if (channelRef.current) {
       await supabase.removeChannel(channelRef.current);
     }
