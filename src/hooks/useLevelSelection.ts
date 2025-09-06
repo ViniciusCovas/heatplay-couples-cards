@@ -41,6 +41,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const submitLevelVote = useCallback(async (level: number) => {
     if (!roomId) {
       logger.error('No room ID for level vote');
+      toast.error('Room not connected. Please try again.');
       return;
     }
 

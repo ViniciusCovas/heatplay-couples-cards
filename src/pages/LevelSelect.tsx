@@ -539,7 +539,7 @@ const LevelSelect = () => {
         <div className="space-y-4">
         {levels.map((level) => {
             const isSelected = votedLevel === level.id;
-            const isDisabled = !playerId || !playerIdReady || agreedLevel !== null;
+            const isDisabled = !playerId || !playerIdReady || !room?.id || agreedLevel !== null;
             const isWaitingDisabled = isWaitingForPartner || levelsMismatch;
             const isMismatched = levelsMismatch && isSelected;
             
@@ -639,6 +639,16 @@ const LevelSelect = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Connection status indicator */}
+        {!room?.id && (
+          <div className="text-center p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-700">
+              <Timer className="w-4 h-4 inline-block mr-1" />
+              {t('levelSelect.connectingToRoom', 'Connecting to room...')}
+            </p>
+          </div>
+        )}
 
         {/* Footer Info */}
         <div className="text-center space-y-2 pt-4">
