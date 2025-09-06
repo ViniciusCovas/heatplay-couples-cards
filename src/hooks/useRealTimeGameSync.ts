@@ -7,7 +7,7 @@ import { logger } from '@/utils/logger';
 // Generate unique session ID for this browser session
 const SESSION_ID = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-// Notification rate limiting
+// Notification rate limiting (only for game events, not join/leave)
 const NOTIFICATION_COOLDOWN = 5000; // 5 seconds
 let lastNotificationTime = 0;
 
@@ -30,8 +30,7 @@ interface PresenceState {
   [key: string]: any[];
 }
 
-// Track known players to prevent duplicate join notifications
-const knownPlayersRef: { current: Set<string> } = { current: new Set() };
+// Track presence state for connection monitoring only
 const lastPresenceUpdateRef: { current: number } = { current: 0 };
 
 export const useRealTimeGameSync = ({
@@ -175,28 +174,35 @@ export const useRealTimeGameSync = ({
         logger.debug(`[${SESSION_ID}] Presence sync - players: ${currentPlayers.length}`);
       })
       .on('presence', { event: 'join' }, ({ key, newPresences }) => {
-        logger.info(`[${SESSION_ID}] Player joined:`, { key, newPresences });
+        logger.debug(`[${SESSION_ID}] Player joined:`, { key, newPresences });
         
-        // Only show notification for other players, not this session
+        // Update opponent connection status for UI indicators only
         if (newPresences && newPresences.length > 0) {
           const joinedPlayer = newPresences[0];
           const isThisSession = joinedPlayer?.session_id === SESSION_ID;
-          const playerKey = `${key}_${joinedPlayer?.session_id || 'unknown'}`;
           
-          if (!isThisSession && !knownPlayersRef.current.has(playerKey)) {
-            knownPlayersRef.current.add(playerKey);
-            showNotification('Player joined the game');
+          if (!isThisSession) {
+            setConnectionState(prev => ({
+              ...prev,
+              opponentConnected: true
+            }));
           }
         }
       })
       .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
-        logger.info(`[${SESSION_ID}] Player left:`, { key, leftPresences });
+        logger.debug(`[${SESSION_ID}] Player left:`, { key, leftPresences });
         
-        // Remove from known players when they leave
+        // Update opponent connection status for UI indicators only
         if (leftPresences && leftPresences.length > 0) {
           const leftPlayer = leftPresences[0];
-          const playerKey = `${key}_${leftPlayer?.session_id || 'unknown'}`;
-          knownPlayersRef.current.delete(playerKey);
+          const isThisSession = leftPlayer?.session_id === SESSION_ID;
+          
+          if (!isThisSession) {
+            setConnectionState(prev => ({
+              ...prev,
+              opponentConnected: false
+            }));
+          }
         }
       })
       .subscribe(async (status) => {
