@@ -34,6 +34,9 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
   const [levelsMismatch, setLevelsMismatch] = useState(false);
   const { t } = useTranslation();
 
+  // Add state reset timeout to prevent stuck states
+  const [lastActionTime, setLastActionTime] = useState<number>(Date.now());
+
   // Submit level vote using atomic RPC function
   const submitLevelVote = useCallback(async (level: number) => {
     if (!roomId) {
@@ -62,6 +65,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       const typedResult = result as unknown as LevelSelectionResult;
       setSelectedLevel(level);
       setHasVoted(true);
+      setLastActionTime(Date.now());
 
       // Handle the response based on status
       switch (typedResult.status) {
@@ -127,11 +131,12 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     setLevelsMismatch(false);
     setCountdown(null);
     setAgreedLevel(null);
+    setLastActionTime(Date.now());
     
     toast.info(t('levelSelect.readyToSelect'));
   }, [t]);
 
-  // Check current room state on mount
+  // Check current room state on mount and reset stale states
   useEffect(() => {
     if (!roomId) return;
 
@@ -152,6 +157,13 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
           setIsWaitingForPartner(false);
           setLevelsMismatch(false);
           setCountdown(null);
+        } else if (room?.current_phase === 'level-selection') {
+          // Reset any stale waiting states when entering level selection
+          logger.debug('Room in level-selection phase, resetting stale states');
+          setIsWaitingForPartner(false);
+          setLevelsMismatch(false);
+          setCountdown(null);
+          setAgreedLevel(null);
         }
       } catch (error) {
         logger.error('Error checking room state', error);
@@ -160,6 +172,21 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
 
     checkRoomState();
   }, [roomId]);
+
+  // Auto-reset stuck states after timeout
+  useEffect(() => {
+    if (!isWaitingForPartner && !agreedLevel) return;
+
+    const timeout = setTimeout(() => {
+      const timeElapsed = Date.now() - lastActionTime;
+      if (timeElapsed > 30000) { // 30 seconds timeout
+        logger.warn('Level selection stuck for 30s, auto-resetting');
+        tryAgain();
+      }
+    }, 31000);
+
+    return () => clearTimeout(timeout);
+  }, [isWaitingForPartner, agreedLevel, lastActionTime, tryAgain]);
 
   // Listen for room phase changes (main real-time listener)
   useEffect(() => {

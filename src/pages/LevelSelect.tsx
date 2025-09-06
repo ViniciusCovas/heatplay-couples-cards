@@ -36,7 +36,7 @@ const LevelSelect = () => {
   const { playerId, isReady: playerIdReady } = usePlayerId();
   const { syncAction } = useGameSync(room?.id || null, playerId);
   // Remove unused imports and methods since we're now fully automatic
-  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, levelsMismatch } = useLevelSelection(room?.id || null, playerId);
+  const { submitLevelVote, isWaitingForPartner, agreedLevel, hasVoted, selectedLevel: votedLevel, countdown, levelsMismatch, tryAgain, forceSync } = useLevelSelection(room?.id || null, playerId);
   const [progress] = useState(0); // This will come from game state later
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
@@ -352,10 +352,21 @@ const LevelSelect = () => {
   const startLevel = async (levelId: number) => {
     logger.debug('startLevel called:', { levelId, roomId: room?.id, playerId });
     
+    // Check if we're in a stuck state and force sync if needed
+    if (isWaitingForPartner || levelsMismatch) {
+      logger.debug('Forcing sync before level selection due to stuck state');
+      await forceSync();
+    }
+    
     try {
       await submitLevelVote(levelId);
     } catch (error) {
       logger.error('Error voting for level:', error);
+      toast({
+        title: t('error.title', 'Error'),
+        description: t('error.levelSelectionFailed', 'Failed to select level. Please try again.'),
+        variant: "destructive"
+      });
     }
   };
 
@@ -497,7 +508,7 @@ const LevelSelect = () => {
                 </p>
               </div>
             </div>
-           ) : isWaitingForPartner ? (
+            ) : isWaitingForPartner ? (
             <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
               <div className="flex items-center space-x-2">
                 <Timer className="w-4 h-4 animate-pulse" />
@@ -508,6 +519,14 @@ const LevelSelect = () => {
               <div className="w-6 h-6 mx-auto">
                 <div className="w-full h-full border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
               </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={tryAgain}
+                className="mt-2 text-xs"
+              >
+                Reset Selection
+              </Button>
             </div>
            ) : (
              <p className="text-base text-muted-foreground">
@@ -520,7 +539,8 @@ const LevelSelect = () => {
         <div className="space-y-4">
         {levels.map((level) => {
             const isSelected = votedLevel === level.id;
-            const isDisabled = !playerId || !playerIdReady || isWaitingForPartner || agreedLevel !== null || levelsMismatch;
+            const isDisabled = !playerId || !playerIdReady || agreedLevel !== null;
+            const isWaitingDisabled = isWaitingForPartner || levelsMismatch;
             const isMismatched = levelsMismatch && isSelected;
             
             return (
@@ -533,11 +553,11 @@ const LevelSelect = () => {
                       : agreedLevel === level.id
                         ? `border-green-500 bg-green-50 ${showMatchAnimation ? 'animate-pulse' : ''}`
                         : 'border-primary bg-primary/5'
-                    : isDisabled
+                    : isDisabled || isWaitingDisabled
                       ? 'opacity-50 border-muted cursor-not-allowed'
                       : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
                 }`}
-                onClick={() => !isDisabled && handleLevelClick(level.id)}
+                onClick={() => !isDisabled && !isWaitingDisabled && handleLevelClick(level.id)}
               >
                 <div className="flex items-start space-x-4">
                   <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0 relative`}>
