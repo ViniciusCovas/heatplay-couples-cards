@@ -37,7 +37,7 @@ export const useRealTimeGameSync = ({
   const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isActiveRef = useRef(true);
-  const hasJoinedRef = useRef(false); // Track if we've already shown join notification
+  // Removed hasJoinedRef - no longer showing join notifications
 
   // Fast heartbeat system - every 3 seconds
   const sendHeartbeat = useCallback(async () => {
@@ -145,13 +145,12 @@ export const useRealTimeGameSync = ({
       })
       .on('presence', { event: 'join' }, ({ newPresences }) => {
         logger.info('Player joined:', newPresences);
-        // Only show join notification once per session and for other players
+        // Track presence but don't show notifications
         const otherPlayerJoined = newPresences.some((presence: any) => 
           presence.player_id !== playerId
         );
-        if (otherPlayerJoined && !hasJoinedRef.current) {
-          hasJoinedRef.current = true;
-          toast.info('Player joined the game');
+        if (otherPlayerJoined) {
+          setConnectionState(prev => ({ ...prev, opponentConnected: true }));
         }
       })
       .on('presence', { event: 'leave' }, ({ leftPresences }) => {
@@ -160,8 +159,7 @@ export const useRealTimeGameSync = ({
           presence.player_id !== playerId
         );
         if (otherPlayerLeft) {
-          toast.warning('Player left the game');
-          hasJoinedRef.current = false; // Reset for next join
+          setConnectionState(prev => ({ ...prev, opponentConnected: false }));
         }
       })
       .subscribe(async (status) => {
@@ -205,7 +203,6 @@ export const useRealTimeGameSync = ({
     if (!roomId || !playerId) return;
 
     isActiveRef.current = true;
-    hasJoinedRef.current = false; // Reset join tracking
     
     // Setup subscriptions
     const channel = setupRealTimeSubscriptions();
@@ -221,7 +218,6 @@ export const useRealTimeGameSync = ({
 
     return () => {
       isActiveRef.current = false;
-      hasJoinedRef.current = false;
       
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
@@ -243,7 +239,7 @@ export const useRealTimeGameSync = ({
       await supabase.removeChannel(channelRef.current);
     }
     
-    hasJoinedRef.current = false; // Reset join tracking on reconnect
+    // Reconnecting channel
     const newChannel = setupRealTimeSubscriptions();
     if (newChannel) {
       channelRef.current = newChannel;

@@ -27,10 +27,12 @@ Deno.serve(async (req) => {
       console.log('Technical recovery completed successfully')
     }
 
-    // Run disconnection detection
+    // Run disconnection detection (reduced frequency)
     const { error: disconnectionError } = await supabase.rpc('detect_disconnected_players')
     if (disconnectionError) {
       console.error('Error detecting disconnected players:', disconnectionError)
+    } else {
+      console.log('Disconnection detection completed successfully')
     }
 
     // Process the queue
