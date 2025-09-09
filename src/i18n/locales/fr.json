@@ -234,6 +234,12 @@
       "intimacyDescription": "À quel point la réponse était-elle intime et personnelle?",
       "surpriseDescription": "À quel point la réponse était-elle surprenante ou inattendue?"
     },
+    "processing": {
+      "title": "Traitement de l'Évaluation...",
+      "description": "Préparation du prochain tour",
+      "yourTurnNext": "Préparez-vous ! C'est votre tour de répondre",
+      "waitingForPartner": "Votre partenaire répondra à la prochaine carte"
+    },
     "waitingForEvaluation": "En attente de l'évaluation de {{player}}...",
     "fallbackQuestions": {
       "question1": "Quelle a été votre première impression de moi?",

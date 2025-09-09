@@ -92,6 +92,13 @@ const Game = () => {
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
   
+  // Transition state for evaluation processing
+  const [isProcessingEvaluation, setIsProcessingEvaluation] = useState(false);
+  const [transitionFeedback, setTransitionFeedback] = useState<{
+    message: string;
+    isMyNextTurn: boolean;
+  } | null>(null);
+  
   // Timer state - Enhanced for proper pause/resume functionality
   const [cardDisplayStartTime, setCardDisplayStartTime] = useState<number>(0);
   const [timerPaused, setTimerPaused] = useState<boolean>(false);
@@ -1207,14 +1214,70 @@ const Game = () => {
       navigate(`/level-select?room=${roomCode}`);
     };
 
+    // Handle partner response events
+    const handlePartnerResponse = (event: CustomEvent) => {
+      logger.info('Received partner response event');
+      // UI feedback is handled by the toast in useGameSync
+    };
+
+    // Handle evaluation received events
+    const handleEvaluationReceived = (event: CustomEvent) => {
+      const { evaluation, question, response, evaluator, round } = event.detail;
+      
+      logger.info('Evaluation received for my response', {
+        evaluation,
+        question: question?.substring(0, 50),
+        round
+      });
+      
+      // Show evaluation feedback
+      toast({
+        title: t('game.notifications.evaluationTitle'),
+        description: t('game.notifications.evaluationMessage'),
+        variant: "default",
+      });
+    };
+
+    // Handle evaluation processing with 3-second transition
+    const handleEvaluationProcessing = (event: CustomEvent) => {
+      const { isMyNextTurn, gameFinished } = event.detail;
+      
+      logger.info('Evaluation processing started', { isMyNextTurn, gameFinished });
+      
+      if (gameFinished) {
+        // Game is finished, don't show processing state
+        return;
+      }
+      
+      setIsProcessingEvaluation(true);
+      setTransitionFeedback({
+        message: isMyNextTurn ? 
+          t('game.processing.yourTurnNext') : 
+          t('game.processing.waitingForPartner'),
+        isMyNextTurn
+      });
+      
+      // Clear processing state after 3 seconds
+      setTimeout(() => {
+        setIsProcessingEvaluation(false);
+        setTransitionFeedback(null);
+      }, 3000);
+    };
+
     window.addEventListener('gameFinish', handleGameFinish as EventListener);
     window.addEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
+    window.addEventListener('partnerResponse', handlePartnerResponse as EventListener);
+    window.addEventListener('evaluationReceived', handleEvaluationReceived as EventListener);
+    window.addEventListener('evaluationProcessing', handleEvaluationProcessing as EventListener);
 
     return () => {
       window.removeEventListener('gameFinish', handleGameFinish as EventListener);
       window.removeEventListener('changeLevelRequest', handleChangeLevelRequest as EventListener);
+      window.removeEventListener('partnerResponse', handlePartnerResponse as EventListener);
+      window.removeEventListener('evaluationReceived', handleEvaluationReceived as EventListener);
+      window.removeEventListener('evaluationProcessing', handleEvaluationProcessing as EventListener);
     };
-  }, [roomCode, navigate, gamePhase, currentCard, isMyTurn]);
+  }, [roomCode, navigate, gamePhase, currentCard, isMyTurn, t, toast]);
 
   // Timer update effect for real-time display - Enhanced with pause support
   useEffect(() => {
@@ -1434,8 +1497,8 @@ const Game = () => {
           isPaused={timerPaused}
         />
 
-         {/* Response Evaluation Modal - Show only for evaluation phase */}
-         {pendingEvaluation && gamePhase === 'evaluation' && (
+         {/* Response Evaluation Modal - Show only for evaluation phase and not processing */}
+         {pendingEvaluation && gamePhase === 'evaluation' && !isProcessingEvaluation && (
            <ResponseEvaluation
              isVisible={true}
              question={pendingEvaluation.question}
@@ -1445,6 +1508,36 @@ const Game = () => {
              onCancel={handleEvaluationCancel}
              isSubmitting={isSubmitting}
            />
+         )}
+
+         {/* Processing Evaluation Transition */}
+         {isProcessingEvaluation && (
+           <div className="fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4">
+             <Card className="w-full max-w-md p-8 space-y-6 romantic-card text-center animate-scale-in">
+               <div className="flex justify-center">
+                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
+               </div>
+               <div className="space-y-2">
+                 <h3 className="text-lg font-brand font-semibold text-foreground">
+                   {t('game.processing.title')}
+                 </h3>
+                 <p className="text-sm text-muted-foreground">
+                   {t('game.processing.description')}
+                 </p>
+                 {transitionFeedback && (
+                   <div className={`mt-4 p-3 rounded-lg border ${
+                     transitionFeedback.isMyNextTurn 
+                       ? 'bg-green-50 border-green-200 text-green-800' 
+                       : 'bg-blue-50 border-blue-200 text-blue-800'
+                   }`}>
+                     <p className="text-sm font-medium">
+                       {transitionFeedback.message}
+                     </p>
+                   </div>
+                 )}
+               </div>
+             </Card>
+           </div>
          )}
 
         {/* Level Up Confirmation Modal */}

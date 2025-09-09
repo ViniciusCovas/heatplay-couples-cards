@@ -279,11 +279,24 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
         const nextPlayerNumber = action.action_data?.next_player_number;
         const isMyNextTurn = (playerNumber === nextPlayerNumber);
         
-        if (isMyNextTurn) {
-          showToast(t('game.notifications.yourTurn'), 'success');
-        } else {
-          showToast(t('game.notifications.waitingForPlayer'));
-        }
+        // Create processing event to show 3-second transition
+        window.dispatchEvent(new CustomEvent('evaluationProcessing', {
+          detail: {
+            nextPlayerNumber,
+            isMyNextTurn,
+            totalEvaluations: action.action_data?.total_evaluations || 0,
+            gameFinished: action.action_data?.game_finished || false
+          }
+        }));
+        
+        // Show feedback after 3-second delay
+        setTimeout(() => {
+          if (isMyNextTurn) {
+            showToast(t('game.notifications.yourTurn'), 'success');
+          } else {
+            showToast(t('game.notifications.waitingForPlayer'));
+          }
+        }, 3000);
         break;
       case 'turn_advance':
         // Reduce frequency of turn advance notifications

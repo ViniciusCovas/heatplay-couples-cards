@@ -241,6 +241,12 @@
       "intimacyDescription": "How intimate and personal was the response?",
       "surpriseDescription": "How surprising or unexpected was the response?"
     },
+    "processing": {
+      "title": "Processing Evaluation...",
+      "description": "Preparing the next round",
+      "yourTurnNext": "Get ready! It's your turn to respond next",
+      "waitingForPartner": "Your partner will respond to the next card"
+    },
     "waitingForEvaluation": "Waiting for {{player}} to evaluate your response...",
     "fallbackQuestions": {
       "question1": "What was your first impression of me?",
