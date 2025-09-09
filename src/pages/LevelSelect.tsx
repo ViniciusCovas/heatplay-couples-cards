@@ -238,8 +238,8 @@ const LevelSelect = () => {
         room: room?.id 
       });
       
-      if (isConnected && room) {
-        logger.debug('Already connected to room:', room.id);
+      if (isConnected && room && room.room_code === roomCode) {
+        logger.debug('Already connected to correct room:', room.id);
         return;
       }
       
