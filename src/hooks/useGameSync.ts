@@ -275,9 +275,22 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
         break;
 
       case 'evaluation_complete':
+        logger.info('Received evaluation_complete sync event', {
+          action,
+          playerNumber,
+          nextPlayerNumber: action.action_data?.next_player_number
+        });
+        
         // Database trigger has advanced the game automatically
         const nextPlayerNumber = action.action_data?.next_player_number;
         const isMyNextTurn = (playerNumber === nextPlayerNumber);
+        
+        logger.info('Processing evaluation completion', {
+          nextPlayerNumber,
+          isMyNextTurn,
+          totalEvaluations: action.action_data?.total_evaluations,
+          gameFinished: action.action_data?.game_finished
+        });
         
         // Create processing event to show 3-second transition
         window.dispatchEvent(new CustomEvent('evaluationProcessing', {
