@@ -354,22 +354,25 @@ const Game = () => {
   });
   
   // Helper function to derive local phase from database state
-  const deriveLocalPhase = (dbState: any, playerNum: number): GamePhase => {
+  const deriveLocalPhase = (dbState: any, playerNum: number | undefined): GamePhase => {
     // Check if room is finished first - this overrides any phase logic
     if (room?.status === 'finished') {
       logger.info('Game is finished, showing final report');
       return 'final-report';
     }
     
+    // GUARD: Return waiting state if player number is not resolved
+    if (!playerNum) {
+      logger.debug('Player number not resolved, returning waiting state');
+      return 'waiting-for-evaluation';
+    }
+    
     const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
                          (dbState.current_turn === 'player2' && playerNum === 2);
     
-    const subTurn = dbState.question_sub_turn || 'first_response';
-    
     logger.debug('deriveLocalPhase', { 
       dbPhase: dbState.current_phase, 
-      dbTurn: dbState.current_turn, 
-      subTurn,
+      dbTurn: dbState.current_turn,
       roomStatus: room?.status,
       playerNum, 
       isMyTurnInDB 
@@ -428,14 +431,15 @@ const Game = () => {
       }
       
       // Sync game phase based on database state and player logic - ONLY source of phase changes
-      const newPhase = deriveLocalPhase(gameState, playerNumber || 1);
+      const newPhase = deriveLocalPhase(gameState, playerNumber || undefined);
       if (newPhase !== gamePhase) {
         logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
           to: newPhase, 
           dbPhase: gameState.current_phase,
           dbTurn: gameState.current_turn,
-          roomStatus: room?.status
+          roomStatus: room?.status,
+          playerNumber
         });
         
         setGamePhase(newPhase);
@@ -1364,10 +1368,12 @@ const Game = () => {
         isMyNextTurn
       });
       
-      // Clear processing state after 3 seconds
+      // Clear processing state after 3 seconds and force game sync
       setTimeout(() => {
         setIsProcessingEvaluation(false);
         setTransitionFeedback(null);
+        // Force immediate sync after evaluation processing
+        forceGameSync();
       }, 3000);
     };
 
