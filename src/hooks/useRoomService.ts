@@ -451,9 +451,21 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
   }, [room]);
 
-  // Set up real-time subscriptions
+  // Set up real-time subscriptions with watchdog polling
   useEffect(() => {
     if (!room) return;
+
+    const refreshParticipants = async () => {
+      const { data } = await supabase
+        .from('room_participants')
+        .select('*, player_number')
+        .eq('room_id', room.id);
+      
+      if (data) {
+        logger.debug('Participants refreshed', { data });
+        setParticipants(data as RoomParticipant[]);
+      }
+    };
 
     const roomChannel = supabase
       .channel(`room_${room.id}`)
@@ -465,18 +477,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
           table: 'room_participants',
           filter: `room_id=eq.${room.id}`
         },
-        async () => {
-          // Refresh participants
-          const { data } = await supabase
-            .from('room_participants')
-            .select('*, player_number')
-            .eq('room_id', room.id);
-          
-          if (data) {
-            logger.debug('Participants updated via realtime', { data });
-            setParticipants(data as RoomParticipant[]);
-          }
-        }
+        refreshParticipants
       )
       .on(
         'postgres_changes',
@@ -498,8 +499,14 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
     setChannel(roomChannel);
 
+    // Watchdog polling to ensure participant data is always up-to-date
+    const watchdogInterval = setInterval(() => {
+      refreshParticipants();
+    }, 3000); // Poll every 3 seconds
+
     return () => {
       supabase.removeChannel(roomChannel);
+      clearInterval(watchdogInterval);
     };
   }, [room]);
 
