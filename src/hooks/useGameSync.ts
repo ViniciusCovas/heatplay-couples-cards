@@ -290,7 +290,26 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
           nextPlayerNumber: action.action_data?.next_player_number
         });
         
-        // Database trigger has advanced the game automatically
+        // If server suggests a second response to the same question but the product expects next card,
+        // force-advance to next round ONCE (by the evaluator who triggered the event)
+        try {
+          const subTurn = action.action_data?.sub_turn;
+          const sameQuestion = action.action_data?.same_question;
+          const triggeredByEvaluator = action.triggered_by === playerId;
+          if ((subTurn === 'second_response' || sameQuestion === true) && triggeredByEvaluator) {
+            const roundNumber = action.action_data?.round_number || 0;
+            const result = await supabase.rpc('advance_game_to_next_round', {
+              room_id_param: action.room_id,
+              current_round: roundNumber,
+              evaluating_player_id: playerId
+            });
+            logger.info('Forced advance to next round after evaluation (skipping second response)', { result });
+          }
+        } catch (e) {
+          logger.warn('Failed to force advance to next round', e);
+        }
+        
+        // Database trigger/queue should have advanced the game automatically
         const nextPlayerNumber = action.action_data?.next_player_number;
         const isMyNextTurn = (playerNumber === nextPlayerNumber);
         
