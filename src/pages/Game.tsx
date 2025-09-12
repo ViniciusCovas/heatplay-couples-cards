@@ -24,7 +24,7 @@ import { logger } from "@/utils/logger";
 import { useGameRealTimeState } from "@/hooks/useGameRealTimeState";
 import { RealTimeIndicators } from "@/components/game/RealTimeIndicators";
 
-type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'level-up-confirmation' | 'final-report';
+type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'waiting-for-evaluation' | 'waiting-for-partner-response' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
 const Game = () => {
@@ -364,9 +364,12 @@ const Game = () => {
     const isMyTurnInDB = (dbState.current_turn === 'player1' && playerNum === 1) || 
                          (dbState.current_turn === 'player2' && playerNum === 2);
     
+    const subTurn = dbState.question_sub_turn || 'first_response';
+    
     logger.debug('deriveLocalPhase', { 
       dbPhase: dbState.current_phase, 
       dbTurn: dbState.current_turn, 
+      subTurn,
       roomStatus: room?.status,
       playerNum, 
       isMyTurnInDB 
@@ -378,8 +381,13 @@ const Game = () => {
       case 'response-input':
         return 'card-display'; // Always show card first, use local state for response input
       case 'evaluation':
-        // In evaluation phase: evaluator gets 'evaluation', other player gets 'card-display'
-        return isMyTurnInDB ? 'evaluation' : 'card-display';
+        // In evaluation phase: evaluator gets 'evaluation', other player shows waiting
+        if (isMyTurnInDB) {
+          return 'evaluation';
+        } else {
+          // Player being evaluated shows waiting state with question context
+          return 'waiting-for-evaluation';
+        }
       case 'final-report':
         return 'final-report';
       default:
@@ -1488,7 +1496,7 @@ const Game = () => {
           </div>
         </div>
 
-        {/* Game Content based on current phase */}
+         {/* Game Content based on current phase */}
         {gamePhase === 'card-display' && (
           <>
             <GameCard
@@ -1502,6 +1510,14 @@ const Game = () => {
               selectionMethod={gameState?.current_card_selection_method}
               isGeneratingCard={isGeneratingCard}
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
+              subTurn={gameState?.question_sub_turn}
+              questionProgress={{
+                current: gameState?.current_card_index || 1,
+                total: 6,
+                subPhase: gameState?.question_sub_turn === 'second_response' ? '2nd response' : 
+                         gameState?.question_sub_turn === 'first_response' ? '1st response' : 
+                         'evaluating'
+              }}
             />
 
             {/* Enhanced timer display with pause state */}
@@ -1554,7 +1570,7 @@ const Game = () => {
             )}
 
             {/* Message for waiting player */}
-            {!isMyTurn && (
+            {!isMyTurn && gamePhase === 'card-display' && (
               <div className="text-center py-8 space-y-4">
                 <p className="text-muted-foreground">
                   {gameState?.current_phase === 'evaluation' 
@@ -1574,7 +1590,40 @@ const Game = () => {
           </>
         )}
 
-        {/* Response Input Modal - Enhanced with timer pause functionality */}
+        {/* Waiting for Evaluation Phase */}
+        {gamePhase === 'waiting-for-evaluation' && (
+          <div className="text-center space-y-6 py-8">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-xl font-heading text-foreground">
+                {t('game.waitingForEvaluation')}
+              </h2>
+              <p className="text-muted-foreground">
+                Your partner is evaluating your response to this question
+              </p>
+            </div>
+            
+            <div className="bg-muted/30 rounded-lg p-6 border border-border/30">
+              <h3 className="text-lg font-semibold text-foreground mb-4">
+                Question you just answered:
+              </h3>
+              <p className="text-foreground/90 text-lg leading-relaxed">
+                {getCurrentCardText()}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
+              <span>Round {gameState?.current_card_index || 1} of 6</span>
+              <span>•</span>
+              <span>{gameState?.question_sub_turn === 'first_evaluation' ? '1/2 responses' : '2/2 responses'}</span>
+            </div>
+          </div>
+        )}
+
+         {/* Response Input Modal - Enhanced with timer pause functionality */}
         <ResponseInput
           isVisible={showResponseInput}
           question={currentCard}

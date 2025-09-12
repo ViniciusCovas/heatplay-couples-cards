@@ -222,6 +222,9 @@ export type Database = {
           player2_proximity_response: boolean | null
           proximity_question_answered: boolean | null
           proximity_response: boolean | null
+          question_completion_status: string | null
+          question_first_responder: string | null
+          question_sub_turn: string | null
           room_code: string
           selected_language: string | null
           session_id: string | null
@@ -248,6 +251,9 @@ export type Database = {
           player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
+          question_completion_status?: string | null
+          question_first_responder?: string | null
+          question_sub_turn?: string | null
           room_code: string
           selected_language?: string | null
           session_id?: string | null
@@ -274,6 +280,9 @@ export type Database = {
           player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
           proximity_response?: boolean | null
+          question_completion_status?: string | null
+          question_first_responder?: string | null
+          question_sub_turn?: string | null
           room_code?: string
           selected_language?: string | null
           session_id?: string | null

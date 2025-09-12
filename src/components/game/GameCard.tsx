@@ -19,6 +19,12 @@ interface GameCardProps {
   selectionMethod?: string;
   isGeneratingCard?: boolean;
   aiFailureReason?: string;
+  subTurn?: string;
+  questionProgress?: {
+    current: number;
+    total: number;
+    subPhase: string;
+  };
 }
 
 export const GameCard = ({ 
@@ -31,7 +37,9 @@ export const GameCard = ({
   aiTargetArea,
   selectionMethod,
   isGeneratingCard = false,
-  aiFailureReason
+  aiFailureReason,
+  subTurn,
+  questionProgress
 }: GameCardProps) => {
   const { t } = useTranslation();
   
@@ -138,7 +146,7 @@ export const GameCard = ({
               )}
               
               {/* Level name at bottom */}
-              <div className="absolute bottom-6 left-6 right-6 text-center">
+              <div className="absolute bottom-6 left-6 right-6 text-center space-y-2">
                 <p className={`text-sm font-brand font-semibold
                   ${currentLevel === 1 ? 'text-green-600' : ''}
                   ${currentLevel === 2 ? 'text-purple-600' : ''}
@@ -147,6 +155,15 @@ export const GameCard = ({
                 `}>
                   {getLevelName(currentLevel)}
                 </p>
+                
+                {/* Question progress indicator */}
+                {questionProgress && (
+                  <div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
+                    <span>Q{questionProgress.current}</span>
+                    <span>•</span>
+                    <span>{questionProgress.subPhase}</span>
+                  </div>
+                )}
               </div>
               
               {/* Card number */}

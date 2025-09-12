@@ -28,6 +28,9 @@ interface GameState {
   current_card_ai_reasoning?: string;
   current_card_ai_target_area?: string;
   current_card_selection_method?: string;
+  question_sub_turn?: string;
+  question_first_responder?: string;
+  question_completion_status?: string;
 }
 
 interface UseGameSyncReturn {
@@ -55,7 +58,7 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
       try {
         const { data: room, error } = await supabase
           .from('game_rooms')
-          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language, current_card_ai_reasoning, current_card_ai_target_area, current_card_selection_method')
+          .select('current_phase, proximity_question_answered, proximity_response, player1_proximity_response, player2_proximity_response, current_turn, current_card, current_card_index, used_cards, selected_language, current_card_ai_reasoning, current_card_ai_target_area, current_card_selection_method, question_sub_turn, question_first_responder, question_completion_status')
           .eq('id', roomId)
           .single();
 
@@ -75,7 +78,10 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
             selected_language: room.selected_language || undefined,
             current_card_ai_reasoning: room.current_card_ai_reasoning || undefined,
             current_card_ai_target_area: room.current_card_ai_target_area || undefined,
-            current_card_selection_method: room.current_card_selection_method || undefined
+            current_card_selection_method: room.current_card_selection_method || undefined,
+            question_sub_turn: room.question_sub_turn || 'first_response',
+            question_first_responder: room.question_first_responder || undefined,
+            question_completion_status: room.question_completion_status || 'incomplete'
           });
         }
       } catch (error) {
@@ -140,7 +146,10 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
             selected_language: updatedRoom.selected_language,
             current_card_ai_reasoning: updatedRoom.current_card_ai_reasoning,
             current_card_ai_target_area: updatedRoom.current_card_ai_target_area,
-            current_card_selection_method: updatedRoom.current_card_selection_method
+            current_card_selection_method: updatedRoom.current_card_selection_method,
+            question_sub_turn: updatedRoom.question_sub_turn || 'first_response',
+            question_first_responder: updatedRoom.question_first_responder || undefined,
+            question_completion_status: updatedRoom.question_completion_status || 'incomplete'
           });
         }
       )
