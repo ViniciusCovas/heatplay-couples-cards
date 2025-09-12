@@ -485,6 +485,15 @@ const Game = () => {
           }
 
           if (responseData) {
+            // GUARD: Prevent evaluating own response
+            if (responseData.player_id === effectivePlayerId) {
+              logger.warn('Cannot evaluate own response, skipping evaluation setup', {
+                responsePlayerId: responseData.player_id,
+                currentPlayerId: effectivePlayerId
+              });
+              return;
+            }
+            
             // Get partner's name based on their player ID
             const partnerName = responseData.player_id !== effectivePlayerId ? 
               (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 

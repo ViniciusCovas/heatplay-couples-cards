@@ -301,6 +301,31 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
           gameFinished: action.action_data?.game_finished
         });
         
+        // HARD SYNC: Force fetch latest room state immediately after evaluation
+        if (action.room_id) {
+          const { data: room, error } = await supabase
+            .from('game_rooms')
+            .select('current_phase, current_turn, current_card, current_card_index, used_cards, question_sub_turn, question_first_responder, question_completion_status')
+            .eq('id', action.room_id)
+            .single();
+          
+          if (!error && room) {
+            setGameState(prev => prev ? {
+              ...prev,
+              current_phase: (room.current_phase as GameState['current_phase']) || 'card-display',
+              current_turn: (room.current_turn as GameState['current_turn']) || 'player1',
+              current_card: room.current_card,
+              current_card_index: room.current_card_index || 0,
+              used_cards: room.used_cards || [],
+              question_sub_turn: room.question_sub_turn || 'first_response',
+              question_first_responder: room.question_first_responder || undefined,
+              question_completion_status: room.question_completion_status || 'incomplete'
+            } : null);
+            
+            logger.info('Hard synced game state after evaluation completion', { room });
+          }
+        }
+        
         // Create processing event to show 3-second transition
         window.dispatchEvent(new CustomEvent('evaluationProcessing', {
           detail: {
