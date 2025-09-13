@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { usePauseBackend } from './usePauseBackend';
 
 export const useGameQueueProcessor = (roomId: string | null) => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const processingRef = useRef(false);
+  const isPaused = usePauseBackend();
 
   const processQueue = async () => {
     if (processingRef.current || !roomId) return;
@@ -45,7 +47,7 @@ export const useGameQueueProcessor = (roomId: string | null) => {
   };
 
   useEffect(() => {
-    if (!roomId) return;
+    if (!roomId || isPaused) return;
 
     // Process queue immediately when room changes
     processQueue();
@@ -59,7 +61,7 @@ export const useGameQueueProcessor = (roomId: string | null) => {
         intervalRef.current = null;
       }
     };
-  }, [roomId]);
+  }, [roomId, isPaused]);
 
   // Cleanup on unmount
   useEffect(() => {

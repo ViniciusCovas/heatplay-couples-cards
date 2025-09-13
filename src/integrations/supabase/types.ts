@@ -720,6 +720,14 @@ export type Database = {
         Args: { current_used_cards?: string[]; room_id_param: string }
         Returns: string
       }
+      submit_response_evaluation: {
+        Args: {
+          evaluation_data: Json
+          player_id_param: string
+          response_id_param: string
+        }
+        Returns: Json
+      }
       sync_game_state_reliably: {
         Args: { player_id_param: string; room_id_param: string }
         Returns: Json
