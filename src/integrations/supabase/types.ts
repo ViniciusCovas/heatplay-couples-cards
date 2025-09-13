@@ -109,39 +109,6 @@ export type Database = {
         }
         Relationships: []
       }
-      game_flow_queue: {
-        Row: {
-          created_at: string
-          error_message: string | null
-          event_data: Json
-          event_type: string
-          id: string
-          processed: boolean
-          processed_at: string | null
-          room_id: string
-        }
-        Insert: {
-          created_at?: string
-          error_message?: string | null
-          event_data?: Json
-          event_type: string
-          id?: string
-          processed?: boolean
-          processed_at?: string | null
-          room_id: string
-        }
-        Update: {
-          created_at?: string
-          error_message?: string | null
-          event_data?: Json
-          event_type?: string
-          id?: string
-          processed?: boolean
-          processed_at?: string | null
-          room_id?: string
-        }
-        Relationships: []
-      }
       game_responses: {
         Row: {
           ai_reasoning: string | null
@@ -601,14 +568,6 @@ export type Database = {
         Args: { credits_amount: number; user_id_param: string }
         Returns: Json
       }
-      advance_game_to_next_round: {
-        Args: {
-          current_round: number
-          evaluating_player_id: string
-          room_id_param: string
-        }
-        Returns: Json
-      }
       anonymous_can_access_room: {
         Args: { player_id_param: string; room_id_param: string }
         Returns: boolean
@@ -620,13 +579,6 @@ export type Database = {
       auto_advance_stuck_rooms: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      auto_recover_technical_issues: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          action_taken: string
-          room_id: string
-        }[]
       }
       check_room_credit_status: {
         Args: { room_code_param: string }
@@ -759,13 +711,6 @@ export type Database = {
       promote_to_admin: {
         Args: { user_email: string }
         Returns: boolean
-      }
-      repair_stuck_evaluations: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          action_taken: string
-          room_id: string
-        }[]
       }
       room_is_open: {
         Args: { room_id_param: string }
