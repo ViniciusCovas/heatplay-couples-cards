@@ -14,33 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      ai_analyses: {
-        Row: {
-          ai_response: Json
-          analysis_type: string
-          created_at: string
-          id: string
-          input_data: Json
-          room_id: string
-        }
-        Insert: {
-          ai_response: Json
-          analysis_type: string
-          created_at?: string
-          id?: string
-          input_data: Json
-          room_id: string
-        }
-        Update: {
-          ai_response?: Json
-          analysis_type?: string
-          created_at?: string
-          id?: string
-          input_data?: Json
-          room_id?: string
-        }
-        Relationships: []
-      }
       connection_states: {
         Row: {
           connection_status: string
@@ -71,7 +44,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_connection_states_room_id"
+            foreignKeyName: "connection_states_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
             referencedRelation: "game_rooms"
@@ -154,13 +127,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "fk_game_responses_room_id"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "game_rooms"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "game_responses_room_id_fkey"
             columns: ["room_id"]
             isOneToOne: false
@@ -172,28 +138,20 @@ export type Database = {
       game_rooms: {
         Row: {
           created_at: string
-          created_by: string | null
-          credit_status: string | null
+          credit_status: string
           current_card: string | null
-          current_card_ai_reasoning: string | null
-          current_card_ai_target_area: string | null
           current_card_index: number | null
-          current_card_selection_method: string | null
-          current_phase: string | null
+          current_phase: string
           current_turn: string | null
           finished_at: string | null
-          host_user_id: string | null
+          host_user_id: string
           id: string
           level: number
           player1_proximity_response: boolean | null
           player2_proximity_response: boolean | null
           proximity_question_answered: boolean | null
-          proximity_response: boolean | null
-          question_completion_status: string | null
-          question_first_responder: string | null
-          question_sub_turn: string | null
           room_code: string
-          selected_language: string | null
+          selected_language: string
           session_id: string | null
           started_at: string | null
           status: string
@@ -201,28 +159,20 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          created_by?: string | null
-          credit_status?: string | null
+          credit_status?: string
           current_card?: string | null
-          current_card_ai_reasoning?: string | null
-          current_card_ai_target_area?: string | null
           current_card_index?: number | null
-          current_card_selection_method?: string | null
-          current_phase?: string | null
+          current_phase?: string
           current_turn?: string | null
           finished_at?: string | null
-          host_user_id?: string | null
+          host_user_id: string
           id?: string
           level?: number
           player1_proximity_response?: boolean | null
           player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
-          proximity_response?: boolean | null
-          question_completion_status?: string | null
-          question_first_responder?: string | null
-          question_sub_turn?: string | null
           room_code: string
-          selected_language?: string | null
+          selected_language?: string
           session_id?: string | null
           started_at?: string | null
           status?: string
@@ -230,42 +180,26 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          created_by?: string | null
-          credit_status?: string | null
+          credit_status?: string
           current_card?: string | null
-          current_card_ai_reasoning?: string | null
-          current_card_ai_target_area?: string | null
           current_card_index?: number | null
-          current_card_selection_method?: string | null
-          current_phase?: string | null
+          current_phase?: string
           current_turn?: string | null
           finished_at?: string | null
-          host_user_id?: string | null
+          host_user_id?: string
           id?: string
           level?: number
           player1_proximity_response?: boolean | null
           player2_proximity_response?: boolean | null
           proximity_question_answered?: boolean | null
-          proximity_response?: boolean | null
-          question_completion_status?: string | null
-          question_first_responder?: string | null
-          question_sub_turn?: string | null
           room_code?: string
-          selected_language?: string | null
+          selected_language?: string
           session_id?: string | null
           started_at?: string | null
           status?: string
           used_cards?: string[] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "game_rooms_session_id_fkey"
-            columns: ["session_id"]
-            isOneToOne: false
-            referencedRelation: "sessions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       game_sync: {
         Row: {
@@ -293,13 +227,6 @@ export type Database = {
           triggered_by?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_game_sync_room_id"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "game_rooms"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "game_sync_room_id_fkey"
             columns: ["room_id"]
@@ -332,13 +259,6 @@ export type Database = {
           selected_level?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_level_selection_votes_room_id"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "game_rooms"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "level_selection_votes_room_id_fkey"
             columns: ["room_id"]
@@ -478,7 +398,7 @@ export type Database = {
           last_activity: string
           player_id: string
           player_name: string | null
-          player_number: number | null
+          player_number: number
           room_id: string
         }
         Insert: {
@@ -488,7 +408,7 @@ export type Database = {
           last_activity?: string
           player_id: string
           player_name?: string | null
-          player_number?: number | null
+          player_number: number
           room_id: string
         }
         Update: {
@@ -498,17 +418,10 @@ export type Database = {
           last_activity?: string
           player_id?: string
           player_name?: string | null
-          player_number?: number | null
+          player_number?: number
           room_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "fk_room_participants_room_id"
-            columns: ["room_id"]
-            isOneToOne: false
-            referencedRelation: "game_rooms"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "room_participants_room_id_fkey"
             columns: ["room_id"]
@@ -593,7 +506,9 @@ export type Database = {
         Returns: Json
       }
       consume_credit_for_room: {
-        Args: { room_code_param: string; user_id_param: string }
+        Args:
+          | { room_code_param: string }
+          | { room_code_param: string; user_id_param: string }
         Returns: Json
       }
       consume_credit_for_room_v2: {
@@ -601,7 +516,7 @@ export type Database = {
         Returns: Json
       }
       create_room_and_join: {
-        Args: { level_param: number; selected_language_param?: string }
+        Args: { level_param?: number; selected_language_param?: string }
         Returns: {
           id: string
           room_code: string
@@ -690,7 +605,9 @@ export type Database = {
         Returns: boolean
       }
       join_room_by_code: {
-        Args: { player_id_param: string; room_code_param: string }
+        Args:
+          | { player_id_param: string; room_code_param: string }
+          | { room_code_param: string }
         Returns: Json
       }
       normalize_used_cards: {
@@ -729,7 +646,9 @@ export type Database = {
         Returns: Json
       }
       sync_game_state_reliably: {
-        Args: { player_id_param: string; room_id_param: string }
+        Args:
+          | { player_id_param: string; room_id_param: string }
+          | { room_id_param: string }
         Returns: Json
       }
       update_user_activity: {
