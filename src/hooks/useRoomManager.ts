@@ -68,11 +68,11 @@ export const useRoomManager = () => {
       try {
         const { data: roomCheck } = await supabase
           .from('game_rooms')
-          .select('host_user_id, created_by')
+          .select('host_user_id')
           .eq('room_code', roomCode)
           .single();
           
-        if (roomCheck && (roomCheck.host_user_id === playerId || roomCheck.created_by === playerId)) {
+        if (roomCheck && roomCheck.host_user_id === playerId) {
           logger.debug('Skipping join - user is room creator', { roomCode, playerId });
           setState(prev => ({ ...prev, hasJoinedSuccessfully: true, lastProcessedRoomCode: roomCode }));
           return true;

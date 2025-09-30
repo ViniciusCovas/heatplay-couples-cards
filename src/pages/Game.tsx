@@ -336,8 +336,8 @@ const Game = () => {
     playerName: string;
   } | null>(null);
   
-  // Get proximity from game state
-  const isCloseProximity = gameState?.proximity_response || false;
+  // Get proximity from game state (use player1's response as default)
+  const isCloseProximity = gameState?.player1_proximity_response || false;
   
   // Response data
   const [gameResponses, setGameResponses] = useState<GameResponse[]>([]);
@@ -1551,18 +1551,16 @@ const Game = () => {
               showCard={showCard}
               cardIndex={usedCards.length}
               totalCards={totalCards}
-              aiReasoning={gameState?.current_card_ai_reasoning}
-              aiTargetArea={gameState?.current_card_ai_target_area}
-              selectionMethod={gameState?.current_card_selection_method}
+              aiReasoning={undefined}
+              aiTargetArea={undefined}
+              selectionMethod={'random'}
               isGeneratingCard={isGeneratingCard}
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
-              subTurn={gameState?.question_sub_turn}
+              subTurn={'first_response'}
               questionProgress={{
                 current: gameState?.current_card_index || 1,
                 total: 6,
-                subPhase: gameState?.question_sub_turn === 'second_response' ? '2nd response' : 
-                         gameState?.question_sub_turn === 'first_response' ? '1st response' : 
-                         'evaluating'
+                subPhase: '1st response'
               }}
             />
 
@@ -1663,8 +1661,6 @@ const Game = () => {
 
             <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
               <span>Round {gameState?.current_card_index || 1} of 6</span>
-              <span>•</span>
-              <span>{gameState?.question_sub_turn === 'first_evaluation' ? '1/2 responses' : '2/2 responses'}</span>
             </div>
           </div>
         )}

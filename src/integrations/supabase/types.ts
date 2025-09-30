@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_analyses: {
+        Row: {
+          ai_response: Json
+          analysis_type: string
+          created_at: string
+          id: string
+          room_id: string
+          updated_at: string
+        }
+        Insert: {
+          ai_response: Json
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          room_id: string
+          updated_at?: string
+        }
+        Update: {
+          ai_response?: Json
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          room_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_analyses_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "game_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       connection_states: {
         Row: {
           connection_status: string

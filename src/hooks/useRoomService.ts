@@ -106,7 +106,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       room_code: roomData.room_code,
       level: roomData.level || 1,
       status: roomData.status as 'waiting' | 'playing' | 'finished',
-      created_by: roomData.created_by || undefined,
+      created_by: roomData.host_user_id || undefined,
       created_at: roomData.created_at,
       started_at: roomData.started_at || undefined,
       finished_at: roomData.finished_at || undefined
@@ -157,7 +157,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       if (!joinResult || typeof joinResult !== 'object' || !('success' in joinResult) || !joinResult.success) {
-        const knownError = (joinResult && joinResult.error) ? joinResult.error : 'unknown';
+        const knownError = (joinResult && typeof joinResult === 'object' && 'error' in joinResult) ? joinResult.error as string : 'unknown';
         console.warn('❌ Room join unsuccessful:', joinResult);
         
         // Provide specific error messages for different scenarios
@@ -213,7 +213,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         room_code: roomData.room_code,
         level: roomData.level || 1,
         status: roomData.status as 'waiting' | 'playing' | 'finished',
-        created_by: roomData.created_by || undefined,
+        created_by: roomData.host_user_id || undefined,
         created_at: roomData.created_at,
         started_at: roomData.started_at || undefined,
         finished_at: roomData.finished_at || undefined
@@ -308,7 +308,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         room_code: roomData.room_code,
         level: roomData.level || 1,
         status: roomData.status as 'waiting' | 'playing' | 'finished',
-        created_by: roomData.created_by || undefined,
+        created_by: roomData.host_user_id || undefined,
         created_at: roomData.created_at,
         started_at: roomData.started_at || undefined,
         finished_at: roomData.finished_at || undefined
@@ -483,11 +483,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
   // Update playerNumber whenever participants change
   useEffect(() => {
-    if (!effectivePlayerId || participants.length === 0) {
-      setPlayerNumber(null);
-      return;
-    }
-    if (!user?.id) {
+    if (!user?.id || participants.length === 0) {
       setPlayerNumber(null);
       return;
     }
