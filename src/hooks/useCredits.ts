@@ -132,10 +132,9 @@ export const useCredits = () => {
     if (!user) return { success: false, error: 'not_authenticated' };
 
     try {
-      // Use consume_credit_for_room which handles room ownership validation
+      // Use consume_credit_for_room (uses auth.uid() server-side)
       const { data, error } = await supabase.rpc('consume_credit_for_room', {
-        room_code_param: roomCode,
-        user_id_param: user.id
+        room_code_param: roomCode
       });
 
       if (error) throw error;

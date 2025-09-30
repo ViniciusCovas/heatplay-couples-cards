@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { RealtimeChannel } from '@supabase/supabase-js';
-import { usePlayerId } from '@/hooks/usePlayerId';
 import { useTranslation } from 'react-i18next';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/contexts/AuthContext';
@@ -48,25 +47,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
-  const { playerId: localPlayerId, isReady: playerIdReady } = usePlayerId();
   const { i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
 
-  // Support hybrid authentication: authenticated users for room creation, anonymous users for joining
-  const effectivePlayerId = user?.id || localPlayerId;
-  const isPlayerReady = playerIdReady && !authLoading && !!effectivePlayerId;
-
-  const generateRoomCode = (): string => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
   const createRoom = useCallback(async (level: number, _userId?: string): Promise<string> => {
-    console.log('🔧 createRoom called', { level, userId: user?.id, effectivePlayerId });
+    console.log('🔧 createRoom called', { level, userId: user?.id });
     
     if (!user?.id) {
       console.error('❌ createRoom called without authenticated user');
@@ -129,33 +114,19 @@ export const useRoomService = (): UseRoomServiceReturn => {
     setIsConnected(true);
 
     return created.room_code;
-  }, [user?.id, effectivePlayerId, i18n.language]);
+  }, [user?.id, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     logger.debug('Attempting to join room', { 
       roomCode, 
-      effectivePlayerId, 
       isAuthenticated: !!user?.id, 
-      playerIdReady, 
-      authLoading,
-      isPlayerReady 
+      authLoading
     });
 
-    // Wait briefly for player readiness if needed
-    if (!isPlayerReady) {
-      // Try refreshing session one time
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session && !effectivePlayerId) {
-          logger.error('Player state not ready for room joining', { 
-            effectivePlayerId, playerIdReady, authLoading, hasUser: !!user?.id 
-          });
-          throw new Error('player_not_ready');
-        }
-      } catch (err) {
-        logger.error('Error refreshing session during join attempt', err);
-        throw new Error('player_not_ready');
-      }
+    // Require authentication
+    if (!user?.id || authLoading) {
+      logger.error('User must be authenticated to join room');
+      throw new Error('You must be signed in to join a room.');
     }
     
     try {
@@ -173,30 +144,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // Use join_room_by_code RPC with retry logic
+      // Use join_room_by_code RPC (uses auth.uid() server-side)
       console.log('🚀 Using join_room_by_code RPC for reliable joining...');
       
-      const maxAttempts = 2;
-      let attempt = 0;
-      let joinResult: any = null;
-      let rpcError: any = null;
-
-      while (attempt < maxAttempts) {
-        attempt += 1;
-        const res = await supabase.rpc('join_room_by_code', {
-          room_code_param: roomCode,
-          player_id_param: effectivePlayerId
-        });
-        joinResult = res.data;
-        rpcError = res.error;
-        
-        if (rpcError) {
-          logger.warn('RPC join_room_by_code attempt failed', { attempt, rpcError });
-          await new Promise((r) => setTimeout(r, 150)); // small backoff
-          continue;
-        }
-        break;
-      }
+      const { data: joinResult, error: rpcError } = await supabase.rpc('join_room_by_code', {
+        room_code_param: roomCode
+      });
 
       if (rpcError) {
         console.error('❌ RPC join_room_by_code failed after retries:', rpcError);
@@ -268,7 +221,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       setIsConnected(true);
 
       // Sync game state to ensure consistency
-      await syncGameStateReliably(roomId, effectivePlayerId);
+      await syncGameStateReliably(roomId);
 
       return true;
     } catch (error: any) {
@@ -279,13 +232,13 @@ export const useRoomService = (): UseRoomServiceReturn => {
       console.error('❌ Unexpected error joining room:', error);
       return false;
     }
-  }, [effectivePlayerId, user?.id, isPlayerReady]);
+  }, [user?.id, authLoading]);
 
   const syncRoomState = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Syncing room state for creator', { roomCode, effectivePlayerId });
+    logger.debug('Syncing room state for creator', { roomCode, userId: user?.id });
 
-    if (!effectivePlayerId) {
-      logger.error('No effective player ID for room state sync');
+    if (!user?.id) {
+      logger.error('User must be authenticated for room state sync');
       return false;
     }
 
@@ -318,13 +271,13 @@ export const useRoomService = (): UseRoomServiceReturn => {
         .from('room_participants')
         .select('*')
         .eq('room_id', roomData.id)
-        .eq('player_id', effectivePlayerId)
+        .eq('player_id', user.id)
         .single();
 
       if (participantError || !participantData) {
         logger.error('User not found as participant in room', { 
           roomCode, 
-          effectivePlayerId, 
+          userId: user.id, 
           participantError,
           message: 'Creator not found in room participants' 
         });
@@ -372,14 +325,13 @@ export const useRoomService = (): UseRoomServiceReturn => {
       logger.error('Error syncing room state', error);
       return false;
     }
-  }, [effectivePlayerId]);
+  }, [user?.id]);
 
   // Add reliable game state sync function
-  const syncGameStateReliably = useCallback(async (roomId: string, playerId: string) => {
+  const syncGameStateReliably = useCallback(async (roomId: string) => {
     try {
       const { data: syncResult, error } = await supabase.rpc('sync_game_state_reliably', {
-        room_id_param: roomId,
-        player_id_param: playerId
+        room_id_param: roomId
       });
 
       if (error) {
@@ -395,12 +347,12 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {
-      if (room && effectivePlayerId) {
+      if (room && user?.id) {
         await supabase
           .from('room_participants')
           .delete()
           .eq('room_id', room.id)
-          .eq('player_id', effectivePlayerId);
+          .eq('player_id', user.id);
       }
 
       if (channel) {
@@ -415,7 +367,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     } catch (error) {
       // Silent error handling
     }
-  }, [room, channel, effectivePlayerId]);
+  }, [room, channel, user?.id]);
 
   const startGame = useCallback(async (): Promise<void> => {
     if (!room) return;
@@ -535,12 +487,16 @@ export const useRoomService = (): UseRoomServiceReturn => {
       setPlayerNumber(null);
       return;
     }
+    if (!user?.id) {
+      setPlayerNumber(null);
+      return;
+    }
     
-    const participant = participants.find(p => p.player_id === effectivePlayerId);
+    const participant = participants.find(p => p.player_id === user.id);
     const newPlayerNumber = participant?.player_number || null;
     
     logger.debug('Player number calculation', {
-      effectivePlayerId,
+      userId: user.id,
       participants: participants.map(p => ({ id: p.player_id, number: p.player_number })),
       currentParticipant: participant,
       newPlayerNumber,
@@ -551,7 +507,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       logger.debug('Player number updated', { from: playerNumber, to: newPlayerNumber });
       setPlayerNumber(newPlayerNumber);
     }
-  }, [effectivePlayerId, participants, playerNumber]);
+  }, [user?.id, participants, playerNumber]);
 
   const getPlayerNumber = useCallback((): 1 | 2 | null => {
     return playerNumber;
