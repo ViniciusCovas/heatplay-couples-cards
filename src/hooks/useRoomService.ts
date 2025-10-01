@@ -191,15 +191,15 @@ export const useRoomService = (): UseRoomServiceReturn => {
         const knownError = (joinResult && typeof joinResult === 'object' && 'error' in joinResult) ? joinResult.error as string : 'unknown';
         console.warn('❌ Room join unsuccessful:', { joinResult, knownError });
         
-        // Provide specific error messages for different scenarios
+        // Throw machine-readable error codes for proper error handling in UI
         if (knownError === 'room_full') {
-          throw new Error('This room is already full. Only 2 players can join a room.');
+          throw new Error('room_full');
         }
         if (knownError === 'room_not_found') {
-          throw new Error('Room not found. Please check the room code.');
+          throw new Error('room_not_found');
         }
         if (knownError === 'room_closed') {
-          throw new Error('This room is no longer accepting new players.');
+          throw new Error('room_closed');
         }
         
         throw new Error(knownError);
@@ -256,8 +256,9 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       return true;
     } catch (error: any) {
-      // Allow callers to handle specific errors
-      if (error?.message === 'room_full' || error?.message === 'room_not_found' || error?.message === 'player_not_ready') {
+      // Rethrow all recognized error codes for proper UI handling
+      const recognizedErrors = ['room_full', 'room_not_found', 'player_not_ready', 'room_closed', 'invalid_response'];
+      if (recognizedErrors.includes(error?.message)) {
         throw error;
       }
       console.error('❌ Unexpected error joining room:', error);
