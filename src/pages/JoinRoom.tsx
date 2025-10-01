@@ -60,27 +60,42 @@ export default function JoinRoom() {
     setIsJoining(true);
     
     try {
-      console.log('🚀 Attempting to join room:', code);
+      console.log('🚀 JoinRoom: Attempting to join room:', { 
+        code,
+        isManual: !codeToJoin,
+        hasProcessedUrl,
+        isJoining 
+      });
+      
       const success = await joinRoom(code.toUpperCase());
       
       if (success) {
-        console.log('✅ Successfully joined room');
+        console.log('✅ JoinRoom: Successfully joined/rejoined room');
         toast.success(t('joinRoom.success.connected'));
         if (!codeToJoin) setRoomCode(code); // Only update state if manual input
       } else {
-        console.log('❌ Room join unsuccessful');
+        console.log('❌ JoinRoom: Room join returned false');
         toast.error(t('joinRoom.errors.invalidCode'));
         setHasProcessedUrl(false); // Reset to allow retry
       }
     } catch (error: any) {
-      console.log('❌ Room join error:', error.message);
+      console.log('❌ JoinRoom: Room join error:', { 
+        errorMessage: error.message,
+        errorType: error.constructor.name,
+        error 
+      });
+      
+      // Enhanced error handling with specific messages
       if (error.message === 'room_full') {
-        toast.error('Room is full. Try another code or create a new room.');
-      } else if (error.message === 'room_not_found') {
+        toast.error('This room is full. Only 2 players can join a room.');
+      } else if (error.message === 'room_not_found' || error.message === 'invalid_response') {
         toast.error(t('joinRoom.errors.invalidCode'));
       } else if (error.message === 'player_not_ready') {
         toast.error('Authentication not ready. Please refresh and try again.');
+      } else if (error.message === 'room_closed') {
+        toast.error('This room is no longer accepting players.');
       } else {
+        console.error('Unexpected join error:', error);
         toast.error(t('joinRoom.errors.connectionError'));
       }
       setHasProcessedUrl(false); // Reset to allow retry

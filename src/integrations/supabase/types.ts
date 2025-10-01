@@ -640,9 +640,7 @@ export type Database = {
         Returns: boolean
       }
       join_room_by_code: {
-        Args:
-          | { player_id_param: string; room_code_param: string }
-          | { room_code_param: string }
+        Args: { player_id_param: string; room_code_param: string }
         Returns: Json
       }
       normalize_used_cards: {

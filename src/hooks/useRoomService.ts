@@ -119,16 +119,20 @@ export const useRoomService = (): UseRoomServiceReturn => {
   }, [user?.id, i18n.language]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Attempting to join room', { 
+    // Enhanced debugging for player identity tracking
+    console.log('🎯 JOIN ROOM - Player Identity Debug:', { 
       roomCode, 
+      playerId: playerId ? `${playerId.substring(0, 8)}...` : 'NOT_SET',
+      playerIdFull: playerId,
       isAuthenticated: !!user?.id,
-      hasPlayerId: !!playerId,
-      playerIdReady
+      authUserId: user?.id ? `${user.id.substring(0, 8)}...` : 'NONE',
+      playerIdReady,
+      playerIdSource: user?.id ? 'AUTH' : 'ANONYMOUS'
     });
 
     // Wait for player ID to be ready (works for both authenticated and anonymous)
     if (!playerIdReady || !playerId) {
-      logger.error('Player ID not ready');
+      console.error('❌ Player ID not ready', { playerIdReady, playerId });
       throw new Error('player_not_ready');
     }
     
@@ -147,9 +151,11 @@ export const useRoomService = (): UseRoomServiceReturn => {
         return true;
       }
 
-      // Use 2-parameter join_room_by_code RPC for anonymous joining
-      console.log('🚀 Using join_room_by_code RPC for anonymous joining...', { 
+      // Use 2-parameter join_room_by_code RPC (now the only version after migration)
+      console.log('🚀 Calling join_room_by_code RPC...', { 
+        roomCode,
         playerId: playerId.substring(0, 8) + '...',
+        playerIdFull: playerId,
         isAuthenticated: !!user?.id 
       });
       
@@ -158,14 +164,32 @@ export const useRoomService = (): UseRoomServiceReturn => {
         player_id_param: playerId
       });
 
+      console.log('📥 RPC Response:', { joinResult, rpcError });
+
       if (rpcError) {
-        console.error('❌ RPC join_room_by_code failed after retries:', rpcError);
-        return false;
+        console.error('❌ RPC join_room_by_code failed:', rpcError);
+        throw new Error('room_not_found');
       }
 
-      if (!joinResult || typeof joinResult !== 'object' || !('success' in joinResult) || !joinResult.success) {
+      if (!joinResult || typeof joinResult !== 'object' || !('success' in joinResult)) {
+        console.error('❌ Invalid RPC response format:', joinResult);
+        throw new Error('invalid_response');
+      }
+
+      // Handle already_joined case specially
+      if (joinResult.success && (joinResult as any).already_joined) {
+        console.log('✅ Player already joined this room - syncing state', joinResult);
+        const roomId = (joinResult as any).room_id;
+        
+        // Initialize connection state for rejoining player
+        await syncGameStateReliably(roomId, playerId);
+        
+        // Continue with normal flow to load room data
+      }
+
+      if (!joinResult.success) {
         const knownError = (joinResult && typeof joinResult === 'object' && 'error' in joinResult) ? joinResult.error as string : 'unknown';
-        console.warn('❌ Room join unsuccessful:', joinResult);
+        console.warn('❌ Room join unsuccessful:', { joinResult, knownError });
         
         // Provide specific error messages for different scenarios
         if (knownError === 'room_full') {
