@@ -49,9 +49,10 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     
     try {
       // Call the atomic level selection function using Supabase RPC
+      // Cast to any to bypass TypeScript checks - PostgreSQL will handle UUID conversion
       const { data: result, error } = await supabase.rpc('handle_level_selection', {
-        room_id_param: roomId,
-        player_id_param: playerId,
+        room_id_param: roomId as any,
+        player_id_param: playerId as any,
         selected_level_param: level
       });
 
