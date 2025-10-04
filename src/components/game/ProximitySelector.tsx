@@ -143,10 +143,34 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
 
   // Auto-confirm when participants are loaded and we haven't confirmed yet
   useEffect(() => {
-    if (participants.length > 0 && !isConfirmed && !waitingForPartner) {
+    // Only proceed if ALL required data is ready
+    if (
+      participants.length > 0 && 
+      playerId && 
+      playerIdReady && 
+      room?.id && 
+      !isConfirmed && 
+      !waitingForPartner
+    ) {
+      logger.debug('Auto-confirming proximity - all data ready', {
+        participantsCount: participants.length,
+        playerId,
+        playerIdReady,
+        roomId: room.id
+      });
       handleConfirm();
+    } else if (participants.length > 0 && (!playerId || !playerIdReady || !room?.id)) {
+      // Log when we're skipping auto-confirm due to missing data
+      logger.debug('Skipping auto-confirm - waiting for data', {
+        participantsCount: participants.length,
+        hasPlayerId: !!playerId,
+        playerIdReady,
+        hasRoomId: !!room?.id,
+        isConfirmed,
+        waitingForPartner
+      });
     }
-  }, [participants.length, isConfirmed, waitingForPartner, handleConfirm]);
+  }, [participants.length, playerId, playerIdReady, room?.id, isConfirmed, waitingForPartner, handleConfirm]);
 
   logger.debug('ProximitySelector render', { 
     isVisible, 
