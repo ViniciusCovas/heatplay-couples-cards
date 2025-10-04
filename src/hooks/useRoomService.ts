@@ -48,6 +48,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [isConnected, setIsConnected] = useState(false);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('IDLE');
   const { i18n } = useTranslation();
   const { user, loading: authLoading } = useAuth();
   const { playerId, isReady: playerIdReady } = usePlayerId();
@@ -484,14 +485,26 @@ export const useRoomService = (): UseRoomServiceReturn => {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        // Part 3: Track subscription status
+        setSubscriptionStatus(status);
+        logger.info(`🔵 [Realtime] Subscription status: ${status}`);
+        
+        if (status === 'SUBSCRIBED') {
+          logger.info('✅ [Realtime] Successfully subscribed to room channel');
+        } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          logger.error('❌ [Realtime] Subscription failed, triggering manual refresh');
+          refreshParticipants();
+        }
+      });
 
     setChannel(roomChannel);
 
     return () => {
+      // Part 2: Increase cleanup delay from 100ms to 500ms
       setTimeout(() => {
         supabase.removeChannel(roomChannel);
-      }, 100);
+      }, 500);
     };
   }, [room]);
 

@@ -123,6 +123,7 @@ function CreateRoomContent() {
         participants={participants}
         onGameStart={handleGameStart}
         onLeaveRoom={handleLeaveRoom}
+        roomId={room.id}
       />
     );
   }

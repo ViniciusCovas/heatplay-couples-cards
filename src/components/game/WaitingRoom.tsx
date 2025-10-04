@@ -7,17 +7,46 @@ import { Users, Copy, CheckCircle, Clock } from 'lucide-react';
 import { RoomParticipant } from '@/hooks/useRoomService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WaitingRoomProps {
   roomCode: string;
   participants: RoomParticipant[];
   onGameStart: () => Promise<void>;
   onLeaveRoom: () => void;
+  roomId?: string;
 }
 
-export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }: WaitingRoomProps) {
+export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, roomId }: WaitingRoomProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
+  const [localParticipants, setLocalParticipants] = useState(participants);
   const { t } = useTranslation();
+
+  // Fallback polling to ensure we catch participant updates (Part 1 of fix)
+  useEffect(() => {
+    if (!roomId || localParticipants.length >= 2) return;
+
+    const pollParticipants = async () => {
+      const { data, error } = await supabase
+        .from('room_participants')
+        .select('*')
+        .eq('room_id', roomId);
+
+      if (data && !error) {
+        setLocalParticipants(data as RoomParticipant[]);
+      }
+    };
+
+    // Poll every 2 seconds while waiting for players
+    const intervalId = setInterval(pollParticipants, 2000);
+
+    return () => clearInterval(intervalId);
+  }, [roomId, localParticipants.length]);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalParticipants(participants);
+  }, [participants]);
 
   const copyRoomCode = async () => {
     try {
@@ -30,14 +59,14 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
 
   // Start countdown when both players are ready
   useEffect(() => {
-    if (participants.length === 2 && participants.every(p => p.is_ready)) {
+    if (localParticipants.length === 2 && localParticipants.every(p => p.is_ready)) {
       if (countdown === null) {
         setCountdown(5);
       }
     } else {
       setCountdown(null);
     }
-  }, [participants, countdown]);
+  }, [localParticipants, countdown]);
 
   // Countdown logic
   useEffect(() => {
@@ -111,12 +140,12 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
           <div className="space-y-3">
             <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
-              {t('waitingRoom.players')} ({participants.length}/2)
+              {t('waitingRoom.players')} ({localParticipants.length}/2)
             </h3>
             <div className="space-y-2">
               {[1, 2].map((playerNum) => {
                 // Find participant by player_number rather than array index
-                const participant = participants.find(p => p.player_number === playerNum);
+                const participant = localParticipants.find(p => p.player_number === playerNum);
                 return (
                   <div
                     key={playerNum}
@@ -149,7 +178,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom }
           </div>
 
           {/* Instructions */}
-          {participants.length < 2 && (
+          {localParticipants.length < 2 && (
             <div className="p-4 bg-muted/30 rounded-xl border border-dashed border-muted-foreground/30">
               <p className="text-sm text-muted-foreground">
                 {t('waitingRoom.shareInstruction')}
