@@ -117,6 +117,39 @@ export type Database = {
         }
         Relationships: []
       }
+      game_flow_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_data: Json
+          event_type: string
+          id: string
+          processed: boolean
+          processed_at: string | null
+          room_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_type: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          room_id: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_data?: Json
+          event_type?: string
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          room_id?: string
+        }
+        Relationships: []
+      }
       game_responses: {
         Row: {
           ai_reasoning: string | null
@@ -616,17 +649,11 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       handle_level_selection: {
-        Args:
-          | {
-              player_id_param: string
-              room_id_param: string
-              selected_level_param: number
-            }
-          | {
-              player_id_param: string
-              room_id_param: string
-              selected_level_param: number
-            }
+        Args: {
+          player_id_param: string
+          room_id_param: string
+          selected_level_param: number
+        }
         Returns: Json
       }
       handle_proximity_response: {
