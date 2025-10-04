@@ -48,17 +48,25 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     logger.debug('Submitting level vote', { roomId, playerId, level });
     
     try {
-      // Call the atomic level selection function using Supabase RPC
-      // Cast to any to bypass TypeScript checks - PostgreSQL will handle UUID conversion
+      // Call the unified level selection function using Supabase RPC
       const { data: result, error } = await supabase.rpc('handle_level_selection', {
-        room_id_param: roomId as any,
-        player_id_param: playerId as any,
+        room_id_param: roomId,
+        player_id_param: playerId,
         selected_level_param: level
       });
 
       if (error) {
-        logger.error('RPC call failed', error);
-        toast.error('Failed to select level. Please try again.');
+        logger.error('RPC call failed', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          roomId,
+          playerId,
+          level
+        });
+        toast.error(error.message || 'Failed to select level. Please try again.');
+        setIsWaitingForPartner(false);
         return;
       }
       logger.debug('Level selection result', result);
