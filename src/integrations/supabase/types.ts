@@ -616,11 +616,17 @@ export type Database = {
         Returns: Database["public"]["Enums"]["app_role"]
       }
       handle_level_selection: {
-        Args: {
-          player_id_param: string
-          room_id_param: string
-          selected_level_param: number
-        }
+        Args:
+          | {
+              player_id_param: string
+              room_id_param: string
+              selected_level_param: number
+            }
+          | {
+              player_id_param: string
+              room_id_param: string
+              selected_level_param: number
+            }
         Returns: Json
       }
       handle_proximity_response: {
