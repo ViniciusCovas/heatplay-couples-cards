@@ -266,11 +266,31 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
   }, [playerId, playerIdReady, user?.id]);
 
-  const syncRoomState = useCallback(async (roomCode: string): Promise<boolean> => {
-    logger.debug('Syncing room state for creator', { roomCode, userId: user?.id });
+  // Add reliable game state sync function
+  const syncGameStateReliably = useCallback(async (roomId: string, playerIdParam: string) => {
+    try {
+      const { data: syncResult, error } = await supabase.rpc('sync_game_state_reliably', {
+        room_id_param: roomId,
+        player_id_param: playerIdParam
+      });
 
-    if (!user?.id) {
-      logger.error('User must be authenticated for room state sync');
+      if (error) {
+        console.warn('⚠️ Game state sync failed:', error);
+        return;
+      }
+
+      logger.debug('✅ Game state synced reliably:', syncResult);
+    } catch (error) {
+      console.warn('⚠️ Game state sync error:', error);
+    }
+  }, []);
+
+  const syncRoomState = useCallback(async (roomCode: string): Promise<boolean> => {
+    logger.debug('Syncing room state', { roomCode, playerId, playerIdReady });
+
+    // Wait for playerId to be ready (works for both authenticated and anonymous)
+    if (!playerIdReady || !playerId) {
+      logger.error('Player ID not ready for room state sync', { playerIdReady, playerId });
       return false;
     }
 
@@ -298,25 +318,25 @@ export const useRoomService = (): UseRoomServiceReturn => {
         roomCode 
       });
 
-      // Verify user is already a participant
+      // Verify player is already a participant (using playerId instead of user.id)
       const { data: participantData, error: participantError } = await supabase
         .from('room_participants')
         .select('*')
         .eq('room_id', roomData.id)
-        .eq('player_id', user.id)
+        .eq('player_id', playerId)
         .single();
 
       if (participantError || !participantData) {
-        logger.error('User not found as participant in room', { 
+        logger.error('Player not found as participant in room', { 
           roomCode, 
-          userId: user.id, 
+          playerId, 
           participantError,
-          message: 'Creator not found in room participants' 
+          message: 'Player not found in room participants' 
         });
         return false;
       }
 
-      logger.debug('Creator verified as participant', { 
+      logger.debug('Player verified as participant', { 
         participantId: participantData.id,
         playerNumber: participantData.player_number 
       });
@@ -347,6 +367,9 @@ export const useRoomService = (): UseRoomServiceReturn => {
       });
       setIsConnected(true);
 
+      // Sync game state reliably after setting room state
+      await syncGameStateReliably(roomData.id, playerId);
+
       logger.debug('Room state synced successfully', { 
         roomId: roomData.id, 
         status: roomData.status,
@@ -357,26 +380,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       logger.error('Error syncing room state', error);
       return false;
     }
-  }, [user?.id]);
-
-  // Add reliable game state sync function
-  const syncGameStateReliably = useCallback(async (roomId: string, playerIdParam: string) => {
-    try {
-      const { data: syncResult, error } = await supabase.rpc('sync_game_state_reliably', {
-        room_id_param: roomId,
-        player_id_param: playerIdParam
-      });
-
-      if (error) {
-        console.warn('⚠️ Game state sync failed:', error);
-        return;
-      }
-
-      logger.debug('✅ Game state synced reliably:', syncResult);
-    } catch (error) {
-      console.warn('⚠️ Game state sync error:', error);
-    }
-  }, []);
+  }, [playerId, playerIdReady, syncGameStateReliably]);
 
   const leaveRoom = useCallback(async (): Promise<void> => {
     try {
