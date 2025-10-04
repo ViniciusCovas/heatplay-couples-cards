@@ -488,14 +488,10 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
     setChannel(roomChannel);
 
-    // Watchdog polling to ensure participant data is always up-to-date
-    const watchdogInterval = setInterval(() => {
-      refreshParticipants();
-    }, 3000); // Poll every 3 seconds
-
     return () => {
-      supabase.removeChannel(roomChannel);
-      clearInterval(watchdogInterval);
+      setTimeout(() => {
+        supabase.removeChannel(roomChannel);
+      }, 100);
     };
   }, [room]);
 

@@ -145,7 +145,9 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
       });
 
     return () => {
-      supabase.removeChannel(channel);
+      setTimeout(() => {
+        supabase.removeChannel(channel);
+      }, 100);
     };
   }, [roomId, playerId]);
 

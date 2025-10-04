@@ -194,7 +194,7 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
     if (!roomId) return;
 
     const channel = supabase
-      .channel(`room-${roomId}`)
+      .channel(`level-select-${roomId}`)
       .on(
         'postgres_changes',
         {
@@ -220,7 +220,9 @@ export const useLevelSelection = (roomId: string | null, playerId: string): UseL
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      setTimeout(() => {
+        supabase.removeChannel(channel);
+      }, 100);
     };
   }, [roomId, t]);
 
