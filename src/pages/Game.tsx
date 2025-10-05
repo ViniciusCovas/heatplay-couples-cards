@@ -134,25 +134,33 @@ const Game = () => {
     connectionError
   });
 
-  // Translate UUID to question text for display
+  // Translate UUID to question text for display - WITH RACE CONDITION GUARD
   const getQuestionText = useCallback((cardIdOrText: string): string => {
     if (!cardIdOrText) return '';
+    
+    // CRITICAL: Guard against race condition - don't translate if levelCards not loaded yet
+    if (levelCards.length === 0) {
+      logger.warn(`⚠️ RACE CONDITION: getQuestionText called but levelCards is empty (length: ${levelCards.length})`);
+      return ''; // Return empty to prevent showing UUIDs
+    }
     
     // Check if it's already text (not a UUID)
     const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
     if (!uuidPattern.test(cardIdOrText)) {
+      logger.debug(`Already text, not UUID: "${cardIdOrText}"`);
       return cardIdOrText;
     }
     
     // It's a UUID, look it up in levelCards
+    logger.debug(`Translating UUID: ${cardIdOrText} (levelCards available: ${levelCards.length})`);
     const matchingCard = levelCards.find(card => card.id === cardIdOrText);
     if (matchingCard) {
-      logger.debug(`✅ Translated UUID ${cardIdOrText} to text: "${matchingCard.text}"`);
+      logger.info(`✅ Translated UUID ${cardIdOrText} to text: "${matchingCard.text}"`);
       return matchingCard.text;
     }
     
-    logger.warn(`⚠️ Could not find question text for UUID: ${cardIdOrText}`);
-    return cardIdOrText; // Fallback to UUID if not found
+    logger.error(`⚠️ UUID not found in levelCards: ${cardIdOrText}`);
+    return ''; // Return empty instead of UUID to avoid showing corrupted data
   }, [levelCards]);
 
   // Emergency sync when game state is out of sync
@@ -474,29 +482,12 @@ const Game = () => {
       // Update turn
       setCurrentTurn(gameState.current_turn);
       
-      // Update card ALWAYS if it exists in game state and differs from current
-      if (gameState.current_card) {
-        const questionText = getQuestionText(gameState.current_card);
-        
-        if (questionText !== currentCard) {
-          logger.info('Card updated from game state - syncing UI', { 
-            newCardUUID: gameState.current_card,
-            questionText, 
-            oldCard: currentCard,
-            gamePhase: gameState.current_phase 
-          });
-          setCurrentCard(questionText);
-          setShowCard(false);
-          // FIXED: Changed from 300ms to 700ms to match CSS transition duration
-          setTimeout(() => setShowCard(true), 700);
-          
-          // If we're in card-display phase and it's my turn, start the timer
-          if (gameState.current_phase === 'card-display' && isMyTurn) {
-            logger.info('Starting timer for synced card display');
-            setTimeout(() => startTimer(), 700); // Start timer after card animation
-          }
-        }
-      }
+      // Card updates are now handled by the deferred update useEffect above
+      // This prevents race conditions with levelCards loading
+      logger.debug('Card update delegated to deferred update effect', {
+        currentCardUUID: gameState.current_card,
+        levelCardsLoaded: levelCards.length > 0
+      });
       
       // Update used cards - no translation needed, these are UUIDs for tracking
       if (gameState.used_cards) {
