@@ -703,6 +703,14 @@ export type Database = {
         Args: { current_used_cards?: string[]; room_id_param: string }
         Returns: string
       }
+      set_current_card_if_missing: {
+        Args: {
+          language_param?: string
+          level_param?: number
+          room_id_param: string
+        }
+        Returns: Json
+      }
       submit_response_evaluation: {
         Args: {
           evaluation_data: Json

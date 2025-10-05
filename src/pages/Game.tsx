@@ -548,17 +548,47 @@ const Game = () => {
             responseRound: responseData?.round_number
           });
 
-          if (responseData) {
+          // HOTFIX: If strict query returns nothing, try fallback query without card_id filter
+          // This handles card drift where current_card changed between response submit and evaluation fetch
+          let finalResponseData = responseData;
+          
+          if (!finalResponseData) {
+            logger.warn('[setupEvaluationData] Strict query failed - attempting fallback without card_id filter');
+            
+            const { data: fallbackData, error: fallbackError } = await supabase
+              .from('game_responses')
+              .select('*')
+              .eq('room_id', room.id)
+              .eq('round_number', currentRound)
+              .is('evaluation', null)
+              .neq('player_id', effectivePlayerId)
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            if (fallbackError) {
+              logger.error('[setupEvaluationData] Fallback query error', fallbackError);
+            } else if (fallbackData) {
+              logger.info('[setupEvaluationData] FALLBACK SUCCESS - Found response via fallback', {
+                responseId: fallbackData.id,
+                cardId: fallbackData.card_id,
+                cardDrift: fallbackData.card_id !== currentCardFromState
+              });
+              finalResponseData = fallbackData;
+            }
+          }
+
+          if (finalResponseData) {
             logger.info('[setupEvaluationData] Checking self-evaluation guard', {
-              responsePlayerId: responseData.player_id,
+              responsePlayerId: finalResponseData.player_id,
               effectivePlayerId: effectivePlayerId,
-              matches: responseData.player_id === effectivePlayerId
+              matches: finalResponseData.player_id === effectivePlayerId
             });
             
             // GUARD: Prevent evaluating own response
-            if (responseData.player_id === effectivePlayerId) {
+            if (finalResponseData.player_id === effectivePlayerId) {
               logger.warn('[setupEvaluationData] GUARD TRIPPED - Cannot evaluate own response', {
-                responsePlayerId: responseData.player_id,
+                responsePlayerId: finalResponseData.player_id,
                 currentPlayerId: effectivePlayerId,
                 playerNumber
               });
@@ -566,19 +596,19 @@ const Game = () => {
             }
             
             // Get partner's name based on their player ID
-            const partnerName = responseData.player_id !== effectivePlayerId ? 
+            const partnerName = finalResponseData.player_id !== effectivePlayerId ? 
               (playerNumber === 1 ? t('game.player2') : t('game.player1')) : 
               t('game.yourResponse');
 
             setPendingEvaluation({
-              question: getQuestionTextByCardId(responseData.card_id),
-              response: responseData.response || '',
-              responseId: responseData.id,
+              question: getQuestionTextByCardId(finalResponseData.card_id),
+              response: finalResponseData.response || '',
+              responseId: finalResponseData.id,
               playerName: partnerName
             });
 
             logger.info('[setupEvaluationData] SUCCESS - Evaluation data set up', {
-              responseId: responseData.id,
+              responseId: finalResponseData.id,
               partnerName
             });
           } else {
@@ -810,68 +840,44 @@ const Game = () => {
           gameState?.current_phase === 'card-display' &&
           room && !isGeneratingCard) {
         
-        const usedCardsFromState = gameState?.used_cards || [];
-        const availableCards = levelCards.filter(card => !usedCardsFromState.includes(card.id));
+        logger.debug('Attempting atomic card selection via RPC', { 
+          roomId: room.id,
+          currentLevel,
+          language: gameState?.selected_language || i18n.language
+        });
         
-        if (availableCards.length > 0) {
-          // ALWAYS try AI selection first - for ALL cards, not just first
-          const isFirstQuestion = usedCardsFromState.length === 0;
-          
-          logger.debug('Attempting AI card generation for ALL cards', { 
-            isFirstQuestion, 
-            availableCards: availableCards.length,
-            currentLevel,
-            language: i18n.language
+        // Use atomic RPC to prevent card drift
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('set_current_card_if_missing', {
+          room_id_param: room.id,
+          language_param: gameState?.selected_language || i18n.language,
+          level_param: currentLevel
+        });
+        
+        if (rpcError) {
+          logger.error('RPC card selection failed', rpcError);
+          return;
+        }
+        
+        const result = rpcResult as { success?: boolean; card_id?: string; already_set?: boolean; newly_set?: boolean; race_detected?: boolean; error?: string };
+        
+        if (result?.success) {
+          logger.info('Atomic card selection completed', {
+            cardId: result.card_id,
+            alreadySet: result.already_set,
+            newlySet: result.newly_set,
+            raceDetected: result.race_detected
           });
           
-          // Try AI selection with current level number - FOR ALL CARDS
-          const aiResult = await selectCardWithAI(room.id, currentLevel, i18n.language, isFirstQuestion);
-          
-          let selectedCard = aiResult.cardId;
-          let updatesForGameState: any = {};
-          
-          // IMPROVED: Handle AI success or failure atomically to prevent intermediate UI states
-          if (selectedCard && aiResult.reasoning) {
-            // AI selection successful - save all AI data to database
-            updatesForGameState = {
-              current_card: selectedCard,
-              current_card_ai_reasoning: aiResult.reasoning,
-              current_card_ai_target_area: aiResult.targetArea,
-              current_card_selection_method: aiResult.selectionMethod
-            };
-            
-            logger.info('AI selection successful, updating database atomically', { updatesForGameState });
-          } else {
-            // AI failed - use random selection and clear AI data atomically
-            const randomQuestion = availableCards[Math.floor(Math.random() * availableCards.length)];
-            selectedCard = randomQuestion.id;
-            updatesForGameState = {
-              current_card: selectedCard,
-              current_card_ai_reasoning: null,
-              current_card_ai_target_area: null,
-              current_card_selection_method: 'random_fallback'
-            };
-            
-            logger.info('Using random card fallback, updating database atomically', { 
-              selectedCard, 
-              selectedText: randomQuestion.text,
-              availableCards: availableCards.length,
-              usedCards: usedCardsFromState.length,
-              isFirstQuestion
-            });
-          }
-          
-          // Update database with all data at once - this will sync to both players atomically
-          // This prevents the intermediate "ai.randomfallback" state from showing in UI
-          await updateGameState(updatesForGameState);
-          
-          logger.info('Card generation completed and synced atomically to database', { updatesForGameState });
+          // The RPC has already updated the database
+          // The game state sync will handle updating the UI
+        } else {
+          logger.error('Card selection RPC returned unsuccessful', result);
         }
       }
     };
 
     generateCard();
-  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language, isRoomLoaded, isConnected]);
+  }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language, isRoomLoaded, isConnected, gameState?.selected_language]);
 
   useEffect(() => {
     setProgress((usedCards.length / totalCards) * 100);
