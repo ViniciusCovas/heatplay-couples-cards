@@ -63,9 +63,16 @@ const Game = () => {
   const connectionAttemptRef = useRef(false);
 
   // System readiness and player ID resolution
-  // CRITICAL FIX: For anonymous users, always use playerId (not user?.id)
-  // For authenticated users, use their auth ID for database consistency
-  const effectivePlayerId = user?.id || playerId;
+  // CRITICAL FIX: Always use room-specific playerId to ensure unique player identity
+  // This prevents auth session sharing issues where both players share same user?.id
+  const effectivePlayerId = playerId;
+  
+  logger.info('Player identity resolved', {
+    roomParticipantId: playerId,
+    authUserId: user?.id,
+    effectivePlayerId,
+    playerNumber
+  });
   const isPaused = usePauseBackend();
   
   // Real-time state management
