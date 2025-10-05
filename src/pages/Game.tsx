@@ -978,10 +978,40 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
+      // UUID validation pattern
+      const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+      
+      let validCardId = currentCardFromState;
+      
+      // Check if current_card is a valid UUID
+      if (!uuidPattern.test(currentCardFromState)) {
+        logger.warn(`⚠️ current_card is NOT a valid UUID: "${currentCardFromState}", searching levelCards for match`);
+        
+        // Try to find the UUID by matching the text
+        const matchingCard = levelCards.find(card => card.text === currentCardFromState);
+        if (matchingCard) {
+          validCardId = matchingCard.id;
+          logger.info(`✅ Found matching UUID: ${validCardId} for text: "${currentCardFromState}"`);
+        } else {
+          logger.error(`❌ Could not find UUID for card text: "${currentCardFromState}". Available cards:`, levelCards.map(c => ({ id: c.id, text: c.text.substring(0, 30) })));
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Unable to submit response. Invalid card reference."
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      } else {
+        logger.debug(`✅ card_id is valid UUID: ${validCardId}`);
+      }
+
       logger.info('Submitting response with timer data', { 
         response, 
         actualResponseTime, 
-        currentCardFromState,
+        originalCardFromState: currentCardFromState,
+        validCardId,
+        isUUID: uuidPattern.test(validCardId),
         currentRound,
         effectivePlayerId,
         currentTurn,
@@ -998,7 +1028,9 @@ const Game = () => {
         currentRound,
         responseLength: response.length,
         actualResponseTime,
-        cardId: currentCardFromState
+        originalCardId: currentCardFromState,
+        validCardId,
+        cardIdIsUUID: uuidPattern.test(validCardId)
       });
 
       const { error: responseError } = await supabase
@@ -1006,7 +1038,7 @@ const Game = () => {
         .insert({
           room_id: room.id,
           player_id: effectivePlayerId,
-          card_id: currentCardFromState,
+          card_id: validCardId,
           response: response,
           response_time: Math.round(actualResponseTime), // Store actual timer-based response time
           round_number: currentRound,
@@ -1016,6 +1048,11 @@ const Game = () => {
 
       if (responseError) {
         logger.error('Error saving response', responseError);
+        toast({
+          variant: "destructive",
+          title: "Error submitting response",
+          description: responseError.message
+        });
         throw responseError;
       }
 
