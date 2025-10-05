@@ -13,6 +13,7 @@ import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
 import { ConnectionReport, type ConnectionData } from "@/components/game/ConnectionReport";
 import { ResponseEvaluation, type EvaluationData } from "@/components/game/ResponseEvaluation";
 import { LanguageIndicator } from "@/components/ui/language-indicator";
+import { DebugBar } from "@/components/game/DebugBar";
 
 import { calculateConnectionScore, type GameResponse } from "@/utils/connectionAlgorithm";
 import { useRoomService } from "@/hooks/useRoomService";
@@ -85,6 +86,11 @@ const Game = () => {
     playerId: effectivePlayerId
   });
   const isSystemReady = playerIdReady && !authLoading && !!effectivePlayerId;
+  
+  // Debug mode toggle
+  const showDebug = searchParams.get('debug') === '1';
+  const [lastSyncTime, setLastSyncTime] = useState<Date>();
+  const [lastStateTransition, setLastStateTransition] = useState<Date>();
   
   // Debug logging for player ID resolution
   logger.debug('Player ID resolution', {
@@ -364,15 +370,27 @@ const Game = () => {
   
   // Helper function to derive local phase from database state
   const deriveLocalPhase = (dbState: any, playerNum: number | undefined): GamePhase => {
+    logger.debug('[deriveLocalPhase] Input state', {
+      dbPhase: dbState.current_phase,
+      dbTurn: dbState.current_turn,
+      dbCard: dbState.current_card,
+      playerNum,
+      roomStatus: room?.status
+    });
+    
     // Check if room is finished first - this overrides any phase logic
     if (room?.status === 'finished') {
-      logger.info('Game is finished, showing final report');
+      logger.info('[deriveLocalPhase] Game is finished, showing final report');
       return 'final-report';
     }
     
     // GUARD: Return waiting state if player number is not resolved
     if (!playerNum) {
-      logger.debug('Player number not resolved, returning waiting state');
+      logger.warn('[deriveLocalPhase] Player number UNDEFINED - returning waiting-for-evaluation', {
+        dbPhase: dbState.current_phase,
+        dbTurn: dbState.current_turn,
+        playerNumResolved: false
+      });
       return 'waiting-for-evaluation';
     }
     
@@ -387,29 +405,45 @@ const Game = () => {
       isMyTurnInDB 
     });
     
+    let chosenPhase: GamePhase;
     switch (dbState.current_phase) {
       case 'card-display':
-        return 'card-display';
+        chosenPhase = 'card-display';
+        break;
       case 'response-input':
-        return 'card-display'; // Always show card first, use local state for response input
+        chosenPhase = 'card-display'; // Always show card first, use local state for response input
+        break;
       case 'evaluation':
         // In evaluation phase: evaluator gets 'evaluation', other player shows waiting
         if (isMyTurnInDB) {
-          return 'evaluation';
+          chosenPhase = 'evaluation';
         } else {
           // Player being evaluated shows waiting state with question context
-          return 'waiting-for-evaluation';
+          chosenPhase = 'waiting-for-evaluation';
         }
+        break;
       case 'final-report':
-        return 'final-report';
+        chosenPhase = 'final-report';
+        break;
       default:
-        return 'card-display';
+        chosenPhase = 'card-display';
+        break;
     }
+    
+    logger.info('[deriveLocalPhase] Chosen local phase', {
+      dbPhase: dbState.current_phase,
+      chosenPhase,
+      isMyTurnInDB,
+      playerNum
+    });
+    
+    return chosenPhase;
   };
   
   // Main sync useEffect - handles ALL phase transitions based on database state
   useEffect(() => {
     if (gameState) {
+      setLastSyncTime(new Date());
       logger.debug('Syncing with game state', { gameState });
       
       // Update turn
@@ -442,9 +476,10 @@ const Game = () => {
       // Sync game phase based on database state and player logic - ONLY source of phase changes
       const newPhase = deriveLocalPhase(gameState, playerNumber || undefined);
       if (newPhase !== gamePhase) {
+        setLastStateTransition(new Date());
         logger.info('Phase changed via deriveLocalPhase', { 
           from: gamePhase, 
-          to: newPhase, 
+          to: newPhase,
           dbPhase: gameState.current_phase,
           dbTurn: gameState.current_turn,
           roomStatus: room?.status,
@@ -473,12 +508,20 @@ const Game = () => {
   useEffect(() => {
     const setupEvaluationData = async () => {
       if (gamePhase === 'evaluation' && gameState && room && !pendingEvaluation) {
-        logger.debug('Setting up evaluation data for evaluator');
+        logger.debug('[setupEvaluationData] Entering evaluation setup');
         
         try {
           // Get the current round number
           const currentRound = (gameState.used_cards?.length || 0) + 1;
           const currentCardFromState = gameState.current_card;
+          
+          logger.info('[setupEvaluationData] BEFORE query', {
+            roomId: room.id,
+            currentCard: currentCardFromState,
+            currentRound,
+            effectivePlayerId,
+            playerNumber
+          });
           
           // Fetch the latest response that needs evaluation for the current card/round
           const { data: responseData, error } = await supabase
@@ -493,16 +536,31 @@ const Game = () => {
             .maybeSingle();
 
           if (error) {
-            logger.error('Error fetching response for evaluation', error);
+            logger.error('[setupEvaluationData] Error fetching response for evaluation', error);
             return;
           }
 
+          logger.info('[setupEvaluationData] AFTER query', {
+            foundResponse: !!responseData,
+            responseId: responseData?.id,
+            responsePlayerId: responseData?.player_id,
+            responseCardId: responseData?.card_id,
+            responseRound: responseData?.round_number
+          });
+
           if (responseData) {
+            logger.info('[setupEvaluationData] Checking self-evaluation guard', {
+              responsePlayerId: responseData.player_id,
+              effectivePlayerId: effectivePlayerId,
+              matches: responseData.player_id === effectivePlayerId
+            });
+            
             // GUARD: Prevent evaluating own response
             if (responseData.player_id === effectivePlayerId) {
-              logger.warn('Cannot evaluate own response, skipping evaluation setup', {
+              logger.warn('[setupEvaluationData] GUARD TRIPPED - Cannot evaluate own response', {
                 responsePlayerId: responseData.player_id,
-                currentPlayerId: effectivePlayerId
+                currentPlayerId: effectivePlayerId,
+                playerNumber
               });
               return;
             }
@@ -519,10 +577,19 @@ const Game = () => {
               playerName: partnerName
             });
 
-            logger.info('Evaluation data set up successfully for partner response');
+            logger.info('[setupEvaluationData] SUCCESS - Evaluation data set up', {
+              responseId: responseData.id,
+              partnerName
+            });
+          } else {
+            logger.warn('[setupEvaluationData] No response found matching filters', {
+              roomId: room.id,
+              cardId: currentCardFromState,
+              round: currentRound
+            });
           }
         } catch (error) {
-          logger.error('Error setting up evaluation data', error);
+          logger.error('[setupEvaluationData] Exception caught', error);
         }
       }
     };
@@ -1758,6 +1825,24 @@ const Game = () => {
           </p>
         </div>
       </div>
+      
+      {/* Debug Bar - Only visible when ?debug=1 is in URL */}
+      {showDebug && (
+        <DebugBar
+          playerId={playerId}
+          authUserId={user?.id}
+          effectivePlayerId={effectivePlayerId}
+          playerNumber={playerNumber ?? undefined}
+          dbCurrentPhase={gameState?.current_phase ?? undefined}
+          dbCurrentTurn={gameState?.current_turn ?? undefined}
+          dbCurrentCard={gameState?.current_card ?? undefined}
+          localGamePhase={gamePhase}
+          pendingEvaluation={!!pendingEvaluation}
+          pendingEvaluationResponseId={pendingEvaluation?.responseId}
+          lastSyncTime={lastSyncTime}
+          lastStateTransition={lastStateTransition}
+        />
+      )}
     </div>
   );
 };
