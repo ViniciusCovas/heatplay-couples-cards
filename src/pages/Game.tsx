@@ -134,6 +134,27 @@ const Game = () => {
     connectionError
   });
 
+  // Translate UUID to question text for display
+  const getQuestionText = useCallback((cardIdOrText: string): string => {
+    if (!cardIdOrText) return '';
+    
+    // Check if it's already text (not a UUID)
+    const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+    if (!uuidPattern.test(cardIdOrText)) {
+      return cardIdOrText;
+    }
+    
+    // It's a UUID, look it up in levelCards
+    const matchingCard = levelCards.find(card => card.id === cardIdOrText);
+    if (matchingCard) {
+      logger.debug(`✅ Translated UUID ${cardIdOrText} to text: "${matchingCard.text}"`);
+      return matchingCard.text;
+    }
+    
+    logger.warn(`⚠️ Could not find question text for UUID: ${cardIdOrText}`);
+    return cardIdOrText; // Fallback to UUID if not found
+  }, [levelCards]);
+
   // Emergency sync when game state is out of sync
   const forceGameSync = useCallback(async () => {
     if (!room?.id || !gameState) return;
@@ -148,7 +169,8 @@ const Game = () => {
     
     // Force immediate sync with database state
     if (gameState.current_card && gameState.current_card !== currentCard) {
-      setCurrentCard(gameState.current_card);
+      const questionText = getQuestionText(gameState.current_card);
+      setCurrentCard(questionText);
       setShowCard(true);
     }
     
@@ -158,15 +180,17 @@ const Game = () => {
     
     // Process any pending queue items
     await processImmediately();
-  }, [room?.id, gameState, currentCard, gamePhase, processImmediately]);
+  }, [room?.id, gameState, currentCard, gamePhase, processImmediately, getQuestionText]);
   
   // Automatic state mismatch detection and correction
   useEffect(() => {
     if (!gameState || !room?.id) return;
     
+    const dbCardText = getQuestionText(gameState.current_card || '');
+    
     // Check for critical mismatches that need immediate fixing
     const hasCardMismatch = gameState.current_card && 
-                           gameState.current_card !== currentCard && 
+                           dbCardText !== currentCard && 
                            gameState.current_phase === 'card-display';
                            
     const hasPhaseMismatch = gameState.current_phase && 
@@ -177,6 +201,7 @@ const Game = () => {
         hasCardMismatch,
         hasPhaseMismatch,
         dbCard: gameState.current_card,
+        dbCardText,
         localCard: currentCard,
         dbPhase: gameState.current_phase,
         localPhase: gamePhase
@@ -187,7 +212,7 @@ const Game = () => {
         forceGameSync();
       }, 1000);
     }
-  }, [gameState, currentCard, gamePhase, room?.id, forceGameSync]);
+  }, [gameState, currentCard, gamePhase, room?.id, forceGameSync, getQuestionText]);
 
   // Room initialization logic
   useEffect(() => {
@@ -450,25 +475,30 @@ const Game = () => {
       setCurrentTurn(gameState.current_turn);
       
       // Update card ALWAYS if it exists in game state and differs from current
-      if (gameState.current_card && gameState.current_card !== currentCard) {
-        logger.info('Card updated from game state - syncing UI', { 
-          newCard: gameState.current_card, 
-          oldCard: currentCard,
-          gamePhase: gameState.current_phase 
-        });
-        setCurrentCard(gameState.current_card);
-        setShowCard(false);
-        // FIXED: Changed from 300ms to 700ms to match CSS transition duration
-        setTimeout(() => setShowCard(true), 700);
+      if (gameState.current_card) {
+        const questionText = getQuestionText(gameState.current_card);
         
-        // If we're in card-display phase and it's my turn, start the timer
-        if (gameState.current_phase === 'card-display' && isMyTurn) {
-          logger.info('Starting timer for synced card display');
-          setTimeout(() => startTimer(), 700); // Start timer after card animation
+        if (questionText !== currentCard) {
+          logger.info('Card updated from game state - syncing UI', { 
+            newCardUUID: gameState.current_card,
+            questionText, 
+            oldCard: currentCard,
+            gamePhase: gameState.current_phase 
+          });
+          setCurrentCard(questionText);
+          setShowCard(false);
+          // FIXED: Changed from 300ms to 700ms to match CSS transition duration
+          setTimeout(() => setShowCard(true), 700);
+          
+          // If we're in card-display phase and it's my turn, start the timer
+          if (gameState.current_phase === 'card-display' && isMyTurn) {
+            logger.info('Starting timer for synced card display');
+            setTimeout(() => startTimer(), 700); // Start timer after card animation
+          }
         }
       }
       
-      // Update used cards
+      // Update used cards - no translation needed, these are UUIDs for tracking
       if (gameState.used_cards) {
         setUsedCards(gameState.used_cards);
       }
