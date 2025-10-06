@@ -136,7 +136,7 @@ export const GameCard = ({
                     <div className="w-2 h-2 bg-primary rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                   <p className="text-sm text-gray-600 font-brand font-medium leading-relaxed max-w-60 px-2">
-                    {loadingMicroTip}
+                    {currentCard ? loadingMicroTip : "Loading questions..."}
                   </p>
                 </div>
               ) : (

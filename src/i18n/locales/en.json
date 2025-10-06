@@ -186,6 +186,7 @@
     "typeYourResponse": "Type your response...",
     "evaluateResponse": "Evaluate this response",
     "aiCardText": "✨ AI-Card Based on Last Interaction 🪄",
+    "loadingQuestions": "Loading questions...",
     "errors": {
       "connectionError": "Connection Error",
       "connectionFailed": "Could not connect to room {{roomCode}} after {{maxRetries}} attempts",
@@ -200,7 +201,9 @@
       "insufficientData": "Insufficient Data",
       "insufficientDataDescription": "Not enough data to generate connection report",
       "finalReportFailed": "Could not generate final report",
-      "levelChangeFailed": "Could not request level change"
+      "levelChangeFailed": "Could not request level change",
+      "cardRecoveryFailed": "Card Selection Error",
+      "cardRecoveryFailedDescription": "Unable to load question. Please refresh the page."
     },
     "noRoomCode": "No room code provided",
     "retryingConnection": "Retrying connection...",

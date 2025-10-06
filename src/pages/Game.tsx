@@ -106,6 +106,7 @@ const Game = () => {
   const [usedCards, setUsedCards] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [gamePhase, setGamePhase] = useState<GamePhase>('card-display');
+  const [isLoadingCardData, setIsLoadingCardData] = useState(false); // PHASE 1: Track card loading state
   
   // Transition state for evaluation processing
   const [isProcessingEvaluation, setIsProcessingEvaluation] = useState(false);
@@ -237,15 +238,34 @@ const Game = () => {
   }, [gameState, currentCard, gamePhase, room?.id, forceGameSync, getQuestionText]);
 
   // 🎯 DEFERRED CARD TEXT RESOLUTION: Wait for both UUID and translation data
-  // This is the CRITICAL fix for the race condition that causes truncated/corrupted card text
+  // PHASE 1: Enhanced with loading state and timeout mechanism
   useEffect(() => {
-    // Guard: Don't proceed if levelCards isn't loaded yet
-    if (levelCards.length === 0) {
-      logger.debug('⏳ DEFERRED RESOLUTION: Waiting for levelCards to load', {
-        currentCardUUID: gameState?.current_card,
-        levelCardsLoaded: false
-      });
-      return;
+    // PHASE 1: Set loading state when waiting for levelCards
+    if (levelCards.length === 0 && gameState?.current_card) {
+      if (!isLoadingCardData) {
+        logger.info('🔄 Setting loading state: Waiting for levelCards to load');
+        setIsLoadingCardData(true);
+      }
+      
+      // Timeout mechanism: If levelCards doesn't load within 5 seconds, trigger manual fetch
+      const loadingTimeout = setTimeout(() => {
+        if (levelCards.length === 0) {
+          logger.error('⏰ TIMEOUT: levelCards failed to load within 5 seconds');
+          setIsLoadingCardData(false);
+          
+          toast({
+            variant: "destructive",
+            title: "Loading Questions",
+            description: "Retrying question load...",
+            duration: 2000
+          });
+          
+          // Clear cache to force re-fetch
+          sessionStorage.removeItem(`questions_${currentLevel}_${gameState?.selected_language || i18n.language}`);
+        }
+      }, 5000);
+      
+      return () => clearTimeout(loadingTimeout);
     }
 
     // Guard: Don't proceed if we don't have a card UUID from the database
@@ -256,42 +276,41 @@ const Game = () => {
         setCurrentCard('');
         setShowCard(false);
       }
+      setIsLoadingCardData(false);
       return;
     }
 
-    // Translate the UUID to question text
-    const dbCardText = getQuestionText(gameState.current_card);
-    
-    // Update local state only if translation succeeded and differs from current
-    if (dbCardText && dbCardText !== currentCard) {
-      logger.info('✅ DEFERRED RESOLUTION: Setting currentCard text after levelCards loaded', {
-        uuid: gameState.current_card,
-        translatedText: dbCardText.substring(0, 50) + '...',
-        previousCard: currentCard.substring(0, 30),
-        levelCardsCount: levelCards.length,
-        gamePhase: gameState.current_phase
-      });
+    // PHASE 2: Translate UUID once levelCards is loaded
+    if (levelCards.length > 0) {
+      const dbCardText = getQuestionText(gameState.current_card);
       
-      setCurrentCard(dbCardText);
-      setShowCard(false);
-      
-      // Show card with animation after short delay
-      setTimeout(() => {
-        setShowCard(true);
+      if (dbCardText && dbCardText !== currentCard) {
+        logger.info('✅ DEFERRED RESOLUTION: Translation complete', {
+          uuid: gameState.current_card,
+          translatedText: dbCardText.substring(0, 50) + '...',
+          levelCardsCount: levelCards.length
+        });
         
-        // If we're in card-display phase and it's my turn, start the timer
-        if (gameState.current_phase === 'card-display' && isMyTurn) {
-          logger.info('⏱️ Starting timer for card display (my turn)');
-          startTimer();
-        }
-      }, 100);
-    } else if (!dbCardText) {
-      logger.warn('⚠️ DEFERRED RESOLUTION: Translation failed even though levelCards is loaded', {
-        uuid: gameState.current_card,
-        levelCardsCount: levelCards.length
-      });
+        setCurrentCard(dbCardText);
+        setShowCard(false);
+        setIsLoadingCardData(false); // Clear loading state
+        
+        // Show card with animation after short delay
+        setTimeout(() => {
+          setShowCard(true);
+          
+          // If we're in card-display phase and it's my turn, start the timer
+          if (gameState.current_phase === 'card-display' && isMyTurn) {
+            logger.info('⏱️ Starting timer for card display (my turn)');
+            startTimer();
+          }
+        }, 100);
+      } else if (!dbCardText) {
+        logger.warn('⚠️ Translation failed even though levelCards is loaded');
+        setIsLoadingCardData(false);
+      }
     }
-  }, [gameState?.current_card, levelCards, currentCard, getQuestionText, gameState?.current_phase]);
+  }, [gameState?.current_card, levelCards, currentCard, getQuestionText, gameState?.current_phase, isLoadingCardData, currentLevel, i18n.language, gameState?.selected_language]);
 
   // Room initialization logic
   useEffect(() => {
@@ -758,15 +777,36 @@ const Game = () => {
   // Fetch questions from database
   useEffect(() => {
     const fetchQuestions = async () => {
-      if (!isRoomLoaded || !room?.id) {
-        logger.debug('Skipping question fetch: room not loaded', { isRoomLoaded, roomId: room?.id });
+      // PHASE 3: Trigger immediately when room ID is available
+      if (!room?.id) {
+        logger.debug('Skipping question fetch: no room ID');
         return;
       }
 
       try {
         // Use room's selected language if available, otherwise fall back to UI language
         const gameLanguage = gameState?.selected_language || i18n.language;
-        logger.debug('Fetching questions', { gameLanguage, currentLevel, roomLanguage: gameState?.selected_language });
+        const cacheKey = `questions_${currentLevel}_${gameLanguage}`;
+        
+        // PHASE 3: Try to load from sessionStorage cache first
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+          try {
+            const parsed = JSON.parse(cachedData);
+            logger.info('📦 Loaded questions from cache', { 
+              level: currentLevel, 
+              language: gameLanguage,
+              count: parsed.questions.length 
+            });
+            setLevelCards(parsed.questions);
+            setLevelNames(prev => ({ ...prev, [currentLevel]: parsed.levelName }));
+            return;
+          } catch (e) {
+            logger.warn('Cache parse error, fetching fresh data');
+          }
+        }
+        
+        logger.debug('Fetching questions from database', { gameLanguage, currentLevel, roomLanguage: gameState?.selected_language });
         
         // Get level information
         const { data: levelData, error: levelError } = await supabase
@@ -792,6 +832,13 @@ const Game = () => {
         const questions = questionsData.map(q => ({ id: q.id, text: q.text }));
         setLevelCards(questions);
         setLevelNames(prev => ({ ...prev, [currentLevel]: levelData.name }));
+
+        // PHASE 3: Cache the fetched data in sessionStorage
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+          questions,
+          levelName: levelData.name,
+          timestamp: Date.now()
+        }));
 
         logger.debug('Loaded questions', { 
           level: currentLevel, 
@@ -833,7 +880,7 @@ const Game = () => {
     };
 
     fetchQuestions();
-  }, [currentLevel, i18n.language, gameState?.current_card, gameState?.selected_language, updateGameState, prevLanguage, isRoomLoaded, room?.id]);
+  }, [currentLevel, i18n.language, gameState?.selected_language, room?.id]); // PHASE 3: Removed isRoomLoaded dependency
 
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
@@ -1070,48 +1117,76 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      // PHASE 3 FIX: Enhanced UUID validation with recovery logic
+      // PHASE 2: Enhanced UUID validation with retry logic
       const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
       
       let validCardId = currentCardFromState;
       
       // Check if current_card is empty or invalid
-      if (!currentCardFromState || currentCardFromState.trim() === '') {
-        logger.error('❌ CRITICAL: current_card is empty! Attempting recovery...');
+      if (!currentCardFromState || currentCardFromState.trim() === '' || !uuidPattern.test(currentCardFromState)) {
+        logger.error('❌ CRITICAL: Invalid current_card! Attempting recovery...', {
+          currentCard: currentCardFromState,
+          levelCardsLoaded: levelCards.length > 0,
+          gamePhase: gameState?.current_phase
+        });
         
-        // Attempt to trigger card selection manually
-        try {
-          const { data: rpcResult, error: rpcError } = await supabase.rpc('set_current_card_if_missing', {
-            room_id_param: room.id,
-            language_param: gameState?.selected_language || i18n.language,
-            level_param: currentLevel
-          });
-          
-          if (rpcError) {
-            logger.error('Recovery RPC failed', rpcError);
-            throw rpcError;
+        let recoverySuccess = false;
+        const MAX_RETRIES = 3;
+        
+        // PHASE 2: Retry loop with increased wait times
+        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            logger.info(`🔄 Recovery attempt ${attempt}/${MAX_RETRIES}`);
+            
+            // Step 1: Trigger card selection RPC
+            const { data: rpcResult, error: rpcError } = await supabase.rpc('set_current_card_if_missing', {
+              room_id_param: room.id,
+              language_param: gameState?.selected_language || i18n.language,
+              level_param: currentLevel
+            });
+            
+            if (rpcError) {
+              logger.error(`Attempt ${attempt} failed`, rpcError);
+              if (attempt === MAX_RETRIES) throw rpcError;
+              continue;
+            }
+            
+            // Step 2: Wait longer for real-time propagation (2 seconds)
+            logger.info(`⏳ Waiting 2s for realtime propagation (attempt ${attempt})`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // Step 3: Check if levelCards is loaded
+            if (levelCards.length === 0) {
+              logger.warn(`⚠️ levelCards still empty on attempt ${attempt}, waiting...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            // Step 4: Verify recovery success
+            const recoveredCard = gameState?.current_card;
+            if (recoveredCard && uuidPattern.test(recoveredCard)) {
+              validCardId = recoveredCard;
+              logger.info(`✅ Recovery successful on attempt ${attempt}:`, validCardId);
+              recoverySuccess = true;
+              break;
+            }
+          } catch (error) {
+            logger.error(`Recovery attempt ${attempt} error:`, error);
+            if (attempt === MAX_RETRIES) {
+              // All retries failed - show error with refresh button
+              toast({
+                variant: "destructive",
+                title: t('game.errors.cardRecoveryFailed'),
+                description: t('game.errors.cardRecoveryFailedDescription'),
+                duration: 10000
+              });
+              setIsSubmitting(false);
+              return;
+            }
           }
-          
-          logger.info('✅ Recovery successful, card selected:', rpcResult);
-          
-          // Wait a moment for the real-time update to propagate
-          await new Promise(resolve => setTimeout(resolve, 500));
-          
-          // Try to get the updated card from gameState
-          const recoveredCard = gameState?.current_card;
-          if (recoveredCard && uuidPattern.test(recoveredCard)) {
-            validCardId = recoveredCard;
-            logger.info('✅ Recovered card UUID:', validCardId);
-          } else {
-            throw new Error('Card recovery failed - still no valid UUID');
-          }
-        } catch (recoveryError) {
-          logger.error('❌ Card recovery failed:', recoveryError);
-          toast({
-            variant: "destructive",
-            title: "Card Selection Error",
-            description: "Unable to load question card. Please refresh the game."
-          });
+        }
+        
+        if (!recoverySuccess) {
+          logger.error('❌ All recovery attempts failed');
           setIsSubmitting(false);
           return;
         }
@@ -1760,7 +1835,12 @@ const Game = () => {
             lastPing={realTimeState.lastPing}
             isWaitingForOpponent={gamePhase === 'evaluation' && !isMyTurn}
             timeRemaining={realTimeState.timeRemaining}
-            onReconnect={forceGameSync}
+            onReconnect={() => {
+              // PHASE 4: Reconnect triggers both sync and question refetch
+              forceGameSync();
+              setLevelCards([]);
+              sessionStorage.clear();
+            }}
             className="justify-center"
           />
           
@@ -1799,13 +1879,13 @@ const Game = () => {
             <GameCard
               currentCard={getCurrentCardText()}
               currentLevel={currentLevel}
-              showCard={showCard}
+              showCard={showCard && !isLoadingCardData}
               cardIndex={usedCards.length}
               totalCards={totalCards}
               aiReasoning={undefined}
               aiTargetArea={undefined}
               selectionMethod={'random'}
-              isGeneratingCard={isGeneratingCard}
+              isGeneratingCard={isGeneratingCard || isLoadingCardData}
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
               subTurn={'first_response'}
               questionProgress={{

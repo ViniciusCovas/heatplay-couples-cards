@@ -185,6 +185,7 @@
     "typeYourResponse": "Digite sua resposta...",
     "evaluateResponse": "Avalie esta resposta",
     "aiCardText": "✨ Card-IA | Com base na sua interação 🪄",
+    "loadingQuestions": "Carregando perguntas...",
     "errors": {
       "connectionError": "Erro de Conexão",
       "connectionFailed": "Não foi possível conectar à sala {{roomCode}} após {{maxRetries}} tentativas",
@@ -195,7 +196,9 @@
       "insufficientData": "Dados Insuficientes",
       "insufficientDataDescription": "Não há dados suficientes para gerar o relatório de conexão",
       "finalReportFailed": "Não foi possível gerar o relatório final",
-      "levelChangeFailed": "Não foi possível solicitar mudança de nível"
+      "levelChangeFailed": "Não foi possível solicitar mudança de nível",
+      "cardRecoveryFailed": "Erro de Seleção de Carta",
+      "cardRecoveryFailedDescription": "Não foi possível carregar a pergunta. Por favor, atualize a página."
     },
     "noRoomCode": "Nenhum código de sala fornecido",
     "retryingConnection": "Tentando conexão novamente...",
