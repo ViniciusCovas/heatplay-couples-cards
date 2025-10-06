@@ -163,6 +163,20 @@ const Game = () => {
     return ''; // Return empty instead of UUID to avoid showing corrupted data
   }, [levelCards]);
 
+  // Clear any cached data on mount to prevent stale card text
+  useEffect(() => {
+    try {
+      // Clear potential sources of cached card text
+      const keysToRemove = Object.keys(localStorage).filter(key => 
+        key.includes('card') || key.includes('question') || key.includes('game_state')
+      );
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      logger.info('🧹 Cleared cached game data on mount', { keysRemoved: keysToRemove.length });
+    } catch (error) {
+      logger.warn('Failed to clear cached data', error);
+    }
+  }, []); // Run once on mount
+
   // Emergency sync when game state is out of sync
   const forceGameSync = useCallback(async () => {
     if (!room?.id || !gameState) return;
@@ -221,6 +235,63 @@ const Game = () => {
       }, 1000);
     }
   }, [gameState, currentCard, gamePhase, room?.id, forceGameSync, getQuestionText]);
+
+  // 🎯 DEFERRED CARD TEXT RESOLUTION: Wait for both UUID and translation data
+  // This is the CRITICAL fix for the race condition that causes truncated/corrupted card text
+  useEffect(() => {
+    // Guard: Don't proceed if levelCards isn't loaded yet
+    if (levelCards.length === 0) {
+      logger.debug('⏳ DEFERRED RESOLUTION: Waiting for levelCards to load', {
+        currentCardUUID: gameState?.current_card,
+        levelCardsLoaded: false
+      });
+      return;
+    }
+
+    // Guard: Don't proceed if we don't have a card UUID from the database
+    if (!gameState?.current_card) {
+      // No card in DB → clear local state
+      if (currentCard !== '') {
+        logger.info('🧹 DEFERRED RESOLUTION: No card in DB, clearing local state');
+        setCurrentCard('');
+        setShowCard(false);
+      }
+      return;
+    }
+
+    // Translate the UUID to question text
+    const dbCardText = getQuestionText(gameState.current_card);
+    
+    // Update local state only if translation succeeded and differs from current
+    if (dbCardText && dbCardText !== currentCard) {
+      logger.info('✅ DEFERRED RESOLUTION: Setting currentCard text after levelCards loaded', {
+        uuid: gameState.current_card,
+        translatedText: dbCardText.substring(0, 50) + '...',
+        previousCard: currentCard.substring(0, 30),
+        levelCardsCount: levelCards.length,
+        gamePhase: gameState.current_phase
+      });
+      
+      setCurrentCard(dbCardText);
+      setShowCard(false);
+      
+      // Show card with animation after short delay
+      setTimeout(() => {
+        setShowCard(true);
+        
+        // If we're in card-display phase and it's my turn, start the timer
+        if (gameState.current_phase === 'card-display' && isMyTurn) {
+          logger.info('⏱️ Starting timer for card display (my turn)');
+          startTimer();
+        }
+      }, 100);
+    } else if (!dbCardText) {
+      logger.warn('⚠️ DEFERRED RESOLUTION: Translation failed even though levelCards is loaded', {
+        uuid: gameState.current_card,
+        levelCardsCount: levelCards.length
+      });
+    }
+  }, [gameState?.current_card, levelCards, currentCard, getQuestionText, gameState?.current_phase]);
 
   // Room initialization logic
   useEffect(() => {
