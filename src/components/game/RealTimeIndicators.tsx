@@ -1,6 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Wifi, WifiOff, Clock, User } from 'lucide-react';
+import { Wifi, WifiOff, Clock, User, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface RealTimeIndicatorsProps {
@@ -10,6 +10,7 @@ interface RealTimeIndicatorsProps {
   isWaitingForOpponent?: boolean;
   timeRemaining?: number;
   className?: string;
+  onReconnect?: () => void; // PHASE 4: Add reconnect callback
 }
 
 export const RealTimeIndicators: React.FC<RealTimeIndicatorsProps> = ({
@@ -18,7 +19,8 @@ export const RealTimeIndicators: React.FC<RealTimeIndicatorsProps> = ({
   lastPing,
   isWaitingForOpponent = false,
   timeRemaining,
-  className
+  className,
+  onReconnect
 }) => {
   const formatTimeRemaining = (seconds: number) => {
     if (seconds <= 0) return '0s';
@@ -32,8 +34,52 @@ export const RealTimeIndicators: React.FC<RealTimeIndicatorsProps> = ({
     return connected ? 'bg-primary/10 text-primary border-primary/20' : 'bg-destructive/10 text-destructive border-destructive/20';
   };
 
+  const getConnectionLabel = (connected: boolean) => {
+    return connected ? 'Connected' : 'Disconnected';
+  };
+
   return (
-    <div className={cn("flex items-center gap-2 p-2", className)}>
+    <div className={cn("flex items-center gap-2 p-2 flex-wrap", className)}>
+      {/* PHASE 4: Connection Status Indicator */}
+      <Badge 
+        variant="outline" 
+        className={cn(
+          "flex items-center gap-1 text-xs",
+          getConnectionColor(isConnected)
+        )}
+      >
+        {isConnected ? (
+          <Wifi className="h-3 w-3" />
+        ) : (
+          <WifiOff className="h-3 w-3" />
+        )}
+        {getConnectionLabel(isConnected)}
+      </Badge>
+
+      {/* PHASE 4: Manual Reconnect Button (shown when disconnected) */}
+      {!isConnected && onReconnect && (
+        <Badge 
+          variant="outline" 
+          className="flex items-center gap-1 text-xs bg-accent/10 text-accent border-accent/20 cursor-pointer hover:bg-accent/20 transition-colors"
+          onClick={onReconnect}
+        >
+          <RefreshCw className="h-3 w-3" />
+          Reconnect
+        </Badge>
+      )}
+
+      {/* Opponent Connection Status */}
+      <Badge 
+        variant="outline" 
+        className={cn(
+          "flex items-center gap-1 text-xs",
+          getConnectionColor(opponentConnected)
+        )}
+      >
+        <User className="h-3 w-3" />
+        Opponent {opponentConnected ? 'Online' : 'Offline'}
+      </Badge>
+
       {/* Waiting indicator */}
       {isWaitingForOpponent && (
         <Badge variant="outline" className="flex items-center gap-1 text-xs bg-secondary/10 text-secondary border-secondary/20">

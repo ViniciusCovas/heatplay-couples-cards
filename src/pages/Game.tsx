@@ -1070,13 +1070,54 @@ const Game = () => {
       const currentRound = (gameState?.used_cards?.length || 0) + 1;
       const currentCardFromState = gameState?.current_card || currentCard;
       
-      // UUID validation pattern
+      // PHASE 3 FIX: Enhanced UUID validation with recovery logic
       const uuidPattern = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
       
       let validCardId = currentCardFromState;
       
+      // Check if current_card is empty or invalid
+      if (!currentCardFromState || currentCardFromState.trim() === '') {
+        logger.error('❌ CRITICAL: current_card is empty! Attempting recovery...');
+        
+        // Attempt to trigger card selection manually
+        try {
+          const { data: rpcResult, error: rpcError } = await supabase.rpc('set_current_card_if_missing', {
+            room_id_param: room.id,
+            language_param: gameState?.selected_language || i18n.language,
+            level_param: currentLevel
+          });
+          
+          if (rpcError) {
+            logger.error('Recovery RPC failed', rpcError);
+            throw rpcError;
+          }
+          
+          logger.info('✅ Recovery successful, card selected:', rpcResult);
+          
+          // Wait a moment for the real-time update to propagate
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Try to get the updated card from gameState
+          const recoveredCard = gameState?.current_card;
+          if (recoveredCard && uuidPattern.test(recoveredCard)) {
+            validCardId = recoveredCard;
+            logger.info('✅ Recovered card UUID:', validCardId);
+          } else {
+            throw new Error('Card recovery failed - still no valid UUID');
+          }
+        } catch (recoveryError) {
+          logger.error('❌ Card recovery failed:', recoveryError);
+          toast({
+            variant: "destructive",
+            title: "Card Selection Error",
+            description: "Unable to load question card. Please refresh the game."
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
       // Check if current_card is a valid UUID
-      if (!uuidPattern.test(currentCardFromState)) {
+      else if (!uuidPattern.test(currentCardFromState)) {
         logger.warn(`⚠️ current_card is NOT a valid UUID: "${currentCardFromState}", searching levelCards for match`);
         
         // Try to find the UUID by matching the text
@@ -1712,13 +1753,14 @@ const Game = () => {
             </div>
           </div>
           
-          {/* Real-time Connection Indicators - Fixed to use actual connection data */}
+          {/* Real-time Connection Indicators - PHASE 4: Added connection status & reconnect */}
           <RealTimeIndicators
             isConnected={isConnected && realTimeState.isConnected}
             opponentConnected={realTimeState.opponentConnected}
             lastPing={realTimeState.lastPing}
             isWaitingForOpponent={gamePhase === 'evaluation' && !isMyTurn}
             timeRemaining={realTimeState.timeRemaining}
+            onReconnect={forceGameSync}
             className="justify-center"
           />
           

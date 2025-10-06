@@ -117,6 +117,13 @@ export const useGameSync = (roomId: string | null, playerId: string, playerNumbe
         },
         (payload) => {
           const updatedRoom = payload.new as any;
+          
+          // PHASE 1 FIX: Add null check to prevent "Cannot read properties of null" error
+          if (!updatedRoom) {
+            logger.warn('⚠️ Received null updated room payload, skipping state update.');
+            return;
+          }
+          
           logger.debug('Room state updated', { updatedRoom });
           
           setGameState({
