@@ -16,6 +16,7 @@ import { ScoreInterpretation } from '@/components/insights/ScoreInterpretation';
 import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
 import { QuestionInsights } from '@/components/insights/QuestionInsights';
+import { ShareableCard } from '@/components/insights/ShareableCard';
 
 
 import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
@@ -360,6 +361,13 @@ export default function FullAnalysis() {
             </p>
           </CardContent>
         </Card>
+
+        {/* Shareable Wrapped-style Result Card */}
+        <ShareableCard
+          compatibilityScore={analysis.compatibilityScore}
+          insight={analysis.keyInsights?.[0]}
+          relationshipPhase={analysis.relationshipPhase}
+        />
 
         {/* Deep Analysis Section */}
         <div className="grid gap-6">

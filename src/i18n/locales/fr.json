@@ -555,5 +555,40 @@
     "lastUpdated": "Dernière mise à jour",
     "translationNote": "Ce document est fourni en anglais. Des versions traduites (Español, Français, Português) sont disponibles sur demande à legal@letsgetclose.app.",
     "adultsOnly": "Réservé aux adultes de 18 ans et plus"
+  },
+  "invite": {
+    "title": "Invite ton/ta partenaire",
+    "subtitle": "Un seul clic et c'est parti — le jeu commence dès son arrivée.",
+    "whatsapp": "WhatsApp",
+    "share": "Partager",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié — envoie-le vite !",
+    "copyError": "Impossible de copier le lien",
+    "orCode": "Ou fais-lui saisir ce code :",
+    "message": "Je te mets au défi de te rapprocher de moi ce soir 😏🔥 Rejoins ma partie privée : {{url}}"
+  },
+  "shareCard": {
+    "sectionTitle": "Partage ton résultat",
+    "sectionSubtitle": "Une carte prête pour tes stories — aucune réponse dévoilée, juste l'étincelle.",
+    "download": "Télécharger l'image",
+    "whatsapp": "WhatsApp",
+    "share": "Partager",
+    "downloaded": "Image enregistrée !",
+    "shareError": "Le partage n'est pas disponible sur cet appareil",
+    "previewAlt": "Ta carte de résultat à partager",
+    "compatibility": "Compatibilité",
+    "ourVibe": "Notre vibe",
+    "insightLabel": "Ce soir on a découvert",
+    "footer": "à jouer sur letsgetclose.app",
+    "fallbackInsight": "Certaines étincelles se découvrent seulement en personne.",
+    "fallbackArchetype": "Une histoire qui commence",
+    "archetypes": {
+      "twinFlames": "Âmes sœurs",
+      "magnetic": "Duo magnétique",
+      "risingHeat": "Feu montant",
+      "slowBurn": "Feu doux",
+      "newSpark": "Nouvelle étincelle"
+    },
+    "whatsappMessage": "On a joué à Let's Get Close : {{score}}% de compatibilité 😏🔥 À toi de jouer : {{url}}"
   }
 }

@@ -536,5 +536,40 @@
     "lastUpdated": "Last updated",
     "translationNote": "This document is provided in English. Translated versions (Español, Français, Português) are available on request at legal@letsgetclose.app.",
     "adultsOnly": "For adults 18+ only"
+  },
+  "invite": {
+    "title": "Invite your partner",
+    "subtitle": "One tap and they're in — the game starts the moment they join.",
+    "whatsapp": "WhatsApp",
+    "share": "Share",
+    "copyLink": "Copy link",
+    "linkCopied": "Link copied — now send it to them!",
+    "copyError": "Couldn't copy the link",
+    "orCode": "Or let them type this code:",
+    "message": "I dare you to get closer to me tonight 😏🔥 Join my private game: {{url}}"
+  },
+  "shareCard": {
+    "sectionTitle": "Share your result",
+    "sectionSubtitle": "A story-ready card of your night — no answers revealed, just the vibe.",
+    "download": "Download image",
+    "whatsapp": "WhatsApp",
+    "share": "Share",
+    "downloaded": "Image saved!",
+    "shareError": "Sharing isn't available on this device",
+    "previewAlt": "Your shareable result card",
+    "compatibility": "Compatibility",
+    "ourVibe": "Our vibe",
+    "insightLabel": "Tonight we discovered",
+    "footer": "play at letsgetclose.app",
+    "fallbackInsight": "Some sparks are best discovered in person.",
+    "fallbackArchetype": "A Story Just Beginning",
+    "archetypes": {
+      "twinFlames": "Twin Flames",
+      "magnetic": "Magnetic Duo",
+      "risingHeat": "Rising Heat",
+      "slowBurn": "Slow Burn",
+      "newSpark": "New Spark"
+    },
+    "whatsappMessage": "We played Let's Get Close and scored {{score}}% compatibility 😏🔥 Your turn: {{url}}"
   }
 }

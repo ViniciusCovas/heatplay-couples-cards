@@ -127,6 +127,7 @@ function CreateRoomContent() {
         onGameStart={handleGameStart}
         onLeaveRoom={handleLeaveRoom}
         roomId={room.id}
+        isHost
       />
     );
   }

@@ -555,5 +555,40 @@
     "lastUpdated": "Última atualização",
     "translationNote": "Este documento é fornecido em inglês. Versões traduzidas (Español, Français, Português) estão disponíveis mediante solicitação em legal@letsgetclose.app.",
     "adultsOnly": "Somente para maiores de 18 anos"
+  },
+  "invite": {
+    "title": "Convide seu amor",
+    "subtitle": "Um toque e pronto — o jogo começa assim que a pessoa entrar.",
+    "whatsapp": "WhatsApp",
+    "share": "Compartilhar",
+    "copyLink": "Copiar link",
+    "linkCopied": "Link copiado — agora é só enviar!",
+    "copyError": "Não foi possível copiar o link",
+    "orCode": "Ou peça para digitar este código:",
+    "message": "Duvido você chegar mais perto de mim hoje à noite 😏🔥 Entra no meu jogo privado: {{url}}"
+  },
+  "shareCard": {
+    "sectionTitle": "Compartilhe seu resultado",
+    "sectionSubtitle": "Um card pronto para os stories — sem respostas, só o clima.",
+    "download": "Baixar imagem",
+    "whatsapp": "WhatsApp",
+    "share": "Compartilhar",
+    "downloaded": "Imagem salva!",
+    "shareError": "Compartilhar não está disponível neste dispositivo",
+    "previewAlt": "Seu card de resultado para compartilhar",
+    "compatibility": "Compatibilidade",
+    "ourVibe": "Nossa vibe",
+    "insightLabel": "Hoje descobrimos",
+    "footer": "jogue em letsgetclose.app",
+    "fallbackInsight": "Algumas faíscas só se descobrem ao vivo.",
+    "fallbackArchetype": "Uma história só começando",
+    "archetypes": {
+      "twinFlames": "Almas gêmeas",
+      "magnetic": "Dupla magnética",
+      "risingHeat": "Fogo crescente",
+      "slowBurn": "Fogo lento",
+      "newSpark": "Faísca nova"
+    },
+    "whatsappMessage": "Jogamos Let's Get Close e fizemos {{score}}% de compatibilidade 😏🔥 Sua vez: {{url}}"
   }
 }

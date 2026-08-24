@@ -22,24 +22,28 @@ export default function JoinRoom() {
   const { room, participants, joinRoom, leaveRoom, startGame } = useRoomService();
   const { t } = useTranslation();
 
-  // Handle URL room parameter for direct joins with race condition prevention
+  // Handle URL room parameters for direct joins with race condition prevention.
+  // ?code=XXXXXX is the partner invite deep link; ?room=XXXXXX is the legacy param.
+  const inviteCode = searchParams.get('code');
+  const legacyRoomCode = searchParams.get('room');
+
   useEffect(() => {
-    const urlRoomCode = searchParams.get('room');
-    
+    const urlRoomCode = inviteCode || legacyRoomCode;
+
     if (urlRoomCode && !room && !hasProcessedUrl && !isJoining) {
       setHasProcessedUrl(true);
       setRoomCode(urlRoomCode.toUpperCase());
       // Auto-join if room code is in URL
-      handleJoinRoom(urlRoomCode);
+      handleJoinRoom(urlRoomCode, !!inviteCode);
     }
-    
+
     // Reset when URL room parameter is removed
     if (!urlRoomCode && hasProcessedUrl) {
       setHasProcessedUrl(false);
     }
-  }, [searchParams.get('room'), room, hasProcessedUrl, isJoining]);
+  }, [inviteCode, legacyRoomCode, room, hasProcessedUrl, isJoining]);
 
-  const handleJoinRoom = async (codeToJoin?: string): Promise<void> => {
+  const handleJoinRoom = async (codeToJoin?: string, fromInviteLink = false): Promise<void> => {
     const code = codeToJoin || roomCode;
 
     // Prevent duplicate calls
@@ -74,6 +78,9 @@ export default function JoinRoom() {
       if (success) {
         logger.info('JoinRoom: Successfully joined/rejoined room');
         track('room_joined');
+        if (fromInviteLink) {
+          track('invite_link_joined');
+        }
         toast.success(t('joinRoom.success.connected'));
         if (!codeToJoin) setRoomCode(code); // Only update state if manual input
       } else {

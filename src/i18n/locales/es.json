@@ -555,5 +555,40 @@
     "lastUpdated": "Última actualización",
     "translationNote": "Este documento se ofrece en inglés. Hay versiones traducidas (Español, Français, Português) disponibles bajo petición en legal@letsgetclose.app.",
     "adultsOnly": "Solo para mayores de 18 años"
+  },
+  "invite": {
+    "title": "Invita a tu pareja",
+    "subtitle": "Un toque y ya está dentro: el juego empieza en cuanto se una.",
+    "whatsapp": "WhatsApp",
+    "share": "Compartir",
+    "copyLink": "Copiar enlace",
+    "linkCopied": "Enlace copiado, ¡mándaselo ya!",
+    "copyError": "No se pudo copiar el enlace",
+    "orCode": "O que escriba este código:",
+    "message": "Te reto a acercarte a mí esta noche 😏🔥 Entra a mi juego privado: {{url}}"
+  },
+  "shareCard": {
+    "sectionTitle": "Comparte tu resultado",
+    "sectionSubtitle": "Una tarjeta lista para stories — sin respuestas, solo la chispa.",
+    "download": "Descargar imagen",
+    "whatsapp": "WhatsApp",
+    "share": "Compartir",
+    "downloaded": "¡Imagen guardada!",
+    "shareError": "Compartir no está disponible en este dispositivo",
+    "previewAlt": "Tu tarjeta de resultado para compartir",
+    "compatibility": "Compatibilidad",
+    "ourVibe": "Nuestra vibra",
+    "insightLabel": "Esta noche descubrimos",
+    "footer": "juega en letsgetclose.app",
+    "fallbackInsight": "Hay chispas que solo se descubren en persona.",
+    "fallbackArchetype": "Una historia que apenas empieza",
+    "archetypes": {
+      "twinFlames": "Almas gemelas",
+      "magnetic": "Dúo magnético",
+      "risingHeat": "Fuego en ascenso",
+      "slowBurn": "Fuego lento",
+      "newSpark": "Chispa nueva"
+    },
+    "whatsappMessage": "Jugamos a Let's Get Close y sacamos {{score}}% de compatibilidad 😏🔥 Te toca: {{url}}"
   }
 }

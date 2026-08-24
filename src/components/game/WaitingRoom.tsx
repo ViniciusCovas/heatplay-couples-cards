@@ -8,6 +8,7 @@ import { RoomParticipant } from '@/hooks/useRoomService';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
+import { InvitePartner } from '@/components/game/InvitePartner';
 
 interface WaitingRoomProps {
   roomCode: string;
@@ -15,9 +16,10 @@ interface WaitingRoomProps {
   onGameStart: () => Promise<void>;
   onLeaveRoom: () => void;
   roomId?: string;
+  isHost?: boolean;
 }
 
-export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, roomId }: WaitingRoomProps) {
+export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, roomId, isHost = false }: WaitingRoomProps) {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [localParticipants, setLocalParticipants] = useState(participants);
   const { t } = useTranslation();
@@ -102,9 +104,16 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, 
             </p>
           </div>
 
-          {/* Room Code */}
+          {/* Invite hero (host only, while waiting for partner) */}
+          {isHost && localParticipants.length < 2 && (
+            <InvitePartner roomCode={roomCode} />
+          )}
+
+          {/* Room Code (fallback for same-room play) */}
           <div className="space-y-3">
-            <p className="text-sm font-medium text-muted-foreground">{t('waitingRoom.roomCode')}</p>
+            <p className="text-sm font-medium text-muted-foreground">
+              {isHost && localParticipants.length < 2 ? t('invite.orCode') : t('waitingRoom.roomCode')}
+            </p>
             <div className="flex items-center gap-2">
               <div className="flex-1 bg-gradient-to-r from-muted/50 to-muted/30 rounded-xl p-3 border-2 border-dashed border-primary/30">
                 <span className="text-2xl font-mono font-bold text-primary tracking-wider">
