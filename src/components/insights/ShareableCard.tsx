@@ -13,7 +13,15 @@ const BRAND_PINK = '#E91E63';
 export interface ShareableCardProps {
   /** 0–100 compatibility score; undefined renders the fallback card */
   compatibilityScore?: number;
-  /** One quote-worthy AI insight (aggregate only — never free-text answers) */
+  /**
+   * One quote-worthy AI insight.
+   *
+   * PRIVACY CONTRACT: this must always be the model's OWN synthesis
+   * (`shareable_insight` / `keyInsights[0]`). The share card is a public
+   * artefact, so it must never render a raw spoken answer or a listener's
+   * free-text note verbatim. The edge-function prompt enforces the same rule
+   * on the generation side; do not wire any raw `evaluation.note` in here.
+   */
   insight?: string;
   /** Optional relationship phase from the analysis, shown as a small tag */
   relationshipPhase?: string;

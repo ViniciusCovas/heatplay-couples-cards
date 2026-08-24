@@ -14,7 +14,7 @@ const OPENAI_MODEL = 'gpt-4o-mini';
 const ANALYSIS_TEMPERATURE = 0.7; // creative-but-grounded narrative
 const ANALYSIS_MAX_TOKENS = 1400;
 const OPENAI_TIMEOUT_MS = 45000;
-const MAX_QUOTED_RESPONSE_CHARS = 180; // per-answer excerpt fed to the model
+const MAX_NOTE_CHARS = 180;            // per-note excerpt fed to the model
 const MAX_RESPONSES_IN_PROMPT = 12;    // cap prompt size / cost
 
 // Helper functions
@@ -48,7 +48,7 @@ function calculateCorrelation(x: number[], y: number[]): number {
 
 // Returns null (NOT zeros) when an evaluation cannot be parsed, so bad rows
 // are skipped instead of silently dragging every average toward 0.
-function parseEvaluation(evaluation: string): { honesty: number; attraction: number; intimacy: number; surprise: number } | null {
+function parseEvaluation(evaluation: string): { honesty: number; attraction: number; intimacy: number; surprise: number; note?: string } | null {
   try {
     const parsed = JSON.parse(evaluation);
     if (parsed && typeof parsed === 'object' &&
@@ -62,6 +62,19 @@ function parseEvaluation(evaluation: string): { honesty: number; attraction: num
   } catch {
     return null;
   }
+}
+
+// The listener's optional short impression of what their partner said out
+// loud. Couples answer in person and nothing is recorded, so this is the only
+// real language the model ever sees. Rows written before the field existed
+// (and rows where the listener skipped it) simply return null.
+function extractNote(evaluation: string | null): string | null {
+  if (!evaluation) return null;
+  const parsed = parseEvaluation(evaluation);
+  const note = parsed?.note;
+  if (typeof note !== 'string') return null;
+  const trimmed = note.trim();
+  return trimmed ? trimmed.substring(0, MAX_NOTE_CHARS) : null;
 }
 
 async function callOpenAI(systemPrompt: string, userPrompt: string): Promise<string> {
@@ -345,9 +358,12 @@ serve(async (req) => {
     const responseTimes = responses.map(r => r.response_time || 0).filter(t => t > 0);
     const avgResponseTime = responseTimes.length ? responseTimes.reduce((sum, t) => sum + t, 0) / responseTimes.length : 0;
 
-    // Per-answer digest for the model — the actual Q&A material, not just stats
-    const answerDigest = responses
-      .filter(r => r.response)
+    // Per-round digest for the model. The couple answered ALOUD and nothing was
+    // recorded, so we NEVER send an "answer" — only the question, the
+    // listener's optional impression, and the 1-5 ratings. The old code fed the
+    // "Spoken response" i18n placeholder here, which is why every analysis was
+    // effectively ratings-only.
+    const roundDigest = responses
       .slice(0, MAX_RESPONSES_IN_PROMPT)
       .map((r, index) => {
         const evalData = r.evaluation ? parseEvaluation(r.evaluation) : null;
@@ -355,18 +371,25 @@ serve(async (req) => {
         const scoreStr = evalData
           ? `H${evalData.honesty} A${evalData.attraction} I${evalData.intimacy} S${evalData.surprise}`
           : 'not evaluated';
-        return `Q${index + 1}: "${questionText}"\n   Answer: "${String(r.response).substring(0, MAX_QUOTED_RESPONSE_CHARS)}"\n   Partner's rating (1-5): ${scoreStr}`;
+        const note = extractNote(r.evaluation);
+        const noteLine = note
+          ? `\n   Listener's impression of what their partner said: "${note}"`
+          : '';
+        return `Q${index + 1}: "${questionText}"${noteLine}\n   Listener's rating (1-5): ${scoreStr}`;
       });
 
-    // Specific quote extraction with question text
+    const notesCount = responses.filter(r => extractNote(r.evaluation)).length;
+
+    // Highest-rated rounds, identified by question + ratings only. `response`
+    // is a placeholder string in close-proximity play and is never surfaced.
     const topResponses = responses
-      .filter(r => r.response && r.evaluation)
+      .filter(r => r.evaluation)
       .map((r, index) => {
         const evalData = parseEvaluation(r.evaluation);
         if (!evalData) return null;
         const avgScore = (evalData.honesty + evalData.attraction + evalData.intimacy + evalData.surprise) / 4;
         const questionText = questionMap[r.card_id]?.text || 'Unknown question';
-        return { index, response: r.response, avgScore, evalData, questionText, cardId: r.card_id };
+        return { index, avgScore, evalData, questionText, cardId: r.card_id };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
       .sort((a, b) => b.avgScore - a.avgScore)
@@ -386,8 +409,7 @@ serve(async (req) => {
             questionText: questionText.substring(0, 80) + '...',
             type: 'trust_breakthrough',
             score: evalData.honesty,
-            insight: `Question ${index + 1} triggered exceptional honesty (${evalData.honesty}/5)`,
-            responsePreview: response.response?.substring(0, 60) + '...' || ''
+            insight: `Question ${index + 1} triggered exceptional honesty (${evalData.honesty}/5)`
           });
         }
         if (evalData.intimacy >= 4.5) {
@@ -396,8 +418,7 @@ serve(async (req) => {
             questionText: questionText.substring(0, 80) + '...',
             type: 'intimacy_peak',
             score: evalData.intimacy,
-            insight: `Deep emotional connection achieved in Question ${index + 1} (${evalData.intimacy}/5)`,
-            responsePreview: response.response?.substring(0, 60) + '...' || ''
+            insight: `Deep emotional connection achieved in Question ${index + 1} (${evalData.intimacy}/5)`
           });
         }
         if (evalData.attraction >= 4.5) {
@@ -406,8 +427,7 @@ serve(async (req) => {
             questionText: questionText.substring(0, 80) + '...',
             type: 'attraction_spark',
             score: evalData.attraction,
-            insight: `Significant attraction spike at Question ${index + 1} (${evalData.attraction}/5)`,
-            responsePreview: response.response?.substring(0, 60) + '...' || ''
+            insight: `Significant attraction spike at Question ${index + 1} (${evalData.attraction}/5)`
           });
         }
       }
@@ -418,9 +438,18 @@ serve(async (req) => {
 
     // ---- Prompt: the model only writes the NARRATIVE. All numeric metrics
     // are computed deterministically above and merged into the result below.
-    const systemPrompt = `You are GetClose AI, a warm, perceptive couples-connection analyst. You write like a wise, playful friend who truly listened — never clinical, never generic. You are comfortable with adult (18+) themes of desire and intimacy, and you keep things tasteful. Reply with a single valid JSON object only. Every human-readable string in your output MUST be written in this language: ${language}.`;
+    const systemPrompt = `You are GetClose AI, a warm, perceptive couples-connection analyst. You write like a wise, playful friend who truly listened — never clinical, never generic. You are comfortable with adult (18+) themes of desire and intimacy, and you keep things tasteful.
 
-    const userPrompt = `A couple just finished a GetClose session (level ${currentLevel}). Analyze THEIR actual answers below and write a premium, personal analysis. Quote or paraphrase their own words where it makes an insight land. Be positive but honest — name real growth areas kindly.
+CRITICAL — WHAT YOUR INPUT ACTUALLY IS:
+This couple played in person, sitting together. They answered every question OUT LOUD to each other. Their spoken answers were NOT recorded and you will never see them. What you receive for each round is:
+  * the question they were asked,
+  * OPTIONALLY, a short written impression by the LISTENER about what their partner had just said (their words, about their partner — often only a fragment),
+  * the listener's 1-5 ratings of that answer (honesty, attraction, intimacy, surprise).
+Ground every insight in those impressions and ratings. NEVER invent, quote, or describe what a partner "said" or "answered" — you do not know. Do not write phrases like "when she said…" or "his answer about…". You may refer to what one partner NOTICED or how a question landed, because that is what you were actually given. Where a round has no impression, work from the question and the ratings alone and say nothing about content.
+
+Reply with a single valid JSON object only. Every human-readable string in your output MUST be written in this language: ${language}.`;
+
+    const userPrompt = `A couple just finished a GetClose session (level ${currentLevel}), answering aloud to each other in person. Write a premium, personal analysis from what is below. Be positive but honest — name real growth areas kindly. Remember: the answers themselves were spoken and never recorded, so the only human words you have are the listeners' short impressions.
 
 SESSION METRICS (all scores 1-5):
 - Bond Map: Closeness ${bondMap.closeness.toFixed(2)}, Spark ${bondMap.spark.toFixed(2)}, Anchor (trust) ${bondMap.anchor.toFixed(2)}
@@ -431,23 +460,23 @@ SESSION METRICS (all scores 1-5):
 - Session: ${sessionDuration} min, ${responses.length} answers, avg response time ${avgResponseTime.toFixed(1)}s
 - Breakthrough moments detected: ${breakthroughMoments.length}
 
-THEIR ACTUAL QUESTIONS AND ANSWERS:
-${answerDigest.join('\n')}
+THE ROUNDS THEY PLAYED (question, the listener's optional impression of their partner's spoken answer, and the listener's ratings). ${notesCount} of ${Math.min(responses.length, MAX_RESPONSES_IN_PROMPT)} rounds shown include a written impression:
+${roundDigest.join('\n')}
 
 Return EXACTLY this JSON shape (all strings in ${language}):
 {
   "archetype": "A memorable 2-4 word couple archetype name that captures THEIR specific dynamic, e.g. 'The Slow-Burn Explorers' — invent one unique to them, title-cased",
-  "archetypeDescription": "1-2 sentences on why this archetype fits them, referencing their actual answers",
-  "shareable_insight": "ONE quote-worthy insight about this couple, max 140 characters, written to be screenshot-shared — punchy, specific, warm",
+  "archetypeDescription": "1-2 sentences on why this archetype fits them, referencing what they noticed about each other and how they rated it",
+  "shareable_insight": "ONE quote-worthy insight about this couple, max 140 characters, written to be screenshot-shared — punchy, specific, warm. PRIVACY: this line is printed on a public share card. It must be YOUR OWN synthesis in your own words: never copy or paraphrase a listener's impression closely enough to be recognisable, never quote it, and never include anything that reads as a private confession or an intimate detail about one person. If the only grounded material is too private to share, write something warm and true about their dynamic instead.",
   "relationshipPhase": "${relationshipPhase}",
   "strengthAreas": [
-    { "area": "name of a strong pillar", "score": <their 1-5 avg for it>, "insight": "specific, grounded in an actual answer" }
+    { "area": "name of a strong pillar", "score": <their 1-5 avg for it>, "insight": "specific, grounded in a listener's impression or in the ratings — never in an invented answer" }
   ],
   "growthAreas": [
     { "area": "name of the weakest pillar", "score": <their 1-5 avg for it>, "recommendation": "kind, concrete, actionable advice" }
   ],
   "keyInsights": [
-    "3 insights about their communication, emotional dynamics, and connection quality — each tied to something they actually said or scored"
+    "3 insights about their communication, emotional dynamics, and connection quality — each tied to something a listener actually noticed or scored, never to an answer you imagined"
   ],
   "personalizedTips": [
     "3 specific, doable suggestions for their next session or their week"
@@ -521,7 +550,6 @@ Return EXACTLY this JSON shape (all strings in ${language}):
     analysis.responseQuotes = topResponses.slice(0, 2).map(r => ({
       questionIndex: r.index + 1,
       questionText: r.questionText || 'Unknown question',
-      responsePreview: (r.response?.substring(0, 100) || '') + '...',
       overallScore: Number(r.avgScore.toFixed(1)),
       breakdown: {
         honesty: r.evalData.honesty,
@@ -549,6 +577,7 @@ Return EXACTLY this JSON shape (all strings in ${language}):
           bond_map: bondMap,
           total_responses: responses.length,
           valid_evaluations: evaluationCount,
+          listener_notes: notesCount,
           invalid_evaluations: invalidEvaluationCount,
           session_duration: sessionDuration,
           language

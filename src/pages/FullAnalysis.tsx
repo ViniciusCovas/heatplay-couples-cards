@@ -74,6 +74,17 @@ interface AnalysisData {
   specificMoments?: SpecificMoment[];
 }
 
+/**
+ * One round where the listener wrote down what stayed with them after their
+ * partner answered out loud. Optional by design: sessions where nobody wrote
+ * anything simply produce an empty list and the section is not rendered.
+ */
+interface NoteMoment {
+  id: string;
+  question: string;
+  note: string;
+}
+
 export default function FullAnalysis() {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
@@ -85,6 +96,7 @@ export default function FullAnalysis() {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [psychMetrics, setPsychMetrics] = useState<any>(null);
   const [responses, setResponses] = useState<any[]>([]);
+  const [noteMoments, setNoteMoments] = useState<NoteMoment[]>([]);
   
   // Enhanced data hooks
   const connectionInsights = useConnectionInsights(roomCode || '');
@@ -138,6 +150,41 @@ export default function FullAnalysis() {
 
       if (gameResponses) {
         setResponses(gameResponses);
+
+        // Question texts, fetched separately (game_responses.card_id has no
+        // declared FK to questions, so an embedded select is not reliable).
+        const cardIds = [...new Set(gameResponses.map((r) => r.card_id).filter(Boolean))];
+        let questionTextById: Record<string, string> = {};
+        if (cardIds.length > 0) {
+          const { data: questionRows } = await supabase
+            .from('questions')
+            .select('id, text')
+            .in('id', cardIds);
+          questionTextById = (questionRows || []).reduce((acc, q) => {
+            acc[q.id] = q.text;
+            return acc;
+          }, {} as Record<string, string>);
+        }
+
+        // The listener's optional free-text note lives inside the evaluation
+        // JSON. Rows written before the field existed simply have none.
+        const moments: NoteMoment[] = [];
+        gameResponses.forEach((resp) => {
+          if (!resp.evaluation || typeof resp.evaluation !== 'string') return;
+          try {
+            const parsed = JSON.parse(resp.evaluation);
+            const note = typeof parsed?.note === 'string' ? parsed.note.trim() : '';
+            if (!note) return;
+            moments.push({
+              id: resp.id,
+              question: questionTextById[resp.card_id] || '',
+              note
+            });
+          } catch {
+            /* unparseable evaluation: skipped, same as the metrics path */
+          }
+        });
+        setNoteMoments(moments);
         
         // Calculate psychological metrics
         const formattedResponses = gameResponses.map(resp => {
@@ -447,6 +494,46 @@ export default function FullAnalysis() {
         {/* Moments that landed — derived from ratings, never from answer text */}
         <MomentsThatLanded moments={analysis.specificMoments} />
 
+        {/* What you noticed about each other — the listeners' own words, shown
+            back only to the two people who wrote them. Absent entirely when
+            nobody used the optional field. */}
+        {noteMoments.length > 0 && (
+          <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Heart className="w-4 h-4 text-primary" fill="currentColor" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl font-display">
+                    {t('ai.fullAnalysis.notes.title')}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    {t('ai.fullAnalysis.notes.subtitle')}
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {noteMoments.map((moment) => (
+                <div
+                  key={moment.id}
+                  className="rounded-xl border border-primary/15 bg-background/60 p-4 space-y-1.5"
+                >
+                  {moment.question && (
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                      {moment.question}
+                    </p>
+                  )}
+                  <p className="text-[15px] leading-relaxed italic text-foreground">
+                    “{moment.note}”
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Deep Analysis Section */}
         <div className="grid gap-6">
           {/* Bond Map Visualization */}
@@ -462,66 +549,69 @@ export default function FullAnalysis() {
             />
           )}
 
-          {/* 5-Point Connection Radar */}
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-foreground text-center">5-Point Connection Radar</h2>
-            <p className="text-muted-foreground text-center">See how your session compares across honesty, intimacy, attraction, surprise and stability.</p>
-            {connectionInsights.data && (
-              <CompatibilityRadar 
-                insights={connectionInsights.data} 
+          {/* 5-Point Connection Radar — heading only when there is a chart
+              under it (the hook returns nothing on empty/failed sessions). */}
+          {connectionInsights.data && (
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground text-center">5-Point Connection Radar</h2>
+              <p className="text-muted-foreground text-center">See how your session compares across honesty, intimacy, attraction, surprise and stability.</p>
+              <CompatibilityRadar
+                insights={connectionInsights.data}
                 analytics={roomAnalytics.data}
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Intelligence Insights Section */}
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Intelligence Analysis</h2>
-            <p className="text-muted-foreground">Deep insights from your conversation patterns</p>
-          </div>
+        {roomAnalytics.data && (
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Intelligence Analysis</h2>
+              <p className="text-muted-foreground">Deep insights from your conversation patterns</p>
+            </div>
 
-          {/* Question Insights & Interactive Timeline */}
-          <div className="grid gap-6">
-            {roomAnalytics.data && (
+            <div className="grid gap-6">
               <QuestionInsights analytics={roomAnalytics.data} />
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Your Connection Journey */}
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Your Connection Journey</h2>
-            <p className="text-muted-foreground">
-              We highlight the first 5 questions that shaped this session. Click "Show More" to explore the rest.
-            </p>
-          </div>
-
+        {connectionInsights.data && (
           <div className="space-y-6">
-            {connectionInsights.data && (
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Your Connection Journey</h2>
+              <p className="text-muted-foreground">
+                We highlight the first 5 questions that shaped this session. Click "Show More" to explore the rest.
+              </p>
+            </div>
+
+            <div className="space-y-6">
               <VerticalTimeline insights={connectionInsights.data} />
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Context & Comparison Section */}
-        <div className="space-y-6">
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-bold text-foreground">Global Context</h2>
-            <p className="text-muted-foreground">How your session compares to global patterns</p>
-          </div>
-
+        {/* Context & Comparison Section — one of the two panels must have data
+            for the heading to be worth showing. */}
+        {(connectionInsights.data || roomCode) && (
           <div className="space-y-6">
-            {connectionInsights.data && (
-              <GlobalContextOverview insights={connectionInsights.data} />
-            )}
-            {roomCode && (
-              <PeerContextPanelV2 roomCode={roomCode} />
-            )}
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Global Context</h2>
+              <p className="text-muted-foreground">How your session compares to global patterns</p>
+            </div>
+
+            <div className="space-y-6">
+              {connectionInsights.data && (
+                <GlobalContextOverview insights={connectionInsights.data} />
+              )}
+              {roomCode && (
+                <PeerContextPanelV2 roomCode={roomCode} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Detailed Analysis Sections */}
         <div className="space-y-6">
