@@ -624,7 +624,8 @@
       "successTitle": "Success",
       "signedIn": "Signed in successfully!",
       "checkEmail": "Check your email to confirm your account!",
-      "unexpected": "An unexpected error occurred"
+      "unexpected": "An unexpected error occurred",
+      "accountSaved": "Your account is saved. Everything you played is still here."
     },
     "reset": {
       "title": "Reset your password",
@@ -656,6 +657,17 @@
       "or": "Or",
       "useEmail": "Use Email Instead",
       "termsText": "By continuing, you agree to our Terms of Service and Privacy Policy"
+    },
+    "saveAccount": {
+      "title": "Save your account",
+      "description": "You're playing as a guest. Add an email and password so your credits, rooms and analyses stay yours — you keep everything you've played.",
+      "cta": "Save my account",
+      "later": "Not now",
+      "toast": "Save your account first so your credits stay yours."
+    },
+    "upgrade": {
+      "title": "Save your account",
+      "subtitle": "You're playing as a guest. Add an email and password to keep your credits, rooms and analyses."
     }
   },
   "legal": {

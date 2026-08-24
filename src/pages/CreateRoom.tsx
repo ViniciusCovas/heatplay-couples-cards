@@ -15,6 +15,13 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { CreditBalance } from '@/components/credits/CreditBalance';
 import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useCredits } from '@/hooks/useCredits';
 import { usePremium } from '@/hooks/usePremium';
 import { Sparkles } from 'lucide-react';
@@ -26,16 +33,28 @@ function CreateRoomContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [roomCode, setRoomCode] = useState('');
   const [showCreditModal, setShowCreditModal] = useState(false);
+  const [showSaveAccount, setShowSaveAccount] = useState(false);
   // Remove needsCreditConsumption state since we do it synchronously
   const navigate = useNavigate();
   const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
-  const { credits, consumeCredit } = useCredits();
+  const { credits, consumeCredit, needsAccountToPay } = useCredits();
   const { isPremium } = usePremium();
   const { playerId } = usePlayerId();
   const { t } = useTranslation();
 
   // Remove the useEffect for credit consumption since we now do it synchronously
+
+  // Buying is the one step that still needs a real account (Stripe needs a
+  // durable identity + an email for the receipt). Guests get the "save your
+  // account" prompt instead of the checkout modal.
+  const promptForCredits = (): void => {
+    if (needsAccountToPay) {
+      setShowSaveAccount(true);
+      return;
+    }
+    setShowCreditModal(true);
+  };
 
   const handleCreateRoom = async (): Promise<void> => {
     logger.debug('Starting room creation process', { 
@@ -51,7 +70,7 @@ function CreateRoomContent() {
     // is true (migration 20260824160000_premium_entitlement.sql).
     if (!isPremium && credits < 1) {
       logger.debug('Insufficient credits', { credits });
-      setShowCreditModal(true);
+      promptForCredits();
       return;
     }
 
@@ -77,7 +96,7 @@ function CreateRoomContent() {
         
         if (consumeResult.error === 'insufficient_credits') {
           toast.error(t('errors.insufficientCredits', 'Créditos insuficientes'));
-          setShowCreditModal(true);
+          promptForCredits();
         } else {
           toast.error(t('errors.creditConsumption', 'Error al procesar créditos'));
         }
@@ -240,7 +259,39 @@ function CreateRoomContent() {
         </CardContent>
       </Card>
 
-      <CreditPurchaseModal 
+      {/*
+        Guests can host and play, but not pay. Framed as saving what they
+        already have, not as a login wall.
+      */}
+      <Dialog open={showSaveAccount} onOpenChange={setShowSaveAccount}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t('auth.saveAccount.title', 'Save your account')}</DialogTitle>
+            <DialogDescription>
+              {t(
+                'auth.saveAccount.description',
+                "You're playing as a guest. Add an email and password so your credits, rooms and analyses stay yours — you keep everything you've played."
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2">
+            <Button
+              className="w-full btn-gradient-primary"
+              onClick={() => {
+                setShowSaveAccount(false);
+                navigate('/auth?upgrade=1');
+              }}
+            >
+              {t('auth.saveAccount.cta', 'Save my account')}
+            </Button>
+            <Button variant="ghost" className="w-full" onClick={() => setShowSaveAccount(false)}>
+              {t('auth.saveAccount.later', 'Not now')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <CreditPurchaseModal
         open={showCreditModal}
         onOpenChange={setShowCreditModal}
         onPurchaseComplete={() => {

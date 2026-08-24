@@ -641,7 +641,8 @@
       "successTitle": "Succès",
       "signedIn": "Connexion réussie !",
       "checkEmail": "Vérifiez votre e-mail pour confirmer votre compte !",
-      "unexpected": "Une erreur inattendue s'est produite"
+      "unexpected": "Une erreur inattendue s'est produite",
+      "accountSaved": "Votre compte est enregistré. Tout ce que vous avez joué est toujours là."
     },
     "reset": {
       "title": "Réinitialiser votre mot de passe",
@@ -673,6 +674,17 @@
       "or": "Ou",
       "useEmail": "Utiliser l'e-mail",
       "termsText": "En continuant, vous acceptez nos Conditions d'utilisation et notre Politique de confidentialité"
+    },
+    "saveAccount": {
+      "title": "Enregistrez votre compte",
+      "description": "Vous jouez en tant qu'invité. Ajoutez un e-mail et un mot de passe pour que vos crédits, vos salons et vos analyses restent les vôtres — vous ne perdez rien de ce que vous avez joué.",
+      "cta": "Enregistrer mon compte",
+      "later": "Pas maintenant",
+      "toast": "Enregistrez d'abord votre compte pour ne pas perdre vos crédits."
+    },
+    "upgrade": {
+      "title": "Enregistrez votre compte",
+      "subtitle": "Vous jouez en tant qu'invité. Ajoutez un e-mail et un mot de passe pour conserver vos crédits, vos salons et vos analyses."
     }
   },
   "legal": {

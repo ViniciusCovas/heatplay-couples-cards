@@ -641,7 +641,8 @@
       "successTitle": "Éxito",
       "signedIn": "¡Sesión iniciada correctamente!",
       "checkEmail": "¡Revisa tu correo para confirmar tu cuenta!",
-      "unexpected": "Ocurrió un error inesperado"
+      "unexpected": "Ocurrió un error inesperado",
+      "accountSaved": "Tu cuenta está guardada. Todo lo que jugasteis sigue aquí."
     },
     "reset": {
       "title": "Restablecer tu contraseña",
@@ -673,6 +674,17 @@
       "or": "O",
       "useEmail": "Usar correo electrónico",
       "termsText": "Al continuar, aceptas nuestros Términos del Servicio y nuestra Política de Privacidad"
+    },
+    "saveAccount": {
+      "title": "Guarda tu cuenta",
+      "description": "Estás jugando como invitado. Añade un correo y una contraseña para que tus créditos, salas y análisis sigan siendo tuyos: no pierdes nada de lo que ya habéis jugado.",
+      "cta": "Guardar mi cuenta",
+      "later": "Ahora no",
+      "toast": "Guarda tu cuenta primero para no perder tus créditos."
+    },
+    "upgrade": {
+      "title": "Guarda tu cuenta",
+      "subtitle": "Estás jugando como invitado. Añade un correo y una contraseña para conservar tus créditos, salas y análisis."
     }
   },
   "legal": {

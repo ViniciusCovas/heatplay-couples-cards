@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -21,16 +21,24 @@ const Auth = () => {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, isAnonymous } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { t } = useTranslation();
 
+  // A guest (anonymous) session still counts as `user`, but those visitors are
+  // here precisely to finish their account — never bounce them home.
+  const hasPermanentAccount = !!user && !isAnonymous;
+
+  // /auth?upgrade=1 (from the "save your account" prompts) opens on Sign up.
+  const defaultTab = isAnonymous || searchParams.get('upgrade') === '1' ? 'signup' : 'signin';
+
   useEffect(() => {
-    if (user) {
+    if (hasPermanentAccount) {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [hasPermanentAccount, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +85,26 @@ const Auth = () => {
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password);
+      // When the visitor is on a guest session this upgrades it in place: the
+      // same auth.uid() gains an email + password, so their rooms, credits and
+      // analyses carry over untouched.
+      const { error, upgraded } = await signUp(email, password);
       if (error) {
         toast({
           title: t('auth.toast.errorTitle'),
           description: error.message,
           variant: "destructive",
         });
+      } else if (upgraded) {
+        track('signup_completed', { upgraded_from_anonymous: true });
+        toast({
+          title: t('auth.toast.successTitle'),
+          description: t(
+            'auth.toast.accountSaved',
+            'Your account is saved. Everything you played is still here.'
+          ),
+        });
+        navigate('/');
       } else {
         track('signup_completed');
         toast({
@@ -199,14 +220,19 @@ const Auth = () => {
           <>
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-primary">
-                {t('auth.title')}
+                {isAnonymous ? t('auth.upgrade.title', 'Save your account') : t('auth.title')}
               </CardTitle>
               <CardDescription>
-                {t('auth.subtitle')}
+                {isAnonymous
+                  ? t(
+                      'auth.upgrade.subtitle',
+                      "You're playing as a guest. Add an email and password to keep your credits, rooms and analyses."
+                    )
+                  : t('auth.subtitle')}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Tabs defaultValue="signin" className="w-full">
+              <Tabs defaultValue={defaultTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="signin">{t('auth.signIn')}</TabsTrigger>
                   <TabsTrigger value="signup">{t('auth.signUp')}</TabsTrigger>
@@ -297,7 +323,11 @@ const Auth = () => {
                       </Label>
                     </div>
                     <Button type="submit" className="w-full btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100" disabled={loading || !ageConfirmed}>
-                      {loading ? t('auth.creatingAccount') : t('auth.signUp')}
+                      {loading
+                        ? t('auth.creatingAccount')
+                        : isAnonymous
+                          ? t('auth.saveAccount.cta', 'Save my account')
+                          : t('auth.signUp')}
                     </Button>
                   </form>
                 </TabsContent>

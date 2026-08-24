@@ -641,7 +641,8 @@
       "successTitle": "Sucesso",
       "signedIn": "Login realizado com sucesso!",
       "checkEmail": "Verifique seu e-mail para confirmar sua conta!",
-      "unexpected": "Ocorreu um erro inesperado"
+      "unexpected": "Ocorreu um erro inesperado",
+      "accountSaved": "Sua conta foi salva. Tudo o que vocês jogaram continua aqui."
     },
     "reset": {
       "title": "Redefinir sua senha",
@@ -673,6 +674,17 @@
       "or": "Ou",
       "useEmail": "Usar e-mail",
       "termsText": "Ao continuar, você concorda com nossos Termos de Serviço e nossa Política de Privacidade"
+    },
+    "saveAccount": {
+      "title": "Salve sua conta",
+      "description": "Você está jogando como convidado. Adicione um e-mail e uma senha para que seus créditos, salas e análises continuem sendo seus — você não perde nada do que já jogaram.",
+      "cta": "Salvar minha conta",
+      "later": "Agora não",
+      "toast": "Salve sua conta primeiro para não perder seus créditos."
+    },
+    "upgrade": {
+      "title": "Salve sua conta",
+      "subtitle": "Você está jogando como convidado. Adicione um e-mail e uma senha para manter seus créditos, salas e análises."
     }
   },
   "legal": {

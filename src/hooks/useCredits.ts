@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { track } from '@/lib/analytics';
+import i18n from '@/i18n';
 
 export interface CreditPackage {
   id: string;
@@ -94,8 +95,6 @@ export const useCredits = () => {
     // first — the anonymous session is UPGRADED there, so nothing is lost.
     if (isAnonymous) {
       logger.info('purchaseCredits: blocked for anonymous session, prompting account save');
-      // TODO(i18n) add key `auth.saveAccount.toast`
-      //   EN: "Save your account first so your credits stay yours."
       toast.info(
         i18n.t('auth.saveAccount.toast', 'Save your account first so your credits stay yours.')
       );
@@ -197,6 +196,8 @@ export const useCredits = () => {
 
   return {
     credits,
+    /** true when the current identity is a guest: checkout must be gated. */
+    needsAccountToPay: isAnonymous,
     loading,
     purchasing,
     fetchCredits,

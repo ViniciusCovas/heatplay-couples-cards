@@ -239,3 +239,50 @@ Internal functions:
   arrived yet (e.g. webhook misconfigured). It shares the same
   `stripe_events` idempotency ledger as the webhook, so double-granting is
   impossible; the webhook remains the source of truth.
+
+---
+
+## Anonymous play (guest hosts) — required dashboard settings
+
+Migration `20260824200000_anonymous_play.sql` plus the frontend change make the
+room **host** work without an account: on `/create-room` the app calls
+`supabase.auth.signInAnonymously()` and the visitor gets a real `auth.uid()`
+(with `is_anonymous = true`). They can later save the account from `/auth`,
+which calls `auth.updateUser({ email, password })` on the **same** uid, so
+their rooms, credits and analyses carry over.
+
+Three settings must be right in the Supabase dashboard, or the funnel breaks:
+
+1. **Enable anonymous sign-ins** — Authentication → Sign In / Providers →
+   *Anonymous sign-ins*. **Required.** With it off, `signInAnonymously()`
+   returns `422 anonymous_provider_disabled`. The app fails closed (it shows
+   the normal auth modal instead of a broken screen), so the symptom is simply
+   "the signup wall is still there".
+
+2. **Turn OFF "Confirm email"** (Authentication → Sign In / Providers → Email),
+   or switch that provider to **magic link**. With confirmation on, saving an
+   account sends the user out of the browser to click a link mid-session —
+   exactly the drop-off this change exists to remove. Note that with
+   confirmation on, `updateUser({ email, password })` sets the password
+   immediately but leaves the email pending until the link is clicked, so
+   `profiles.email` (synced by the `on_auth_user_email_changed` trigger) stays
+   empty until then.
+
+3. **Rate-limit anonymous sign-ins** — Authentication → Rate Limits →
+   *Anonymous sign-ins* (per hour, per IP; the default is 30). Guest identities
+   are free to mint, so leave this on and keep it low-ish (30/h/IP is a
+   reasonable launch value). Consider enabling CAPTCHA protection
+   (Authentication → Settings → Bot and Abuse Protection) if you see abuse;
+   guests cannot spend money or read anyone else's data, but each one is a row
+   in `auth.users` and `public.profiles`.
+
+Housekeeping: abandoned guest accounts accumulate. Supabase does not expire
+them automatically. A periodic cleanup of `auth.users` rows where
+`is_anonymous = true`, `last_sign_in_at < now() - interval '30 days'` and the
+user hosts no room worth keeping is a sensible follow-up (deleting the user
+cascades to `public.profiles`).
+
+**Where an account is still required:** buying credits / subscribing (Stripe
+needs a durable identity and an email for the receipt) and the admin area.
+`is_admin()` returns false for any anonymous JWT, and `promote_to_admin()`
+rejects guest callers and empty emails.
