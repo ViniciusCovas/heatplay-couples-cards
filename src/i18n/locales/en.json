@@ -271,7 +271,11 @@
       "intimacyDescription": "How intimate and personal was the response?",
       "close": "Close evaluation",
       "rateAria": "Rate {{criterion}} {{value}} out of 5",
-      "surpriseDescription": "How surprising or unexpected was the response?"
+      "surpriseDescription": "How surprising or unexpected was the response?",
+      "noteLabel": "What stayed with you from their answer?",
+      "noteOptional": "Optional",
+      "notePlaceholder": "A word, a feeling, the part you didn't expect…",
+      "noteHint": "Just for the two of you — a line to remember this by."
     },
     "processing": {
       "title": "Processing Evaluation...",
@@ -567,6 +571,11 @@
           "High": "High",
           "Notable": "Notable"
         }
+      },
+      "notes": {
+        "title": "What you noticed about each other",
+        "subtitle": "The lines you wrote right after hearing each other answer.",
+        "empty": "No notes this time — try jotting one down next session."
       }
     }
   },

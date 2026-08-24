@@ -288,7 +288,11 @@
       "rateAria": "Puntuar {{criterion}} con {{value}} de 5",
       "surpriseDescription": "¿Qué tan sorprendente o inesperada fue la respuesta?",
       "submitted": "¡Evaluación enviada!",
-      "processing": "Procesando tu evaluación..."
+      "processing": "Procesando tu evaluación...",
+      "noteLabel": "¿Qué te quedó de su respuesta?",
+      "noteOptional": "Opcional",
+      "notePlaceholder": "Una palabra, una sensación, lo que no esperabas…",
+      "noteHint": "Solo para vosotros dos: una frase para recordar este momento."
     },
     "processing": {
       "title": "Procesando Evaluación...",
@@ -584,6 +588,11 @@
           "High": "Alto",
           "Notable": "Notable"
         }
+      },
+      "notes": {
+        "title": "Lo que notasteis el uno del otro",
+        "subtitle": "Las frases que escribisteis justo después de escucharos.",
+        "empty": "Esta vez no hubo notas: probad a escribir una en la próxima sesión."
       }
     }
   },

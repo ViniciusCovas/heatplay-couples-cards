@@ -1457,7 +1457,11 @@ const Game = () => {
         roomId: room.id
       });
 
-      // Enhanced evaluation data to include timing insights
+      // Enhanced evaluation data to include timing insights.
+      // NOTE: the spread carries the optional listener `note` (see
+      // EvaluationData) into the JSON stored in game_responses.evaluation.
+      // The column already holds a nested object (timing_context), so no
+      // schema or RLS change is needed and old rows simply have no `note`.
       const enhancedEvaluation = {
         ...evaluation,
         timing_context: {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { X, ShieldCheck, Flame, Heart, Sparkles } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 import { logger } from "@/utils/logger";
@@ -22,9 +23,19 @@ export interface EvaluationData {
   intimacy: number;
   surprise: number;
   response_time?: number;
+  /**
+   * Optional short impression the LISTENER writes about what their partner
+   * said out loud. Answers are spoken in person and never recorded, so this
+   * is the only real language the end-of-session analysis ever sees.
+   * Always optional — submitting without it must behave exactly as before.
+   */
+  note?: string;
 }
 
+type RatingKey = 'honesty' | 'attraction' | 'intimacy' | 'surprise';
+
 const RATINGS = [1, 2, 3, 4, 5];
+const NOTE_MAX_LENGTH = 140;
 
 export const ResponseEvaluation = ({
   isVisible,
@@ -43,42 +54,51 @@ export const ResponseEvaluation = ({
     surprise: 3
   });
 
+  const [note, setNote] = useState('');
+  const trimmedNote = note.trim();
+
   const handleSubmit = () => {
     if (isSubmitting) return; // Prevent double submission
+    // The note is strictly optional: when it is empty the payload is byte-for-byte
+    // what it was before this field existed (no `note` key at all).
+    const payload: EvaluationData = trimmedNote
+      ? { ...evaluation, note: trimmedNote.slice(0, NOTE_MAX_LENGTH) }
+      : evaluation;
     logger.debug('ResponseEvaluation: Submitting evaluation', {
       evaluation,
+      hasNote: Boolean(trimmedNote),
       playerName,
       isSubmitting,
       questionPreview: question.substring(0, 50)
     });
-    onSubmitEvaluation(evaluation);
+    onSubmitEvaluation(payload);
   };
 
-  const updateEvaluation = (key: keyof EvaluationData, value: number) => {
+  const updateEvaluation = (key: RatingKey, value: number) => {
     setEvaluation(prev => ({ ...prev, [key]: value }));
   };
 
   const evaluationCriteria = [
     {
-      key: "honesty" as keyof EvaluationData,
+      key: "honesty" as RatingKey,
       label: t('game.evaluation.honesty'),
       icon: <ShieldCheck className="w-5 h-5 text-primary" />,
       description: t('game.evaluation.honestyDescription')
     },
     {
-      key: "attraction" as keyof EvaluationData,
+      key: "attraction" as RatingKey,
       label: t('game.evaluation.attraction'),
       icon: <Flame className="w-5 h-5 text-secondary" />,
       description: t('game.evaluation.attractionDescription')
     },
     {
-      key: "intimacy" as keyof EvaluationData,
+      key: "intimacy" as RatingKey,
       label: t('game.evaluation.intimacy'),
       icon: <Heart className="w-5 h-5 text-primary" fill="currentColor" />,
       description: t('game.evaluation.intimacyDescription')
     },
     {
-      key: "surprise" as keyof EvaluationData,
+      key: "surprise" as RatingKey,
       label: t('game.evaluation.surprise'),
       icon: <Sparkles className="w-5 h-5 text-accent" />,
       description: t('game.evaluation.surpriseDescription')
@@ -169,6 +189,45 @@ export const ResponseEvaluation = ({
                   </div>
                 </div>
               ))}
+            </div>
+
+            {/* Optional note from the listener about what their partner said out
+                loud. Never required — no validation, no nag when left empty. */}
+            <div className="space-y-1.5 border-t border-border/60 pt-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <label
+                  htmlFor="evaluation-note"
+                  className="text-sm font-medium text-foreground font-brand"
+                >
+                  {t('game.evaluation.noteLabel')}
+                </label>
+                <span className="shrink-0 text-xs tabular-nums text-muted-foreground/70">
+                  {t('game.evaluation.noteOptional')}
+                </span>
+              </div>
+              <Textarea
+                id="evaluation-note"
+                rows={2}
+                value={note}
+                maxLength={NOTE_MAX_LENGTH}
+                disabled={isSubmitting}
+                onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
+                placeholder={t('game.evaluation.notePlaceholder')}
+                aria-describedby="evaluation-note-hint evaluation-note-count"
+                className="min-h-0 resize-none rounded-xl bg-background text-sm leading-relaxed"
+              />
+              <div className="flex items-start justify-between gap-3">
+                <p id="evaluation-note-hint" className="text-xs text-muted-foreground">
+                  {t('game.evaluation.noteHint')}
+                </p>
+                <span
+                  id="evaluation-note-count"
+                  aria-live="polite"
+                  className="shrink-0 text-xs tabular-nums text-muted-foreground/70"
+                >
+                  {note.length}/{NOTE_MAX_LENGTH}
+                </span>
+              </div>
             </div>
           </div>
 

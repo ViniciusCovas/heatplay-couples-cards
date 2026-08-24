@@ -288,7 +288,11 @@
       "rateAria": "Noter {{criterion}} {{value}} sur 5",
       "surpriseDescription": "À quel point la réponse était-elle surprenante ou inattendue?",
       "submitted": "Évaluation envoyée !",
-      "processing": "Traitement de votre évaluation..."
+      "processing": "Traitement de votre évaluation...",
+      "noteLabel": "Qu'est-ce qui vous est resté de sa réponse ?",
+      "noteOptional": "Facultatif",
+      "notePlaceholder": "Un mot, une sensation, ce que vous n'attendiez pas…",
+      "noteHint": "Rien que pour vous deux : une phrase pour s'en souvenir."
     },
     "processing": {
       "title": "Traitement de l'Évaluation...",
@@ -584,6 +588,11 @@
           "High": "Élevé",
           "Notable": "Notable"
         }
+      },
+      "notes": {
+        "title": "Ce que vous avez remarqué l'un chez l'autre",
+        "subtitle": "Les phrases écrites juste après vous être écoutés.",
+        "empty": "Pas de notes cette fois — essayez d'en écrire une la prochaine session."
       }
     }
   },
