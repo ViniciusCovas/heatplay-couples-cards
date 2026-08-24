@@ -50,15 +50,21 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const [playerNumber, setPlayerNumber] = useState<1 | 2 | null>(null);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('IDLE');
   const { i18n } = useTranslation();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, ensureSession } = useAuth();
   const { playerId, isReady: playerIdReady } = usePlayerId();
 
   const createRoom = useCallback(async (level: number, _userId?: string): Promise<string> => {
     logger.debug('🔧 createRoom called', { level, userId: user?.id });
     
     if (!user?.id) {
-      console.error('❌ createRoom called without authenticated user');
-      throw new Error('You must be signed in to create a room.');
+      // No account needed to host: mint a guest identity so RLS and the
+      // create_room_and_join RPC (which uses auth.uid()) keep working.
+      logger.info('createRoom: no session yet, ensuring one (anonymous if needed)');
+      const { session, error } = await ensureSession();
+      if (!session) {
+        logger.error('createRoom: could not establish a session', error);
+        throw new Error('You must be signed in to create a room.');
+      }
     }
 
     // Use atomic RPC to create room and join as player 1 with correct RLS context
@@ -117,7 +123,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     setIsConnected(true);
 
     return created.room_code;
-  }, [user?.id, i18n.language]);
+  }, [user?.id, i18n.language, ensureSession]);
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     // Enhanced debugging for player identity tracking

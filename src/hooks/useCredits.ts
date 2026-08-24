@@ -51,7 +51,7 @@ export const creditPackages: CreditPackage[] = [
 ];
 
 export const useCredits = () => {
-  const { user } = useAuth();
+  const { user, isAnonymous } = useAuth();
   const [credits, setCredits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
@@ -85,6 +85,21 @@ export const useCredits = () => {
   const purchaseCredits = async (packageId: string) => {
     if (!user) {
       toast.error('Debes iniciar sesión para comprar créditos');
+      return false;
+    }
+
+    // Playing is free of accounts, but paying is not: Stripe needs a durable
+    // identity and an email for the receipt, and credits bought on a guest
+    // session would be lost with the browser. Send them to finish the account
+    // first — the anonymous session is UPGRADED there, so nothing is lost.
+    if (isAnonymous) {
+      logger.info('purchaseCredits: blocked for anonymous session, prompting account save');
+      // TODO(i18n) add key `auth.saveAccount.toast`
+      //   EN: "Save your account first so your credits stay yours."
+      toast.info(
+        i18n.t('auth.saveAccount.toast', 'Save your account first so your credits stay yours.')
+      );
+      window.location.href = '/auth?upgrade=1';
       return false;
     }
 
