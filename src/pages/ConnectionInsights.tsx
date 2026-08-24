@@ -63,7 +63,7 @@ const ConnectionInsights = () => {
   };
 
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen romantic-background">
         <div className="container mx-auto px-4 py-8">
           {/* SEO */}
           {/* Title and description for SEO */}
@@ -74,13 +74,12 @@ const ConnectionInsights = () => {
               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
                 <Globe className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-                Global Insights Dashboard
+              <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
+                {t('insights.title', 'Global Insights Dashboard')}
               </h1>
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Compare your relationship with thousands of couples worldwide. Discover where you stand, 
-              what makes you unique, and how you rank in the global relationship landscape.
+              {t('insights.subtitle', 'Compare your relationship with thousands of couples worldwide. Discover where you stand, what makes you unique, and how you rank in the global relationship landscape.')}
             </p>
           </div>
 
@@ -89,28 +88,28 @@ const ConnectionInsights = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Search className="w-5 h-5" />
-              Global Benchmark Analysis
+              {t('insights.search.title', 'Global Benchmark Analysis')}
             </CardTitle>
             <CardDescription>
-              Enter your room code to see how your relationship compares with global patterns and statistical trends
+              {t('insights.search.description', 'Enter your room code to see how your relationship compares with global patterns and statistical trends.')}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Input
-                placeholder="Enter room code (e.g., ABC123)"
+                placeholder={t('insights.search.placeholder', 'ABC123')}
                 value={roomCode}
                 onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
                 onKeyPress={handleKeyPress}
-                className="flex-1 text-center font-mono text-lg"
+                className="w-full sm:flex-1 text-center font-mono text-lg tracking-widest"
                 maxLength={6}
               />
-              <Button 
+              <Button
                 onClick={handleSearch}
                 disabled={!roomCode.trim() || isLoading}
-                className="px-8"
+                className="w-full sm:w-auto sm:px-8 h-11 font-semibold btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100"
               >
-                {isLoading ? 'Searching...' : 'Compare Globally'}
+                {isLoading ? t('insights.search.searching', 'Searching...') : t('insights.search.cta', 'Compare globally')}
               </Button>
             </div>
           </CardContent>
@@ -121,7 +120,7 @@ const ConnectionInsights = () => {
           <Alert className="max-w-2xl mx-auto mb-8">
             <Info className="h-4 w-4" />
             <AlertDescription>
-              No analysis found for room code "{searchCode}". Make sure you completed a session with AI analysis enabled.
+              {t('insights.notFound', 'No analysis found for room code "{{code}}". Make sure you finished a session with AI analysis enabled.', { code: searchCode })}
             </AlertDescription>
           </Alert>
         )}
@@ -143,20 +142,20 @@ const ConnectionInsights = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Lightbulb className="w-5 h-5" />
-                  Did You Know?
+                  {t('insights.didYouKnow.title', 'Did you know?')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium">Global Benchmarks</h4>
+                  <h4 className="font-medium">{t('insights.didYouKnow.benchmarks.title', 'Global benchmarks')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Compare your relationship metrics against thousands of couples worldwide to understand your unique patterns.
+                    {t('insights.didYouKnow.benchmarks.body', 'Compare your relationship metrics against thousands of couples worldwide to understand your unique patterns.')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">Statistical Analysis</h4>
+                  <h4 className="font-medium">{t('insights.didYouKnow.analysis.title', 'Statistical analysis')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Advanced analytics reveal where you rank in compatibility, communication style, and relationship velocity.
+                    {t('insights.didYouKnow.analysis.body', 'Advanced analytics reveal where you rank in compatibility, communication style, and relationship velocity.')}
                   </p>
                 </div>
               </CardContent>
@@ -166,20 +165,20 @@ const ConnectionInsights = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5" />
-                  Global Statistics
+                  {t('insights.stats.title', 'Global statistics')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <h4 className="font-medium">Performance Percentiles</h4>
+                  <h4 className="font-medium">{t('insights.stats.percentiles.title', 'Performance percentiles')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Top 10% of couples score above 85% compatibility with consistent high honesty and intimacy.
+                    {t('insights.stats.percentiles.body', 'The top 10% of couples score above 85% compatibility, with consistently high honesty and intimacy.')}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <h4 className="font-medium">Success Predictors</h4>
+                  <h4 className="font-medium">{t('insights.stats.predictors.title', 'Success predictors')}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Strong correlation between attraction-intimacy balance and long-term relationship satisfaction.
+                    {t('insights.stats.predictors.body', 'There is a strong correlation between attraction-intimacy balance and long-term relationship satisfaction.')}
                   </p>
                 </div>
               </CardContent>

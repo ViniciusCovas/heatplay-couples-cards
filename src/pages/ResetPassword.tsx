@@ -95,7 +95,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
@@ -146,7 +146,7 @@ const ResetPassword = () => {
                   minLength={6}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100" disabled={loading}>
                 {loading ? t('auth.reset.updating') : t('auth.reset.updatePassword')}
               </Button>
             </form>

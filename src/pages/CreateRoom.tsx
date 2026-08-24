@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
+import { usePlayerId } from '@/hooks/usePlayerId';
+import { supabase } from '@/integrations/supabase/client';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
@@ -27,6 +29,7 @@ function CreateRoomContent() {
   const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
   const { credits, consumeCredit } = useCredits();
+  const { playerId } = usePlayerId();
   const { t } = useTranslation();
 
   // Remove the useEffect for credit consumption since we now do it synchronously
@@ -105,8 +108,23 @@ function CreateRoomContent() {
   const handleGameStart = async (): Promise<void> => {
     try {
       await startGame(); // Start the game (credit already consumed during room creation)
-      // Navigate without room code in URL to prevent global room manager conflicts
-      navigate('/proximity-selection', { state: { roomCode, isCreator: true } });
+
+      // The old /proximity-selection screen was a no-op: it auto-answered
+      // "together" and advanced. We keep the RPC (the game reads the proximity
+      // response and the phase) but run it silently during the transition.
+      if (room?.id && playerId) {
+        try {
+          await supabase.rpc('handle_proximity_response', {
+            room_id_param: room.id,
+            player_id_param: playerId,
+            is_close_param: true,
+          });
+        } catch (proximityError) {
+          logger.warn('Silent proximity advance failed', proximityError);
+        }
+      }
+
+      navigate(`/level-select?room=${roomCode}`);
     } catch (error) {
       logger.error('Error starting game', error);
       toast.error('Error starting game');
@@ -134,24 +152,28 @@ function CreateRoomContent() {
 
   return (
     <div className="min-h-screen romantic-background flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md mb-8">
-        <div className="flex items-center justify-between">
+      <div className="w-full max-w-md mb-8 space-y-3">
+        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
+            aria-label={t('common.backToHome', 'Back to Home')}
             className="hover:bg-primary/10"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Logo 
-            size="medium"
-            className="hover:scale-105 transition-transform duration-300"
-          />
-          <div className="flex items-center gap-3">
-            <CreditBalance />
-            <LanguageSelector />
+          <div className="flex justify-center min-w-0">
+            <Logo
+              size="small"
+              className="sm:h-24 hover:scale-105 transition-transform duration-300"
+            />
           </div>
+          <div aria-hidden="true" />
+        </div>
+        <div className="flex items-center justify-center gap-3">
+          <CreditBalance />
+          <LanguageSelector />
         </div>
       </div>
       
@@ -176,7 +198,7 @@ function CreateRoomContent() {
           <div className="space-y-4">
             <Button 
               onClick={handleCreateRoom}
-              className="w-full h-12 text-lg font-semibold btn-gradient-primary"
+              className="w-full h-12 text-lg font-semibold btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100"
               disabled={isCreating}
             >
               {isCreating ? (

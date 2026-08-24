@@ -4,6 +4,12 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { track } from '@/lib/analytics';
 
+// WhatsApp's mandated brand green. It is not a Let's Get Close token, so it is
+// declared here as a local CSS custom property instead of a literal utility.
+// TODO: move to index.css as --brand-whatsapp when that file is next touched.
+const WHATSAPP_GREEN = '#25D366';
+const WHATSAPP_GREEN_HOVER = '#1EBE5B';
+
 interface InvitePartnerProps {
   roomCode: string;
 }
@@ -58,7 +64,8 @@ export function InvitePartner({ roomCode }: InvitePartnerProps) {
       <div className="space-y-2">
         <Button
           onClick={shareViaWhatsApp}
-          className="w-full h-12 text-base font-semibold bg-[#25D366] hover:bg-[#1ebe5b] text-white"
+          style={{ ['--brand-whatsapp' as string]: WHATSAPP_GREEN, ['--brand-whatsapp-hover' as string]: WHATSAPP_GREEN_HOVER }}
+          className="w-full h-12 text-base font-semibold bg-[var(--brand-whatsapp)] hover:bg-[var(--brand-whatsapp-hover)] text-white"
         >
           <MessageCircle className="w-5 h-5 mr-2" />
           {t('invite.whatsapp')}

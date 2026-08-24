@@ -235,8 +235,8 @@ export const ProximitySelector = ({ isVisible, onSelect, roomCode, room, partici
             ) : (
               <div className="text-center py-8">
                 {/* Auto-selecting Together mode - show confirmation */}
-                <div className="w-16 h-16 mx-auto rounded-full bg-green-500/20 flex items-center justify-center mb-4">
-                  <Mic className="w-8 h-8 text-green-500" />
+                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Mic className="w-8 h-8 text-primary" />
                 </div>
                 <h3 className="text-lg font-brand text-foreground mb-2">
                   {t('proximitySelector.together.title')} Mode Selected

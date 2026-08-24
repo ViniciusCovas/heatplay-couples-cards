@@ -179,10 +179,46 @@ const ProximitySelection = () => {
     navigate('/');
   };
 
+  // A spinner must never be a dead end (P1-22): after 15s a stuck load turns
+  // into an actionable error with a retry, and there is always a way home.
+  const isBusy = !isSystemReady || !isRoomLoaded || isJoining || !room;
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    if (!isBusy) {
+      setStalled(false);
+      return;
+    }
+    const timer = setTimeout(() => setStalled(true), 15000);
+    return () => clearTimeout(timer);
+  }, [isBusy]);
+
+  const renderStalled = () => (
+    <div className="min-h-screen romantic-background flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm p-6 text-center space-y-4">
+        <h1 className="font-display text-xl font-bold text-foreground">
+          {t('levelSelect.stalled.title', 'This is taking longer than it should')}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {t('levelSelect.stalled.description', 'We could not reach the room. Check your connection and try again.')}
+        </p>
+        <div className="flex flex-col gap-2">
+          <Button className="btn-gradient-primary h-11 font-semibold" onClick={() => window.location.reload()}>
+            {t('levelSelect.stalled.retry', 'Try again')}
+          </Button>
+          <Button variant="outline" onClick={handleGoBack}>
+            {t('proximitySelection.errors.backToHome')}
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+
   // Show loading if system isn't ready or room isn't loaded
   if (!isSystemReady || !isRoomLoaded || isJoining) {
+    if (stalled) return renderStalled();
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+      <div className="min-h-screen romantic-background flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>
             {!isSystemReady
@@ -204,8 +240,9 @@ const ProximitySelection = () => {
 
   // Show loading if room data is not available yet (fallback)
   if (!room) {
+    if (stalled) return renderStalled();
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex items-center justify-center p-4">
+      <div className="min-h-screen romantic-background flex items-center justify-center p-4">
         <Card className="p-6 text-center space-y-4">
           <p>Waiting for room data...</p>
           <Button onClick={handleGoBack} variant="outline">
@@ -217,7 +254,7 @@ const ProximitySelection = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 flex flex-col">
+    <div className="min-h-screen romantic-background flex flex-col">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <Button variant="outline" size="sm" onClick={handleGoBack}>

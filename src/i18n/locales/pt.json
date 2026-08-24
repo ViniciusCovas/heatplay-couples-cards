@@ -178,6 +178,35 @@
       "roomFullDescription": "Esta sala já tem 2 jogadores. Deseja criar uma nova sala?",
       "roomNotFound": "Sala não encontrada",
       "roomNotFoundDescription": "O código de sala inserido não existe ou expirou."
+    },
+    "roomLabel": "Sala",
+    "playerLabel": "Jogador {{number}}",
+    "cardCount_one": "{{count}} carta",
+    "cardCount_other": "{{count}} cartas",
+    "chooseIntensity": "Escolham o nível de intensidade",
+    "chooseNewIntensity": "Escolham o novo nível de intensidade",
+    "youChose": "Você escolheu este nível",
+    "matched": "💖 Vocês estão conectados. Começando em {{count}}...",
+    "resetSelection": "Reiniciar seleção",
+    "initializingPlayer": "Preparando tudo...",
+    "tip": "💡 Dica: vocês podem subir de nível quando se sentirem prontos",
+    "stopAnytime": "Lembrem-se: vocês podem parar a qualquer momento",
+    "mismatch": {
+      "title": "Vocês escolheram níveis diferentes",
+      "description": "Vocês precisam escolher o mesmo nível para jogar juntos.",
+      "resetting": "Reiniciando automaticamente — vocês poderão escolher de novo em instantes.",
+      "card": "Diferente da escolha do seu par"
+    },
+    "lockedDialog": {
+      "title": "Nível bloqueado",
+      "description": "Este nível está bloqueado porque você não concluiu o anterior. Tem certeza de que quer continuar mesmo assim? As perguntas podem ser mais intensas do que espera.",
+      "cancel": "Cancelar",
+      "confirm": "Continuar mesmo assim"
+    },
+    "stalled": {
+      "title": "Isto está demorando mais do que deveria",
+      "description": "Não conseguimos acessar a sala. Verifique sua conexão e tente novamente.",
+      "retry": "Tentar novamente"
     }
   },
   "game": {
@@ -502,6 +531,10 @@
         "weekend_blaze": "Melhor valor",
         "endless_heat": "Ilimitado"
       }
+    },
+    "balance": {
+      "label_one": "{{count}} crédito",
+      "label_other": "{{count}} créditos"
     }
   },
   "auth": {
@@ -739,6 +772,75 @@
     "spark": {
       "title": "Ainda não estão prontos para o jogo completo?",
       "sub": "Levem a pergunta de hoje — uma por dia, grátis para sempre."
+    }
+  },
+  "notFound": {
+    "title": "Esta página saiu do roteiro",
+    "description": "Não encontramos a página que você procurava. Vamos voltar para algo mais próximo.",
+    "backHome": "Voltar ao início"
+  },
+  "paymentSuccess": {
+    "errors": {
+      "noSessionId": "Nenhum ID de sessão de pagamento foi encontrado na URL.",
+      "failed": "Não conseguimos verificar seu pagamento. Se seu cartão foi cobrado, fale com a gente que resolvemos.",
+      "retry": "Algo deu errado ao verificar seu pagamento. Tente novamente."
+    },
+    "verifying": {
+      "title": "Verificando seu pagamento...",
+      "description": "Estamos confirmando seu pagamento. Isso pode levar alguns segundos..."
+    },
+    "attempt": "Tentativa {{count}}",
+    "success": {
+      "title": "Pagamento concluído!",
+      "creditsAdded_one": "{{count}} crédito foi adicionado à sua conta.",
+      "creditsAdded_other": "{{count}} créditos foram adicionados à sua conta.",
+      "hint": "Você já pode começar uma sessão com seu par!"
+    },
+    "error": {
+      "title": "Problema na verificação",
+      "generic": "Houve um problema ao verificar seu pagamento.",
+      "reassurance": "Se seu cartão foi cobrado, seus créditos aparecerão em breve. Você pode verificar de novo ou falar com a gente.",
+      "supportIntro": "Precisa de ajuda? Escreva para nós citando a referência da sua sessão:",
+      "sessionRef": "ID da sessão",
+      "missingSessionId": "indisponível"
+    },
+    "verifyAgain": "Verificar novamente",
+    "continue": "Continuar",
+    "goHome": "Ir para o início",
+    "viewInsights": "Explore seus insights de conexão"
+  },
+  "insights": {
+    "title": "Painel de insights globais",
+    "subtitle": "Compare seu relacionamento com milhares de casais pelo mundo. Descubram onde estão, o que os torna únicos e como se posicionam no cenário global.",
+    "search": {
+      "title": "Análise comparativa global",
+      "description": "Digite o código da sua sala para ver como seu relacionamento se compara aos padrões e tendências globais.",
+      "placeholder": "ABC123",
+      "searching": "Buscando...",
+      "cta": "Comparar globalmente"
+    },
+    "notFound": "Nenhuma análise encontrada para o código \"{{code}}\". Verifique se vocês concluíram uma sessão com a análise por IA ativada.",
+    "didYouKnow": {
+      "title": "Você sabia?",
+      "benchmarks": {
+        "title": "Referências globais",
+        "body": "Compare as métricas do seu relacionamento com as de milhares de casais para entender seus padrões únicos."
+      },
+      "analysis": {
+        "title": "Análise estatística",
+        "body": "A analítica avançada revela onde vocês estão em compatibilidade, estilo de comunicação e ritmo do relacionamento."
+      }
+    },
+    "stats": {
+      "title": "Estatísticas globais",
+      "percentiles": {
+        "title": "Percentis de desempenho",
+        "body": "Os 10% de casais com melhor pontuação superam 85% de compatibilidade, com honestidade e intimidade altas e constantes."
+      },
+      "predictors": {
+        "title": "Preditores de sucesso",
+        "body": "Há forte correlação entre o equilíbrio atração-intimidade e a satisfação de longo prazo."
+      }
     }
   }
 }

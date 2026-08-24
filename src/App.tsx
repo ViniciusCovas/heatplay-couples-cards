@@ -11,7 +11,6 @@ import Home from "./pages/Home";
 // Route-level code splitting: everything except Home is lazy-loaded.
 const CreateRoom = lazy(() => import("./pages/CreateRoom"));
 const JoinRoom = lazy(() => import("./pages/JoinRoom"));
-const ProximitySelection = lazy(() => import("./pages/ProximitySelection"));
 const LevelSelect = lazy(() => import("./pages/LevelSelect"));
 const Game = lazy(() => import("./pages/Game"));
 const Auth = lazy(() => import("./pages/Auth"));
@@ -37,7 +36,7 @@ import { AppHeader } from "./components/navigation/AppHeader";
 const queryClient = new QueryClient();
 
 const RouteFallback = () => (
-  <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+  <div className="min-h-screen romantic-background flex items-center justify-center">
     <div className="text-center">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
       <p className="text-sm text-muted-foreground font-medium">Let's Get Close</p>
@@ -65,7 +64,6 @@ const AppContent = () => {
           <Route path="/" element={<Home />} />
           <Route path="/create-room" element={<CreateRoom />} />
           <Route path="/join-room" element={<JoinRoom />} />
-          <Route path="/proximity-selection" element={<ProximitySelection />} />
           <Route path="/level-select" element={<LevelSelect />} />
           <Route path="/game" element={<Game />} />
           <Route path="/auth" element={<Auth />} />

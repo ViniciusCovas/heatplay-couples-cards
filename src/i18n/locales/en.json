@@ -159,6 +159,37 @@
       "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
       "roomNotFound": "Room Not Found",
       "roomNotFoundDescription": "The room code you entered doesn't exist or has expired."
+    },
+    "roomLabel": "Room",
+    "playerLabel": "Player {{number}}",
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards",
+    "chooseIntensity": "Choose your intensity level",
+    "chooseNewIntensity": "Choose your new intensity level",
+    "youChose": "You chose this level",
+    "matched": "💖 You're connected. Starting in {{count}}...",
+    "agreed": "Perfect! You both picked level {{level}}. Starting the game...",
+    "waitingPartner": "Waiting for your partner to pick a level...",
+    "resetSelection": "Reset selection",
+    "initializingPlayer": "Getting you ready...",
+    "tip": "💡 Tip: you can move up a level whenever you both feel ready",
+    "stopAnytime": "Remember: you can stop at any time",
+    "mismatch": {
+      "title": "You picked different levels",
+      "description": "You need to choose the same level to play together.",
+      "resetting": "Resetting automatically — you can choose again in a moment.",
+      "card": "Different from your partner's choice"
+    },
+    "lockedDialog": {
+      "title": "Level locked",
+      "description": "This level is locked because you haven't finished the previous one. Are you sure you want to continue anyway? The questions may be more intense than you expect.",
+      "cancel": "Cancel",
+      "confirm": "Continue anyway"
+    },
+    "stalled": {
+      "title": "This is taking longer than it should",
+      "description": "We could not reach the room. Check your connection and try again.",
+      "retry": "Try again"
     }
   },
   "game": {
@@ -483,6 +514,10 @@
         "weekend_blaze": "Best value",
         "endless_heat": "Unlimited"
       }
+    },
+    "balance": {
+      "label_one": "{{count}} credit",
+      "label_other": "{{count}} credits"
     }
   },
   "auth": {
@@ -719,6 +754,75 @@
     "spark": {
       "title": "Not ready for the full game?",
       "sub": "Steal tonight's question — one a day, free forever."
+    }
+  },
+  "notFound": {
+    "title": "This page went off script",
+    "description": "We couldn't find the page you were looking for. Let's get you back to something closer.",
+    "backHome": "Back to Home"
+  },
+  "paymentSuccess": {
+    "errors": {
+      "noSessionId": "No payment session ID was found in the URL.",
+      "failed": "We could not verify your payment. If your card was charged, contact support and we will sort it out.",
+      "retry": "Something went wrong while verifying your payment. Please try again."
+    },
+    "verifying": {
+      "title": "Verifying your payment...",
+      "description": "We are confirming your payment. This can take a few seconds..."
+    },
+    "attempt": "Attempt {{count}}",
+    "success": {
+      "title": "Payment successful!",
+      "creditsAdded_one": "{{count}} credit has been added to your account.",
+      "creditsAdded_other": "{{count}} credits have been added to your account.",
+      "hint": "You can start a session with your partner right now!"
+    },
+    "error": {
+      "title": "Verification problem",
+      "generic": "There was a problem verifying your payment.",
+      "reassurance": "If your card was charged, your credits will appear shortly. You can verify again or contact us and we will fix it.",
+      "supportIntro": "Need help? Email us and quote your session reference:",
+      "sessionRef": "Session ID",
+      "missingSessionId": "missing"
+    },
+    "verifyAgain": "Verify again",
+    "continue": "Continue",
+    "goHome": "Go to home",
+    "viewInsights": "Explore your connection insights"
+  },
+  "insights": {
+    "title": "Global Insights Dashboard",
+    "subtitle": "Compare your relationship with thousands of couples worldwide. Discover where you stand, what makes you unique, and how you rank in the global relationship landscape.",
+    "search": {
+      "title": "Global Benchmark Analysis",
+      "description": "Enter your room code to see how your relationship compares with global patterns and statistical trends.",
+      "placeholder": "ABC123",
+      "searching": "Searching...",
+      "cta": "Compare globally"
+    },
+    "notFound": "No analysis found for room code \"{{code}}\". Make sure you finished a session with AI analysis enabled.",
+    "didYouKnow": {
+      "title": "Did you know?",
+      "benchmarks": {
+        "title": "Global benchmarks",
+        "body": "Compare your relationship metrics against thousands of couples worldwide to understand your unique patterns."
+      },
+      "analysis": {
+        "title": "Statistical analysis",
+        "body": "Advanced analytics reveal where you rank in compatibility, communication style, and relationship velocity."
+      }
+    },
+    "stats": {
+      "title": "Global statistics",
+      "percentiles": {
+        "title": "Performance percentiles",
+        "body": "The top 10% of couples score above 85% compatibility, with consistently high honesty and intimacy."
+      },
+      "predictors": {
+        "title": "Success predictors",
+        "body": "There is a strong correlation between attraction-intimacy balance and long-term relationship satisfaction."
+      }
     }
   }
 }

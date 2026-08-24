@@ -225,7 +225,7 @@ export default function FullAnalysis() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+      <div className="min-h-screen romantic-background p-6">
         <div className="max-w-4xl mx-auto">
           <div className="animate-pulse space-y-6">
             <div className="h-8 bg-muted rounded w-1/3"></div>
@@ -239,7 +239,7 @@ export default function FullAnalysis() {
 
   if (error || !analysis) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 p-6">
+      <div className="min-h-screen romantic-background p-6">
         <div className="max-w-4xl mx-auto text-center py-20">
           <Brain className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
           <h1 className="text-2xl font-bold mb-2">Analysis Not Available</h1>
@@ -258,7 +258,7 @@ export default function FullAnalysis() {
   const compatibilityScore = Math.min(100, Math.max(0, analysis.compatibilityScore || 0));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen romantic-background">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">

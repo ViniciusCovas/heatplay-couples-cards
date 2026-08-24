@@ -126,6 +126,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, 
                 size="icon"
                 className="shrink-0 hover:bg-primary/10 border-primary/30"
                 title={t('waitingRoom.copyCode')}
+                aria-label={t('waitingRoom.copyCode')}
               >
                 <Copy className="w-4 h-4" />
               </Button>
@@ -134,7 +135,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, 
 
           {/* Countdown */}
           {countdown !== null && (
-            <div className="space-y-3">
+            <div className="space-y-3" aria-live="polite">
               <div className="flex items-center justify-center gap-2 text-accent-foreground">
                 <Clock className="w-5 h-5" />
                 <span className="text-sm font-medium">{t('waitingRoom.startingIn')}</span>
@@ -170,7 +171,7 @@ export function WaitingRoom({ roomCode, participants, onGameStart, onLeaveRoom, 
                     </div>
                     <div>
                       {participant ? (
-                        <Badge variant="secondary" className="gap-1 bg-green-100 text-green-700">
+                        <Badge variant="secondary" className="gap-1 bg-primary/10 text-primary-ink border-primary/20">
                           <CheckCircle className="w-3 h-3" />
                           {t('waitingRoom.connected')}
                         </Badge>

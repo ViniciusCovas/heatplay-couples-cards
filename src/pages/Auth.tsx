@@ -135,7 +135,7 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen romantic-background flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md">
         {showForgotPassword ? (
           <>
@@ -179,7 +179,7 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
+                  <Button type="submit" className="w-full btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100" disabled={loading}>
                     {loading ? t('auth.reset.sending') : t('auth.reset.sendLink')}
                   </Button>
                   <Button
@@ -242,12 +242,12 @@ const Auth = () => {
                       <button
                         type="button"
                         onClick={() => setShowForgotPassword(true)}
-                        className="text-sm text-primary hover:underline"
+                        className="text-sm text-primary-ink underline-offset-4 hover:underline rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                       >
                         {t('auth.forgotPassword')}
                       </button>
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button type="submit" className="w-full btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100" disabled={loading}>
                       {loading ? t('auth.signingIn') : t('auth.signIn')}
                     </Button>
                   </form>
@@ -289,14 +289,14 @@ const Auth = () => {
                       />
                       <Label
                         htmlFor="age-confirm"
-                        className="text-xs font-normal leading-relaxed text-muted-foreground cursor-pointer"
+                        className="text-sm font-normal leading-relaxed text-muted-foreground cursor-pointer"
                       >
                         <Trans i18nKey="auth.ageGate.label">
                           I confirm I am 18 years of age or older and accept the <Link to="/terms" className="text-primary underline" onClick={(e) => e.stopPropagation()}>Terms of Service</Link> and <Link to="/privacy" className="text-primary underline" onClick={(e) => e.stopPropagation()}>Privacy Policy</Link>
                         </Trans>
                       </Label>
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading || !ageConfirmed}>
+                    <Button type="submit" className="w-full btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100" disabled={loading || !ageConfirmed}>
                       {loading ? t('auth.creatingAccount') : t('auth.signUp')}
                     </Button>
                   </form>

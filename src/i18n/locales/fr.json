@@ -178,6 +178,35 @@
       "roomFullDescription": "Cette salle compte déjà 2 joueurs. Voulez-vous créer une nouvelle salle ?",
       "roomNotFound": "Salle introuvable",
       "roomNotFoundDescription": "Le code de salle saisi n'existe pas ou a expiré."
+    },
+    "roomLabel": "Salon",
+    "playerLabel": "Joueur {{number}}",
+    "cardCount_one": "{{count}} carte",
+    "cardCount_other": "{{count}} cartes",
+    "chooseIntensity": "Choisissez votre niveau d'intensité",
+    "chooseNewIntensity": "Choisissez le nouveau niveau d'intensité",
+    "youChose": "Vous avez choisi ce niveau",
+    "matched": "💖 Vous êtes connectés. Départ dans {{count}}...",
+    "resetSelection": "Réinitialiser la sélection",
+    "initializingPlayer": "Préparation en cours...",
+    "tip": "💡 Astuce : vous pouvez monter d'un niveau dès que vous vous sentez prêts",
+    "stopAnytime": "Rappel : vous pouvez arrêter à tout moment",
+    "mismatch": {
+      "title": "Vous avez choisi des niveaux différents",
+      "description": "Vous devez choisir le même niveau pour jouer ensemble.",
+      "resetting": "Réinitialisation automatique — vous pourrez choisir à nouveau dans un instant.",
+      "card": "Différent du choix de votre partenaire"
+    },
+    "lockedDialog": {
+      "title": "Niveau verrouillé",
+      "description": "Ce niveau est verrouillé car vous n'avez pas terminé le précédent. Voulez-vous vraiment continuer ? Les questions peuvent être plus intenses que prévu.",
+      "cancel": "Annuler",
+      "confirm": "Continuer quand même"
+    },
+    "stalled": {
+      "title": "Cela prend plus de temps que prévu",
+      "description": "Impossible de joindre le salon. Vérifiez votre connexion et réessayez.",
+      "retry": "Réessayer"
     }
   },
   "game": {
@@ -502,6 +531,10 @@
         "weekend_blaze": "Meilleure valeur",
         "endless_heat": "Illimité"
       }
+    },
+    "balance": {
+      "label_one": "{{count}} crédit",
+      "label_other": "{{count}} crédits"
     }
   },
   "auth": {
@@ -739,6 +772,75 @@
     "spark": {
       "title": "Pas encore prêts pour le jeu complet ?",
       "sub": "Prenez la question du jour — une par jour, gratuite pour toujours."
+    }
+  },
+  "notFound": {
+    "title": "Cette page est sortie du scénario",
+    "description": "Nous n'avons pas trouvé la page que vous cherchiez. Revenons à quelque chose de plus proche.",
+    "backHome": "Retour à l'accueil"
+  },
+  "paymentSuccess": {
+    "errors": {
+      "noSessionId": "Aucun identifiant de session de paiement dans l'URL.",
+      "failed": "Nous n'avons pas pu vérifier votre paiement. Si votre carte a été débitée, contactez-nous et nous réglerons cela.",
+      "retry": "Une erreur est survenue lors de la vérification. Veuillez réessayer."
+    },
+    "verifying": {
+      "title": "Vérification de votre paiement...",
+      "description": "Nous confirmons votre paiement. Cela peut prendre quelques secondes..."
+    },
+    "attempt": "Tentative {{count}}",
+    "success": {
+      "title": "Paiement réussi !",
+      "creditsAdded_one": "{{count}} crédit a été ajouté à votre compte.",
+      "creditsAdded_other": "{{count}} crédits ont été ajoutés à votre compte.",
+      "hint": "Vous pouvez lancer une session avec votre partenaire dès maintenant !"
+    },
+    "error": {
+      "title": "Problème de vérification",
+      "generic": "Un problème est survenu lors de la vérification de votre paiement.",
+      "reassurance": "Si votre carte a été débitée, vos crédits apparaîtront sous peu. Vous pouvez relancer la vérification ou nous contacter.",
+      "supportIntro": "Besoin d'aide ? Écrivez-nous en indiquant la référence de votre session :",
+      "sessionRef": "ID de session",
+      "missingSessionId": "indisponible"
+    },
+    "verifyAgain": "Vérifier à nouveau",
+    "continue": "Continuer",
+    "goHome": "Aller à l'accueil",
+    "viewInsights": "Découvrez vos insights de connexion"
+  },
+  "insights": {
+    "title": "Tableau de bord des insights mondiaux",
+    "subtitle": "Comparez votre relation à des milliers de couples dans le monde. Découvrez où vous en êtes, ce qui vous rend uniques et votre position dans le paysage mondial.",
+    "search": {
+      "title": "Analyse comparative mondiale",
+      "description": "Saisissez le code de votre salon pour comparer votre relation aux tendances et statistiques mondiales.",
+      "placeholder": "ABC123",
+      "searching": "Recherche...",
+      "cta": "Comparer au monde"
+    },
+    "notFound": "Aucune analyse trouvée pour le code « {{code}} ». Assurez-vous d'avoir terminé une session avec l'analyse IA activée.",
+    "didYouKnow": {
+      "title": "Le saviez-vous ?",
+      "benchmarks": {
+        "title": "Références mondiales",
+        "body": "Comparez vos indicateurs relationnels à ceux de milliers de couples pour comprendre vos schémas uniques."
+      },
+      "analysis": {
+        "title": "Analyse statistique",
+        "body": "L'analytique avancée révèle votre position en compatibilité, style de communication et rythme relationnel."
+      }
+    },
+    "stats": {
+      "title": "Statistiques mondiales",
+      "percentiles": {
+        "title": "Percentiles de performance",
+        "body": "Les 10 % de couples les mieux classés dépassent 85 % de compatibilité, avec une honnêteté et une intimité élevées et constantes."
+      },
+      "predictors": {
+        "title": "Prédicteurs de réussite",
+        "body": "Il existe une forte corrélation entre l'équilibre attirance-intimité et la satisfaction à long terme."
+      }
     }
   }
 }

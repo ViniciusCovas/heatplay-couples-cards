@@ -20,7 +20,7 @@ export const LegalLayout = ({ title, lastUpdated, children }: LegalLayoutProps) 
   const { t } = useTranslation();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen romantic-background">
       <div className="container mx-auto px-4 py-10 max-w-3xl">
         <div className="mb-6">
           <Button variant="ghost" size="sm" asChild>

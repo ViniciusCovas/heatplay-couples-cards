@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { ArrowLeft, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRoomService } from '@/hooks/useRoomService';
+import { usePlayerId } from '@/hooks/usePlayerId';
+import { supabase } from '@/integrations/supabase/client';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
@@ -20,6 +22,7 @@ export default function JoinRoom() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { room, participants, joinRoom, leaveRoom, startGame } = useRoomService();
+  const { playerId } = usePlayerId();
   const { t } = useTranslation();
 
   // Handle URL room parameters for direct joins with race condition prevention.
@@ -116,14 +119,24 @@ export default function JoinRoom() {
   };
 
   const handleGameStart = async (): Promise<void> => {
-    await startGame(); // Espera a que startGame() termine
-    navigate('/proximity-selection', { 
-      state: { 
-        roomCode: room?.room_code, 
-        isCreator: false,
-        alreadyJoined: true // Flag to indicate player already joined successfully
-      } 
-    });
+    await startGame();
+
+    // The old /proximity-selection screen was a no-op: it auto-answered
+    // "together" and advanced. We keep the RPC (the game reads the proximity
+    // response and the phase) but run it silently during the transition.
+    if (room?.id && playerId) {
+      try {
+        await supabase.rpc('handle_proximity_response', {
+          room_id_param: room.id,
+          player_id_param: playerId,
+          is_close_param: true,
+        });
+      } catch (error) {
+        logger.warn('Silent proximity advance failed', error);
+      }
+    }
+
+    navigate(`/level-select?room=${room?.room_code ?? roomCode}`);
   };
 
   const handleLeaveRoom = (): void => {
@@ -160,20 +173,23 @@ export default function JoinRoom() {
   return (
     <div className="min-h-screen romantic-background flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md mb-8">
-        <div className="flex items-center justify-between">
+        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center gap-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/')}
+            aria-label={t('common.backToHome', 'Back to Home')}
             className="hover:bg-primary/10"
           >
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Logo 
-            size="medium"
-            className="hover:scale-105 transition-transform duration-300"
-          />
-          <div className="w-10" />
+          <div className="flex justify-center min-w-0">
+            <Logo
+              size="small"
+              className="sm:h-24 hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div aria-hidden="true" />
         </div>
       </div>
       
@@ -214,7 +230,7 @@ export default function JoinRoom() {
 
             <Button 
               onClick={() => handleJoinRoom()}
-              className="w-full h-12 text-lg font-semibold btn-gradient-primary"
+              className="w-full h-12 text-lg font-semibold btn-gradient-primary disabled:bg-muted disabled:bg-none disabled:text-muted-foreground disabled:opacity-100"
               disabled={isLoading || isJoining || roomCode.length !== 6}
             >
               {isLoading || isJoining ? (
