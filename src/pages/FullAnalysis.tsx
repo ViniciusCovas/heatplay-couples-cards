@@ -17,6 +17,9 @@ import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
 import { QuestionInsights } from '@/components/insights/QuestionInsights';
 import { ShareableCard } from '@/components/insights/ShareableCard';
+import { NextStepCard, type NextStep } from '@/components/insights/NextStepCard';
+import { DynamicsSection, type IntelligenceMarkers, type AdvancedMetrics } from '@/components/insights/DynamicsSection';
+import { MomentsThatLanded, type SpecificMoment } from '@/components/insights/MomentsThatLanded';
 import { useTranslation } from 'react-i18next';
 import { usePremium } from '@/hooks/usePremium';
 import { Crown, Sparkles } from 'lucide-react';
@@ -41,19 +44,34 @@ interface GrowthArea {
   suggestion: string;
 }
 
+/**
+ * Mirrors the object stored in `ai_analyses.ai_response` by the
+ * `getclose-ai-analysis` edge function. Everything past the first block is
+ * optional: analyses stored before these fields existed simply omit them.
+ */
 interface AnalysisData {
   compatibilityScore: number;
   strengthAreas: (string | StrengthArea)[];
   growthAreas: (string | GrowthArea)[];
   keyInsights: string[];
   personalizedTips: string[];
-  culturalNotes: string[];
   relationshipPhase: string;
-  nextSessionRecommendations: string[];
   /** Optional AI-provided archetype name (preferred over client-side score bands) */
   archetype?: string;
+  /** 1-2 sentences explaining why the archetype fits this couple */
+  archetypeDescription?: string;
   /** Optional AI-provided one-liner crafted for sharing */
   shareable_insight?: string;
+  /** Single localized sentence of cultural/tonal context (string, not an array) */
+  culturalNotes?: string;
+  /** Single paragraph: the best focus for next time (singular, not an array) */
+  nextSessionRecommendation?: string;
+  /** The suggested next session, produced by the model */
+  next_step?: NextStep;
+  /** Server-computed, deterministic */
+  intelligenceMarkers?: IntelligenceMarkers;
+  advancedMetrics?: AdvancedMetrics;
+  specificMoments?: SpecificMoment[];
 }
 
 export default function FullAnalysis() {
@@ -81,7 +99,10 @@ export default function FullAnalysis() {
 
   const loadAnalysisData = async () => {
     if (!roomCode) return;
-    
+    // __HARNESS__
+    const mock = (window as any).__MOCK_ANALYSIS;
+    if (mock) { setAnalysis(mock); setIsLoading(false); return; }
+    // __HARNESS_END__
     try {
       setIsLoading(true);
       
@@ -337,6 +358,25 @@ export default function FullAnalysis() {
               </div>
             </div>
 
+            {/* Archetype + why it fits them */}
+            {(analysis.archetype || analysis.archetypeDescription) && (
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 p-5 sm:p-6 text-center space-y-2">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-primary font-semibold">
+                  {t('ai.fullAnalysis.archetype.label')}
+                </p>
+                {analysis.archetype && (
+                  <h3 className="font-display text-2xl sm:text-3xl text-foreground">
+                    {analysis.archetype}
+                  </h3>
+                )}
+                {analysis.archetypeDescription && (
+                  <p className="text-[15px] leading-relaxed text-muted-foreground max-w-xl mx-auto">
+                    {analysis.archetypeDescription}
+                  </p>
+                )}
+              </div>
+            )}
+
             <Separator />
 
             {/* Key Metrics Overview */}
@@ -400,6 +440,15 @@ export default function FullAnalysis() {
             </CardContent>
           </Card>
         )}
+
+        {/* Your dynamics — server-computed markers & metrics */}
+        <DynamicsSection
+          markers={analysis.intelligenceMarkers}
+          metrics={analysis.advancedMetrics}
+        />
+
+        {/* Moments that landed — derived from ratings, never from answer text */}
+        <MomentsThatLanded moments={analysis.specificMoments} />
 
         {/* Deep Analysis Section */}
         <div className="grid gap-6">
@@ -599,19 +648,50 @@ export default function FullAnalysis() {
           )}
         </div>
 
+        {/* Focus for next time */}
+        {analysis.nextSessionRecommendation && (
+          <Card className="border-primary/20 bg-gradient-to-br from-background to-primary/5">
+            <CardContent className="p-6 sm:p-7 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="font-display text-xl text-foreground">
+                  {t('ai.fullAnalysis.nextSession.title')}
+                </h3>
+              </div>
+              <p className="text-[15px] leading-relaxed text-muted-foreground">
+                {analysis.nextSessionRecommendation}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* What to try next — the retention hook */}
+        <NextStepCard nextStep={analysis.next_step} />
+
+        {/* A note for the two of you */}
+        {typeof analysis.culturalNotes === 'string' && analysis.culturalNotes.trim().length > 20 && (
+          <p className="text-center text-sm italic text-muted-foreground max-w-2xl mx-auto px-4">
+            {analysis.culturalNotes}
+          </p>
+        )}
+
         {/* Footer */}
         <Card className="bg-muted/30">
           <CardContent className="p-6 text-center">
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Ready for Your Next Session?</h3>
               <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-                Based on your analysis, we recommend continuing your journey with deeper questions 
+                Based on your analysis, we recommend continuing your journey with deeper questions
                 to explore the insights discovered in this session.
               </p>
-              <div className="flex justify-center gap-4">
-                <Button onClick={() => navigate('/create-room')}>
-                  Start New Session
-                </Button>
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                {!analysis.next_step && (
+                  <Button onClick={() => navigate('/create-room')}>
+                    Start New Session
+                  </Button>
+                )}
                 <Button variant="outline" onClick={sendAnalysisEmail} disabled={isEmailLoading}>
                   <Mail className="w-4 h-4 mr-2" />
                   Email This Report

@@ -509,7 +509,83 @@
       "A IA está entendendo o estilo de conexão de vocês...",
       "Escolhendo a pergunta mais significativa...",
       "Criando magia com seleção inteligente..."
-    ]
+    ],
+    "fullAnalysis": {
+      "archetype": {
+        "label": "O vosso arquétipo de casal"
+      },
+      "nextStep": {
+        "eyebrow": "O que experimentar a seguir",
+        "levelBadge": "Nível {{level}} · {{name}}",
+        "cta": "Começar a próxima sessão"
+      },
+      "nextSession": {
+        "title": "O vosso foco para a próxima vez"
+      },
+      "dynamics": {
+        "title": "A vossa dinâmica",
+        "subtitle": "O que as vossas avaliações dizem sobre a forma como se ligam.",
+        "primaryDynamic": {
+          "label": "O que vos move",
+          "hint": "A força em que a vossa ligação mais se apoia.",
+          "IntimacyDriven": "Proximidade primeiro",
+          "PassionDriven": "Paixão primeiro",
+          "TrustDriven": "Confiança primeiro",
+          "Exploratory": "Ainda a explorar"
+        },
+        "communication": {
+          "label": "Como falam",
+          "hint": "O estilo que apareceu nas vossas respostas.",
+          "Validating": "Caloroso e tranquilizador",
+          "Adventurous": "Brincalhão e ousado",
+          "Deep": "Profundo e sem pressa",
+          "Balanced": "Equilibrado"
+        },
+        "steadiness": {
+          "label": "Estabilidade emocional",
+          "hint": "Como foram consistentes as vossas avaliações de carta para carta.",
+          "spread": "As avaliações variaram ±{{value}} pontos",
+          "Stable": "Estáveis a noite toda",
+          "Dynamic": "Cheias de oscilações"
+        },
+        "honestyIntimacy": {
+          "label": "Sinceridade e proximidade",
+          "hint": "Quanto a proximidade subia quando a sinceridade subia."
+        },
+        "attractionSurprise": {
+          "label": "Atração e surpresa",
+          "hint": "Quanto a atração subia quando se surpreendiam."
+        },
+        "link": {
+          "strong": "Andam juntas",
+          "moderate": "Algo ligadas",
+          "light": "Seguem caminhos próprios"
+        },
+        "signals": {
+          "label": "Sinais analisados",
+          "hint": "Avaliações individuais por trás deste relatório."
+        },
+        "rarity": "A vossa sessão está no percentil {{value}} de tudo o que já vimos."
+      },
+      "moments": {
+        "title": "Momentos que ficaram",
+        "subtitle": "As cartas em que um de vocês avaliou o outro com 4,5 ou mais.",
+        "questionLabel": "Pergunta {{number}}",
+        "outOf": "em 5",
+        "footnote": "Com base nas avaliações que deram um ao outro — nunca no que disseram em voz alta.",
+        "types": {
+          "trust_breakthrough": "Pico de sinceridade",
+          "intimacy_peak": "Pico de proximidade",
+          "attraction_spark": "Faísca de atração",
+          "default": "Momento marcante"
+        },
+        "significance": {
+          "Exceptional": "Excecional",
+          "High": "Alto",
+          "Notable": "Notável"
+        }
+      }
+    }
   },
   "credits": {
     "modal": {

@@ -509,7 +509,83 @@
       "L'IA comprend votre style de connexion...",
       "Choix de la question la plus significative...",
       "Création de magie grâce à la sélection intelligente..."
-    ]
+    ],
+    "fullAnalysis": {
+      "archetype": {
+        "label": "Votre archétype de couple"
+      },
+      "nextStep": {
+        "eyebrow": "À essayer ensuite",
+        "levelBadge": "Niveau {{level}} · {{name}}",
+        "cta": "Lancer la prochaine session"
+      },
+      "nextSession": {
+        "title": "Votre objectif pour la prochaine fois"
+      },
+      "dynamics": {
+        "title": "Votre dynamique",
+        "subtitle": "Ce que vos notes disent de la façon dont vous vous connectez.",
+        "primaryDynamic": {
+          "label": "Ce qui vous porte",
+          "hint": "La force sur laquelle votre lien s'appuie le plus.",
+          "IntimacyDriven": "La proximité d'abord",
+          "PassionDriven": "La passion d'abord",
+          "TrustDriven": "La confiance d'abord",
+          "Exploratory": "Encore en exploration"
+        },
+        "communication": {
+          "label": "Votre façon de parler",
+          "hint": "Le style qui ressort de vos réponses.",
+          "Validating": "Chaleureux et rassurant",
+          "Adventurous": "Joueur et audacieux",
+          "Deep": "Profond et sans hâte",
+          "Balanced": "Équilibré"
+        },
+        "steadiness": {
+          "label": "Stabilité émotionnelle",
+          "hint": "La régularité de vos notes d'une carte à l'autre.",
+          "spread": "Vos notes ont varié de ±{{value}} points",
+          "Stable": "Stables toute la soirée",
+          "Dynamic": "Pleines de variations"
+        },
+        "honestyIntimacy": {
+          "label": "Sincérité et proximité",
+          "hint": "À quel point la proximité montait quand la sincérité montait."
+        },
+        "attractionSurprise": {
+          "label": "Attirance et surprise",
+          "hint": "À quel point l'attirance montait quand vous vous surpreniez."
+        },
+        "link": {
+          "strong": "Vont de pair",
+          "moderate": "Plutôt liées",
+          "light": "Évoluent séparément"
+        },
+        "signals": {
+          "label": "Signaux analysés",
+          "hint": "Les notes individuelles derrière ce rapport."
+        },
+        "rarity": "Votre session se situe dans le {{value}} percentile de tout ce que nous avons vu."
+      },
+      "moments": {
+        "title": "Les moments qui ont marqué",
+        "subtitle": "Les cartes où l'un de vous a noté l'autre 4,5 ou plus.",
+        "questionLabel": "Question {{number}}",
+        "outOf": "sur 5",
+        "footnote": "D'après les notes que vous vous êtes données, jamais d'après ce que vous avez dit à voix haute.",
+        "types": {
+          "trust_breakthrough": "Pic de sincérité",
+          "intimacy_peak": "Pic de proximité",
+          "attraction_spark": "Étincelle d'attirance",
+          "default": "Moment marquant"
+        },
+        "significance": {
+          "Exceptional": "Exceptionnel",
+          "High": "Élevé",
+          "Notable": "Notable"
+        }
+      }
+    }
   },
   "credits": {
     "modal": {

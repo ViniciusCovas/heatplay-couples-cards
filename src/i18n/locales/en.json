@@ -492,7 +492,83 @@
       "AI is understanding your connection style...",
       "Choosing the most meaningful question...",
       "Creating magic with intelligent selection..."
-    ]
+    ],
+    "fullAnalysis": {
+      "archetype": {
+        "label": "Your couple archetype"
+      },
+      "nextStep": {
+        "eyebrow": "What to try next",
+        "levelBadge": "Level {{level}} · {{name}}",
+        "cta": "Start your next session"
+      },
+      "nextSession": {
+        "title": "Your focus for next time"
+      },
+      "dynamics": {
+        "title": "Your dynamics",
+        "subtitle": "What your ratings say about how the two of you connect.",
+        "primaryDynamic": {
+          "label": "What drives you",
+          "hint": "The force your connection leans on most.",
+          "IntimacyDriven": "Closeness first",
+          "PassionDriven": "Passion first",
+          "TrustDriven": "Trust first",
+          "Exploratory": "Still exploring"
+        },
+        "communication": {
+          "label": "How you talk",
+          "hint": "The style that showed up across your answers.",
+          "Validating": "Warm and reassuring",
+          "Adventurous": "Playful and daring",
+          "Deep": "Deep and unhurried",
+          "Balanced": "Balanced"
+        },
+        "steadiness": {
+          "label": "Emotional steadiness",
+          "hint": "How consistent your ratings were card to card.",
+          "spread": "Ratings varied by ±{{value}} points",
+          "Stable": "Steady all night",
+          "Dynamic": "Full of swings"
+        },
+        "honestyIntimacy": {
+          "label": "Honesty and closeness",
+          "hint": "How much closeness rose when honesty did."
+        },
+        "attractionSurprise": {
+          "label": "Attraction and surprise",
+          "hint": "How much attraction rose when you surprised each other."
+        },
+        "link": {
+          "strong": "Move together",
+          "moderate": "Somewhat linked",
+          "light": "Move on their own"
+        },
+        "signals": {
+          "label": "Signals analyzed",
+          "hint": "Individual ratings behind this report."
+        },
+        "rarity": "Your session sits in the {{value}} percentile of everything we've seen."
+      },
+      "moments": {
+        "title": "Moments that landed",
+        "subtitle": "The cards where one of you rated the other 4.5 or higher.",
+        "questionLabel": "Question {{number}}",
+        "outOf": "out of 5",
+        "footnote": "Based on the ratings you gave each other — never on what you said out loud.",
+        "types": {
+          "trust_breakthrough": "Honesty peak",
+          "intimacy_peak": "Closeness peak",
+          "attraction_spark": "Attraction spark",
+          "default": "Standout moment"
+        },
+        "significance": {
+          "Exceptional": "Exceptional",
+          "High": "High",
+          "Notable": "Notable"
+        }
+      }
+    }
   },
   "credits": {
     "modal": {

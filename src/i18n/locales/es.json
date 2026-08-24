@@ -509,7 +509,83 @@
       "La IA está entendiendo vuestro estilo de conexión...",
       "Eligiendo la pregunta más significativa...",
       "Creando magia con selección inteligente..."
-    ]
+    ],
+    "fullAnalysis": {
+      "archetype": {
+        "label": "Vuestro arquetipo de pareja"
+      },
+      "nextStep": {
+        "eyebrow": "Qué probar ahora",
+        "levelBadge": "Nivel {{level}} · {{name}}",
+        "cta": "Empezar la siguiente sesión"
+      },
+      "nextSession": {
+        "title": "Vuestro foco para la próxima vez"
+      },
+      "dynamics": {
+        "title": "Vuestra dinámica",
+        "subtitle": "Lo que vuestras valoraciones dicen sobre cómo conectáis.",
+        "primaryDynamic": {
+          "label": "Qué os mueve",
+          "hint": "La fuerza en la que más se apoya vuestra conexión.",
+          "IntimacyDriven": "Primero la cercanía",
+          "PassionDriven": "Primero la pasión",
+          "TrustDriven": "Primero la confianza",
+          "Exploratory": "Aún explorando"
+        },
+        "communication": {
+          "label": "Cómo habláis",
+          "hint": "El estilo que apareció en vuestras respuestas.",
+          "Validating": "Cálido y tranquilizador",
+          "Adventurous": "Juguetón y atrevido",
+          "Deep": "Profundo y sin prisa",
+          "Balanced": "Equilibrado"
+        },
+        "steadiness": {
+          "label": "Estabilidad emocional",
+          "hint": "Lo constantes que fueron vuestras valoraciones carta a carta.",
+          "spread": "Las valoraciones variaron ±{{value}} puntos",
+          "Stable": "Estables toda la noche",
+          "Dynamic": "Llenas de altibajos"
+        },
+        "honestyIntimacy": {
+          "label": "Sinceridad y cercanía",
+          "hint": "Cuánto subía la cercanía cuando subía la sinceridad."
+        },
+        "attractionSurprise": {
+          "label": "Atracción y sorpresa",
+          "hint": "Cuánto subía la atracción cuando os sorprendíais."
+        },
+        "link": {
+          "strong": "Van de la mano",
+          "moderate": "Algo conectadas",
+          "light": "Van por su cuenta"
+        },
+        "signals": {
+          "label": "Señales analizadas",
+          "hint": "Valoraciones individuales detrás de este informe."
+        },
+        "rarity": "Vuestra sesión está en el percentil {{value}} de todo lo que hemos visto."
+      },
+      "moments": {
+        "title": "Momentos que dieron en el blanco",
+        "subtitle": "Las cartas en las que uno valoró al otro con 4,5 o más.",
+        "questionLabel": "Pregunta {{number}}",
+        "outOf": "sobre 5",
+        "footnote": "Basado en las valoraciones que os disteis, nunca en lo que dijisteis en voz alta.",
+        "types": {
+          "trust_breakthrough": "Pico de sinceridad",
+          "intimacy_peak": "Pico de cercanía",
+          "attraction_spark": "Chispa de atracción",
+          "default": "Momento destacado"
+        },
+        "significance": {
+          "Exceptional": "Excepcional",
+          "High": "Alto",
+          "Notable": "Notable"
+        }
+      }
+    }
   },
   "credits": {
     "modal": {
