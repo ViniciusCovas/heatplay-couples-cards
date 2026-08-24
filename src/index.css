@@ -317,6 +317,26 @@
       0 16px 30px -14px rgba(150, 60, 95, 0.34),
       0 46px 80px -34px rgba(120, 40, 80, 0.5);
   }
+  /* hairline swash that frames the card's closing ornament */
+  .deck-rule {
+    background: linear-gradient(90deg, rgba(150, 60, 95, 0), rgba(150, 60, 95, 0.24));
+  }
+  .deck-rule + * + .deck-rule {
+    background: linear-gradient(90deg, rgba(150, 60, 95, 0.24), rgba(150, 60, 95, 0));
+  }
+  /* Oversized printed quote mark low on the card. It fills the area a short
+     question would otherwise leave blank, and reads as letterpress texture
+     rather than as content, so it never competes with the question. */
+  .deck-watermark {
+    right: 0.55rem;
+    bottom: 4.1rem;
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 9rem;
+    line-height: 0.62;
+    opacity: 0.09;
+    user-select: none;
+  }
+
   /* card catches the light on hover */
   .deck-shine {
     background: linear-gradient(115deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.75) 48%, rgba(255, 255, 255, 0) 62%);
@@ -354,6 +374,7 @@
     }
     .deck-float,
     .animate-heartbeat,
+    .landing-light .animate-bounce,
     .landing-light .animate-pulse {
       animation: none !important;
     }

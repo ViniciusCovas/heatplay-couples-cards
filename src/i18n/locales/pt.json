@@ -637,7 +637,7 @@
   "premium": {
     "title": "Close Premium",
     "tagline": "Uma assinatura. Para os dois.",
-    "subtitle": "Noites ilimitadas de conversa de verdade, por menos que um café por mês.",
+    "subtitle": "Noites ilimitadas de conversa a sério — por menos do que um café por mês.",
     "link": "Close Premium",
     "billing": {
       "monthly": "Mensal",
@@ -650,18 +650,18 @@
       "title": "Grátis",
       "price": "€0",
       "features": {
-        "spark": "Pergunta Daily Spark",
-        "firstLevel": "Nível quebra-gelo",
-        "credits": "Créditos por sessão"
+        "spark": "Os quatro níveis, abertos desde o início",
+        "firstLevel": "Relatório de conexão depois de cada noite",
+        "credits": "Pagas cada noite com créditos"
       }
     },
     "plan": {
       "features": {
-        "unlimited": "Sessões de jogo ilimitadas",
-        "allLevels": "Todos os níveis de intimidade desbloqueados",
-        "weeklyAnalysis": "Análise semanal do relacionamento com IA",
+        "unlimited": "Noites ilimitadas — sem créditos",
+        "allLevels": "Os quatro níveis, todas as noites",
+        "weeklyAnalysis": "Análise completa com IA depois de cada noite",
         "history": "Histórico completo de sessões e insights",
-        "partner": "Seu par também está incluído"
+        "partner": "O teu parceiro também está incluído"
       },
       "cta": "Assinar o Close Premium",
       "processing": "Levando você para o pagamento…",
@@ -691,16 +691,17 @@
     },
     "upsell": {
       "title": "Desbloqueie noites ilimitadas — Close Premium",
-      "subtitle": "Todos os níveis, análise semanal com IA e todo o histórico de sessões. Vocês dois, um só plano.",
+      "subtitle": "Noites ilimitadas, análise completa com IA em cada uma e todo o vosso histórico. Os dois, um só plano.",
       "cta": "Conhecer o Close Premium"
     },
     "welcome": {
       "title": "Bem-vindos ao Close Premium!",
-      "subtitle": "Sua assinatura está ativa. Sessões ilimitadas, todos os níveis e análise semanal com IA — para os dois.",
+      "subtitle": "A tua subscrição está ativa. Noites ilimitadas e análise completa com IA sempre — para os dois.",
       "partnerHint": "Não esqueça de vincular seu par na página Premium para que ele também aproveite.",
       "cta": "Começar uma sessão",
       "goPremiumPage": "Ir para o Premium"
-    }
+    },
+    "unlimitedBadge": "Premium — noites ilimitadas"
   },
   "dailySpark": {
     "title": "Daily Spark",
@@ -721,6 +722,7 @@
     "ctaJoin": "Tenho um código",
     "deckHint": "Toque numa carta para virar · deslize para ver a próxima",
     "deckBack": "Sua pergunta está esperando…",
+    "deckPrompt": "Respondam em voz alta — e devolvam.",
     "stats": {
       "couples": "Privado, só vocês dois",
       "questions": "Mais de 400 perguntas",

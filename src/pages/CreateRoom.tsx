@@ -16,6 +16,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CreditBalance } from '@/components/credits/CreditBalance';
 import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal';
 import { useCredits } from '@/hooks/useCredits';
+import { usePremium } from '@/hooks/usePremium';
+import { Sparkles } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import { track } from '@/lib/analytics';
 
@@ -29,6 +31,7 @@ function CreateRoomContent() {
   const { user } = useAuth();
   const { room, participants, createRoom, leaveRoom, startGame } = useRoomService();
   const { credits, consumeCredit } = useCredits();
+  const { isPremium } = usePremium();
   const { playerId } = usePlayerId();
   const { t } = useTranslation();
 
@@ -42,8 +45,11 @@ function CreateRoomContent() {
       authenticated: !!user 
     });
 
-    // Check if user has credits first
-    if (credits < 1) {
+    // Close Premium covers unlimited nights, so subscribers never need a
+    // credit. The authoritative check lives in the DB: consume_credit_for_room
+    // activates the room without decrementing the balance when has_premium()
+    // is true (migration 20260824160000_premium_entitlement.sql).
+    if (!isPremium && credits < 1) {
       logger.debug('Insufficient credits', { credits });
       setShowCreditModal(true);
       return;
@@ -56,8 +62,11 @@ function CreateRoomContent() {
       logger.info('Room created successfully', { code });
       track('room_created', { level });
       
-      // Consume credit immediately after room creation
-      logger.debug('Consuming credit for room', { code });
+      // Activate the session immediately after room creation. This RPC is the
+      // ONLY path that creates the sessions row and flips the room to
+      // playing/active_session, so premium users must call it too — it just
+      // does not spend a credit for them.
+      logger.debug('Activating session for room', { code, isPremium });
       const consumeResult = await consumeCredit(code);
       
       if (!consumeResult.success) {
@@ -75,7 +84,7 @@ function CreateRoomContent() {
         return;
       }
       
-      logger.debug('Credit consumed successfully');
+      logger.debug('Session activated', { premium: isPremium });
       setRoomCode(code);
       toast.success(t('messages.roomCreated'));
     } catch (error) {
@@ -172,7 +181,14 @@ function CreateRoomContent() {
           <div aria-hidden="true" />
         </div>
         <div className="flex items-center justify-center gap-3">
-          <CreditBalance />
+          {isPremium ? (
+            <div className="flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary">
+              <Sparkles className="h-4 w-4" aria-hidden="true" />
+              <span>{t('premium.unlimitedBadge', 'Premium — unlimited nights')}</span>
+            </div>
+          ) : (
+            <CreditBalance />
+          )}
           <LanguageSelector />
         </div>
       </div>

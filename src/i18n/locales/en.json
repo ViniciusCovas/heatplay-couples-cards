@@ -633,16 +633,16 @@
       "title": "Free",
       "price": "€0",
       "features": {
-        "spark": "Daily Spark question",
-        "firstLevel": "Ice-breaker level",
-        "credits": "Pay-per-session credits"
+        "spark": "All four levels, open from the start",
+        "firstLevel": "Connection report after every night",
+        "credits": "Pay per night with credits"
       }
     },
     "plan": {
       "features": {
-        "unlimited": "Unlimited game sessions",
-        "allLevels": "All intimacy levels unlocked",
-        "weeklyAnalysis": "Weekly AI relationship analysis",
+        "unlimited": "Unlimited nights — no credits needed",
+        "allLevels": "All four levels, every night",
+        "weeklyAnalysis": "Full AI analysis after every night",
         "history": "Full session history & insights",
         "partner": "Your partner is covered too"
       },
@@ -674,16 +674,17 @@
     },
     "upsell": {
       "title": "Unlock unlimited nights — Close Premium",
-      "subtitle": "All levels, weekly AI analysis and your whole session history. Both of you, one plan.",
+      "subtitle": "Unlimited nights, full AI analysis after each one, and your whole session history. Both of you, one plan.",
       "cta": "Discover Close Premium"
     },
     "welcome": {
       "title": "Welcome to Close Premium!",
-      "subtitle": "Your subscription is active. Unlimited sessions, every level, weekly AI analysis — for both of you.",
+      "subtitle": "Your subscription is active. Unlimited nights and full AI analysis every time — for both of you.",
       "partnerHint": "Don't forget to link your partner on the Premium page so they're covered too.",
       "cta": "Start a session",
       "goPremiumPage": "Go to Premium"
-    }
+    },
+    "unlimitedBadge": "Premium — unlimited nights"
   },
   "dailySpark": {
     "title": "Daily Spark",
@@ -703,6 +704,7 @@
     "ctaJoin": "I have a code",
     "deckHint": "Tap a card to flip it · swipe for the next one",
     "deckBack": "Your question is waiting…",
+    "deckPrompt": "Answer out loud — then ask it back.",
     "stats": {
       "couples": "Private, just the two of you",
       "questions": "400+ curated questions",

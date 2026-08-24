@@ -40,6 +40,22 @@ import { usePauseBackend, createLocalGameChannel, LocalGameEvent } from '@/hooks
 type GamePhase = 'card-display' | 'response-input' | 'evaluation' | 'waiting-for-evaluation' | 'waiting-for-partner-response' | 'level-up-confirmation' | 'final-report';
 type PlayerTurn = 'player1' | 'player2';
 
+/**
+ * Number of questions in one Close night.
+ *
+ * This is NOT a UI preference: the database decides when a game ends. The
+ * `evaluate_and_advance` / round-advance trigger finishes the session after 6
+ * evaluations (see supabase/migrations/20250912231841_*.sql). The progress bar
+ * and the "cards completed" label must use the same number, otherwise the bar
+ * crawls towards the level's full question count and the game ends at ~15%.
+ *
+ * If the trigger's threshold changes, change it here too.
+ */
+const SESSION_QUESTIONS = 6;
+
+/** Give the AI selector this long before falling back to SQL random selection. */
+const AI_SELECTION_TIMEOUT_MS = 8000;
+
 const Game = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -767,8 +783,11 @@ const Game = () => {
   // Final report
   const [connectionData, setConnectionData] = useState<ConnectionData | null>(null);
   
-  const totalCards = levelCards.length;
-  const minimumRecommended = 6;
+  // The session is 6 questions long, enforced by the DB round-advance trigger.
+  // The level's own question count (levelCards.length) is just the pool we draw
+  // from and must NOT drive the progress bar.
+  const totalCards = SESSION_QUESTIONS;
+  const minimumRecommended = SESSION_QUESTIONS;
 
   // Helper function to get current card text safely
   const getCurrentCardText = () => {
@@ -906,10 +925,17 @@ const Game = () => {
   // AI-powered card generation state - PERSISTENT across level changes
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   const [aiCardInfo, setAiCardInfo] = useState<{
+    /** The card this AI metadata belongs to. Guards against showing stale
+     *  reasoning after the card advances or after a race-lost selection. */
+    cardId?: string;
     reasoning?: string;
     targetArea?: string;
     selectionMethod?: string;
   } | null>(null);
+
+  // AI metadata is only valid for the card it was produced for.
+  const activeAiCardInfo =
+    aiCardInfo && currentCard && aiCardInfo.cardId === currentCard ? aiCardInfo : null;
 
   // Enhanced AI card info debugging
   useEffect(() => {
@@ -1000,12 +1026,67 @@ const Game = () => {
           gameState?.current_phase === 'card-display' &&
           room && !isGeneratingCard) {
         
-        logger.debug('Attempting atomic card selection via RPC', { 
+        const language = gameState?.selected_language || i18n.language;
+        const isFirstQuestion = (gameState?.used_cards?.length ?? 0) === 0;
+
+        // ---- Step 1: try the AI selector (best effort) --------------------
+        // The player whose turn it is asks the intelligent-question-selector
+        // edge function for a context-aware question. Anything that goes wrong
+        // (error, timeout, null card, card not in this level) simply falls
+        // through to the SQL path below, so a failing AI can never block play.
+        try {
+          const aiResult = await Promise.race([
+            selectCardWithAI(room.id, currentLevel, language, isFirstQuestion),
+            new Promise<null>(resolve => setTimeout(() => resolve(null), AI_SELECTION_TIMEOUT_MS)),
+          ]);
+
+          const aiCardId = aiResult?.cardId;
+          const isKnownCard = !!aiCardId && levelCards.some(card => card.id === aiCardId);
+
+          if (aiCardId && isKnownCard) {
+            // Race-safe claim: only writes when current_card is still NULL, the
+            // same guard set_current_card_if_missing uses. If another client
+            // (or a retry) already set a card, we never override it.
+            const { data: claimed, error: claimError } = await supabase
+              .from('game_rooms')
+              .update({ current_card: aiCardId })
+              .eq('id', room.id)
+              .is('current_card', null)
+              .select('id, current_card');
+
+            if (!claimError && claimed && claimed.length > 0) {
+              setAiCardInfo({
+                cardId: aiCardId,
+                reasoning: aiResult?.reasoning ?? undefined,
+                targetArea: aiResult?.targetArea ?? undefined,
+                // game_responses.selection_method has a CHECK constraint of
+                // ('random', 'ai_intelligent') — see migration 20250720051006.
+                selectionMethod: 'ai_intelligent',
+              });
+              logger.info('AI card selection applied', { cardId: aiCardId });
+              return; // card is set; game state sync updates the UI
+            }
+
+            if (claimError) {
+              logger.warn('AI card claim failed, falling back to SQL selection', claimError);
+            } else {
+              logger.info('AI card claim lost the race, keeping the existing card');
+              return; // someone else set the card — do NOT override it
+            }
+          } else if (aiCardId && !isKnownCard) {
+            logger.warn('AI returned a card outside this level, falling back', { aiCardId });
+          }
+        } catch (aiError) {
+          logger.warn('AI card selection threw, falling back to SQL selection', aiError);
+        }
+
+        // ---- Step 2: fallback — the original atomic SQL selection ---------
+        logger.debug('Attempting atomic card selection via RPC', {
           roomId: room.id,
           currentLevel,
-          language: gameState?.selected_language || i18n.language
+          language
         });
-        
+
         // Use atomic RPC to prevent card drift
         const { data: rpcResult, error: rpcError } = await supabase.rpc('set_current_card_if_missing', {
           room_id_param: room.id,
@@ -1030,6 +1111,8 @@ const Game = () => {
           
           // The RPC has already updated the database
           // The game state sync will handle updating the UI
+          // This card was picked by SQL random, not by the AI.
+          setAiCardInfo(null);
         } else {
           logger.error('Card selection RPC returned unsuccessful', result);
         }
@@ -1040,7 +1123,7 @@ const Game = () => {
   }, [levelCards, gameState?.current_card, gameState?.used_cards, isMyTurn, gameState?.current_phase, room, isGeneratingCard, currentLevel, i18n.language, isRoomLoaded, isConnected, gameState?.selected_language]);
 
   useEffect(() => {
-    setProgress((usedCards.length / totalCards) * 100);
+    setProgress(Math.min(100, (usedCards.length / totalCards) * 100));
   }, [usedCards, totalCards]);
 
   // Deterministic card selection based on database state
@@ -1244,9 +1327,9 @@ const Game = () => {
         currentRound,
         effectivePlayerId,
         currentTurn,
-        aiCardInfo: aiCardInfo,
-        selectionMethod: aiCardInfo?.selectionMethod || 'random',
-        aiReasoning: aiCardInfo?.reasoning || null
+        aiCardInfo: activeAiCardInfo,
+        selectionMethod: activeAiCardInfo?.selectionMethod || 'random',
+        aiReasoning: activeAiCardInfo?.reasoning || null
       });
 
       // Save response to database WITH timing information and comprehensive logging
@@ -1271,8 +1354,8 @@ const Game = () => {
           response: response,
           response_time: Math.round(actualResponseTime), // Store actual timer-based response time
           round_number: currentRound,
-          selection_method: aiCardInfo?.selectionMethod || 'random',
-          ai_reasoning: aiCardInfo?.reasoning || null
+          selection_method: activeAiCardInfo?.selectionMethod || 'random',
+          ai_reasoning: activeAiCardInfo?.reasoning || null
         });
 
       if (responseError) {
@@ -1908,11 +1991,11 @@ const Game = () => {
               showCard={showCard && !isLoadingCardData}
               cardIndex={usedCards.length}
               totalCards={totalCards}
-              aiReasoning={undefined}
-              aiTargetArea={undefined}
-              selectionMethod={'random'}
+              aiReasoning={activeAiCardInfo?.reasoning}
+              aiTargetArea={activeAiCardInfo?.targetArea}
+              selectionMethod={activeAiCardInfo?.selectionMethod || 'random'}
               isGeneratingCard={isGeneratingCard || isLoadingCardData}
-              aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
+              aiFailureReason={isGeneratingCard ? undefined : (!activeAiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
               subTurn={'first_response'}
             />
 

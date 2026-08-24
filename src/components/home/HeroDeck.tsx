@@ -151,7 +151,7 @@ export const HeroDeck = () => {
       <div className="deck-float">
         <div
           className="perspective-1200 relative mx-auto"
-          style={{ width: 'min(300px, 78vw)', height: 'min(420px, 109vw)' }}
+          style={{ width: 'min(300px, 78vw)', height: 'min(400px, 104vw)' }}
         >
           {/* soft shadow cast on the light table */}
           <div
@@ -205,7 +205,7 @@ export const HeroDeck = () => {
                   >
                     {/* FRONT — the question, printed on a white/blush card */}
                     <div
-                      className={`backface-hidden deck-card absolute inset-0 flex flex-col overflow-hidden p-6 ${isTop ? 'deck-card-top' : ''}`}
+                      className={`backface-hidden deck-card absolute inset-0 flex flex-col overflow-hidden px-6 pb-5 pt-[1.15rem] ${isTop ? 'deck-card-top' : ''}`}
                       style={{
                         background: isTop ? heat.tint : '#ffffff',
                         border: `1px solid ${isTop ? heat.line : '#f0e2e8'}`,
@@ -241,14 +241,35 @@ export const HeroDeck = () => {
                           ))}
                         </span>
                       </div>
-                      <div className="relative grid flex-1 place-content-center py-4">
-                        <p className="font-display text-balance text-[1.35rem] leading-[1.45] text-[#23212b]">
+                      {/* printed quote watermark — gives the lower half real
+                          weight so short questions no longer leave a void */}
+                      <span
+                        className="deck-watermark pointer-events-none absolute"
+                        style={{ color: heat.dot }}
+                        aria-hidden="true"
+                      >
+                        ”
+                      </span>
+                      {/* Optically (not mathematically) centred: the block sits
+                          a touch above true centre so the type reads settled. */}
+                      <div className="relative flex flex-1 flex-col justify-center pb-3 pt-2">
+                        <p className="font-display text-balance text-[clamp(1.35rem,4.6vw,1.5rem)] leading-[1.38] text-[#23212b]">
                           “{card.question}”
                         </p>
                       </div>
-                      <div className="relative flex items-center justify-between border-t border-[#f3e2e9] pt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6c6577]">
-                        <span>Let's Get Close</span>
-                        <Heart className="h-3.5 w-3.5 text-[#e91e63]" fill="#e91e63" aria-hidden="true" />
+                      {/* Bottom anchor: swash + the ritual, then the wordmark */}
+                      <div className="relative">
+                        <span className="flex items-center gap-2.5" aria-hidden="true">
+                          <span className="deck-rule h-px flex-1" />
+                          <Heart className="h-3 w-3 shrink-0" style={{ color: heat.dot }} fill="currentColor" />
+                          <span className="deck-rule h-px flex-1" />
+                        </span>
+                        <p className="font-display mt-2.5 text-balance text-center text-[0.8125rem] italic leading-snug text-[#55505f]">
+                          {t('landing.deckPrompt')}
+                        </p>
+                        <p className="mt-2.5 text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8d8698]">
+                          Let's Get Close
+                        </p>
                       </div>
                     </div>
 
@@ -294,7 +315,7 @@ export const HeroDeck = () => {
             .reverse()}
         </div>
       </div>
-      <p className="mt-14 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#6c6577]">
+      <p className="mt-11 text-center text-xs font-semibold uppercase tracking-[0.18em] text-[#6c6577]">
         {t('landing.deckHint')}
       </p>
     </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, Heart, MessageCircle, Shield, Star, Users2 } from 'lucide-react';
+import { ArrowRight, ChevronDown, Heart, MessageCircle, Shield, Star, Users2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { LegalFooter } from '@/components/navigation/LegalFooter';
@@ -49,7 +49,13 @@ const Home = () => {
   return (
     <div className="landing-light relative min-h-screen overflow-x-hidden">
       {/* ------------------------------------------------ HERO ------ */}
-      <section ref={heroRef} className="relative mx-auto max-w-6xl px-5 pb-20 pt-10 md:pb-28 md:pt-16">
+      {/* The hero owns the fold on desktop: it fills the viewport below the
+          header and centres its two columns, so 900px-tall screens no longer
+          show a band of dead space under the CTA column. */}
+      <section
+        ref={heroRef}
+        className="relative mx-auto flex max-w-6xl flex-col justify-center px-5 pb-20 pt-10 md:pt-16 lg:min-h-[calc(100svh-4.0625rem)] lg:pb-24"
+      >
         <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
           {/* Copy + CTAs */}
           <div className="text-center lg:text-left">
@@ -95,7 +101,9 @@ const Home = () => {
             </div>
 
             {/* Social proof strip */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm font-medium text-[#55505f] lg:justify-start">
+            {/* Two aligned columns on desktop so the third item reads as a
+                deliberate second row rather than an orphaned wrap. */}
+            <div className="mx-auto mt-10 flex max-w-md flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm font-medium text-[#55505f] lg:mx-0 lg:grid lg:max-w-lg lg:grid-cols-2 lg:justify-items-start lg:gap-x-4">
               <span className="inline-flex items-center gap-2">
                 <Users2 className="h-4 w-4 text-[#c2185b]" aria-hidden="true" />
                 {t('landing.stats.couples')}
@@ -116,6 +124,16 @@ const Home = () => {
             <HeroDeck />
           </div>
         </div>
+
+        {/* Makes the fold deliberate instead of accidental */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center lg:flex"
+        >
+          <span className="landing-chip flex h-9 w-9 items-center justify-center rounded-full text-[#c2185b]">
+            <ChevronDown className="h-4 w-4 animate-bounce" />
+          </span>
+        </span>
       </section>
 
       {/* --------------------------------------------- SECTIONS ---- */}
