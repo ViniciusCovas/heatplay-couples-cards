@@ -16,6 +16,19 @@ const LEVEL_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   Sparkles, Star, Zap, Sun, Moon, Smile, Gift, Crown, Gem, Coffee,
   Music, Target, Handshake, Eye, Feather, Compass, Key, Lightbulb,
 };
+
+// Tailwind can only generate classes it can see at build time, so level colors
+// must come from a static, safelisted palette rather than a runtime DB value.
+// Levels are mapped by their sort order into the brand ramp.
+const LEVEL_ACCENTS = [
+  { color: "text-secondary", bgColor: "bg-secondary/10" },
+  { color: "text-primary-ink", bgColor: "bg-primary/10" },
+  { color: "text-accent", bgColor: "bg-accent/10" },
+  { color: "text-primary", bgColor: "bg-primary/15" },
+];
+
+const accentFor = (index: number) => LEVEL_ACCENTS[((index % LEVEL_ACCENTS.length) + LEVEL_ACCENTS.length) % LEVEL_ACCENTS.length];
+
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -108,7 +121,8 @@ const LevelSelect = () => {
 
         // Get question counts for each level with better error handling
         const levelsWithCounts = await Promise.all(
-          levelsData.map(async (level) => {
+          levelsData.map(async (level, levelIndex) => {
+            const accent = accentFor(levelIndex);
             try {
               const { count, error: countError } = await supabase
                 .from('questions')
@@ -145,8 +159,8 @@ const LevelSelect = () => {
                 title: level.name,
                 description: level.description || '',
                 iconDisplay,
-                color: level.color ? `text-[${level.color}]` : "text-primary",
-                bgColor: level.bg_color || "bg-primary/10",
+                color: accent.color,
+                bgColor: accent.bgColor,
                 cards: count || 0,
                 database_id: level.id // Keep reference to actual database ID
               };
@@ -158,8 +172,8 @@ const LevelSelect = () => {
                 title: level.name || 'Level',
                 description: level.description || 'Connection level',
                 iconDisplay: { type: 'lucide', component: Heart, emoji: null },
-                color: "text-primary",
-                bgColor: "bg-primary/10",
+                color: accent.color,
+                bgColor: accent.bgColor,
                 cards: 5,
                 database_id: level.id
               };
@@ -185,8 +199,8 @@ const LevelSelect = () => {
             title: t('level.spark.title', 'Spark'),
             description: t('level.spark.description', 'Light conversation starters'),
             iconDisplay: { type: 'emoji', component: null, emoji: '✨' },
-            color: "text-yellow-600",
-            bgColor: "bg-yellow-100",
+            color: LEVEL_ACCENTS[0].color,
+            bgColor: LEVEL_ACCENTS[0].bgColor,
             cards: 10
           },
           {
@@ -194,8 +208,8 @@ const LevelSelect = () => {
             title: t('level.connection.title', 'Connection'),
             description: t('level.connection.description', 'Deeper personal sharing'),
             iconDisplay: { type: 'lucide', component: Heart, emoji: null },
-            color: "text-pink-600",
-            bgColor: "bg-pink-100",
+            color: LEVEL_ACCENTS[1].color,
+            bgColor: LEVEL_ACCENTS[1].bgColor,
             cards: 15
           },
           {
@@ -203,8 +217,8 @@ const LevelSelect = () => {
             title: t('level.fire.title', 'Fire'),
             description: t('level.fire.description', 'Intimate and meaningful topics'),
             iconDisplay: { type: 'emoji', component: null, emoji: '🔥' },
-            color: "text-red-600",
-            bgColor: "bg-red-100",
+            color: LEVEL_ACCENTS[2].color,
+            bgColor: LEVEL_ACCENTS[2].bgColor,
             cards: 20
           },
           {
@@ -212,8 +226,8 @@ const LevelSelect = () => {
             title: t('level.nofilter.title', 'No Filter'),
             description: t('level.nofilter.description', 'Raw and unfiltered conversation'),
             iconDisplay: { type: 'lucide', component: AlertTriangle, emoji: null },
-            color: "text-purple-600",
-            bgColor: "bg-purple-100",
+            color: LEVEL_ACCENTS[3].color,
+            bgColor: LEVEL_ACCENTS[3].bgColor,
             cards: 25
           }
         ];
@@ -418,48 +432,83 @@ const LevelSelect = () => {
 
   // Room joining is now handled by centralized useRoomManager in App.tsx
 
-  // Show loading or connection status
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">{t('loading.levels', 'Loading levels...')}</p>
-        </div>
-      </div>
-    );
-  }
+  // --- Loading / stalled handling (P1-22) -------------------------------
+  // A spinner must never be a dead end: there is always a way home, and after
+  // 15s a stuck connection turns into an actionable error with a retry.
+  const isBusy =
+    loading ||
+    !playerId ||
+    !playerIdReady ||
+    Boolean(roomCode && (!isConnected || !room || isJoining));
 
-  if (!playerId || !playerIdReady) {
-    return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">Initializing player...</p>
-        </div>
-      </div>
-    );
-  }
+  const [stalled, setStalled] = useState(false);
 
-  if (roomCode && (!isConnected || !room || isJoining)) {
+  useEffect(() => {
+    if (!isBusy) {
+      setStalled(false);
+      return;
+    }
+    const timer = setTimeout(() => setStalled(true), 15000);
+    return () => clearTimeout(timer);
+  }, [isBusy]);
+
+  const handleRetry = () => {
+    setStalled(false);
+    window.location.reload();
+  };
+
+  if (isBusy) {
+    const busyMessage = loading
+      ? t('loading.levels', 'Loading levels...')
+      : !playerId || !playerIdReady
+        ? t('levelSelect.initializingPlayer', 'Getting you ready...')
+        : isJoining
+          ? t('connecting.joining', 'Joining room {{roomCode}}...', { roomCode })
+          : t('connecting.room', 'Connecting to room {{roomCode}}...', { roomCode });
+
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-6 h-6 mx-auto">
-            <div className="w-full h-full border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
-          </div>
-          <p className="text-muted-foreground">
-            {isJoining 
-              ? t('connecting.joining', 'Joining room {{roomCode}}...', { roomCode })
-              : t('connecting.room', 'Connecting to room {{roomCode}}...', { roomCode })
-            }
-          </p>
-          <Button onClick={() => navigate('/')}>{t('button.back_home', 'Back to Home')}</Button>
+      <div className="min-h-screen romantic-background p-4 flex items-center justify-center">
+        <div className="w-full max-w-sm text-center space-y-5">
+          {stalled ? (
+            <>
+              <div className="w-12 h-12 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="font-display text-xl font-bold text-foreground">
+                  {t('levelSelect.stalled.title', 'This is taking longer than it should')}
+                </h1>
+                <p className="text-sm text-muted-foreground">
+                  {t('levelSelect.stalled.description', 'We could not reach the room. Check your connection and try again.')}
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <Button onClick={handleRetry} className="btn-gradient-primary h-11 font-semibold">
+                  {t('levelSelect.stalled.retry', 'Try again')}
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/')}>
+                  {t('button.back_home', 'Back to Home')}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 mx-auto motion-reduce:hidden">
+                <div className="w-full h-full border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+              </div>
+              <p className="text-muted-foreground">{busyMessage}</p>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                {t('button.back_home', 'Back to Home')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 flex flex-col">
+    <div className="min-h-screen romantic-background p-4 flex flex-col">
       <div className="w-full max-w-md mx-auto space-y-6 flex-1">
         {/* Header */}
         <div className="text-center space-y-2 pt-8">
@@ -468,68 +517,66 @@ const LevelSelect = () => {
           </div>
           <div className="flex items-center justify-center space-x-4 mb-2">
             <p className="text-sm text-muted-foreground">
-              Sala: <span className="font-mono font-bold text-primary">{roomCode}</span>
+              {t('levelSelect.roomLabel', 'Room')}:{' '}
+              <span className="font-mono font-bold text-primary-ink">{roomCode}</span>
             </p>
             <div className="flex items-center text-sm text-muted-foreground">
               <Users className="w-4 h-4 mr-1" />
-              <span>Jugador {playerNumber || '?'}</span>
+              <span>{t('levelSelect.playerLabel', 'Player {{number}}', { number: playerNumber || '?' })}</span>
             </div>
           </div>
           {countdown !== null ? (
             <div className="text-center space-y-4">
-              <div className={`relative ${showMatchAnimation ? 'animate-pulse' : ''}`}>
-                <div className="w-20 h-20 mx-auto rounded-full border-4 border-green-500 flex items-center justify-center bg-green-50 animate-scale-in">
-                  <span className="text-3xl font-bold text-green-600">{countdown}</span>
+              <div className={`relative ${showMatchAnimation ? 'animate-pulse motion-reduce:animate-none' : ''}`}>
+                <div className="w-20 h-20 mx-auto rounded-full border-4 border-primary flex items-center justify-center bg-primary/10 animate-scale-in">
+                  <span className="text-3xl font-bold text-primary-ink">{countdown}</span>
                 </div>
                 {showMatchAnimation && (
                   <>
-                    <Heart className="absolute -top-2 -right-2 w-8 h-8 text-pink-500 animate-heartbeat" />
-                    <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-400 rounded-full animate-ping"></div>
-                    <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-blue-400 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="absolute -bottom-2 -left-2 w-2 h-2 bg-green-400 rounded-full animate-ping" style={{ animationDelay: '1s' }}></div>
-                    <div className="absolute -top-3 left-1/2 w-1 h-1 bg-pink-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
-                    <div className="absolute -right-3 top-1/2 w-1 h-1 bg-purple-400 rounded-full animate-ping" style={{ animationDelay: '0.7s' }}></div>
+                    <Heart className="absolute -top-2 -right-2 w-8 h-8 text-primary animate-heartbeat motion-reduce:animate-none" />
+                    <div className="absolute -top-1 -left-1 w-2 h-2 bg-primary rounded-full animate-ping motion-reduce:hidden"></div>
+                    <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-accent rounded-full animate-ping motion-reduce:hidden" style={{ animationDelay: '0.5s' }}></div>
                   </>
                 )}
               </div>
-              <p className="text-lg text-green-600 font-medium animate-fade-in">
-                💖 You are connected. Let's play! Starting in {countdown}...
+              <p className="text-lg text-primary-ink font-medium animate-fade-in">
+                {t('levelSelect.matched', "💖 You're connected. Starting in {{count}}...", { count: countdown })}
               </p>
             </div>
           ) : agreedLevel ? (
-            <p className="text-base text-green-600 font-medium">
-              ¡Perfecto! Ambos eligieron el nivel {agreedLevel}. Iniciando juego...
+            <p className="text-base text-primary-ink font-medium">
+              {t('levelSelect.agreed', 'Perfect! You both picked level {{level}}. Starting the game...', { level: agreedLevel })}
             </p>
            ) : levelsMismatch ? (
-            <div className={`text-center space-y-4 transition-all duration-500 ${showMismatchAnimation ? 'animate-shake' : ''}`}>
-              <div className="flex items-center justify-center space-x-2 text-red-600">
-                <AlertTriangle className={`w-6 h-6 ${showMismatchAnimation ? 'animate-bounce' : ''}`} />
+            <div className={`text-center space-y-4 transition-all duration-500 ${showMismatchAnimation ? 'animate-shake motion-reduce:animate-none' : ''}`}>
+              <div className="flex items-center justify-center space-x-2 text-destructive">
+                <AlertTriangle className={`w-6 h-6 ${showMismatchAnimation ? 'animate-bounce motion-reduce:animate-none' : ''}`} />
                 <p className="text-lg font-bold">
-                  Different levels selected!
+                  {t('levelSelect.mismatch.title', 'You picked different levels')}
                 </p>
               </div>
-              <div className="p-4 bg-red-50 border-2 border-red-200 rounded-lg">
-                <p className="text-base text-red-700 font-medium mb-2">
-                  You selected different levels. You must select the same level to play.
+              <div className="p-4 bg-destructive/10 border-2 border-destructive/30 rounded-lg">
+                <p className="text-base text-destructive font-medium mb-2">
+                  {t('levelSelect.mismatch.description', 'You need to choose the same level to play together.')}
                 </p>
-                <div className={`w-full max-w-xs mx-auto h-2 bg-red-200 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse' : ''}`}>
-                  <div className="h-full bg-red-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                <div className={`w-full max-w-xs mx-auto h-2 bg-destructive/20 rounded-full overflow-hidden ${showMismatchAnimation ? 'animate-pulse motion-reduce:animate-none' : ''}`}>
+                  <div className="h-full bg-destructive rounded-full" style={{ width: '100%' }}></div>
                 </div>
-                <p className="text-sm text-red-600 mt-2 animate-fade-in">
-                  🔄 Resetting automatically... You can select again in a moment.
+                <p className="text-sm text-destructive mt-2 animate-fade-in">
+                  {t('levelSelect.mismatch.resetting', 'Resetting automatically — you can choose again in a moment.')}
                 </p>
               </div>
             </div>
             ) : isWaitingForPartner ? (
-            <div className="flex flex-col items-center justify-center space-y-3 text-orange-600">
+            <div className="flex flex-col items-center justify-center space-y-3 text-secondary">
               <div className="flex items-center space-x-2">
-                <Timer className="w-4 h-4 animate-pulse" />
+                <Timer className="w-4 h-4 animate-pulse motion-reduce:animate-none" />
                 <p className="text-base font-medium">
-                  Waiting for your partner to select the level...
+                  {t('levelSelect.waitingPartner', 'Waiting for your partner to pick a level...')}
                 </p>
               </div>
-              <div className="w-6 h-6 mx-auto">
-                <div className="w-full h-full border-2 border-orange-300 border-t-orange-600 rounded-full animate-spin"></div>
+              <div className="w-6 h-6 mx-auto motion-reduce:hidden">
+                <div className="w-full h-full border-2 border-secondary/30 border-t-secondary rounded-full animate-spin"></div>
               </div>
               <Button 
                 variant="outline" 
@@ -537,12 +584,14 @@ const LevelSelect = () => {
                 onClick={tryAgain}
                 className="mt-2 text-xs"
               >
-                Reset Selection
+                {t('levelSelect.resetSelection', 'Reset selection')}
               </Button>
             </div>
            ) : (
              <p className="text-base text-muted-foreground">
-               {location.pathname.includes('game') ? 'Elige el nuevo nivel de intensidad' : 'Elige tu nivel de intensidad'}
+               {location.pathname.includes('game')
+                 ? t('levelSelect.chooseNewIntensity', 'Choose your new intensity level')
+                 : t('levelSelect.chooseIntensity', 'Choose your intensity level')}
              </p>
            )}
         </div>
@@ -554,22 +603,34 @@ const LevelSelect = () => {
             const isDisabled = !playerId || !playerIdReady || !room?.id || agreedLevel !== null;
             const isWaitingDisabled = isWaitingForPartner || levelsMismatch;
             const isMismatched = levelsMismatch && isSelected;
-            
+            const isInteractive = !isDisabled && !isWaitingDisabled;
+
             return (
               <Card 
                 key={level.id}
-                className={`p-6 transition-all duration-300 border-2 ${
+                role="button"
+                tabIndex={isInteractive ? 0 : -1}
+                aria-pressed={isSelected}
+                aria-disabled={!isInteractive}
+                className={`p-6 transition-all duration-300 border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
                   isSelected 
                     ? isMismatched
-                      ? `border-red-500 bg-red-50 ${showMismatchAnimation ? 'animate-shake border-red-600' : ''}`
+                      ? `border-destructive bg-destructive/10 ${showMismatchAnimation ? 'animate-shake motion-reduce:animate-none' : ''}`
                       : agreedLevel === level.id
-                        ? `border-green-500 bg-green-50 ${showMatchAnimation ? 'animate-pulse' : ''}`
+                        ? `border-primary bg-primary/10 ${showMatchAnimation ? 'animate-pulse motion-reduce:animate-none' : ''}`
                         : 'border-primary bg-primary/5'
-                    : isDisabled || isWaitingDisabled
-                      ? 'opacity-50 border-muted cursor-not-allowed'
+                    : !isInteractive
+                      ? 'opacity-60 border-muted cursor-not-allowed'
                       : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
                 }`}
-                onClick={() => !isDisabled && !isWaitingDisabled && handleLevelClick(level.id)}
+                onClick={() => isInteractive && handleLevelClick(level.id)}
+                onKeyDown={(e) => {
+                  if (!isInteractive) return;
+                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
+                    handleLevelClick(level.id);
+                  }
+                }}
               >
                 <div className="flex items-start space-x-4">
                   <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0 relative`}>
@@ -580,9 +641,8 @@ const LevelSelect = () => {
                     )}
                         {isSelected && agreedLevel === level.id && showMatchAnimation && (
                           <>
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-pink-500 rounded-full animate-ping"></div>
-                            <Heart className="absolute -top-2 -left-2 w-4 h-4 text-pink-500 animate-heartbeat" />
-                            <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-yellow-400 rounded-full animate-ping" style={{ animationDelay: '0.3s' }}></div>
+                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping motion-reduce:hidden"></div>
+                            <Heart className="absolute -top-2 -left-2 w-4 h-4 text-primary animate-heartbeat motion-reduce:animate-none" />
                           </>
                         )}
                   </div>
@@ -593,7 +653,7 @@ const LevelSelect = () => {
                         {level.title}
                       </h3>
                       <span className="text-xs text-muted-foreground">
-                        {level.cards} cartas
+                        {t('levelSelect.cardCount', '{{count}} cards', { count: level.cards })}
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground mb-3">
@@ -602,19 +662,19 @@ const LevelSelect = () => {
                     
                     {isSelected && (
                       <div className="flex items-center space-x-2">
-                        <p className="text-xs text-primary font-medium">
-                          ✓ Has elegido este nivel
+                        <p className="text-xs text-primary-ink font-medium">
+                          ✓ {t('levelSelect.youChose', 'You chose this level')}
                         </p>
                         {agreedLevel === level.id && showMatchAnimation && (
-                          <Heart className="w-4 h-4 text-pink-500 animate-heartbeat" />
+                          <Heart className="w-4 h-4 text-primary animate-heartbeat motion-reduce:animate-none" />
                         )}
                       </div>
                     )}
                     
                     {isMismatched && showMismatchAnimation && (
-                      <div className="text-xs text-red-600 font-bold mt-2 animate-pulse flex items-center space-x-1">
+                      <div className="text-xs text-destructive font-bold mt-2 flex items-center space-x-1">
                         <AlertTriangle className="w-3 h-3" />
-                        <span>⚠️ Different from partner's choice</span>
+                        <span>{t('levelSelect.mismatch.card', "Different from your partner's choice")}</span>
                       </div>
                     )}
                   </div>
@@ -630,23 +690,21 @@ const LevelSelect = () => {
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-destructive" />
-                Nivel bloqueado
+                {t('levelSelect.lockedDialog.title', 'Level locked')}
               </AlertDialogTitle>
               <AlertDialogDescription>
-                Este nivel está bloqueado porque no has completado el nivel anterior. 
-                ¿Estás seguro de que quieres continuar de todos modos? 
-                Podrías encontrar preguntas más intensas de las esperadas.
+                {t('levelSelect.lockedDialog.description', "This level is locked because you haven't finished the previous one. Are you sure you want to continue anyway? The questions may be more intense than you expect.")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel onClick={() => setShowConfirmDialog(false)}>
-                Cancelar
+                {t('levelSelect.lockedDialog.cancel', 'Cancel')}
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={handleConfirmLockedLevel}
                 className="bg-destructive hover:bg-destructive/90"
               >
-                Continuar de todos modos
+                {t('levelSelect.lockedDialog.confirm', 'Continue anyway')}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -654,8 +712,8 @@ const LevelSelect = () => {
 
         {/* Connection status indicator */}
         {!room?.id && (
-          <div className="text-center p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <p className="text-sm text-amber-700">
+          <div className="text-center p-3 bg-secondary/10 border border-secondary/30 rounded-lg">
+            <p className="text-sm text-secondary">
               <Timer className="w-4 h-4 inline-block mr-1" />
               {t('levelSelect.connectingToRoom', 'Connecting to room...')}
             </p>
@@ -664,11 +722,11 @@ const LevelSelect = () => {
 
         {/* Footer Info */}
         <div className="text-center space-y-2 pt-4">
-          <p className="text-xs text-muted-foreground">
-            💡 Tip: Pueden subir de nivel cuando se sientan listos
+          <p className="text-sm text-muted-foreground">
+            {t('levelSelect.tip', '💡 Tip: you can move up a level whenever you both feel ready')}
           </p>
-          <p className="text-xs text-destructive font-medium">
-            Recuerden: pueden parar en cualquier momento
+          <p className="text-sm text-destructive font-medium">
+            {t('levelSelect.stopAnytime', 'Remember: you can stop at any time')}
           </p>
         </div>
       </div>
