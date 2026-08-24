@@ -540,9 +540,9 @@
           "hint": "How much attraction rose when you surprised each other."
         },
         "link": {
-          "strong": "Move together",
+          "strong": "Rise together",
           "moderate": "Somewhat linked",
-          "light": "Move on their own"
+          "light": "Independent"
         },
         "signals": {
           "label": "Signals analyzed",

@@ -557,9 +557,9 @@
           "hint": "À quel point l'attirance montait quand vous vous surpreniez."
         },
         "link": {
-          "strong": "Vont de pair",
+          "strong": "Montent ensemble",
           "moderate": "Plutôt liées",
-          "light": "Évoluent séparément"
+          "light": "Indépendantes"
         },
         "signals": {
           "label": "Signaux analysés",

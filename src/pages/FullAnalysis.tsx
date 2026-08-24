@@ -99,10 +99,7 @@ export default function FullAnalysis() {
 
   const loadAnalysisData = async () => {
     if (!roomCode) return;
-    // __HARNESS__
-    const mock = (window as any).__MOCK_ANALYSIS;
-    if (mock) { setAnalysis(mock); setIsLoading(false); return; }
-    // __HARNESS_END__
+
     try {
       setIsLoading(true);
       
@@ -667,9 +664,6 @@ export default function FullAnalysis() {
           </Card>
         )}
 
-        {/* What to try next — the retention hook */}
-        <NextStepCard nextStep={analysis.next_step} />
-
         {/* A note for the two of you */}
         {typeof analysis.culturalNotes === 'string' && analysis.culturalNotes.trim().length > 20 && (
           <p className="text-center text-sm italic text-muted-foreground max-w-2xl mx-auto px-4">
@@ -677,15 +671,22 @@ export default function FullAnalysis() {
           </p>
         )}
 
+        {/* What to try next — the retention hook */}
+        <NextStepCard nextStep={analysis.next_step} />
+
         {/* Footer */}
         <Card className="bg-muted/30">
           <CardContent className="p-6 text-center">
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Ready for Your Next Session?</h3>
-              <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-                Based on your analysis, we recommend continuing your journey with deeper questions
-                to explore the insights discovered in this session.
-              </p>
+              {!analysis.next_step && (
+                <>
+                  <h3 className="text-lg font-semibold">Ready for Your Next Session?</h3>
+                  <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+                    Based on your analysis, we recommend continuing your journey with deeper questions
+                    to explore the insights discovered in this session.
+                  </p>
+                </>
+              )}
               <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                 {!analysis.next_step && (
                   <Button onClick={() => navigate('/create-room')}>
