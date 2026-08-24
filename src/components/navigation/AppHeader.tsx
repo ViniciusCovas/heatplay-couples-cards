@@ -170,8 +170,17 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
     </Sheet>
   );
 
+  // Dark-romantic landing page gets a transparent dark header
+  const isLanding = location.pathname === '/';
+
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header
+      className={
+        isLanding
+          ? 'sticky top-0 z-50 w-full border-b border-white/10 bg-[#1c0a24]/80 text-white backdrop-blur'
+          : 'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
+      }
+    >
       <div className="container mx-auto flex h-16 items-center justify-end px-4">
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center space-x-4">
@@ -179,8 +188,9 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
           {user ? <UserMenu /> : (showAuthButton && <AuthButton />)}
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation — language switcher stays visible, not buried in the sheet */}
         <div className="md:hidden flex items-center space-x-2">
+          <LanguageSelector />
           {!user && showAuthButton && <AuthButton />}
           <MobileMenu />
         </div>

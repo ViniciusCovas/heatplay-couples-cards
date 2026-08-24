@@ -177,3 +177,91 @@
     }
   }
 }
+/* ============================================================
+   Landing page (dark-romantic) — tokens, utilities & keyframes
+   ============================================================ */
+@layer utilities {
+  .font-display {
+    font-family: "Playfair Display", "Georgia", serif;
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .perspective-1200 {
+    perspective: 1200px;
+  }
+  .preserve-3d {
+    transform-style: preserve-3d;
+  }
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+}
+
+@layer components {
+  /* Full-bleed dark romantic ground, echoing the shareable story card */
+  .landing-dark {
+    background:
+      radial-gradient(900px 520px at 85% -5%, rgba(233, 30, 99, 0.28), transparent 65%),
+      radial-gradient(800px 600px at 8% 30%, rgba(156, 39, 176, 0.22), transparent 60%),
+      radial-gradient(700px 500px at 92% 70%, rgba(255, 87, 34, 0.10), transparent 60%),
+      linear-gradient(160deg, #1c0a24 0%, #2a0e33 42%, #0d0716 100%);
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .landing-glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+  }
+
+  .landing-cta {
+    background: linear-gradient(135deg, #ff4f8b 0%, #e91e63 55%, #c2185b 100%);
+    box-shadow: 0 10px 40px -8px rgba(233, 30, 99, 0.55);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
+  }
+  .landing-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 50px -8px rgba(233, 30, 99, 0.7);
+  }
+
+  /* Scroll-reveal (respects reduced motion) */
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Hero deck card sizing + soft float of the stack */
+  .deck-card {
+    border-radius: 1.5rem;
+    box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
+  .deck-float {
+    animation: deck-float 7s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+    .deck-float,
+    .animate-heartbeat,
+    .landing-dark .animate-pulse {
+      animation: none !important;
+    }
+  }
+}
+
+@keyframes deck-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}

@@ -669,5 +669,66 @@
     "streak_other": "Série de {{count}} jours",
     "streak_many": "Série de {{count}} jours",
     "shareText": "Notre question Daily Spark du jour : « {{question}} » — tu me réponds ? 😏 Joue avec moi ici : {{url}}"
+  },
+  "landing": {
+    "badge": "Pour les couples · Privé · 18+",
+    "headline": "Le jeu qui vous rapproche vraiment.",
+    "sub": "De vraies questions, quatre niveaux d'intensité, un salon rien que pour vous deux. Ce soir, on oublie la petite conversation.",
+    "ctaPlay": "Jouer maintenant",
+    "ctaJoin": "J'ai un code",
+    "deckHint": "Touchez une carte pour la retourner · glissez pour la suivante",
+    "deckBack": "Votre question vous attend…",
+    "stats": {
+      "couples": "Privé, rien que vous deux",
+      "questions": "Plus de 400 questions",
+      "rating": "Analyse de couple par IA"
+    },
+    "how": {
+      "title": "De « salut » à « je ne l'avais jamais dit à personne » en trois étapes",
+      "step1": {
+        "title": "Créez votre salon privé",
+        "desc": "Un geste, zéro réglage. Un code qui n'appartient qu'à vous deux.",
+        "chip": "Code du salon"
+      },
+      "step2": {
+        "title": "Envoyez le lien à votre partenaire",
+        "desc": "Un clic et c'est parti. Le jeu commence dès que vous êtes deux.",
+        "bubble": "Tu joues avec moi ce soir ? Une question et tu verras 😏",
+        "reply": "Je suis partant·e. Envoie le lien 🔥"
+      },
+      "step3": {
+        "title": "Jouez et recevez votre analyse IA",
+        "desc": "Répondez, notez, provoquez-vous. À la fin, l'IA vous raconte votre soirée : votre vibe, votre score, votre histoire.",
+        "score": "Compatibilité"
+      }
+    },
+    "levels": {
+      "title": "Choisissez votre température",
+      "sub": "Quatre niveaux, une seule règle : vous n'allez que là où vous le voulez tous les deux.",
+      "sample": "Carte d'exemple",
+      "l1desc": "Des questions douces, comme un premier rendez-vous.",
+      "l2desc": "Celles auxquelles on pense sans jamais oser les poser.",
+      "l3desc": "Là où la pièce se réchauffe et les réponses deviennent sincères.",
+      "l4desc": "Sans filtre, sans script. Rien que vous deux, à fond."
+    },
+    "ai": {
+      "eyebrow": "Analyse de couple par IA",
+      "title": "Finissez la soirée avec votre histoire, racontée par l'IA.",
+      "body": "Après le jeu, l'IA transforme votre soirée en archétype de couple, score de compatibilité et une phrase à encadrer — prête à partager, sans révéler aucune réponse.",
+      "insight": "Vous deux transformez une simple question en conversation de quarante minutes.",
+      "cta": "Débloquer l'analyse complète"
+    },
+    "pricing": {
+      "free": "Gratuit",
+      "freeDesc": "Jouez ce soir : premiers niveaux, salon privé, étincelle du jour.",
+      "premium": "Premium",
+      "premiumDesc": "Tous les niveaux, analyse IA complète, soirées illimitées.",
+      "cta": "Comparer les offres"
+    },
+    "sticky": "Jouer maintenant",
+    "spark": {
+      "title": "Pas encore prêts pour le jeu complet ?",
+      "sub": "Prenez la question du jour — une par jour, gratuite pour toujours."
+    }
   }
 }

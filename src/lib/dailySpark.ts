@@ -289,6 +289,17 @@ export function getDailySpark(language: string | undefined, date: Date = new Dat
   return QUESTIONS[locale][sparkIndexForDate(date)];
 }
 
+/**
+ * A curated sample of real questions for a locale, by index into the
+ * question list. Used by the landing page deck & heat-level previews so
+ * marketing always shows real game content, never placeholders.
+ */
+export function getSparkSample(language: string | undefined, indices: number[]): string[] {
+  const locale = toSparkLocale(language);
+  const list = QUESTIONS[locale];
+  return indices.map((i) => list[((i % QUESTION_COUNT) + QUESTION_COUNT) % QUESTION_COUNT]);
+}
+
 /** Local YYYY-MM-DD key used for streak/share bookkeeping. */
 export function localDayKey(date: Date = new Date()): string {
   const y = date.getFullYear();

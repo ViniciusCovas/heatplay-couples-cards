@@ -649,5 +649,66 @@
     "streak_one": "{{count}}-day streak",
     "streak_other": "{{count}}-day streak",
     "shareText": "Our Daily Spark question for today: \"{{question}}\" — answer me? 😏 Play with me here: {{url}}"
+  },
+  "landing": {
+    "badge": "For couples · Private · 18+",
+    "headline": "The game that gets you closer.",
+    "sub": "Real questions, four heat levels, one room for just the two of you. Tonight, skip the small talk.",
+    "ctaPlay": "Play now",
+    "ctaJoin": "I have a code",
+    "deckHint": "Tap a card to flip it · swipe for the next one",
+    "deckBack": "Your question is waiting…",
+    "stats": {
+      "couples": "Private, just the two of you",
+      "questions": "400+ curated questions",
+      "rating": "AI couple analysis"
+    },
+    "how": {
+      "title": "From “hey” to “I never told anyone that” in three steps",
+      "step1": {
+        "title": "Create your private room",
+        "desc": "One tap, no setup. You get a code that belongs to the two of you only.",
+        "chip": "Room code"
+      },
+      "step2": {
+        "title": "Send the link to your partner",
+        "desc": "They tap, they're in. The game starts the moment you're both inside.",
+        "bubble": "Play with me tonight? One question and you'll see 😏",
+        "reply": "I'm in. Send the link 🔥"
+      },
+      "step3": {
+        "title": "Play & get your AI analysis",
+        "desc": "Answer, rate, tease. At the end, our AI reads the night back to you — your vibe, your score, your story.",
+        "score": "Compatibility"
+      }
+    },
+    "levels": {
+      "title": "Choose your heat",
+      "sub": "Four levels, one rule: you only go as far as you both want to.",
+      "sample": "Sample card",
+      "l1desc": "Sweet openers that feel like your first date again.",
+      "l2desc": "The questions you think about but never ask.",
+      "l3desc": "Where the room gets warmer and the answers get honest.",
+      "l4desc": "No filters, no scripts. Just the two of you, all in."
+    },
+    "ai": {
+      "eyebrow": "AI couple analysis",
+      "title": "End the night with your story, told back to you.",
+      "body": "After you play, our AI turns your night into a couple archetype, a compatibility score and one insight worth framing — ready to share, with zero answers revealed.",
+      "insight": "You two turn ordinary questions into forty-minute conversations.",
+      "cta": "Unlock the full analysis"
+    },
+    "pricing": {
+      "free": "Free",
+      "freeDesc": "Play tonight — first levels, private room, daily spark.",
+      "premium": "Premium",
+      "premiumDesc": "Every heat level, full AI analysis, unlimited nights.",
+      "cta": "Compare plans"
+    },
+    "sticky": "Play now",
+    "spark": {
+      "title": "Not ready for the full game?",
+      "sub": "Steal tonight's question — one a day, free forever."
+    }
   }
 }
