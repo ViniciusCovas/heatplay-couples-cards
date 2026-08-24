@@ -32,6 +32,8 @@ const config: Config = {
 				primary: {
 					DEFAULT: "hsl(var(--primary))",
 					foreground: "hsl(var(--primary-foreground))",
+					/* AA-contrast pink for text on light grounds */
+					ink: "hsl(var(--primary-ink))",
 				},
 				secondary: {
 					DEFAULT: "hsl(var(--secondary))",

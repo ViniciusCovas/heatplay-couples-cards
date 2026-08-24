@@ -23,7 +23,12 @@
     --destructive-foreground: 0 0% 100%;
     --border: 330 30% 90%;
     --input: 0 0% 100%;
-    --ring: 330 81% 60%;
+    /* Focus ring: the brand pink (#E91E63) is only 1.7:1 on the blush ground,
+       so rings were effectively invisible. Use the darker pink ink instead. */
+    --ring: 336 79% 43%;
+    /* Accessible pink for text: #E91E63 is 3.6:1 on white (fails AA for body
+       copy). #c2185b is 5.9:1. Use text-primary-ink for pink text. */
+    --primary-ink: 336 79% 43%;
     --radius: 0.75rem;
     
     /* Romantic gradients */
