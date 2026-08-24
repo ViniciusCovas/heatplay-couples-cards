@@ -13,15 +13,26 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { requireInternalSecret } from "../_shared/guards.ts";
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Only the pg_cron job may trigger the campaign. Publicly invokable, this
+  // would let anyone mass-email every inactive user at will.
+  const secretCheck = requireInternalSecret(req);
+  if (!secretCheck.ok) {
+    console.warn("send-reengagement-email: rejected request without valid internal secret");
+    return new Response(JSON.stringify({ success: false, error: secretCheck.error }), {
+      status: 403,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 
   try {

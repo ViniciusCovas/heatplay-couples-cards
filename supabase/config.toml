@@ -1,17 +1,48 @@
-
 project_id = "bbdeyohqrutithaziulp"
 
-[functions.intelligent-question-selector]
-verify_jwt = false
+# ---------------------------------------------------------------------------
+# Edge function JWT verification
+#
+# verify_jwt = true  -> the platform rejects requests without a valid project
+#                       JWT (a user access token OR the anon key) before the
+#                       function runs. Functions not listed here default to
+#                       verify_jwt = true (create-payment, verify-payment).
+# verify_jwt = false -> the function is reachable without a JWT and MUST
+#                       enforce its own authentication (documented per entry).
+# ---------------------------------------------------------------------------
 
+# Called by both players during gameplay. Anonymous partners invoke it with
+# the anon key as bearer, which satisfies verify_jwt. The function also
+# enforces that the target room is a real, active game (and that identified
+# callers are participants of it).
+[functions.intelligent-question-selector]
+verify_jwt = true
+
+# Called by either player at game end; same access model as above.
+[functions.getclose-ai-analysis]
+verify_jwt = true
+
+# Called by either player; only ever emails the room host's own address.
+[functions.send-ai-analysis-email]
+verify_jwt = true
+
+# Internal only: invoked by the on_auth_user_created DB trigger via pg_net.
+# No JWT is sent; authentication is the INTERNAL_FUNCTION_SECRET shared
+# secret checked inside the function (x-internal-secret header).
 [functions.send-welcome-email]
 verify_jwt = false
 
+# Internal only: invoked by the weekly pg_cron job via pg_net. Authenticated
+# with INTERNAL_FUNCTION_SECRET (x-internal-secret header).
 [functions.send-reengagement-email]
 verify_jwt = false
 
-[functions.getclose-ai-analysis]
+# Internal only: invoked by the pg_cron queue-processor job via pg_net.
+# Authenticated with INTERNAL_FUNCTION_SECRET (x-internal-secret header).
+[functions.process-game-queue]
 verify_jwt = false
 
-[functions.send-ai-analysis-email]
+# Stripe cannot send Supabase JWTs; authentication is the Stripe webhook
+# signature (STRIPE_WEBHOOK_SECRET) verified inside the function.
+[functions.stripe-webhook]
 verify_jwt = false

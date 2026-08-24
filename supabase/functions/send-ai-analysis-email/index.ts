@@ -5,12 +5,10 @@ import { renderAsync } from 'npm:@react-email/components@0.0.22';
 import React from 'npm:react@18.3.1';
 import { PremiumAIAnalysisEmail } from '../_shared/email-templates/templates/PremiumAIAnalysisEmail.tsx';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { checkRoomAccess, getCallerUser } from "../_shared/guards.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface AnalysisEmailRequest {
   roomId: string;
@@ -18,6 +16,8 @@ interface AnalysisEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -37,6 +37,21 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // ---- Access guard ----------------------------------------------------
+    // The email is only ever sent to the room HOST's own address, but the
+    // endpoint must still be scoped: an identified caller must belong to the
+    // room, and anonymous callers can only target recently active rooms
+    // (otherwise anyone could spam any host with their own report at will).
+    const caller = await getCallerUser(req);
+    const access = await checkRoomAccess(supabase, roomId, caller?.id ?? null);
+    if (!access.ok) {
+      console.warn(`send-ai-analysis-email: access denied for room ${roomId}: ${access.error}`);
+      return new Response(JSON.stringify({ error: access.error }), {
+        status: access.status,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
 
     console.log(`Processing AI analysis email for room: ${roomId}`);
 

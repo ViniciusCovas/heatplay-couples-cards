@@ -4,12 +4,10 @@ import { renderAsync } from "npm:@react-email/components@0.0.22";
 import React from "npm:react@18.3.1";
 import { WelcomeEmail } from "../_shared/email-templates/templates/WelcomeEmail.tsx";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { getCorsHeaders } from "../_shared/cors.ts";
+import { requireInternalSecret } from "../_shared/guards.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 interface WelcomeEmailRequest {
   email: string;
@@ -18,9 +16,23 @@ interface WelcomeEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // This function is only invoked internally (auth.users trigger via pg_net).
+  // It must never be publicly callable: it would let anyone send branded
+  // email to arbitrary addresses through our Resend account.
+  const secretCheck = requireInternalSecret(req);
+  if (!secretCheck.ok) {
+    console.warn("send-welcome-email: rejected request without valid internal secret");
+    return new Response(JSON.stringify({ success: false, error: secretCheck.error }), {
+      status: 403,
+      headers: { "Content-Type": "application/json", ...corsHeaders },
+    });
   }
 
   try {

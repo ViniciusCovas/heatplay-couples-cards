@@ -1,13 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getAllowedOrigins, getCorsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -53,6 +51,13 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // Only redirect back to an allowed origin (never a spoofed Origin header).
+    const allowedOrigins = getAllowedOrigins();
+    const requestOrigin = req.headers.get("origin")?.replace(/\/+$/, "");
+    const safeOrigin = requestOrigin && allowedOrigins.includes(requestOrigin)
+      ? requestOrigin
+      : allowedOrigins[0];
+
     // Create payment session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -71,8 +76,8 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
-      success_url: `${req.headers.get("origin")}/payment-success?session_id={CHECKOUT_SESSION_ID}&credits=${selectedPackage.credits}`,
-      cancel_url: `${req.headers.get("origin")}/`,
+      success_url: `${safeOrigin}/payment-success?session_id={CHECKOUT_SESSION_ID}&credits=${selectedPackage.credits}`,
+      cancel_url: `${safeOrigin}/`,
       metadata: {
         user_id: user.id,
         credits: selectedPackage.credits.toString(),

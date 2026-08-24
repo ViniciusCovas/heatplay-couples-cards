@@ -2,14 +2,12 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { getCorsHeaders } from '../_shared/cors.ts';
+import { checkRoomAccess, getCallerUser } from '../_shared/guards.ts';
+
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 // Helper functions
 function calculateStandardDeviation(values: number[]): number {
@@ -49,6 +47,8 @@ function parseEvaluation(evaluation: string): any {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -56,7 +56,7 @@ serve(async (req) => {
 
   try {
     console.log('Starting AI analysis request...');
-    
+
     const { roomId, language = 'en' } = await req.json();
     console.log('Room ID:', roomId, 'Language:', language);
 
@@ -69,6 +69,22 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // ---- Access guard ----------------------------------------------------
+    // The analysis is generated at the end of a game by either player. An
+    // identified caller must be the host or a participant of the room; an
+    // anonymous caller (anon key) can only target rooms in the recently
+    // active window. This prevents generating (and paying OpenAI for)
+    // analyses of arbitrary or historical rooms.
+    const caller = await getCallerUser(req);
+    const access = await checkRoomAccess(supabase, roomId, caller?.id ?? null);
+    if (!access.ok) {
+      console.warn(`getclose-ai-analysis: access denied for room ${roomId}: ${access.error}`);
+      return new Response(JSON.stringify({ success: false, error: access.error }), {
+        status: access.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Fetch room data
     console.log('Fetching room data...');

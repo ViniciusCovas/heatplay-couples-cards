@@ -1,14 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.5'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getCorsHeaders } from '../_shared/cors.ts'
+import { requireInternalSecret } from '../_shared/guards.ts'
 
 Deno.serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get('origin'));
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Only the pg_cron scheduler may run the queue processor / recovery RPCs.
+  const secretCheck = requireInternalSecret(req);
+  if (!secretCheck.ok) {
+    console.warn('process-game-queue: rejected request without valid internal secret');
+    return new Response(JSON.stringify({ success: false, error: secretCheck.error }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {

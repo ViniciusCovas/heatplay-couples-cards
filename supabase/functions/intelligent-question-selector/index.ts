@@ -3,18 +3,12 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+import { getCorsHeaders } from '../_shared/cors.ts';
+import { checkRoomAccess, getCallerUser } from '../_shared/guards.ts';
+
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-
-// Enhanced CORS headers with production domain support
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-requested-with, accept, accept-language, cache-control, pragma',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-  'Vary': 'Origin',
-};
 
 // Simple in-memory cache for level lookups
 const levelCache = new Map<string, { id: string; timestamp: number }>();
@@ -182,7 +176,8 @@ function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis:
 serve(async (req) => {
   const origin = req.headers.get('origin');
   const method = req.method;
-  
+  const corsHeaders = getCorsHeaders(origin);
+
   console.log(`[${new Date().toISOString()}] ${method} request from origin: ${origin || 'unknown'}`);
 
   // Enhanced CORS preflight handling
@@ -209,6 +204,24 @@ serve(async (req) => {
     }
 
     const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+
+    // ---- Access guard ----------------------------------------------------
+    // Both players (including the anonymous partner, who authenticates with
+    // the project anon key) call this during gameplay. The room must be a
+    // real, currently ACTIVE game; identified callers must additionally be
+    // the host or a participant. This stops anyone from burning the OpenAI
+    // budget against arbitrary/finished rooms.
+    const caller = await getCallerUser(req);
+    const access = await checkRoomAccess(supabase, roomId, caller?.id ?? null, {
+      requireActive: true,
+    });
+    if (!access.ok) {
+      console.warn(`intelligent-question-selector: access denied for room ${roomId}: ${access.error}`);
+      return new Response(JSON.stringify({ error: access.error }), {
+        status: access.status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Parallel data fetching with individual error handling
     const [recentResponses, room, levelId] = await Promise.allSettled([
