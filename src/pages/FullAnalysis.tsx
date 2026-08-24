@@ -17,6 +17,9 @@ import { CompatibilityRadar } from '@/components/insights/CompatibilityRadar';
 import { VerticalTimeline } from '@/components/insights/VerticalTimeline';
 import { QuestionInsights } from '@/components/insights/QuestionInsights';
 import { ShareableCard } from '@/components/insights/ShareableCard';
+import { useTranslation } from 'react-i18next';
+import { usePremium } from '@/hooks/usePremium';
+import { Crown, Sparkles } from 'lucide-react';
 
 
 import { GlobalContextOverview } from '@/components/insights/GlobalContextOverview';
@@ -52,6 +55,8 @@ interface AnalysisData {
 export default function FullAnalysis() {
   const { roomCode } = useParams<{ roomCode: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const { isPremium } = usePremium();
   const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -368,6 +373,28 @@ export default function FullAnalysis() {
           insight={analysis.keyInsights?.[0]}
           relationshipPhase={analysis.relationshipPhase}
         />
+
+        {/* Close Premium upsell */}
+        {!isPremium && (
+          <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-background to-secondary/10 overflow-hidden">
+            <CardContent className="p-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center flex-shrink-0 shadow-md">
+                <Crown className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 text-center sm:text-left space-y-1">
+                <h3 className="text-lg font-semibold text-foreground">{t('premium.upsell.title')}</h3>
+                <p className="text-sm text-muted-foreground">{t('premium.upsell.subtitle')}</p>
+              </div>
+              <Button
+                onClick={() => navigate('/premium')}
+                className="btn-gradient-primary text-white border-0 shadow-md whitespace-nowrap"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t('premium.upsell.cta')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Deep Analysis Section */}
         <div className="grid gap-6">

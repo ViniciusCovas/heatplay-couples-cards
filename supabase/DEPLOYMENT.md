@@ -17,6 +17,20 @@ live project — it is code only until you deploy it.
 | Payments | `verify-payment` granted credits from a client-passed `session_id`, trusting metadata, unauthenticated, replayable | New `stripe-webhook` function (signature-verified) is the source of truth; `verify-payment` requires the caller to be the user in `session.metadata.user_id` and both paths share an idempotency ledger (`public.stripe_events`) so a session can never be credited twice |
 | Public edge functions | 5 functions with `verify_jwt = false`, CORS `*` | `intelligent-question-selector`, `getclose-ai-analysis`, `send-ai-analysis-email` now require a project JWT **and** validate room access in-function; `send-welcome-email`, `send-reengagement-email`, `process-game-queue` require the `INTERNAL_FUNCTION_SECRET` header; CORS restricted to `ALLOWED_ORIGINS` |
 
+## 0. Create the Close Premium products in Stripe
+
+The "Close Premium" couple subscription needs two recurring Prices in the
+Stripe dashboard (Products → Add product):
+
+- Product **Close Premium** with two prices:
+  - **€6.99 / month** (recurring, monthly) → copy its price id into
+    `STRIPE_PRICE_PREMIUM_MONTHLY`
+  - **€39.99 / year** (recurring, yearly) → copy its price id into
+    `STRIPE_PRICE_PREMIUM_YEARLY`
+
+The frontend displays €6.99/€39.99; keep the Stripe prices in sync with
+`PRICES` in `src/pages/Premium.tsx` if you ever change them.
+
 ## 1. Set the secrets
 
 ### 1a. Edge function secrets
@@ -25,6 +39,8 @@ live project — it is code only until you deploy it.
 supabase secrets set \
   STRIPE_SECRET_KEY="sk_live_..." \
   STRIPE_WEBHOOK_SECRET="whsec_..." \        # from step 3 below
+  STRIPE_PRICE_PREMIUM_MONTHLY="price_..." \ # from step 0 below (Close Premium €6.99/mo)
+  STRIPE_PRICE_PREMIUM_YEARLY="price_..." \  # from step 0 below (Close Premium €39.99/yr)
   INTERNAL_FUNCTION_SECRET="$(openssl rand -hex 32)" \
   ALLOWED_ORIGINS="https://yourdomain.com,https://www.yourdomain.com" \
   OPENAI_API_KEY="sk-..." \
@@ -74,7 +90,16 @@ supabase db push
 supabase migration up
 ```
 
-The migration (`supabase/migrations/20260824120000_launch_security_hardening.sql`):
+Two new migrations apply, **in order**:
+
+1. `20260824120000_launch_security_hardening.sql` (security hardening)
+2. `20260824140000_premium_subscriptions.sql` (Close Premium) — depends on
+   the hardening migration (service-role write discipline, `stripe_events`
+   ledger). It creates `public.subscriptions` (RLS: couple can SELECT, only
+   service_role writes), `public.has_premium(uuid)` and
+   `public.set_subscription_partner(text)` (both granted to `authenticated`).
+
+The hardening migration (`supabase/migrations/20260824120000_launch_security_hardening.sql`):
 
 - drops **all** existing policies on the game/profile/credit tables and
   recreates the scoped set (idempotent to re-run);
@@ -95,6 +120,13 @@ In the Stripe dashboard (Developers → Webhooks → Add endpoint):
   - `checkout.session.completed`
   - `checkout.session.async_payment_succeeded` (optional but recommended if
     you ever enable delayed payment methods)
+  - `customer.subscription.created`
+  - `customer.subscription.updated`
+  - `customer.subscription.deleted`
+
+  The three `customer.subscription.*` events keep `public.subscriptions`
+  (Close Premium) in sync — renewals, payment failures (`past_due`) and
+  cancellations all flow through them.
 - Copy the endpoint's **signing secret** (`whsec_...`) and set it as
   `STRIPE_WEBHOOK_SECRET` (step 1a), then redeploy the function if it was
   already deployed.
@@ -159,6 +191,17 @@ Payments:
    `duplicate: true`, no extra credits.
 8. Call `verify-payment` with a session id belonging to another user (or
    without a login token) → 403/401.
+
+Close Premium:
+
+- Subscribe on `/premium` with a Stripe test card → redirected to
+  `/payment-success?mode=subscription`, welcome screen shown; a row appears
+  in `public.subscriptions` with `status = 'active'` and the right plan;
+  `select public.has_premium('<your-uuid>');` returns true.
+- Link a partner by email on `/premium` → `partner_user_id` set; the partner
+  account also gets `has_premium = true`.
+- Cancel the subscription in the Stripe dashboard → the
+  `customer.subscription.deleted` webhook flips the row to `canceled`.
 
 Internal functions:
 

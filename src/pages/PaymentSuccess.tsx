@@ -2,15 +2,19 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { CheckCircle, Loader2, RefreshCw, Crown, Sparkles } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
+import { usePremium } from '@/hooks/usePremium';
+import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 
 export default function PaymentSuccess() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { verifyPayment } = useCredits();
+  const { refresh: refreshPremium } = usePremium();
   const [verifying, setVerifying] = useState(true);
   const [verified, setVerified] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,6 +22,7 @@ export default function PaymentSuccess() {
 
   const sessionId = searchParams.get('session_id');
   const credits = searchParams.get('credits');
+  const isSubscription = searchParams.get('mode') === 'subscription';
 
   const handleVerification = async (isRetry = false) => {
     if (!sessionId) {
@@ -55,13 +60,49 @@ export default function PaymentSuccess() {
   };
 
   useEffect(() => {
-    logger.debug('PaymentSuccess component mounted', { sessionId, credits });
+    logger.debug('PaymentSuccess component mounted', { sessionId, credits, isSubscription });
+    if (isSubscription) {
+      // Subscription checkouts are confirmed by the Stripe webhook; there is
+      // no credit verification to run. Just refresh the premium state.
+      setVerifying(false);
+      setVerified(true);
+      refreshPremium();
+      return;
+    }
     handleVerification();
   }, [sessionId]);
 
   const handleContinue = () => {
     navigate('/');
   };
+
+  if (isSubscription) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-romantic-primary/5 to-romantic-accent/5 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md text-center border-primary/30">
+          <CardHeader>
+            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg">
+              <Crown className="h-8 w-8 text-white" />
+            </div>
+            <CardTitle>{t('premium.welcome.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">{t('premium.welcome.subtitle')}</p>
+            <p className="text-sm text-primary font-medium">{t('premium.welcome.partnerHint')}</p>
+            <div className="flex flex-col gap-2">
+              <Button onClick={() => navigate('/create-room')} className="w-full btn-gradient-primary text-white border-0">
+                <Sparkles className="w-4 h-4 mr-2" />
+                {t('premium.welcome.cta')}
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/premium')} className="w-full">
+                {t('premium.welcome.goPremiumPage')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-romantic-primary/5 to-romantic-accent/5 flex items-center justify-center p-4">

@@ -65,6 +65,19 @@ serve(async (req) => {
     return json({ error: "Invalid signature" }, 400);
   }
 
+  // ---- Close Premium subscription lifecycle -------------------------------
+  // customer.subscription.created/updated/deleted keep public.subscriptions
+  // in sync. Upserts are idempotent by nature (keyed on the Stripe
+  // subscription id and written with the latest object state), so no ledger
+  // claim is needed for them.
+  if (
+    event.type === "customer.subscription.created" ||
+    event.type === "customer.subscription.updated" ||
+    event.type === "customer.subscription.deleted"
+  ) {
+    return await handleSubscriptionEvent(stripe, event);
+  }
+
   // Only checkout completions grant credits. Everything else is acknowledged
   // so Stripe stops retrying.
   const relevant =
@@ -76,6 +89,12 @@ serve(async (req) => {
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
+
+  // Subscription checkouts carry no credits: sync the subscription row
+  // instead of the credit path. Idempotent via the stripe_events ledger.
+  if (session.mode === "subscription") {
+    return await handleSubscriptionCheckout(stripe, event, session);
+  }
 
   if (session.payment_status !== "paid") {
     // completed but unpaid (e.g. delayed payment method) - the
@@ -134,3 +153,139 @@ serve(async (req) => {
   console.log(`stripe-webhook: granted ${credits} credits to ${userId} (session ${session.id})`);
   return json({ received: true, credits_granted: credits });
 });
+
+// ============================================================================
+// Close Premium subscription handlers
+// ============================================================================
+
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+/** Map a Stripe subscription status onto our 4-value column. */
+function mapStatus(status: Stripe.Subscription.Status): string {
+  switch (status) {
+    case "active":
+    case "trialing":
+      return "active";
+    case "past_due":
+    case "unpaid":
+      return "past_due";
+    case "canceled":
+    case "incomplete_expired":
+      return "canceled";
+    default:
+      return "incomplete";
+  }
+}
+
+/** Upsert the public.subscriptions row from a Stripe subscription object. */
+async function upsertSubscription(
+  sub: Stripe.Subscription,
+  overrideStatus?: string,
+): Promise<Response> {
+  const userId = sub.metadata?.user_id;
+  const plan = sub.metadata?.plan;
+
+  if (!userId || !UUID_RE.test(userId)) {
+    // Not one of ours (or metadata lost) — acknowledge; retrying won't help.
+    console.error(`stripe-webhook: subscription ${sub.id} has no valid user_id metadata`);
+    return json({ received: true, error: "invalid_metadata" });
+  }
+
+  const supabase = serviceClient();
+  const { error } = await supabase.from("subscriptions").upsert(
+    {
+      user_id: userId,
+      stripe_customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null,
+      stripe_subscription_id: sub.id,
+      plan: plan === "monthly" || plan === "yearly" ? plan : null,
+      status: overrideStatus ?? mapStatus(sub.status),
+      current_period_end: sub.current_period_end
+        ? new Date(sub.current_period_end * 1000).toISOString()
+        : null,
+    },
+    { onConflict: "stripe_subscription_id" },
+  );
+
+  if (error) {
+    console.error("stripe-webhook: subscription upsert failed:", error);
+    return json({ error: "Failed to sync subscription" }, 500); // let Stripe retry
+  }
+
+  console.log(`stripe-webhook: synced subscription ${sub.id} for ${userId}`);
+  return json({ received: true, subscription_synced: true });
+}
+
+/** customer.subscription.created / updated / deleted */
+async function handleSubscriptionEvent(
+  _stripe: Stripe,
+  event: Stripe.Event,
+): Promise<Response> {
+  const sub = event.data.object as Stripe.Subscription;
+  const overrideStatus = event.type === "customer.subscription.deleted" ? "canceled" : undefined;
+  return await upsertSubscription(sub, overrideStatus);
+}
+
+/**
+ * checkout.session.completed with mode=subscription.
+ *
+ * Usually customer.subscription.created arrives too, but ordering is not
+ * guaranteed; syncing here as well makes premium available immediately after
+ * checkout. Claimed in the stripe_events ledger (credits_granted = 0) so a
+ * redelivered checkout event is a clean no-op.
+ */
+async function handleSubscriptionCheckout(
+  stripe: Stripe,
+  event: Stripe.Event,
+  session: Stripe.Checkout.Session,
+): Promise<Response> {
+  const subscriptionId =
+    typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+  if (!subscriptionId) {
+    console.error(`stripe-webhook: subscription checkout ${session.id} has no subscription id`);
+    return json({ received: true, error: "missing_subscription" });
+  }
+
+  const supabase = serviceClient();
+
+  // Idempotency claim (same ledger as credit grants; no credits involved).
+  const { error: claimError } = await supabase.from("stripe_events").insert({
+    event_id: event.id,
+    session_id: session.id,
+    event_type: event.type,
+    user_id: session.metadata?.user_id && UUID_RE.test(session.metadata.user_id)
+      ? session.metadata.user_id
+      : null,
+    credits_granted: 0,
+  });
+
+  if (claimError) {
+    if (claimError.code === "23505") {
+      console.log(`stripe-webhook: subscription session ${session.id} already processed`);
+      return json({ received: true, duplicate: true });
+    }
+    console.error("stripe-webhook: failed to record subscription event:", claimError);
+    return json({ error: "Failed to record event" }, 500);
+  }
+
+  // Fetch the full subscription so metadata/status/period are authoritative.
+  let sub: Stripe.Subscription;
+  try {
+    sub = await stripe.subscriptions.retrieve(subscriptionId);
+  } catch (err) {
+    console.error("stripe-webhook: failed to retrieve subscription:", err);
+    await supabase.from("stripe_events").delete().eq("event_id", event.id);
+    return json({ error: "Failed to retrieve subscription" }, 500); // retry
+  }
+
+  // Checkout metadata is the fallback if subscription_data.metadata was lost.
+  if (!sub.metadata?.user_id && session.metadata?.user_id) {
+    sub.metadata = { ...sub.metadata, ...session.metadata };
+  }
+
+  const result = await upsertSubscription(sub);
+  if (result.status >= 500) {
+    // Roll back the claim so Stripe's retry can re-attempt the sync.
+    await supabase.from("stripe_events").delete().eq("event_id", event.id);
+  }
+  return result;
+}

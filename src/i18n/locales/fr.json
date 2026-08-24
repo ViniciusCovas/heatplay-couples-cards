@@ -590,5 +590,84 @@
       "newSpark": "Nouvelle étincelle"
     },
     "whatsappMessage": "On a joué à Let's Get Close : {{score}}% de compatibilité 😏🔥 À toi de jouer : {{url}}"
+  },
+  "premium": {
+    "title": "Close Premium",
+    "tagline": "Un seul abonnement. Pour vous deux.",
+    "subtitle": "Des soirées illimitées de vraie conversation, pour moins qu'un café par mois.",
+    "link": "Close Premium",
+    "billing": {
+      "monthly": "Mensuel",
+      "yearly": "Annuel",
+      "yearlyBadge": "-52 %"
+    },
+    "perMonth": "/mois",
+    "perYear": "/an",
+    "free": {
+      "title": "Gratuit",
+      "price": "0 €",
+      "features": {
+        "spark": "Question Daily Spark",
+        "firstLevel": "Niveau brise-glace",
+        "credits": "Crédits à la séance"
+      }
+    },
+    "plan": {
+      "features": {
+        "unlimited": "Sessions de jeu illimitées",
+        "allLevels": "Tous les niveaux d'intimité débloqués",
+        "weeklyAnalysis": "Analyse IA hebdomadaire de votre couple",
+        "history": "Historique complet des sessions et insights",
+        "partner": "Votre partenaire est aussi couvert(e)"
+      },
+      "cta": "Passer à Close Premium",
+      "processing": "Redirection vers le paiement…",
+      "signInRequired": "Connectez-vous pour vous abonner",
+      "popular": "Le préféré"
+    },
+    "active": {
+      "title": "Vous êtes Premium",
+      "subtitle": "Profitez de soirées illimitées à deux.",
+      "renewsOn": "Renouvellement le {{date}}",
+      "manageHint": "Pour gérer ou annuler votre abonnement, utilisez le lien dans l'email de reçu Stripe ou contactez le support."
+    },
+    "partner": {
+      "title": "Partagez-le avec votre partenaire",
+      "description": "Saisissez l'email du compte de votre partenaire : un seul abonnement vous couvre tous les deux.",
+      "placeholder": "partenaire@email.com",
+      "cta": "Lier mon/ma partenaire",
+      "linked": "Partenaire lié(e)",
+      "success": "Votre partenaire profite maintenant de Close Premium !",
+      "errors": {
+        "partner_not_found": "Aucun compte trouvé avec cet email. Demandez à votre partenaire de s'inscrire d'abord.",
+        "cannot_link_self": "C'est votre propre email — saisissez celui de votre partenaire.",
+        "no_active_subscription": "Un abonnement actif est nécessaire pour lier un(e) partenaire.",
+        "not_authenticated": "Reconnectez-vous puis réessayez.",
+        "unknown": "Une erreur est survenue. Réessayez."
+      }
+    },
+    "upsell": {
+      "title": "Des soirées illimitées — Close Premium",
+      "subtitle": "Tous les niveaux, l'analyse IA hebdomadaire et tout votre historique de sessions. Vous deux, un seul abonnement.",
+      "cta": "Découvrir Close Premium"
+    },
+    "welcome": {
+      "title": "Bienvenue dans Close Premium !",
+      "subtitle": "Votre abonnement est actif. Sessions illimitées, tous les niveaux, analyse IA hebdomadaire — pour vous deux.",
+      "partnerHint": "Pensez à lier votre partenaire sur la page Premium pour qu'il ou elle soit aussi couvert(e).",
+      "cta": "Lancer une session",
+      "goPremiumPage": "Aller à Premium"
+    }
+  },
+  "dailySpark": {
+    "title": "Daily Spark",
+    "badge": "La question du jour",
+    "share": "Envoyez-la à votre partenaire",
+    "play": "Jouer au jeu complet",
+    "sharedToday": "Envoyée aujourd'hui",
+    "streak_one": "Série de {{count}} jour",
+    "streak_other": "Série de {{count}} jours",
+    "streak_many": "Série de {{count}} jours",
+    "shareText": "Notre question Daily Spark du jour : « {{question}} » — tu me réponds ? 😏 Joue avec moi ici : {{url}}"
   }
 }

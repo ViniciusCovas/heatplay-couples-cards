@@ -24,6 +24,7 @@ const AdminQuestionsBulk = lazy(() => import("./pages/AdminQuestionsBulk"));
 const AdminQuestionsManual = lazy(() => import("./pages/AdminQuestionsManual"));
 const ConnectionInsights = lazy(() => import("./pages/ConnectionInsights"));
 const FullAnalysis = lazy(() => import("./pages/FullAnalysis"));
+const Premium = lazy(() => import("./pages/Premium"));
 const Terms = lazy(() => import("./pages/legal/Terms"));
 const Privacy = lazy(() => import("./pages/legal/Privacy"));
 const Refund = lazy(() => import("./pages/legal/Refund"));
@@ -70,6 +71,7 @@ const AppContent = () => {
           <Route path="/auth" element={<Auth />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/premium" element={<Premium />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/refund" element={<Refund />} />

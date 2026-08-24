@@ -11,8 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { package_type } = await req.json();
-    
+    const { package_type, mode, plan } = await req.json();
+
     // Credit packages
     const packages = {
       "first_spark": { credits: 1, price: 350, name: "First Spark - 1 Sesión" },
@@ -21,9 +21,30 @@ serve(async (req) => {
       "endless_heat": { credits: 10, price: 1750, name: "Endless Heat Pass - 10 Sesiones" }
     };
 
-    const selectedPackage = packages[package_type as keyof typeof packages];
-    if (!selectedPackage) {
-      throw new Error("Invalid package type");
+    const isSubscription = mode === "subscription";
+
+    // Close Premium subscription plans (Stripe price IDs configured via env)
+    const premiumPrices: Record<string, string | undefined> = {
+      monthly: Deno.env.get("STRIPE_PRICE_PREMIUM_MONTHLY"),
+      yearly: Deno.env.get("STRIPE_PRICE_PREMIUM_YEARLY"),
+    };
+
+    let selectedPackage: { credits: number; price: number; name: string } | null = null;
+    let premiumPriceId: string | null = null;
+
+    if (isSubscription) {
+      if (plan !== "monthly" && plan !== "yearly") {
+        throw new Error("Invalid subscription plan");
+      }
+      premiumPriceId = premiumPrices[plan] ?? null;
+      if (!premiumPriceId) {
+        throw new Error(`Stripe price for plan '${plan}' is not configured`);
+      }
+    } else {
+      selectedPackage = packages[package_type as keyof typeof packages] ?? null;
+      if (!selectedPackage) {
+        throw new Error("Invalid package type");
+      }
     }
 
     // Create Supabase client
@@ -58,6 +79,33 @@ serve(async (req) => {
       ? requestOrigin
       : allowedOrigins[0];
 
+    if (isSubscription) {
+      // Close Premium subscription checkout
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        customer_email: customerId ? undefined : user.email,
+        line_items: [{ price: premiumPriceId!, quantity: 1 }],
+        mode: "subscription",
+        success_url: `${safeOrigin}/payment-success?session_id={CHECKOUT_SESSION_ID}&mode=subscription&plan=${plan}`,
+        cancel_url: `${safeOrigin}/premium`,
+        metadata: {
+          user_id: user.id,
+          plan: plan,
+        },
+        subscription_data: {
+          metadata: {
+            user_id: user.id,
+            plan: plan,
+          },
+        },
+      });
+
+      return new Response(JSON.stringify({ url: session.url }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     // Create payment session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -67,20 +115,20 @@ serve(async (req) => {
           price_data: {
             currency: "usd",
             product_data: { 
-              name: selectedPackage.name,
-              description: `${selectedPackage.credits} sesión${selectedPackage.credits > 1 ? 'es' : ''} de Let's Get Close`
+              name: selectedPackage!.name,
+              description: `${selectedPackage!.credits} sesión${selectedPackage!.credits > 1 ? 'es' : ''} de Let's Get Close`
             },
-            unit_amount: selectedPackage.price,
+            unit_amount: selectedPackage!.price,
           },
           quantity: 1,
         },
       ],
       mode: "payment",
-      success_url: `${safeOrigin}/payment-success?session_id={CHECKOUT_SESSION_ID}&credits=${selectedPackage.credits}`,
+      success_url: `${safeOrigin}/payment-success?session_id={CHECKOUT_SESSION_ID}&credits=${selectedPackage!.credits}`,
       cancel_url: `${safeOrigin}/`,
       metadata: {
         user_id: user.id,
-        credits: selectedPackage.credits.toString(),
+        credits: selectedPackage!.credits.toString(),
         package_type: package_type
       }
     });

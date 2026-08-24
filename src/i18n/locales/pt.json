@@ -590,5 +590,84 @@
       "newSpark": "Faísca nova"
     },
     "whatsappMessage": "Jogamos Let's Get Close e fizemos {{score}}% de compatibilidade 😏🔥 Sua vez: {{url}}"
+  },
+  "premium": {
+    "title": "Close Premium",
+    "tagline": "Uma assinatura. Para os dois.",
+    "subtitle": "Noites ilimitadas de conversa de verdade, por menos que um café por mês.",
+    "link": "Close Premium",
+    "billing": {
+      "monthly": "Mensal",
+      "yearly": "Anual",
+      "yearlyBadge": "Economize 52%"
+    },
+    "perMonth": "/mês",
+    "perYear": "/ano",
+    "free": {
+      "title": "Grátis",
+      "price": "€0",
+      "features": {
+        "spark": "Pergunta Daily Spark",
+        "firstLevel": "Nível quebra-gelo",
+        "credits": "Créditos por sessão"
+      }
+    },
+    "plan": {
+      "features": {
+        "unlimited": "Sessões de jogo ilimitadas",
+        "allLevels": "Todos os níveis de intimidade desbloqueados",
+        "weeklyAnalysis": "Análise semanal do relacionamento com IA",
+        "history": "Histórico completo de sessões e insights",
+        "partner": "Seu par também está incluído"
+      },
+      "cta": "Assinar o Close Premium",
+      "processing": "Levando você para o pagamento…",
+      "signInRequired": "Entre para assinar",
+      "popular": "O favorito"
+    },
+    "active": {
+      "title": "Você é Premium",
+      "subtitle": "Aproveitem noites ilimitadas juntos.",
+      "renewsOn": "Renova em {{date}}",
+      "manageHint": "Para gerenciar ou cancelar sua assinatura, use o link no email de recibo do Stripe ou fale com o suporte."
+    },
+    "partner": {
+      "title": "Compartilhe com seu par",
+      "description": "Digite o email da conta do seu par e ele também ganha Premium: uma assinatura cobre os dois.",
+      "placeholder": "par@email.com",
+      "cta": "Vincular par",
+      "linked": "Par vinculado",
+      "success": "Seu par agora também tem Close Premium!",
+      "errors": {
+        "partner_not_found": "Não encontramos uma conta com esse email. Peça para seu par se cadastrar primeiro.",
+        "cannot_link_self": "Esse é o seu próprio email — digite o do seu par.",
+        "no_active_subscription": "Você precisa de uma assinatura ativa para vincular seu par.",
+        "not_authenticated": "Entre novamente e tente outra vez.",
+        "unknown": "Algo deu errado. Tente novamente."
+      }
+    },
+    "upsell": {
+      "title": "Desbloqueie noites ilimitadas — Close Premium",
+      "subtitle": "Todos os níveis, análise semanal com IA e todo o histórico de sessões. Vocês dois, um só plano.",
+      "cta": "Conhecer o Close Premium"
+    },
+    "welcome": {
+      "title": "Bem-vindos ao Close Premium!",
+      "subtitle": "Sua assinatura está ativa. Sessões ilimitadas, todos os níveis e análise semanal com IA — para os dois.",
+      "partnerHint": "Não esqueça de vincular seu par na página Premium para que ele também aproveite.",
+      "cta": "Começar uma sessão",
+      "goPremiumPage": "Ir para o Premium"
+    }
+  },
+  "dailySpark": {
+    "title": "Daily Spark",
+    "badge": "A pergunta de hoje",
+    "share": "Mande para o seu par",
+    "play": "Jogar o jogo completo",
+    "sharedToday": "Enviada hoje",
+    "streak_one": "Sequência de {{count}} dia",
+    "streak_other": "Sequência de {{count}} dias",
+    "streak_many": "Sequência de {{count}} dias",
+    "shareText": "Nossa pergunta Daily Spark de hoje: \"{{question}}\" — me responde? 😏 Joga comigo aqui: {{url}}"
   }
 }

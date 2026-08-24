@@ -7,6 +7,8 @@ import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/animated-logo";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { LegalFooter } from "@/components/navigation/LegalFooter";
+import { DailySpark } from "@/components/home/DailySpark";
+import { Crown } from "lucide-react";
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -106,6 +108,11 @@ const Home = () => {
                 <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.joinPartner')}
               </Button>
+            </div>
+
+            {/* Daily Spark - today's couple question */}
+            <div className="max-w-md mx-auto lg:mx-0 pt-4 text-left">
+              <DailySpark />
             </div>
 
             {/* Value Props - Compact for mobile */}
@@ -264,6 +271,17 @@ const Home = () => {
               <p className="text-muted-foreground">{t('home.features.level3.description')}</p>
             </div>
           </div>
+        </div>
+
+        {/* Close Premium entry point */}
+        <div className="text-center mb-8">
+          <button
+            onClick={() => navigate('/premium')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/15 transition-colors"
+          >
+            <Crown className="w-4 h-4" />
+            {t('premium.upsell.cta')}
+          </button>
         </div>
 
         {/* Legal Footer */}
