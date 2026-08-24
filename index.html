@@ -16,6 +16,14 @@
     <link rel="icon" href="/app-icon.png" type="image/png">
     <link rel="apple-touch-icon" href="/app-icon.png">
 
+    <!-- Installable: adding to the home screen also enables web push on
+         iOS 16.4+, which plain Safari tabs do not get. -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Get Close">
+    <meta name="mobile-web-app-capable" content="yes">
+
     <meta property="og:title" content="Let's Get Close - Skip small talk. Start real talk." />
     <meta property="og:description" content="The AI-powered card game that brings couples closer. For adults 18+." />
     <meta property="og:type" content="website" />

@@ -1,0 +1,26 @@
+{
+  "name": "Let's Get Close",
+  "short_name": "Get Close",
+  "description": "The card game that gets you closer. Play tonight from a link — no install needed for your partner.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF5F7",
+  "theme_color": "#E91E63",
+  "categories": ["lifestyle", "entertainment"],
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "500x500",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
