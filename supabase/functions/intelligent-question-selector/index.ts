@@ -10,6 +10,13 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+// ---- Tunable knobs (see ALGORITHM.md) --------------------------------------
+const OPENAI_MODEL = 'gpt-4o-mini';
+const SELECTOR_TEMPERATURE = 0.7;
+const SELECTOR_MAX_TOKENS = 250;
+const CANDIDATE_POOL_SIZE = 20; // questions shown to the model per selection
+const OPENAI_TIMEOUT_MS = 30000;
+
 // Simple in-memory cache for level lookups
 const levelCache = new Map<string, { id: string; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -53,7 +60,7 @@ async function retryWithBackoff<T>(
 async function getCachedLevelId(supabase: any, currentLevel: number, language: string): Promise<string> {
   const cacheKey = `${currentLevel}-${language}`;
   const cached = levelCache.get(cacheKey);
-  
+
   // Return cached result if valid
   if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
     return cached.id;
@@ -75,21 +82,22 @@ async function getCachedLevelId(supabase: any, currentLevel: number, language: s
     if (!data) {
       throw new Error(`No level found for sort_order ${currentLevel} and language ${language}`);
     }
-    
+
     return data;
   }, 1, `level lookup (${cacheKey})`);
 
   // Cache the result
   levelCache.set(cacheKey, { id: levelData.id, timestamp: Date.now() });
-  
+
   return levelData.id;
 }
 
-// Enhanced OpenAI API call with better error handling
+// Enhanced OpenAI API call with better error handling.
+// Uses response_format json_object so the model must return strict JSON.
 async function callOpenAIWithRetry(promptContent: string): Promise<any> {
   return retryWithBackoff(async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), OPENAI_TIMEOUT_MS);
 
     try {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -99,10 +107,14 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [{ role: 'user', content: promptContent }],
-          temperature: 0.7,
-          max_tokens: 300,
+          model: OPENAI_MODEL,
+          messages: [
+            { role: 'system', content: 'You select questions for a couples connection game. Respond with a single valid JSON object only.' },
+            { role: 'user', content: promptContent }
+          ],
+          temperature: SELECTOR_TEMPERATURE,
+          max_tokens: SELECTOR_MAX_TOKENS,
+          response_format: { type: 'json_object' },
         }),
         signal: controller.signal,
       });
@@ -111,7 +123,7 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
 
       if (!response.ok) {
         const errorText = await response.text();
-        
+
         // Handle specific error cases
         if (response.status === 429) {
           throw new Error(`OpenAI rate limit (429): ${errorText}`);
@@ -126,9 +138,9 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      
+
       if (error.name === 'AbortError') {
-        throw new Error('OpenAI API call timed out after 30 seconds');
+        throw new Error(`OpenAI API call timed out after ${OPENAI_TIMEOUT_MS / 1000} seconds`);
       }
       throw error;
     }
@@ -136,16 +148,22 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
 }
 
 // Smart fallback function that considers context
-function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean): any {
+function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean, recentCategories: string[] = []): any {
   if (isFirstQuestion) {
     // For first questions, prefer general or introductory questions
-    const introQuestions = availableQuestions.filter(q => 
+    const introQuestions = availableQuestions.filter(q =>
       q.category && (q.category.includes('general') || q.category.includes('intro'))
     );
     if (introQuestions.length > 0) {
       return introQuestions[Math.floor(Math.random() * introQuestions.length)];
     }
   }
+
+  // Prefer a category we have not just asked, to keep the session varied
+  const freshCategoryQuestions = availableQuestions.filter(q =>
+    q.category && !recentCategories.includes(q.category)
+  );
+  const pool = freshCategoryQuestions.length > 0 ? freshCategoryQuestions : availableQuestions;
 
   // If we have last response analysis, try to balance areas
   if (lastResponseAnalysis.honesty !== undefined) {
@@ -156,22 +174,24 @@ function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis:
       { area: 'intimacy', score: lastResponseAnalysis.intimacy },
       { area: 'surprise', score: lastResponseAnalysis.surprise }
     ];
-    
+
     const lowestArea = scores.reduce((min, current) => current.score < min.score ? current : min);
-    
+
     // Try to find questions that might improve this area
-    const targetQuestions = availableQuestions.filter(q => 
+    const targetQuestions = pool.filter(q =>
       q.category && q.category.toLowerCase().includes(lowestArea.area.toLowerCase())
     );
-    
+
     if (targetQuestions.length > 0) {
       return targetQuestions[Math.floor(Math.random() * targetQuestions.length)];
     }
   }
 
   // Default random selection
-  return availableQuestions[Math.floor(Math.random() * availableQuestions.length)];
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 serve(async (req) => {
   const origin = req.headers.get('origin');
@@ -183,9 +203,9 @@ serve(async (req) => {
   // Enhanced CORS preflight handling
   if (req.method === 'OPTIONS') {
     console.log('Handling CORS preflight request');
-    return new Response(null, { 
+    return new Response(null, {
       status: 200,
-      headers: corsHeaders 
+      headers: corsHeaders
     });
   }
 
@@ -193,9 +213,23 @@ serve(async (req) => {
   let failureReason = '';
 
   try {
-    const { roomId, currentLevel, language = 'en', isFirstQuestion = false } = await req.json();
+    const { roomId, currentLevel, language: requestLanguage = 'en', isFirstQuestion = false } = await req.json();
 
-    console.log(`Processing request for room ${roomId}, level ${currentLevel}, language ${language}`);
+    // ---- Input validation ------------------------------------------------
+    if (typeof roomId !== 'string' || !UUID_RE.test(roomId)) {
+      return new Response(JSON.stringify({ error: 'Invalid roomId' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (!Number.isInteger(currentLevel) || currentLevel < 1 || currentLevel > 10) {
+      return new Response(JSON.stringify({ error: 'Invalid currentLevel' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Processing request for room ${roomId}, level ${currentLevel}, requested language ${requestLanguage}`);
 
     // Validate OpenAI API key
     if (!openAIApiKey) {
@@ -223,8 +257,27 @@ serve(async (req) => {
       });
     }
 
+    // Get room data first: we need the room's own selected_language so
+    // questions are always served in the language the couple chose for the
+    // room, regardless of what UI language the calling client happens to use.
+    const roomData = await retryWithBackoff(async () => {
+      const { data, error } = await supabase
+        .from('game_rooms')
+        .select('used_cards, selected_language')
+        .eq('id', roomId)
+        .single();
+
+      if (error) throw new Error(`Failed to fetch room data: ${error.message}`);
+      return data;
+    }, 1, 'room data fetch');
+
+    const language = roomData.selected_language || requestLanguage;
+    if (roomData.selected_language && roomData.selected_language !== requestLanguage) {
+      console.log(`Language override: room selected_language=${roomData.selected_language} (client sent ${requestLanguage})`);
+    }
+
     // Parallel data fetching with individual error handling
-    const [recentResponses, room, levelId] = await Promise.allSettled([
+    const [recentResponses, levelId] = await Promise.allSettled([
       // Get only the most recent response pair (last 2 responses) for analysis
       retryWithBackoff(async () => {
         const { data, error } = await supabase
@@ -239,18 +292,6 @@ serve(async (req) => {
         return data || [];
       }, 1, 'recent responses fetch'),
 
-      // Get room data
-      retryWithBackoff(async () => {
-        const { data, error } = await supabase
-          .from('game_rooms')
-          .select('used_cards')
-          .eq('id', roomId)
-          .single();
-
-        if (error) throw new Error(`Failed to fetch room data: ${error.message}`);
-        return data;
-      }, 1, 'room data fetch'),
-
       // Get level ID with caching
       getCachedLevelId(supabase, currentLevel, language)
     ]);
@@ -260,17 +301,12 @@ serve(async (req) => {
       failureReason = `Database error: ${recentResponses.reason.message}`;
       throw recentResponses.reason;
     }
-    if (room.status === 'rejected') {
-      failureReason = `Room fetch error: ${room.reason.message}`;
-      throw room.reason;
-    }
     if (levelId.status === 'rejected') {
       failureReason = `Level lookup error: ${levelId.reason.message}`;
       throw levelId.reason;
     }
 
     const recentResponseData = recentResponses.value;
-    const roomData = room.value;
     const levelIdValue = levelId.value;
 
     // Get available questions with retry
@@ -286,17 +322,39 @@ serve(async (req) => {
       return data || [];
     }, 1, 'questions fetch');
 
-    // Filter out already used questions
-    const usedCards = roomData.used_cards || [];
-    const availableQuestions = questions.filter((q: any) => !usedCards.includes(q.text));
+    // Filter out already used questions.
+    // NOTE: used_cards historically mixes formats — the DB trigger
+    // (handle_evaluation_completion_v5 / select_next_card_robust) stores
+    // question IDs, while older client code stored question text. Match both
+    // so a question is never repeated within a room.
+    const usedCards: string[] = roomData.used_cards || [];
+    const usedSet = new Set(usedCards);
+    const availableQuestions = questions.filter((q: any) =>
+      !usedSet.has(q.text) && !usedSet.has(String(q.id))
+    );
 
     if (availableQuestions.length === 0) {
       failureReason = 'No available questions for this level and language';
       throw new Error(failureReason);
     }
 
+    // Categories of the couple's most recent cards, to steer variety
+    const recentCardIds = recentResponseData.map((r: any) => String(r.card_id)).filter(Boolean);
+    let recentCategories: string[] = [];
+    if (recentCardIds.length > 0) {
+      try {
+        const { data: recentQs } = await supabase
+          .from('questions')
+          .select('id, category')
+          .in('id', recentCardIds);
+        recentCategories = (recentQs || []).map((q: any) => q.category).filter(Boolean);
+      } catch (_e) {
+        // Non-fatal; variety hint is best-effort
+      }
+    }
+
     // Analyze only the most recent response for context (keep prompt short)
-    let lastResponseAnalysis = { hasData: false };
+    let lastResponseAnalysis: any = { hasData: false };
     if (recentResponseData.length > 0) {
       const lastResponse = recentResponseData[0];
       if (lastResponse.evaluation) {
@@ -317,37 +375,40 @@ serve(async (req) => {
       }
     }
 
-    // Compact AI prompt focusing only on the immediate emotional state
+    // Cap the candidate list shown to the model (cost + focus). The RPC
+    // already randomizes order, so a slice is a random sample.
+    const candidates = availableQuestions.slice(0, CANDIDATE_POOL_SIZE);
+
+    // Compact AI prompt focusing only on the immediate emotional state.
+    // Evaluations are on a 1-5 scale (see ResponseEvaluation UI).
     const promptContent = `You are GetClose AI, selecting the next question to deepen this couple's connection.
 
 Context:
-- Level: ${currentLevel} (${language})
+- Level: ${currentLevel} (language: ${language})
 - Is First Question: ${isFirstQuestion}
-- Available Questions: ${availableQuestions.length}
+- Recent question categories (avoid repeating the same category back-to-back): ${recentCategories.length ? recentCategories.join(', ') : 'none yet'}
 
 ${lastResponseAnalysis.hasData ? `
-Most Recent Response Analysis:
-- Honesty: ${lastResponseAnalysis.honesty}/10
-- Attraction: ${lastResponseAnalysis.attraction}/10
-- Intimacy: ${lastResponseAnalysis.intimacy}/10
-- Surprise: ${lastResponseAnalysis.surprise}/10
+Most Recent Response Evaluation (scale 1-5):
+- Honesty: ${lastResponseAnalysis.honesty}/5
+- Attraction: ${lastResponseAnalysis.attraction}/5
+- Intimacy: ${lastResponseAnalysis.intimacy}/5
+- Surprise: ${lastResponseAnalysis.surprise}/5
 - Response Time: ${lastResponseAnalysis.response_time}ms
 
-Strategy: Based on their most recent emotional state, what question would create the deepest connection right now?
+Strategy: Based on their most recent emotional state, pick the question that best deepens connection right now. Prefer gently raising their weakest dimension, and vary the category/theme from recent questions so the session feels like a journey, not a loop.
 ` : `
 First Question Strategy: Choose an engaging opener that creates comfort and encourages vulnerability.
 `}
 
-Available Questions:
-${availableQuestions.map((q: any, i: number) => `${i + 1}. [${q.category || 'general'}] ${q.text}`).join('\n')}
-
-Select the ONE question that will create the deepest connection based on their current emotional state.
+Available Questions (0-based index):
+${candidates.map((q: any, i: number) => `${i}. [${q.category || 'general'}] ${q.text}`).join('\n')}
 
 Respond with ONLY a JSON object:
 {
-  "selectedQuestionIndex": [0-based index],
-  "reasoning": "[2-3 sentences explaining why this question is perfect right now]",
-  "targetArea": "[honesty|attraction|intimacy|surprise]"
+  "selectedQuestionIndex": <integer, 0-based index into the list above>,
+  "reasoning": "<2-3 sentences explaining why this question is perfect right now>",
+  "targetArea": "<honesty|attraction|intimacy|surprise>"
 }`;
 
     // Call OpenAI with enhanced error handling
@@ -355,7 +416,7 @@ Respond with ONLY a JSON object:
     try {
       console.log('Calling OpenAI API...');
       const data = await callOpenAIWithRetry(promptContent);
-      
+
       try {
         aiResponse = JSON.parse(data.choices[0].message.content);
         console.log('AI response parsed successfully');
@@ -366,10 +427,10 @@ Respond with ONLY a JSON object:
     } catch (apiError) {
       console.error('OpenAI API failed:', apiError.message);
       failureReason = `OpenAI API failed: ${apiError.message}`;
-      
+
       // Use smart fallback based on last response
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
-      
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion, recentCategories);
+
       // Store fallback analysis
       try {
         await supabase
@@ -408,15 +469,16 @@ Respond with ONLY a JSON object:
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
+
     // Validate AI response
-    const selectedQuestion = availableQuestions[aiResponse.selectedQuestionIndex];
+    const idx = aiResponse.selectedQuestionIndex;
+    const selectedQuestion = Number.isInteger(idx) ? candidates[idx] : undefined;
     if (!selectedQuestion) {
       failureReason = `Invalid question index selected: ${aiResponse.selectedQuestionIndex}`;
-      
+
       // Use smart fallback
-      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion);
-      
+      const fallbackQuestion = getSmartRandomFallback(availableQuestions, lastResponseAnalysis, isFirstQuestion, recentCategories);
+
       return new Response(JSON.stringify({
         question: fallbackQuestion,
         reasoning: 'Smart fallback used due to invalid AI selection',
@@ -467,8 +529,8 @@ Respond with ONLY a JSON object:
   } catch (error) {
     const processingTime = Date.now() - startTime;
     console.error('Error in intelligent-question-selector:', error.message);
-    
-    return new Response(JSON.stringify({ 
+
+    return new Response(JSON.stringify({
       error: error.message,
       fallbackToRandom: true,
       failureReason: failureReason || error.message,
