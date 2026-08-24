@@ -151,7 +151,7 @@ export const HeroDeck = () => {
       <div className="deck-float">
         <div
           className="perspective-1200 relative mx-auto"
-          style={{ width: 'min(300px, 78vw)', height: 'min(400px, 104vw)' }}
+          style={{ width: 'min(300px, 78vw)', height: 'min(380px, 99vw)' }}
         >
           {/* soft shadow cast on the light table */}
           <div

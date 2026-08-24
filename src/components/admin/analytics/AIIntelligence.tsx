@@ -99,9 +99,12 @@ export const AIIntelligence = ({ aiAnalytics, connectionIntelligence }: AIIntell
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-primary">
-                    {aiAnalytics?.performanceMetrics.aiVsRandomSuccess || 0}%
+                    {aiAnalytics?.performanceMetrics.aiSelectedShare === null ||
+                     aiAnalytics?.performanceMetrics.aiSelectedShare === undefined
+                      ? '—'
+                      : `${aiAnalytics.performanceMetrics.aiSelectedShare}%`}
                   </div>
-                  <p className="text-xs text-muted-foreground">AI vs Random Success</p>
+                  <p className="text-xs text-muted-foreground">Questions chosen by AI</p>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-secondary">
@@ -213,7 +216,9 @@ export const AIIntelligence = ({ aiAnalytics, connectionIntelligence }: AIIntell
                     <div>
                       <p className="text-sm font-medium">{area.area}</p>
                       <p className="text-xs text-muted-foreground">
-                        {area.avgImprovement}% avg improvement
+                        {area.avgScore !== null
+                          ? `Avg score ${area.avgScore}/5`
+                          : 'No score recorded'}
                       </p>
                     </div>
                     <Badge variant="outline">{area.frequency}</Badge>
@@ -230,32 +235,37 @@ export const AIIntelligence = ({ aiAnalytics, connectionIntelligence }: AIIntell
       </div>
 
       {/* Success Patterns */}
-      {connectionIntelligence?.successPatterns && connectionIntelligence.successPatterns.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              Success Pattern Recognition
-            </CardTitle>
-            <CardDescription>
-              Patterns that correlate with successful relationship outcomes
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Success Pattern Recognition
+          </CardTitle>
+          <CardDescription>
+            Correlations measured between session behaviour and the AI compatibility score
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {connectionIntelligence?.successPatterns && connectionIntelligence.successPatterns.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {connectionIntelligence.successPatterns.map((pattern) => (
                 <div key={pattern.pattern} className="space-y-2 p-4 rounded-lg bg-muted/30">
                   <div className="flex justify-between items-center">
                     <h4 className="font-medium">{pattern.pattern}</h4>
-                    <Badge variant="secondary">{Math.round(pattern.correlation * 100)}%</Badge>
+                    <Badge variant="secondary">r = {pattern.correlation.toFixed(2)}</Badge>
                   </div>
                   <p className="text-sm text-muted-foreground">{pattern.description}</p>
+                  <p className="text-xs text-muted-foreground">n = {pattern.sampleSize} sessions</p>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          ) : (
+            <div className="text-center py-4 text-muted-foreground text-sm">
+              Not enough data yet — correlations need at least 5 analysed sessions.
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

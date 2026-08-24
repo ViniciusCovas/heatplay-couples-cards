@@ -63,8 +63,10 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
       brandRecognition: Number(advertiserMetrics.marketPositioning?.brandRecognition) || 0,
       innovationIndex: Number(advertiserMetrics.marketPositioning?.innovationIndex) || 0
     },
-    roiForecasting: (advertiserMetrics.roiForecasting || []).filter(item => 
-      item && typeof item.projected === 'number' && !isNaN(item.projected)
+    // Observed monthly revenue only. `projected` is always null — this
+    // dashboard has no forecasting model, so nothing is charted as a forecast.
+    roiForecasting: (advertiserMetrics.roiForecasting || []).filter(item =>
+      item && typeof item.actual === 'number' && !isNaN(item.actual)
     )
   };
 
@@ -177,12 +179,13 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
               Revenue Growth & Projections
             </CardTitle>
             <CardDescription>
-              Demonstrable growth trajectory for advertiser confidence
+              Observed monthly revenue from completed sessions
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {safeMetrics.roiForecasting.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={safeMetrics.roiForecasting.length > 0 ? safeMetrics.roiForecasting : [{ month: 'Jan', projected: 10, actual: 5 }]}>
+              <AreaChart data={safeMetrics.roiForecasting}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="month" 
@@ -190,29 +193,22 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
                 />
                 <YAxis className="text-xs" />
                 <Tooltip 
-                  formatter={(value, name) => [
-                    `$${value.toLocaleString()}`,
-                    name === 'projected' ? 'Projected Revenue' : 'Actual Revenue'
-                  ]}
+                  formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                 />
                 <Area 
                   type="monotone" 
-                  dataKey="projected" 
-                  stroke="hsl(var(--primary))" 
-                  fill="hsl(var(--primary))"
-                  fillOpacity={0.3}
+                  dataKey="actual" 
+                  stroke="hsl(var(--secondary))" 
+                  fill="hsl(var(--secondary))"
+                  fillOpacity={0.2}
                 />
-                {safeMetrics.roiForecasting.some(item => item.actual !== null) && (
-                  <Area 
-                    type="monotone" 
-                    dataKey="actual" 
-                    stroke="hsl(var(--secondary))" 
-                    fill="hsl(var(--secondary))"
-                    fillOpacity={0.2}
-                  />
-                )}
               </AreaChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-12 text-muted-foreground text-sm">
+                Not enough data yet — no completed sessions with revenue to chart.
+              </div>
+            )}
             
             <div className="grid grid-cols-2 gap-4 mt-4 pt-4 border-t">
               <div className="text-center">
@@ -276,14 +272,15 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>ROI Forecasting for Advertisers</CardTitle>
+            <CardTitle>Monthly Revenue History</CardTitle>
             <CardDescription>
-              Projected reach and value demonstrating advertising potential
+              Actual revenue recorded per month — no projections are estimated
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {safeMetrics.roiForecasting.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={safeMetrics.roiForecasting.length > 0 ? safeMetrics.roiForecasting : [{ month: 'Jan', projected: 10 }]}>
+              <LineChart data={safeMetrics.roiForecasting}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis 
                   dataKey="month" 
@@ -291,27 +288,21 @@ export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: 
                 />
                 <YAxis className="text-xs" />
                 <Tooltip 
-                  formatter={(value, name) => [
-                    `$${value.toLocaleString()}`,
-                    name === 'projected' ? 'Projected Revenue' : 'Actual Revenue'
-                  ]}
+                  formatter={(value) => [`$${Number(value).toLocaleString()}`, 'Revenue']}
                 />
                 <Line 
                   type="monotone" 
-                  dataKey="projected" 
-                  stroke="hsl(var(--primary))" 
+                  dataKey="actual" 
+                  stroke="hsl(var(--secondary))" 
                   strokeWidth={2}
                 />
-                {safeMetrics.roiForecasting.some(item => item.actual !== null) && (
-                  <Line 
-                    type="monotone" 
-                    dataKey="actual" 
-                    stroke="hsl(var(--secondary))" 
-                    strokeWidth={2}
-                  />
-                )}
               </LineChart>
             </ResponsiveContainer>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground text-sm">
+                Not enough data yet.
+              </div>
+            )}
           </CardContent>
         </Card>
 

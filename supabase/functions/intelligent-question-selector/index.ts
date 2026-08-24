@@ -147,6 +147,29 @@ async function callOpenAIWithRetry(promptContent: string): Promise<any> {
   }, 1, 'OpenAI API call');
 }
 
+/**
+ * Which question categories serve which connection dimension.
+ *
+ * The seeded question catalogue uses Spanish category words
+ * (see supabase/migrations/20250713203321_*.sql): `reflexion`, `dinamica`,
+ * `profunda`, `intima`. The previous implementation substring-matched the
+ * category against the dimension NAME ('honesty', 'attraction', ...), which
+ * never matched any real category, so the "target the weakest dimension"
+ * branch was dead. This explicit table maps each dimension to the categories
+ * that actually exist, with the English equivalents kept for catalogues that
+ * are seeded in English.
+ */
+const DIMENSION_CATEGORIES: Record<string, string[]> = {
+  honesty: ['profunda', 'reflexion', 'deep', 'honesty', 'reflection'],
+  attraction: ['dinamica', 'intima', 'attraction', 'playful', 'dynamic'],
+  intimacy: ['intima', 'profunda', 'intimacy', 'intimate'],
+  surprise: ['dinamica', 'reflexion', 'surprise', 'fun', 'dynamic'],
+};
+
+function categoriesForDimension(dimension: string): string[] {
+  return DIMENSION_CATEGORIES[dimension] ?? [];
+}
+
 // Smart fallback function that considers context
 function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis: any, isFirstQuestion: boolean, recentCategories: string[] = []): any {
   if (isFirstQuestion) {
@@ -177,13 +200,21 @@ function getSmartRandomFallback(availableQuestions: any[], lastResponseAnalysis:
 
     const lowestArea = scores.reduce((min, current) => current.score < min.score ? current : min);
 
-    // Try to find questions that might improve this area
-    const targetQuestions = pool.filter(q =>
-      q.category && q.category.toLowerCase().includes(lowestArea.area.toLowerCase())
-    );
+    // Try to find questions that might improve this area, using the explicit
+    // dimension -> real-category mapping (see DIMENSION_CATEGORIES).
+    const wanted = categoriesForDimension(lowestArea.area);
+    if (wanted.length > 0) {
+      const matches = (list: any[]) => list.filter(q =>
+        q.category && wanted.includes(String(q.category).trim().toLowerCase())
+      );
 
-    if (targetQuestions.length > 0) {
-      return targetQuestions[Math.floor(Math.random() * targetQuestions.length)];
+      // Prefer a fresh category first, then any question of the target
+      // categories, then fall through to plain variety selection below.
+      const targetQuestions = matches(pool).length > 0 ? matches(pool) : matches(availableQuestions);
+
+      if (targetQuestions.length > 0) {
+        return targetQuestions[Math.floor(Math.random() * targetQuestions.length)];
+      }
     }
   }
 

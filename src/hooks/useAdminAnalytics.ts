@@ -65,9 +65,11 @@ export interface AIAnalytics {
   reasoningAnalysis: Array<{ keyword: string; frequency: number }>;
   targetAreaTrends: Array<{ area: string; count: number; trend: 'up' | 'down' | 'stable' }>;
   performanceMetrics: {
-    aiVsRandomSuccess: number;
+    /** Share of stored responses whose question was chosen by the AI selector.
+     *  null when no response has recorded a selection method yet. */
+    aiSelectedShare: number | null;
     avgReasoningLength: number;
-    mostCommonTargetArea: string;
+    mostCommonTargetArea: string | null;
   };
 }
 
@@ -77,8 +79,13 @@ export interface ConnectionIntelligence {
     distribution: Array<{ range: string; count: number }>;
   };
   relationshipPhases: Array<{ phase: string; count: number; percentage: number }>;
-  commonGrowthAreas: Array<{ area: string; frequency: number; avgImprovement: number }>;
-  successPatterns: Array<{ pattern: string; correlation: number; description: string }>;
+  /** Areas the AI flagged as growth areas, counted across real analyses.
+   *  avgScore is the couples' average 1-5 score for that area, or null when
+   *  the analyses did not record a score. */
+  commonGrowthAreas: Array<{ area: string; frequency: number; avgScore: number | null }>;
+  /** Correlations actually computed from session data. Empty when there is
+   *  not enough data (see MIN_CORRELATION_SAMPLE) — never a placeholder. */
+  successPatterns: Array<{ pattern: string; correlation: number; description: string; sampleSize: number }>;
 }
 
 export interface UserReturnPatterns {
@@ -119,7 +126,10 @@ export interface AdvertiserMetrics {
     brandRecognition: number;
     innovationIndex: number;
   };
-  roiForecasting: Array<{ month: string; projected: number; actual: number | null }>;
+  /** Real observed revenue per month. `projected` stays null: this product
+   *  has no forecasting model, and an invented trend line shown to an
+   *  advertiser would be a fabrication. */
+  roiForecasting: Array<{ month: string; projected: number | null; actual: number | null }>;
 }
 
 export const useAdminAnalytics = () => {
@@ -406,16 +416,14 @@ export const useAdminAnalytics = () => {
       const competitorAnalysis = totalUsers > 50 ? 85 : Math.max(65, 40 + totalUsers);
       const brandRecognition = totalSessions > 100 ? 75 : Math.max(45, 30 + totalSessions * 0.2);
 
-      // Safe ROI forecasting
-      const baseRevenue = Math.max(monthlyRevenue, 10);
-      const roiForecasting = [
-        { month: 'Jan', projected: Math.round(baseRevenue * 0.8), actual: Math.round(baseRevenue) },
-        { month: 'Feb', projected: Math.round(baseRevenue * 1.2), actual: Math.round(baseRevenue * 1.1) },
-        { month: 'Mar', projected: Math.round(baseRevenue * 1.5), actual: Math.round(baseRevenue * 1.3) },
-        { month: 'Apr', projected: Math.round(baseRevenue * 1.8), actual: null },
-        { month: 'May', projected: Math.round(baseRevenue * 2.2), actual: null },
-        { month: 'Jun', projected: Math.round(baseRevenue * 2.6), actual: null }
-      ].filter(item => !isNaN(item.projected) && item.projected > 0);
+      // Real revenue history — the last 6 months of actually consumed credits.
+      // `projected` is deliberately null: there is no forecasting model behind
+      // this dashboard, so we report observed revenue only.
+      const roiForecasting = generateRealMonthlyRevenue(safeSessions).map(entry => ({
+        month: entry.month,
+        projected: null as number | null,
+        actual: Math.round(entry.amount * 100) / 100
+      }));
 
       setAdvertiserMetrics({
         audienceQuality: {
@@ -757,22 +765,6 @@ export const useAdminAnalytics = () => {
     return last30Days;
   };
 
-  const generateROIForecasting = () => {
-    // Simple projection based on current growth
-    const next12Months = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() + i);
-      const baseValue = 100 + (i * 50); // Conservative growth projection
-      
-      return {
-        month: date.toISOString().slice(0, 7),
-        projectedReach: baseValue * 10,
-        estimatedValue: baseValue * 25
-      };
-    });
-    return next12Months;
-  };
-
   // AI Analytics Functions
   const fetchAIAnalytics = async () => {
     try {
@@ -785,7 +777,11 @@ export const useAdminAnalytics = () => {
       const categoryDistribution = calculateCategoryDistribution(aiAnalysesData || []);
       const reasoningAnalysis = analyzeReasoningPatterns(aiAnalysesData || []);
       const targetAreaTrends = calculateTargetAreaTrends(aiAnalysesData || []);
-      const performanceMetrics = calculateAIPerformanceMetrics(aiAnalysesData || []);
+      const { data: methodRows } = await supabase
+        .from('game_responses')
+        .select('selection_method');
+
+      const performanceMetrics = calculateAIPerformanceMetrics(aiAnalysesData || [], methodRows || []);
 
       setAiAnalytics({
         categoryDistribution,
@@ -802,14 +798,19 @@ export const useAdminAnalytics = () => {
     try {
       const { data: aiAnalysesData, error } = await supabase
         .from('ai_analyses')
-        .select('ai_response');
+        .select('room_id, ai_response');
 
       if (error) throw error;
+
+      // Needed for the real success-pattern correlations.
+      const { data: responsesData } = await supabase
+        .from('game_responses')
+        .select('room_id, player_id, response, response_time');
 
       const globalCompatibility = calculateGlobalCompatibility(aiAnalysesData || []);
       const relationshipPhases = analyzeRelationshipPhases(aiAnalysesData || []);
       const commonGrowthAreas = identifyCommonGrowthAreas(aiAnalysesData || []);
-      const successPatterns = analyzeSuccessPatterns(aiAnalysesData || []);
+      const successPatterns = analyzeSuccessPatterns(aiAnalysesData || [], responsesData || []);
 
       setConnectionIntelligence({
         globalCompatibility,
@@ -898,7 +899,13 @@ export const useAdminAnalytics = () => {
     });
   };
 
-  const calculateAIPerformanceMetrics = (aiAnalyses: any[]) => {
+  const calculateAIPerformanceMetrics = (aiAnalyses: any[], responses: any[]) => {
+    // Real share of AI-selected questions, from game_responses.selection_method.
+    const methodRows = responses.filter(r => typeof r?.selection_method === 'string' && r.selection_method);
+    const aiSelectedShare = methodRows.length > 0
+      ? Math.round((methodRows.filter(r => r.selection_method !== 'random').length / methodRows.length) * 100)
+      : null;
+
     const avgReasoningLength = aiAnalyses.reduce((sum, analysis) => 
       sum + (analysis.ai_response?.reasoning?.length || 0), 0) / Math.max(aiAnalyses.length, 1);
     
@@ -912,16 +919,16 @@ export const useAdminAnalytics = () => {
       mostCommon[a] > mostCommon[b] ? a : b, '');
 
     return {
-      aiVsRandomSuccess: 85, // Could be calculated based on response quality metrics
+      aiSelectedShare,
       avgReasoningLength: Math.round(avgReasoningLength),
-      mostCommonTargetArea: mostCommonTargetArea || 'Emotional Closeness'
+      mostCommonTargetArea: mostCommonTargetArea || null
     };
   };
 
   // Connection Intelligence Helper Functions
   const calculateGlobalCompatibility = (aiAnalyses: any[]) => {
     const scores = aiAnalyses.map(analysis => 
-      analysis.ai_response?.compatibility_score || 0
+      Number(analysis.ai_response?.compatibilityScore ?? analysis.ai_response?.compatibility_score) || 0
     ).filter(score => score > 0);
 
     const averageScore = scores.length > 0 
@@ -939,35 +946,189 @@ export const useAdminAnalytics = () => {
     return { averageScore: Math.round(averageScore), distribution };
   };
 
+  /**
+   * Real relationship-phase distribution.
+   *
+   * getclose-ai-analysis stores `relationshipPhase` on every final report
+   * ('exploring' | 'building' | 'deepening' | 'mastering'). We count what is
+   * actually there. If no analysis carries a phase we return an empty array,
+   * which the dashboard renders as "no data" — we never invent a count.
+   */
   const analyzeRelationshipPhases = (aiAnalyses: any[]) => {
-    const phases = ['exploring', 'building', 'deepening', 'advanced'];
-    const total = aiAnalyses.length;
-    
-    return phases.map(phase => {
-      const count = Math.floor(Math.random() * total * 0.3); // Mock for now - would analyze actual relationship depth
-      return {
+    const counts = new Map<string, number>();
+
+    aiAnalyses.forEach(analysis => {
+      const raw = analysis?.ai_response?.relationshipPhase
+        ?? analysis?.ai_response?.relationship_phase;
+      if (typeof raw !== 'string' || !raw.trim()) return;
+      const phase = raw.trim().toLowerCase();
+      counts.set(phase, (counts.get(phase) || 0) + 1);
+    });
+
+    const total = Array.from(counts.values()).reduce((sum, n) => sum + n, 0);
+    if (total === 0) return [];
+
+    return Array.from(counts.entries())
+      .map(([phase, count]) => ({
         phase: phase.charAt(0).toUpperCase() + phase.slice(1),
         count,
-        percentage: total > 0 ? Math.round((count / total) * 100) : 0
-      };
-    });
+        percentage: Math.round((count / total) * 100)
+      }))
+      .sort((a, b) => b.count - a.count);
   };
 
+  /**
+   * Real growth areas: the `growthAreas` array the AI writes on each final
+   * report ({ area, score, recommendation }). Frequency is a genuine count;
+   * avgScore is the mean 1-5 score when the analyses recorded one, else null.
+   * Returns [] when no analysis has growth areas.
+   */
   const identifyCommonGrowthAreas = (aiAnalyses: any[]) => {
-    const areas = ['Communication', 'Trust', 'Intimacy', 'Understanding', 'Conflict Resolution'];
-    return areas.map(area => ({
-      area,
-      frequency: Math.floor(Math.random() * 50) + 10, // Mock for now
-      avgImprovement: Math.floor(Math.random() * 30) + 15
-    }));
+    const buckets = new Map<string, { area: string; frequency: number; scores: number[] }>();
+
+    aiAnalyses.forEach(analysis => {
+      const growthAreas = analysis?.ai_response?.growthAreas
+        ?? analysis?.ai_response?.growth_areas;
+      if (!Array.isArray(growthAreas)) return;
+
+      growthAreas.forEach((entry: any) => {
+        const name = typeof entry === 'string' ? entry : entry?.area;
+        if (typeof name !== 'string' || !name.trim()) return;
+        const key = name.trim().toLowerCase();
+
+        const bucket = buckets.get(key) || { area: name.trim(), frequency: 0, scores: [] };
+        bucket.frequency += 1;
+        const score = Number(entry?.score);
+        if (Number.isFinite(score) && score > 0) bucket.scores.push(score);
+        buckets.set(key, bucket);
+      });
+    });
+
+    return Array.from(buckets.values())
+      .map(bucket => ({
+        area: bucket.area,
+        frequency: bucket.frequency,
+        avgScore: bucket.scores.length > 0
+          ? Math.round((bucket.scores.reduce((sum, n) => sum + n, 0) / bucket.scores.length) * 10) / 10
+          : null
+      }))
+      .sort((a, b) => b.frequency - a.frequency);
   };
 
-  const analyzeSuccessPatterns = (aiAnalyses: any[]) => {
-    return [
-      { pattern: 'Regular Sessions', correlation: 0.85, description: 'Couples who play 2+ times per week show higher compatibility' },
-      { pattern: 'Honest Responses', correlation: 0.78, description: 'High honesty scores correlate with relationship growth' },
-      { pattern: 'Balanced Participation', correlation: 0.72, description: 'Equal participation leads to better outcomes' }
+  /**
+   * Success patterns are real Pearson correlations between a per-room feature
+   * and that room's AI compatibility score. Below MIN_CORRELATION_SAMPLE rooms
+   * a correlation is meaningless, so we return an empty list and the dashboard
+   * shows "Not enough data yet" instead of a confident-looking number.
+   */
+  const MIN_CORRELATION_SAMPLE = 5;
+
+  const pearson = (xs: number[], ys: number[]): number | null => {
+    const n = xs.length;
+    if (n < MIN_CORRELATION_SAMPLE || ys.length !== n) return null;
+    const meanX = xs.reduce((s, v) => s + v, 0) / n;
+    const meanY = ys.reduce((s, v) => s + v, 0) / n;
+    let num = 0, dx = 0, dy = 0;
+    for (let i = 0; i < n; i++) {
+      const a = xs[i] - meanX;
+      const b = ys[i] - meanY;
+      num += a * b;
+      dx += a * a;
+      dy += b * b;
+    }
+    if (dx === 0 || dy === 0) return null;
+    const r = num / Math.sqrt(dx * dy);
+    return Number.isFinite(r) ? r : null;
+  };
+
+  const analyzeSuccessPatterns = (aiAnalyses: any[], responses: any[]) => {
+    // compatibility score per room (final reports only carry one each)
+    const scoreByRoom = new Map<string, number>();
+    aiAnalyses.forEach(analysis => {
+      const score = Number(
+        analysis?.ai_response?.compatibilityScore ?? analysis?.ai_response?.compatibility_score
+      );
+      if (analysis?.room_id && Number.isFinite(score) && score > 0) {
+        scoreByRoom.set(analysis.room_id, score);
+      }
+    });
+
+    if (scoreByRoom.size === 0) return [];
+
+    // per-room response features
+    const byRoom = new Map<string, { lengths: number[]; times: number[]; perPlayer: Map<string, number> }>();
+    responses.forEach(r => {
+      if (!r?.room_id || !scoreByRoom.has(r.room_id)) return;
+      const bucket = byRoom.get(r.room_id) || { lengths: [], times: [], perPlayer: new Map<string, number>() };
+      if (typeof r.response === 'string') bucket.lengths.push(r.response.length);
+      const time = Number(r.response_time);
+      if (Number.isFinite(time) && time > 0) bucket.times.push(time);
+      if (r.player_id) bucket.perPlayer.set(r.player_id, (bucket.perPlayer.get(r.player_id) || 0) + 1);
+      byRoom.set(r.room_id, bucket);
+    });
+
+    const avg = (values: number[]) => values.reduce((s, v) => s + v, 0) / values.length;
+
+    const features: Array<{
+      pattern: string;
+      description: string;
+      value: (bucket: { lengths: number[]; times: number[]; perPlayer: Map<string, number> }) => number | null;
+      explain: (r: number, n: number) => string;
+    }> = [
+      {
+        pattern: 'Longer Answers',
+        description: '',
+        value: b => (b.lengths.length > 0 ? avg(b.lengths) : null),
+        explain: (r, n) =>
+          `Average answer length vs compatibility score across ${n} analysed sessions (r = ${r.toFixed(2)}).`
+      },
+      {
+        pattern: 'Balanced Participation',
+        description: '',
+        value: b => {
+          const counts = Array.from(b.perPlayer.values());
+          if (counts.length < 2) return null;
+          const total = counts.reduce((s, v) => s + v, 0);
+          if (total === 0) return null;
+          // 1 = perfectly balanced, 0 = one player answered everything
+          return 1 - Math.abs(counts[0] - counts[1]) / total;
+        },
+        explain: (r, n) =>
+          `How evenly the two partners answered vs compatibility score across ${n} analysed sessions (r = ${r.toFixed(2)}).`
+      },
+      {
+        pattern: 'Time Taken to Answer',
+        description: '',
+        value: b => (b.times.length > 0 ? avg(b.times) : null),
+        explain: (r, n) =>
+          `Average seconds spent per answer vs compatibility score across ${n} analysed sessions (r = ${r.toFixed(2)}).`
+      }
     ];
+
+    const patterns: Array<{ pattern: string; correlation: number; description: string; sampleSize: number }> = [];
+
+    features.forEach(feature => {
+      const xs: number[] = [];
+      const ys: number[] = [];
+      byRoom.forEach((bucket, roomId) => {
+        const value = feature.value(bucket);
+        if (value === null || !Number.isFinite(value)) return;
+        xs.push(value);
+        ys.push(scoreByRoom.get(roomId)!);
+      });
+
+      const r = pearson(xs, ys);
+      if (r === null) return;
+
+      patterns.push({
+        pattern: feature.pattern,
+        correlation: Math.round(r * 100) / 100,
+        description: feature.explain(r, xs.length),
+        sampleSize: xs.length
+      });
+    });
+
+    return patterns;
   };
 
   // User Return Pattern Helper Functions
