@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { track } from '@/lib/analytics';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Brain, Heart, Users, Lightbulb, TrendingUp, Share2, Download, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ export default function FullAnalysis() {
 
   useEffect(() => {
     if (roomCode) {
+      track('analysis_viewed');
       loadAnalysisData();
     }
   }, [roomCode]);

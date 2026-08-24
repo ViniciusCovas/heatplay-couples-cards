@@ -9,7 +9,9 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  // Track dismissal instead of calling setState during render.
+  // The modal is open whenever the user is unauthenticated and hasn't dismissed it.
+  const [dismissed, setDismissed] = useState(false);
 
   if (loading) {
     return (
@@ -26,13 +28,11 @@ export const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
     if (fallback) {
       return <>{fallback}</>;
     }
-    
-    // Show auth modal
-    setShowAuthModal(true);
+
     return (
-      <AuthModal 
-        open={showAuthModal} 
-        onOpenChange={setShowAuthModal}
+      <AuthModal
+        open={!dismissed}
+        onOpenChange={(open) => setDismissed(!open)}
         onSuccess={() => window.location.reload()}
       />
     );

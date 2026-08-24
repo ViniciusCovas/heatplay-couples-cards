@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { logger } from '@/utils/logger';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -67,7 +68,7 @@ export const EnhancedContentUserIntelligence = ({ questionAnalytics, userAnalyti
       Language: q.language
     }));
     
-    console.log('Exporting enhanced question data:', data);
+    logger.debug('Exporting enhanced question data:', data);
   };
 
   const openQuestionModal = (question: any) => {

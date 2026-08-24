@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { logger } from '@/utils/logger';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export const ContentUserIntelligence = ({ questionAnalytics, userAnalytics }: Co
     }));
     
     // In a real app, this would trigger a CSV/Excel download
-    console.log('Exporting question data:', data);
+    logger.debug('Exporting question data:', data);
   };
 
   return (

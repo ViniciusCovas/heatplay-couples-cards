@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { logger } from '@/utils/logger';
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ interface AdvertiserIntelligenceProps {
 export const AdvertiserIntelligence = ({ advertiserMetrics, revenueAnalytics }: AdvertiserIntelligenceProps) => {
   const generateAdvertiserReport = () => {
     // In a real app, this would generate a comprehensive PDF report
-    console.log('Generating advertiser report with:', { advertiserMetrics, revenueAnalytics });
+    logger.debug('Generating advertiser report with:', { advertiserMetrics, revenueAnalytics });
   };
 
   // Enhanced data validation

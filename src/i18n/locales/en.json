@@ -1,4 +1,3 @@
-
 {
   "app": {
     "title": "Connection Cards",
@@ -153,25 +152,14 @@
     "waitingConnection": "Waiting for connection..."
   },
   "levelSelect": {
-    "title": "Intimate Cards",
-    "subtitle": "Choose your intensity level",
-    "newLevel": "Choose new intensity level",
-    "cards": "cards",
-    "selected": "You chose this level",
-    "waitingPartner": "Waiting for your partner to select level...",
-    "differentLevels": "Different levels selected!",
-    "mustMatch": "You've selected different levels. You must select the same level to play.",
-    "resetting": "Auto-resetting... You can choose again in a moment.",
-    "connected": "You're connected. Let's play! Starting in {{countdown}}...",
-    "agreed": "Perfect! You both chose level {{level}}. Starting in {{countdown}} seconds...",
-    "bothChose": "You both chose level {{level}}. Starting game...",
-    "readyToSelect": "Ready to select again!",
-    "syncingGame": "Levels synced! Starting level {{level}}",
-    "autoResetAfterMismatch": "Auto-resetting after different levels",
-    "votesCleared": "Clearing votes...",
-    "votesSubmitted": "You chose level {{level}}. Waiting for your partner...",
-    "syncing": "Syncing...",
-    "synchronized": "State synchronized"
+    "errors": {
+      "connectionError": "Connection Error",
+      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
+      "roomFull": "Room is Full",
+      "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
+      "roomNotFound": "Room Not Found",
+      "roomNotFoundDescription": "The room code you entered doesn't exist or has expired."
+    }
   },
   "game": {
     "roomCode": "Room Code",
@@ -180,7 +168,7 @@
     "selectLevel": "Select Level",
     "currentLevel": "Current Level",
     "round": "Round {{number}}",
-    "waitingForEvaluation": "Waiting for evaluation...",
+    "waitingForEvaluation": "Waiting for {{player}} to evaluate your response...",
     "proximityQuestion": "How close are you?",
     "responseTime": "Response time: {{time}}s",
     "typeYourResponse": "Type your response...",
@@ -250,7 +238,6 @@
       "yourTurnNext": "Get ready! It's your turn to respond next",
       "waitingForPartner": "Your partner will respond to the next card"
     },
-    "waitingForEvaluation": "Waiting for {{player}} to evaluate your response...",
     "fallbackQuestions": {
       "question1": "What was your first impression of me?",
       "question2": "What do you most admire about our relationship?",
@@ -298,16 +285,6 @@
       "invalidCode": "Invalid room code. Please check and try again.",
       "loadingFailed": "Failed to load room",
       "tryAgain": "Please try again later"
-    }
-  },
-  "levelSelect": {
-    "errors": {
-      "connectionError": "Connection Error",
-      "verifyRoomCode": "Could not connect to room. Please verify the room code.",
-      "roomFull": "Room is Full",
-      "roomFullDescription": "This room already has 2 players. Would you like to create a new room?",
-      "roomNotFound": "Room Not Found",
-      "roomNotFoundDescription": "The room code you entered doesn't exist or has expired."
     }
   },
   "levels": {
@@ -360,7 +337,8 @@
     "questionTextRequired": "Question text is required",
     "invalidRoomCode": "Invalid room code",
     "roomFull": "Room is full",
-    "gameAlreadyStarted": "Game has already started"
+    "gameAlreadyStarted": "Game has already started",
+    "authFailed": "Authentication failed. Please try again."
   },
   "placeholders": {
     "enterRoomCode": "Enter room code",
@@ -496,5 +474,67 @@
         "endless_heat": "Unlimited"
       }
     }
+  },
+  "auth": {
+    "title": "Welcome",
+    "subtitle": "Sign in or create your account to start playing with your partner",
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "your.email@example.com",
+    "passwordPlaceholderSignIn": "Your password",
+    "passwordPlaceholderSignUp": "Choose a strong password",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "forgotPassword": "Forgot your password?",
+    "signInRequired": "Sign in required",
+    "toast": {
+      "errorTitle": "Error",
+      "successTitle": "Success",
+      "signedIn": "Signed in successfully!",
+      "checkEmail": "Check your email to confirm your account!",
+      "unexpected": "An unexpected error occurred"
+    },
+    "reset": {
+      "title": "Reset your password",
+      "description": "Enter your email and we'll send you a link to reset your password",
+      "sendLink": "Send reset link",
+      "sending": "Sending...",
+      "emailSentDescription": "If an account exists for that email, a reset link is on its way. Check your inbox.",
+      "backToSignIn": "Back to sign in",
+      "newPasswordTitle": "Set a new password",
+      "newPasswordSubtitle": "Choose a new password for your account",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm new password",
+      "confirmPasswordPlaceholder": "Repeat your new password",
+      "updatePassword": "Update password",
+      "updating": "Updating...",
+      "passwordUpdated": "Your password has been updated. Welcome back!",
+      "passwordMismatch": "The passwords do not match",
+      "passwordTooShort": "The password must be at least 6 characters long",
+      "invalidLink": "This password reset link is invalid or has expired. Please request a new one."
+    },
+    "ageGate": {
+      "label": "I confirm I am 18 years of age or older and accept the <1>Terms of Service</1> and <3>Privacy Policy</3>",
+      "required": "You must confirm that you are 18 or older and accept the terms to create an account"
+    },
+    "modal": {
+      "title": "Sign in to Continue",
+      "subtitle": "Quick and secure authentication to create your room",
+      "continueWithGoogle": "Continue with Google",
+      "or": "Or",
+      "useEmail": "Use Email Instead",
+      "termsText": "By continuing, you agree to our Terms of Service and Privacy Policy"
+    }
+  },
+  "legal": {
+    "termsTitle": "Terms of Service",
+    "privacyTitle": "Privacy Policy",
+    "refundTitle": "Refund Policy",
+    "backHome": "Back to home",
+    "lastUpdated": "Last updated",
+    "translationNote": "This document is provided in English. Translated versions (Español, Français, Português) are available on request at legal@letsgetclose.app.",
+    "adultsOnly": "For adults 18+ only"
   }
 }

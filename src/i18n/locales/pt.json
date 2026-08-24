@@ -170,7 +170,15 @@
     "votesCleared": "Limpando votos...",
     "votesSubmitted": "Você escolheu o nível {{level}}. Aguardando seu parceiro...",
     "syncing": "Sincronizando...",
-    "synchronized": "Estado sincronizado"
+    "synchronized": "Estado sincronizado",
+    "errors": {
+      "connectionError": "Erro de conexão",
+      "verifyRoomCode": "Não foi possível conectar à sala. Verifique o código da sala.",
+      "roomFull": "A sala está cheia",
+      "roomFullDescription": "Esta sala já tem 2 jogadores. Deseja criar uma nova sala?",
+      "roomNotFound": "Sala não encontrada",
+      "roomNotFoundDescription": "O código de sala inserido não existe ou expirou."
+    }
   },
   "game": {
     "roomCode": "Código da Sala",
@@ -179,7 +187,7 @@
     "selectLevel": "Selecionar Nível",
     "currentLevel": "Nível Atual",
     "round": "Rodada {{number}}",
-    "waitingForEvaluation": "Aguardando avaliação...",
+    "waitingForEvaluation": "Aguardando {{player}} avaliar sua resposta...",
     "proximityQuestion": "Quão próximos vocês estão?",
     "responseTime": "Tempo de resposta: {{time}}s",
     "typeYourResponse": "Digite sua resposta...",
@@ -198,7 +206,11 @@
       "finalReportFailed": "Não foi possível gerar o relatório final",
       "levelChangeFailed": "Não foi possível solicitar mudança de nível",
       "cardRecoveryFailed": "Erro de Seleção de Carta",
-      "cardRecoveryFailedDescription": "Não foi possível carregar a pergunta. Por favor, atualize a página."
+      "cardRecoveryFailedDescription": "Não foi possível carregar a pergunta. Por favor, atualize a página.",
+      "roomFull": "A sala está cheia",
+      "roomFullDescription": "Esta sala já tem 2 jogadores. Deseja criar uma nova sala?",
+      "roomNotFound": "Sala não encontrada",
+      "roomNotFoundDescription": "O código de sala inserido não existe ou expirou."
     },
     "noRoomCode": "Nenhum código de sala fornecido",
     "retryingConnection": "Tentando conexão novamente...",
@@ -235,7 +247,9 @@
       "honestyDescription": "Quão genuína e autêntica foi a resposta?",
       "attractionDescription": "Quão atraente você achou a resposta?",
       "intimacyDescription": "Quão íntima e pessoal foi a resposta?",
-      "surpriseDescription": "Quão surpreendente ou inesperada foi a resposta?"
+      "surpriseDescription": "Quão surpreendente ou inesperada foi a resposta?",
+      "submitted": "Avaliação enviada!",
+      "processing": "Processando sua avaliação..."
     },
     "processing": {
       "title": "Processando Avaliação...",
@@ -243,7 +257,6 @@
       "yourTurnNext": "Prepare-se! É sua vez de responder",
       "waitingForPartner": "Seu parceiro responderá à próxima carta"
     },
-    "waitingForEvaluation": "Aguardando {{player}} avaliar sua resposta...",
     "fallbackQuestions": {
       "question1": "Qual foi sua primeira impressão sobre mim?",
       "question2": "O que você mais admira em nosso relacionamento?",
@@ -271,7 +284,8 @@
       "partnerWantsLevelChange": "Seu parceiro quer mudar de nível",
       "differentLevelsSelected": "Vocês selecionaram níveis diferentes. Devem selecionar o mesmo nível para jogar.",
       "choosingNewLevel": "Seu parceiro quer mudar de nível. Escolhendo novo nível...",
-      "actionSyncError": "Erro sincronizando ação"
+      "actionSyncError": "Erro sincronizando ação",
+      "yourResponseWasEvaluated": "Sua resposta recebeu uma avaliação!"
     }
   },
   "proximitySelection": {
@@ -285,7 +299,11 @@
       "joinFailed": "Falha ao entrar na sala",
       "invalidCode": "Código de sala inválido. Por favor verifique e tente novamente.",
       "loadingFailed": "Falha ao carregar a sala",
-      "tryAgain": "Por favor tente novamente mais tarde"
+      "tryAgain": "Por favor tente novamente mais tarde",
+      "roomFull": "A sala está cheia",
+      "roomFullDescription": "Esta sala já tem 2 jogadores. Deseja criar uma nova sala?",
+      "roomNotFound": "Sala não encontrada",
+      "roomNotFoundDescription": "O código de sala inserido não existe ou expirou."
     }
   },
   "levels": {
@@ -305,7 +323,7 @@
   "admin": {
     "dashboard": "Painel de Administração",
     "manageQuestions": "Gerenciar Perguntas",
-    "manageLevels": "Gerenciar Níveis",          
+    "manageLevels": "Gerenciar Níveis",
     "bulkImport": "Importação em Lote",
     "manualEntry": "Entrada Manual",
     "questionText": "Texto da Pergunta",
@@ -338,7 +356,8 @@
     "questionTextRequired": "Texto da pergunta é obrigatório",
     "invalidRoomCode": "Código de sala inválido",
     "roomFull": "A sala está cheia",
-    "gameAlreadyStarted": "O jogo já começou"
+    "gameAlreadyStarted": "O jogo já começou",
+    "authFailed": "A autenticação falhou. Por favor, tente novamente."
   },
   "placeholders": {
     "enterRoomCode": "Digite o código da sala",
@@ -437,7 +456,21 @@
     "keyInsights": "Insights Principais",
     "personalizedTips": "Dicas Personalizadas",
     "culturalNotes": "Notas Culturais",
-    "nextSession": "Próxima Sessão"
+    "nextSession": "Próxima Sessão",
+    "analyzing": "Analisando a conexão de vocês...",
+    "randomFallback": "Seleção aleatória",
+    "microTips": [
+      "A IA está analisando seus padrões de conversa...",
+      "Encontrando a pergunta perfeita para a conexão de vocês...",
+      "Considerando suas respostas anteriores...",
+      "Criando uma experiência personalizada...",
+      "A IA está lendo nas entrelinhas...",
+      "Selecionando com base na dinâmica única de vocês...",
+      "Preparando o próximo passo da sua jornada...",
+      "A IA está entendendo o estilo de conexão de vocês...",
+      "Escolhendo a pergunta mais significativa...",
+      "Criando magia com seleção inteligente..."
+    ]
   },
   "credits": {
     "modal": {
@@ -460,5 +493,67 @@
         "endless_heat": "Ilimitado"
       }
     }
+  },
+  "auth": {
+    "title": "Bem-vindo(a)",
+    "subtitle": "Entre ou crie sua conta para começar a jogar com seu par",
+    "signIn": "Entrar",
+    "signUp": "Criar conta",
+    "email": "E-mail",
+    "password": "Senha",
+    "emailPlaceholder": "seu.email@exemplo.com",
+    "passwordPlaceholderSignIn": "Sua senha",
+    "passwordPlaceholderSignUp": "Escolha uma senha forte",
+    "signingIn": "Entrando...",
+    "creatingAccount": "Criando conta...",
+    "forgotPassword": "Esqueceu sua senha?",
+    "signInRequired": "Login necessário",
+    "toast": {
+      "errorTitle": "Erro",
+      "successTitle": "Sucesso",
+      "signedIn": "Login realizado com sucesso!",
+      "checkEmail": "Verifique seu e-mail para confirmar sua conta!",
+      "unexpected": "Ocorreu um erro inesperado"
+    },
+    "reset": {
+      "title": "Redefinir sua senha",
+      "description": "Digite seu e-mail e enviaremos um link para redefinir sua senha",
+      "sendLink": "Enviar link",
+      "sending": "Enviando...",
+      "emailSentDescription": "Se existir uma conta com esse e-mail, o link de redefinição está a caminho. Verifique sua caixa de entrada.",
+      "backToSignIn": "Voltar para o login",
+      "newPasswordTitle": "Definir uma nova senha",
+      "newPasswordSubtitle": "Escolha uma nova senha para sua conta",
+      "newPassword": "Nova senha",
+      "confirmPassword": "Confirmar nova senha",
+      "confirmPasswordPlaceholder": "Repita sua nova senha",
+      "updatePassword": "Atualizar senha",
+      "updating": "Atualizando...",
+      "passwordUpdated": "Sua senha foi atualizada. Bem-vindo(a) de volta!",
+      "passwordMismatch": "As senhas não coincidem",
+      "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
+      "invalidLink": "Este link de redefinição de senha é inválido ou expirou. Solicite um novo."
+    },
+    "ageGate": {
+      "label": "Confirmo que tenho 18 anos ou mais e aceito os <1>Termos de Serviço</1> e a <3>Política de Privacidade</3>",
+      "required": "Você deve confirmar que tem 18 anos ou mais e aceitar os termos para criar uma conta"
+    },
+    "modal": {
+      "title": "Entre para continuar",
+      "subtitle": "Autenticação rápida e segura para criar sua sala",
+      "continueWithGoogle": "Continuar com o Google",
+      "or": "Ou",
+      "useEmail": "Usar e-mail",
+      "termsText": "Ao continuar, você concorda com nossos Termos de Serviço e nossa Política de Privacidade"
+    }
+  },
+  "legal": {
+    "termsTitle": "Termos de Serviço",
+    "privacyTitle": "Política de Privacidade",
+    "refundTitle": "Política de Reembolso",
+    "backHome": "Voltar ao início",
+    "lastUpdated": "Última atualização",
+    "translationNote": "Este documento é fornecido em inglês. Versões traduzidas (Español, Français, Português) estão disponíveis mediante solicitação em legal@letsgetclose.app.",
+    "adultsOnly": "Somente para maiores de 18 anos"
   }
 }

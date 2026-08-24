@@ -22,6 +22,7 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/utils/logger";
+import { track } from "@/lib/analytics";
 import { useGameRealTimeState } from "@/hooks/useGameRealTimeState";
 import { RealTimeIndicators } from "@/components/game/RealTimeIndicators";
 import { usePauseBackend, createLocalGameChannel, LocalGameEvent } from '@/hooks/usePauseBackend';
@@ -58,6 +59,15 @@ const Game = () => {
 
   // Room connection state management
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+
+  // Funnel analytics: fire game_completed once per session when the room finishes
+  const gameCompletedTracked = useRef(false);
+  useEffect(() => {
+    if (room?.status === 'finished' && !gameCompletedTracked.current) {
+      gameCompletedTracked.current = true;
+      track('game_completed', { level: currentLevel });
+    }
+  }, [room?.status, currentLevel]);
   const [isRoomLoaded, setIsRoomLoaded] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);

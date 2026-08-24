@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { track } from '@/lib/analytics';
 
 export interface CreditPackage {
   id: string;
@@ -96,6 +97,7 @@ export const useCredits = () => {
       if (error) throw error;
 
       if (data.url) {
+        track('checkout_started', { package: packageId });
         window.open(data.url, '_blank');
         return true;
       }
@@ -117,6 +119,7 @@ export const useCredits = () => {
       if (error) throw error;
 
       if (data.success) {
+        track('purchase_verified', { credits_added: data.credits_added });
         await fetchCredits(); // Refresh credits
         toast.success(`¡${data.credits_added} crédito${data.credits_added > 1 ? 's' : ''} añadido${data.credits_added > 1 ? 's' : ''} a tu cuenta!`);
         return true;

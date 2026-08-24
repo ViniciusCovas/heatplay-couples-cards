@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CreditBalance } from '@/components/credits/CreditBalance';
 import { CreditPurchaseModal } from '@/components/credits/CreditPurchaseModal';
 import { useCredits } from '@/hooks/useCredits';
+import { logger } from '@/utils/logger';
+import { track } from '@/lib/analytics';
 
 function CreateRoomContent() {
   const [level] = useState(1); // Default level
@@ -30,7 +32,7 @@ function CreateRoomContent() {
   // Remove the useEffect for credit consumption since we now do it synchronously
 
   const handleCreateRoom = async (): Promise<void> => {
-    console.log('🚀 Starting room creation process', { 
+    logger.debug('Starting room creation process', { 
       user: user?.id, 
       credits, 
       level,
@@ -39,23 +41,24 @@ function CreateRoomContent() {
 
     // Check if user has credits first
     if (credits < 1) {
-      console.log('❌ Insufficient credits', { credits });
+      logger.debug('Insufficient credits', { credits });
       setShowCreditModal(true);
       return;
     }
 
     setIsCreating(true);
     try {
-      console.log('📞 Calling createRoom function...');
+      logger.debug('Calling createRoom function...');
       const code = await createRoom(level, user?.id);
-      console.log('✅ Room created successfully', { code });
+      logger.info('Room created successfully', { code });
+      track('room_created', { level });
       
       // Consume credit immediately after room creation
-      console.log('💰 Consuming credit for room', { code });
+      logger.debug('Consuming credit for room', { code });
       const consumeResult = await consumeCredit(code);
       
       if (!consumeResult.success) {
-        console.error('❌ Credit consumption failed', consumeResult);
+        logger.error('Credit consumption failed', consumeResult);
         if (room) {
           await leaveRoom();
         }
@@ -69,15 +72,15 @@ function CreateRoomContent() {
         return;
       }
       
-      console.log('✅ Credit consumed successfully');
+      logger.debug('Credit consumed successfully');
       setRoomCode(code);
       toast.success(t('messages.roomCreated'));
     } catch (error) {
-      console.error('❌ Room creation failed:', error);
+      logger.error('Room creation failed', error);
       
       // More specific error handling
       if (error instanceof Error) {
-        console.error('Error details:', {
+        logger.error('Error details', {
           message: error.message,
           name: error.name,
           stack: error.stack
@@ -105,7 +108,7 @@ function CreateRoomContent() {
       // Navigate without room code in URL to prevent global room manager conflicts
       navigate('/proximity-selection', { state: { roomCode, isCreator: true } });
     } catch (error) {
-      console.error('❌ Error starting game:', error);
+      logger.error('Error starting game', error);
       toast.error('Error starting game');
     }
   };

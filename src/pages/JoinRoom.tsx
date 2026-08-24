@@ -9,6 +9,8 @@ import { useRoomService } from '@/hooks/useRoomService';
 import { WaitingRoom } from '@/components/game/WaitingRoom';
 import { useTranslation } from 'react-i18next';
 import { Logo } from '@/components/ui/animated-logo';
+import { logger } from '@/utils/logger';
+import { track } from '@/lib/analytics';
 
 export default function JoinRoom() {
   const [roomCode, setRoomCode] = useState('');
@@ -42,7 +44,7 @@ export default function JoinRoom() {
 
     // Prevent duplicate calls
     if (isJoining) {
-      console.log('🔒 Room join already in progress, skipping duplicate call');
+      logger.debug('Room join already in progress, skipping duplicate call');
       return;
     }
 
@@ -60,7 +62,7 @@ export default function JoinRoom() {
     setIsJoining(true);
     
     try {
-      console.log('🚀 JoinRoom: Attempting to join room:', { 
+      logger.debug('JoinRoom: Attempting to join room', { 
         code,
         isManual: !codeToJoin,
         hasProcessedUrl,
@@ -70,16 +72,17 @@ export default function JoinRoom() {
       const success = await joinRoom(code.toUpperCase());
       
       if (success) {
-        console.log('✅ JoinRoom: Successfully joined/rejoined room');
+        logger.info('JoinRoom: Successfully joined/rejoined room');
+        track('room_joined');
         toast.success(t('joinRoom.success.connected'));
         if (!codeToJoin) setRoomCode(code); // Only update state if manual input
       } else {
-        console.log('❌ JoinRoom: Room join returned false');
+        logger.warn('JoinRoom: Room join returned false');
         toast.error(t('joinRoom.errors.invalidCode'));
         setHasProcessedUrl(false); // Reset to allow retry
       }
     } catch (error: any) {
-      console.log('❌ JoinRoom: Room join error:', { 
+      logger.error('JoinRoom: Room join error', { 
         errorMessage: error.message,
         errorType: error.constructor.name,
         error 
@@ -95,7 +98,7 @@ export default function JoinRoom() {
       } else if (error.message === 'room_closed') {
         toast.error('This room is no longer accepting players.');
       } else {
-        console.error('Unexpected join error:', error);
+        logger.error('Unexpected join error', error);
         toast.error(t('joinRoom.errors.connectionError'));
       }
       setHasProcessedUrl(false); // Reset to allow retry

@@ -1,9 +1,21 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type ComponentType } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
-import { Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users } from "lucide-react";
-import * as LucideReact from "lucide-react";
+import {
+  Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users,
+  Sparkles, Star, Zap, Sun, Moon, Smile, Gift, Crown, Gem, Coffee,
+  Music, Target, Handshake, Eye, Feather, Compass, Key, Lightbulb,
+} from "lucide-react";
+
+// Curated icon map instead of `import * as LucideReact` — the namespace
+// import defeated tree-shaking and pulled the whole icon library (~700KB)
+// into this route's chunk. Unknown names fall back to Heart.
+const LEVEL_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  Lock, Heart, MessageCircle, Flame, AlertTriangle, Timer, Users,
+  Sparkles, Star, Zap, Sun, Moon, Smile, Gift, Crown, Gem, Coffee,
+  Music, Target, Handshake, Eye, Feather, Compass, Key, Lightbulb,
+};
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { 
@@ -121,7 +133,7 @@ const LevelSelect = () => {
                 } else {
                   // Try to find the icon in lucide-react
                   const iconName = iconStr.replace(/[^a-zA-Z]/g, '');
-                  const component = (LucideReact as any)[iconName] || Heart;
+                  const component = LEVEL_ICONS[iconName] || Heart;
                   return { type: 'lucide', component, emoji: null };
                 }
               };

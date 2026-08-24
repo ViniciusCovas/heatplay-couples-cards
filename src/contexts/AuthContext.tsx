@@ -3,6 +3,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/logger';
+import { identify } from '@/lib/analytics';
 
 interface Profile {
   id: string;
@@ -80,6 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (session?.user) {
           // Update user activity on login
           if (event === 'SIGNED_IN') {
+            identify(session.user.id);
             setTimeout(() => {
               updateUserActivity(session.user.id);
             }, 0);

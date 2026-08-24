@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTranslation } from "react-i18next";
 import { Logo } from "@/components/ui/animated-logo";
 import { AuthModal } from "@/components/auth/AuthModal";
+import { LegalFooter } from "@/components/navigation/LegalFooter";
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -264,6 +265,9 @@ const Home = () => {
             </div>
           </div>
         </div>
+
+        {/* Legal Footer */}
+        <LegalFooter />
       </div>
 
       {/* Auth Modal */}

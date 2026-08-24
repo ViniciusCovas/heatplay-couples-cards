@@ -54,7 +54,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
   const { playerId, isReady: playerIdReady } = usePlayerId();
 
   const createRoom = useCallback(async (level: number, _userId?: string): Promise<string> => {
-    console.log('🔧 createRoom called', { level, userId: user?.id });
+    logger.debug('🔧 createRoom called', { level, userId: user?.id });
     
     if (!user?.id) {
       console.error('❌ createRoom called without authenticated user');
@@ -62,7 +62,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
 
     // Use atomic RPC to create room and join as player 1 with correct RLS context
-    console.log('📞 Calling RPC: create_room_and_join...');
+    logger.debug('📞 Calling RPC: create_room_and_join...');
     const { data, error } = await supabase.rpc('create_room_and_join', {
       level_param: level,
       selected_language_param: i18n.language || 'en'
@@ -79,7 +79,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       throw new Error('Failed to create room. Please try again.');
     }
 
-    console.log('✅ RPC room created:', created);
+    logger.debug('✅ RPC room created:', created);
 
     // Fetch full room (ensures we have all fields)
     const { data: roomData, error: roomError } = await supabase
@@ -121,7 +121,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
   const joinRoom = useCallback(async (roomCode: string): Promise<boolean> => {
     // Enhanced debugging for player identity tracking
-    console.log('🎯 JOIN ROOM - Player Identity Debug:', { 
+    logger.debug('🎯 JOIN ROOM - Player Identity Debug:', { 
       roomCode, 
       playerId: playerId ? `${playerId.substring(0, 8)}...` : 'NOT_SET',
       playerIdFull: playerId,
@@ -153,7 +153,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
       }
 
       // Use 2-parameter join_room_by_code RPC (now the only version after migration)
-      console.log('🚀 Calling join_room_by_code RPC...', { 
+      logger.debug('🚀 Calling join_room_by_code RPC...', { 
         roomCode,
         playerId: playerId.substring(0, 8) + '...',
         playerIdFull: playerId,
@@ -165,7 +165,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         player_id_param: playerId
       });
 
-      console.log('📥 RPC Response:', { joinResult, rpcError });
+      logger.debug('📥 RPC Response:', { joinResult, rpcError });
 
       if (rpcError) {
         console.error('❌ RPC join_room_by_code failed:', rpcError);
@@ -179,7 +179,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
 
       // Handle already_joined case specially
       if (joinResult.success && (joinResult as any).already_joined) {
-        console.log('✅ Player already joined this room - syncing state', joinResult);
+        logger.debug('✅ Player already joined this room - syncing state', joinResult);
         const roomId = (joinResult as any).room_id;
         
         // Initialize connection state for rejoining player
@@ -206,7 +206,7 @@ export const useRoomService = (): UseRoomServiceReturn => {
         throw new Error(knownError);
       }
 
-      console.log('✅ Successfully joined room via RPC:', joinResult);
+      logger.debug('✅ Successfully joined room via RPC:', joinResult);
 
       const roomId = (joinResult as any).room_id;
       if (!roomId) {
