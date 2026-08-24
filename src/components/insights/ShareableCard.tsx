@@ -17,6 +17,8 @@ export interface ShareableCardProps {
   insight?: string;
   /** Optional relationship phase from the analysis, shown as a small tag */
   relationshipPhase?: string;
+  /** Optional server-provided archetype name; preferred over the client-side score-band derivation */
+  archetype?: string;
 }
 
 interface CardLabels {
@@ -179,10 +181,19 @@ export function paintShareCard(
   ctx.fill();
   ctx.restore();
 
+  // Tracked-out small caps for label text (no-op on engines without letterSpacing)
+  const setTracking = (px: number): void => {
+    try {
+      (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = `${px}px`;
+    } catch { /* older engines */ }
+  };
+
   // --- "Our vibe" eyebrow + archetype headline ---
+  setTracking(6);
   ctx.font = `500 34px ${SANS}`;
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.fillText(labels.ourVibe.toUpperCase(), cx, 380);
+  setTracking(0);
 
   ctx.font = `700 92px ${SERIF}`;
   const headGrad = ctx.createLinearGradient(0, 420, 0, 560);
@@ -268,20 +279,24 @@ export function paintShareCard(
     ctx.restore();
   }
 
+  setTracking(6);
   ctx.font = `600 36px ${SANS}`;
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
   ctx.fillText(labels.compatibility.toUpperCase(), cx, ringY + radius + 90);
+  setTracking(0);
 
   // --- Insight quote block ---
-  const quoteTop = 1430;
+  const quoteTop = 1415;
+  setTracking(6);
   ctx.font = `500 32px ${SANS}`;
   ctx.fillStyle = 'rgba(255,143,176,0.85)';
   ctx.fillText(labels.insightLabel.toUpperCase(), cx, quoteTop);
+  setTracking(0);
 
   ctx.font = `italic 500 46px ${SERIF}`;
   ctx.fillStyle = 'rgba(255,255,255,0.92)';
-  const quoteLines = wrapLines(ctx, `“${truncate(labels.insight, 140)}”`, CARD_W - 300, 4);
-  quoteLines.forEach((line, i) => ctx.fillText(line, cx, quoteTop + 80 + i * 64));
+  const quoteLines = wrapLines(ctx, `“${truncate(labels.insight, 130)}”`, CARD_W - 260, 4);
+  quoteLines.forEach((line, i) => ctx.fillText(line, cx, quoteTop + 76 + i * 62));
 
   // --- Footer ---
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
@@ -296,15 +311,17 @@ export function paintShareCard(
   ctx.fillText(labels.footer, cx, CARD_H - 120);
 }
 
-export function ShareableCard({ compatibilityScore, insight, relationshipPhase }: ShareableCardProps) {
+export function ShareableCard({ compatibilityScore, insight, relationshipPhase, archetype: serverArchetype }: ShareableCardProps) {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
   const archetypeKey = archetypeKeyForScore(compatibilityScore);
-  const archetype = archetypeKey
-    ? t(`shareCard.archetypes.${archetypeKey}`)
-    : t('shareCard.fallbackArchetype');
+  const archetype = serverArchetype?.trim()
+    ? serverArchetype.trim()
+    : archetypeKey
+      ? t(`shareCard.archetypes.${archetypeKey}`)
+      : t('shareCard.fallbackArchetype');
 
   const siteUrl = window.location.origin;
   const shareText = t('shareCard.whatsappMessage', {

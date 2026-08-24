@@ -50,6 +50,10 @@ interface AnalysisData {
   culturalNotes: string[];
   relationshipPhase: string;
   nextSessionRecommendations: string[];
+  /** Optional AI-provided archetype name (preferred over client-side score bands) */
+  archetype?: string;
+  /** Optional AI-provided one-liner crafted for sharing */
+  shareable_insight?: string;
 }
 
 export default function FullAnalysis() {
@@ -370,7 +374,8 @@ export default function FullAnalysis() {
         {/* Shareable Wrapped-style Result Card */}
         <ShareableCard
           compatibilityScore={analysis.compatibilityScore}
-          insight={analysis.keyInsights?.[0]}
+          archetype={analysis.archetype}
+          insight={analysis.shareable_insight || analysis.keyInsights?.[0]}
           relationshipPhase={analysis.relationshipPhase}
         />
 

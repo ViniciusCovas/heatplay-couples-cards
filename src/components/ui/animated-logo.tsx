@@ -20,7 +20,7 @@ export const Logo = ({
   return (
     <div 
       className={cn(
-        "flex items-center justify-center transition-all duration-300 cursor-pointer hover:scale-105",
+        "flex items-center justify-center max-w-full transition-all duration-300 cursor-pointer hover:scale-105",
         sizeClasses[size],
         className
       )}
@@ -29,7 +29,7 @@ export const Logo = ({
       <img 
         src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png" 
         alt="Let's Get Close - Dating App Logo"
-        className="w-auto h-full object-contain"
+        className="w-auto max-w-full h-full object-contain"
       />
     </div>
   )

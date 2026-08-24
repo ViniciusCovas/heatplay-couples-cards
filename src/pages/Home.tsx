@@ -41,7 +41,7 @@ const Home = () => {
         <div className="grid lg:grid-cols-12 gap-8 lg:gap-16 items-center min-h-screen">
           
           {/* Left Side - Hero Content */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
+          <div className="lg:col-span-7 min-w-0 space-y-6 text-center lg:text-left">
             {/* Trust Indicators */}
             <div className="flex items-center justify-center lg:justify-start gap-6 mb-4">
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium">
@@ -95,7 +95,7 @@ const Home = () => {
             <div className="space-y-4 max-w-md mx-auto lg:mx-0 pt-4">
               <Button 
                 onClick={handleStartJourney} 
-                className="w-full h-16 text-lg font-semibold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group" 
+                className="w-full min-h-16 h-auto py-3 whitespace-normal text-lg font-semibold btn-gradient-primary text-white border-0 shadow-xl hover:shadow-2xl transition-all duration-300 group"
                 size="lg"
               >
                 <Users className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
@@ -104,7 +104,7 @@ const Home = () => {
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </Button>
               
-              <Button onClick={() => navigate('/join-room')} className="w-full h-16 text-lg font-semibold btn-gradient-secondary group" variant="outline" size="lg">
+              <Button onClick={() => navigate('/join-room')} className="w-full min-h-16 h-auto py-3 whitespace-normal text-lg font-semibold btn-gradient-secondary group" variant="outline" size="lg">
                 <MessageCircle className="w-6 h-6 mr-3 group-hover:scale-110 transition-transform" />
                 {t('home.buttons.joinPartner')}
               </Button>

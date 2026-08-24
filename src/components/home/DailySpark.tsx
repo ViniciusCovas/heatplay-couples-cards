@@ -88,7 +88,7 @@ export const DailySpark = () => {
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <Button
             onClick={handleShare}
-            className="flex-1 h-12 font-semibold btn-gradient-primary text-white border-0 shadow-md group"
+            className="flex-1 min-h-12 h-auto py-2 whitespace-normal font-semibold btn-gradient-primary text-white border-0 shadow-md group"
           >
             {sharedToday ? (
               <>
@@ -105,7 +105,7 @@ export const DailySpark = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/create-room')}
-            className="flex-1 h-12 font-semibold btn-gradient-secondary"
+            className="flex-1 min-h-12 h-auto py-2 whitespace-normal font-semibold btn-gradient-secondary"
           >
             <Play className="w-5 h-5 mr-2" />
             {t('dailySpark.play')}

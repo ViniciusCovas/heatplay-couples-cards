@@ -28,8 +28,11 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', // default language
+    // NOTE: no hard-coded `lng` here — setting it would override LanguageDetector,
+    // ignoring the user's saved (localStorage) and browser language on every load.
     fallbackLng: 'en',
+    supportedLngs: ['en', 'es', 'pt', 'fr'],
+    nonExplicitSupportedLngs: true,
     detection: {
       order: ['localStorage', 'navigator', 'htmlTag'],
       caches: ['localStorage'],
