@@ -60,27 +60,27 @@ export const DailySpark = () => {
   };
 
   return (
-    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/5 via-background to-secondary/10 shadow-lg">
+    <Card className="landing-panel relative overflow-hidden rounded-3xl border-0">
       {/* soft glow */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#ffb3cd]/45 rounded-full blur-3xl pointer-events-none"></div>
 
       <CardContent className="relative p-6 md:p-8 space-y-5">
         <div className="flex items-center justify-between gap-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#fdeaf1] text-[#c2185b] text-xs font-semibold uppercase tracking-wide">
             <Flame className="w-3.5 h-3.5" />
             {t('dailySpark.title')}
           </div>
-          <div className="inline-flex items-center gap-1.5 text-sm font-medium text-secondary">
-            <Flame className="w-4 h-4 fill-secondary/20" />
+          <div className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#c33c0c]">
+            <Flame className="w-4 h-4 fill-[#ff5722]/25" />
             {t('dailySpark.streak', { count: streak })}
           </div>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <p className="text-xs font-semibold text-[#6c6577] uppercase tracking-wider">
             {t('dailySpark.badge')}
           </p>
-          <p className="text-xl md:text-2xl font-heading font-semibold text-foreground leading-snug">
+          <p className="font-display text-balance text-xl md:text-[1.6rem] font-semibold text-[#23212b] leading-snug">
             “{question}”
           </p>
         </div>
@@ -88,7 +88,7 @@ export const DailySpark = () => {
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <Button
             onClick={handleShare}
-            className="flex-1 min-h-12 h-auto py-2 whitespace-normal font-semibold btn-gradient-primary text-white border-0 shadow-md group"
+            className="landing-cta flex-1 min-h-12 h-auto py-2 whitespace-normal font-semibold text-white border-0 rounded-full group"
           >
             {sharedToday ? (
               <>
@@ -105,7 +105,7 @@ export const DailySpark = () => {
           <Button
             variant="outline"
             onClick={() => navigate('/create-room')}
-            className="flex-1 min-h-12 h-auto py-2 whitespace-normal font-semibold btn-gradient-secondary"
+            className="flex-1 min-h-12 h-auto py-2 whitespace-normal rounded-full border-[1.5px] border-[#f0c7d5] bg-white/80 font-semibold text-[#c2185b] hover:bg-white hover:border-[#e891ae] hover:text-[#c2185b]"
           >
             <Play className="w-5 h-5 mr-2" />
             {t('dailySpark.play')}

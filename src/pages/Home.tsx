@@ -47,15 +47,15 @@ const Home = () => {
   };
 
   return (
-    <div className="landing-dark relative min-h-screen overflow-hidden">
+    <div className="landing-light relative min-h-screen overflow-x-hidden">
       {/* ------------------------------------------------ HERO ------ */}
-      <section ref={heroRef} className="relative mx-auto max-w-6xl px-4 pb-16 pt-10 md:pb-24 md:pt-16">
-        <div className="grid items-center gap-14 lg:grid-cols-2 lg:gap-10">
+      <section ref={heroRef} className="relative mx-auto max-w-6xl px-5 pb-20 pt-10 md:pb-28 md:pt-16">
+        <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
           {/* Copy + CTAs */}
           <div className="text-center lg:text-left">
             <div className="mb-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <span className="landing-glass inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-white/75">
-                <Shield className="h-3.5 w-3.5 text-[#ff8fb0]" aria-hidden="true" />
+              <span className="landing-chip inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#55505f]">
+                <Shield className="h-3.5 w-3.5 text-[#c2185b]" aria-hidden="true" />
                 {t('landing.badge')}
               </span>
             </div>
@@ -66,17 +66,17 @@ const Home = () => {
               className="mx-auto mb-7 h-16 w-auto md:h-20 lg:mx-0"
             />
 
-            <h1 className="font-display text-balance text-4xl font-semibold leading-[1.08] text-white md:text-5xl lg:text-[3.4rem]">
+            <h1 className="font-display text-balance text-[2.6rem] font-semibold leading-[1.06] tracking-[-0.015em] text-[#23212b] md:text-5xl lg:text-[3.5rem]">
               {t('landing.headline')}
             </h1>
-            <p className="mx-auto mt-5 max-w-xl text-balance text-base leading-relaxed text-white/65 md:text-lg lg:mx-0">
+            <p className="mx-auto mt-6 max-w-xl text-balance text-[1.0625rem] leading-[1.65] text-[#55505f] md:text-lg lg:mx-0">
               {t('landing.sub')}
             </p>
 
             <div className="mx-auto mt-9 flex max-w-md flex-col gap-3 sm:flex-row lg:mx-0">
               <button
                 onClick={() => handleStartJourney('hero')}
-                className="landing-cta group inline-flex min-h-14 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 text-lg font-semibold text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8fb0]"
+                className="landing-cta group inline-flex min-h-14 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2185b]"
               >
                 <Heart className="h-5 w-5 transition-transform group-hover:scale-110" aria-hidden="true" />
                 {t('landing.ctaPlay')}
@@ -87,7 +87,7 @@ const Home = () => {
                   track('landing_cta_clicked', { section: 'hero_join' });
                   navigate('/join-room');
                 }}
-                className="inline-flex min-h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-white/25 px-8 text-lg font-semibold text-white/90 transition-colors hover:border-[#ff5c93]/60 hover:bg-[#ff5c93]/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff8fb0]"
+                className="landing-ghost inline-flex min-h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2185b]"
               >
                 <MessageCircle className="h-5 w-5" aria-hidden="true" />
                 {t('landing.ctaJoin')}
@@ -95,17 +95,17 @@ const Home = () => {
             </div>
 
             {/* Social proof strip */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm text-white/55 lg:justify-start">
+            <div className="mt-10 flex flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm font-medium text-[#55505f] lg:justify-start">
               <span className="inline-flex items-center gap-2">
-                <Users2 className="h-4 w-4 text-[#ff8fb0]" aria-hidden="true" />
+                <Users2 className="h-4 w-4 text-[#c2185b]" aria-hidden="true" />
                 {t('landing.stats.couples')}
               </span>
               <span className="inline-flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-[#ff8fb0]" aria-hidden="true" />
+                <MessageCircle className="h-4 w-4 text-[#c2185b]" aria-hidden="true" />
                 {t('landing.stats.questions')}
               </span>
               <span className="inline-flex items-center gap-2">
-                <Star className="h-4 w-4 fill-[#ffb84d] text-[#ffb84d]" aria-hidden="true" />
+                <Star className="h-4 w-4 fill-[#f59e0b] text-[#b45309]" aria-hidden="true" />
                 {t('landing.stats.rating')}
               </span>
             </div>
@@ -124,13 +124,15 @@ const Home = () => {
       <AiTease />
 
       {/* Daily Spark ritual */}
-      <section className="mx-auto max-w-2xl px-4 py-20 md:py-24">
+      <section className="mx-auto max-w-2xl px-5 py-20 md:py-28">
         <Reveal>
-          <div className="mb-8 text-center">
-            <h2 className="font-display text-balance text-3xl font-semibold leading-tight text-white md:text-4xl">
+          <div className="mb-9 text-center">
+            <h2 className="font-display text-balance text-[2rem] font-semibold leading-[1.15] tracking-[-0.01em] text-[#23212b] md:text-4xl">
               {t('landing.spark.title')}
             </h2>
-            <p className="mt-3 text-balance text-white/65">{t('landing.spark.sub')}</p>
+            <p className="mx-auto mt-4 max-w-lg text-balance leading-relaxed text-[#55505f]">
+              {t('landing.spark.sub')}
+            </p>
           </div>
           <DailySpark />
         </Reveal>
@@ -138,8 +140,8 @@ const Home = () => {
 
       <PricingStrip />
 
-      <div className="border-t border-white/10 px-4">
-        <LegalFooter className="text-white/45" />
+      <div className="border-t border-[#f0dbe3] bg-white/45 px-5">
+        <LegalFooter className="text-[#6c6577]" />
       </div>
 
       {/* Sticky mobile CTA */}

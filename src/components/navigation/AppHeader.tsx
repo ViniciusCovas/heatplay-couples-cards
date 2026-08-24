@@ -29,6 +29,9 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
   // Show login on marketing/auth pages only
   const showAuthButton = !isGameFlow;
 
+  // Light-romantic landing page gets a translucent blush header
+  const isLanding = location.pathname === '/';
+
   const handleSignOut = async () => {
     await signOut();
     window.location.reload();
@@ -82,9 +85,15 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
   );
 
   const AuthButton = () => (
-    <Button 
+    <Button
       onClick={handleAuthClick}
-      className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium min-h-[44px] px-6"
+      // On the light landing the default pink only reaches 3.6:1 against white
+      // label text — the deeper brand pink clears AA at 5.9:1.
+      className={
+        isLanding
+          ? 'bg-[#c2185b] text-white hover:bg-[#a71550] font-semibold min-h-[44px] px-6 rounded-full'
+          : 'bg-primary text-primary-foreground hover:bg-primary/90 font-medium min-h-[44px] px-6'
+      }
       size={isMobile ? "lg" : "default"}
     >
       {t('home.buttons.login')}
@@ -170,14 +179,11 @@ export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
     </Sheet>
   );
 
-  // Dark-romantic landing page gets a transparent dark header
-  const isLanding = location.pathname === '/';
-
   return (
     <header
       className={
         isLanding
-          ? 'sticky top-0 z-50 w-full border-b border-white/10 bg-[#1c0a24]/80 text-white backdrop-blur'
+          ? 'sticky top-0 z-50 w-full border-b border-[#f4dde5]/80 bg-[#fff7f9]/75 backdrop-blur-md'
           : 'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
       }
     >

@@ -178,7 +178,7 @@
   }
 }
 /* ============================================================
-   Landing page (dark-romantic) — tokens, utilities & keyframes
+   Landing page (light-romantic) — tokens, utilities & keyframes
    ============================================================ */
 @layer utilities {
   .font-display {
@@ -200,30 +200,105 @@
 }
 
 @layer components {
-  /* Full-bleed dark romantic ground, echoing the shareable story card */
-  .landing-dark {
-    background:
-      radial-gradient(900px 520px at 85% -5%, rgba(233, 30, 99, 0.28), transparent 65%),
-      radial-gradient(800px 600px at 8% 30%, rgba(156, 39, 176, 0.22), transparent 60%),
-      radial-gradient(700px 500px at 92% 70%, rgba(255, 87, 34, 0.10), transparent 60%),
-      linear-gradient(160deg, #1c0a24 0%, #2a0e33 42%, #0d0716 100%);
-    color: rgba(255, 255, 255, 0.92);
+  /* ---------- Landing palette (scoped: never leaks into .dark app UI) ---- */
+  .landing-light {
+    /* ink scale — every value AA+ on the blush ground (#FFF5F7 / #FFFFFF) */
+    --lp-ink: #23212b;          /* 15.6:1 on white  — headlines / body */
+    --lp-ink-soft: #55505f;     /*  7.6:1 on white  — secondary body   */
+    --lp-ink-mute: #6c6577;     /*  5.4:1 on white  — labels / meta    */
+    --lp-pink: #e91e63;
+    --lp-pink-ink: #c2185b;     /*  5.9:1 on white  — pink text        */
+    --lp-coral: #ff5722;
+    --lp-coral-ink: #c33c0c;    /*  5.1:1 on white  — coral text       */
+    --lp-lilac-ink: #7b3fbf;    /*  6.6:1 on white                     */
+    --lp-line: #f6dfe6;
+    --lp-line-strong: #f0c7d5;
+    --lp-cream: #fffaf7;
+
+    /* Airy blush ground. Two wide blooms TILE down the page (different tile
+       heights so the repeat never reads as a rhythm), over a warm cream base —
+       so every section sits on live colour instead of a flat washed-out band. */
+    background-image:
+      radial-gradient(1100px 620px at 92% 12%, rgba(255, 150, 190, 0.28), transparent 66%),
+      radial-gradient(1000px 660px at -6% 58%, rgba(255, 172, 136, 0.20), transparent 64%),
+      radial-gradient(1100px 720px at 104% 78%, rgba(198, 150, 255, 0.15), transparent 64%),
+      linear-gradient(180deg, #fffaf8 0%, #fff6f9 40%, #fef6fa 72%, #fff8f6 100%);
+    background-size:
+      100% 1500px,
+      100% 2100px,
+      100% 1800px,
+      100% 100%;
+    background-repeat: repeat-y, repeat-y, repeat-y, no-repeat;
+    color: var(--lp-ink);
   }
 
-  .landing-glass {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(8px);
+  /* Frosted band — alternates with the blush wash to give the page rhythm */
+  .landing-band {
+    position: relative;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.72) 12%, rgba(255, 255, 255, 0.82) 50%, rgba(255, 255, 255, 0.72) 88%, rgba(255, 255, 255, 0) 100%);
+  }
+
+  /* Crisp white surface with a pink-tinted shadow — the landing's "paper" */
+  .landing-panel {
+    background: linear-gradient(170deg, #ffffff 0%, var(--lp-cream) 100%);
+    border: 1px solid var(--lp-line);
+    box-shadow:
+      0 1px 2px rgba(120, 40, 70, 0.06),
+      0 6px 14px -8px rgba(176, 55, 100, 0.16),
+      0 22px 44px -20px rgba(176, 55, 100, 0.38);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s;
+  }
+  .landing-panel-hover:hover {
+    transform: translateY(-5px);
+    box-shadow:
+      0 2px 4px rgba(120, 40, 70, 0.07),
+      0 10px 20px -10px rgba(176, 55, 100, 0.2),
+      0 34px 60px -22px rgba(176, 55, 100, 0.48);
   }
 
   .landing-cta {
-    background: linear-gradient(135deg, #ff4f8b 0%, #e91e63 55%, #c2185b 100%);
-    box-shadow: 0 10px 40px -8px rgba(233, 30, 99, 0.55);
-    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s;
+    background: linear-gradient(135deg, #ff5c93 0%, #e91e63 52%, #d81b60 100%);
+    color: #fff;
+    box-shadow:
+      0 10px 28px -10px rgba(216, 27, 96, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.22s, filter 0.22s;
   }
   .landing-cta:hover {
     transform: translateY(-2px);
-    box-shadow: 0 16px 50px -8px rgba(233, 30, 99, 0.7);
+    filter: saturate(1.06);
+    box-shadow:
+      0 18px 40px -12px rgba(216, 27, 96, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.32);
+  }
+  .landing-cta:active {
+    transform: translateY(1px) scale(0.985);
+    box-shadow: 0 5px 16px -8px rgba(216, 27, 96, 0.55);
+  }
+
+  /* Ghost / secondary action on the light ground */
+  .landing-ghost {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1.5px solid var(--lp-line-strong);
+    color: var(--lp-pink-ink);
+    backdrop-filter: blur(6px);
+    transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background 0.22s, border-color 0.22s;
+  }
+  .landing-ghost:hover {
+    background: #ffffff;
+    border-color: #e891ae;
+    transform: translateY(-2px);
+  }
+  .landing-ghost:active {
+    transform: translateY(1px) scale(0.985);
+  }
+
+  /* Small translucent pill (badges, eyebrows) */
+  .landing-chip {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid var(--lp-line-strong);
+    box-shadow: 0 4px 14px -8px rgba(196, 60, 110, 0.35);
+    backdrop-filter: blur(6px);
   }
 
   /* Scroll-reveal (respects reduced motion) */
@@ -238,13 +313,37 @@
     transform: none;
   }
 
-  /* Hero deck card sizing + soft float of the stack */
+  /* Hero deck — premium physical cards resting on a light table */
   .deck-card {
     border-radius: 1.5rem;
-    box-shadow: 0 24px 60px -18px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 1px 1px rgba(150, 60, 95, 0.10),
+      0 10px 22px -12px rgba(150, 60, 95, 0.30),
+      0 34px 60px -28px rgba(120, 40, 80, 0.42);
+  }
+  .deck-card-top {
+    box-shadow:
+      0 1px 1px rgba(150, 60, 95, 0.10),
+      0 16px 30px -14px rgba(150, 60, 95, 0.34),
+      0 46px 80px -34px rgba(120, 40, 80, 0.5);
+  }
+  /* card catches the light on hover */
+  .deck-shine {
+    background: linear-gradient(115deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.75) 48%, rgba(255, 255, 255, 0) 62%);
+    opacity: 0;
+    transition: opacity 0.45s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateX(-30%);
+  }
+  .deck-card:hover .deck-shine {
+    opacity: 0.55;
+    transform: translateX(30%);
   }
   .deck-float {
     animation: deck-float 7s ease-in-out infinite;
+  }
+  /* soft elliptical shadow "on the table" under the deck */
+  .deck-table-shadow {
+    background: radial-gradient(closest-side, rgba(160, 70, 110, 0.22), rgba(160, 70, 110, 0));
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -253,9 +352,19 @@
       transform: none;
       transition: none;
     }
+    .landing-panel,
+    .landing-panel-hover:hover,
+    .landing-cta,
+    .landing-cta:hover,
+    .landing-ghost,
+    .landing-ghost:hover,
+    .deck-shine {
+      transition: none;
+      transform: none;
+    }
     .deck-float,
     .animate-heartbeat,
-    .landing-dark .animate-pulse {
+    .landing-light .animate-pulse {
       animation: none !important;
     }
   }
