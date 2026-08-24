@@ -44,27 +44,12 @@
     --shadow-button: 0 6px 25px -6px hsl(330 81% 60% / 0.3);
   }
 
-  .dark {
-    --background: 0 0% 7%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 11%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 11%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 44 100% 60%;
-    --primary-foreground: 0 0% 23%;
-    --secondary: 347 100% 66%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 44 100% 60%;
-    --accent-foreground: 0 0% 23%;
-    --destructive: 343 66% 56%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 44 100% 60%;
-  }
+  /* No .dark palette: this product is light-only and has no ThemeProvider.
+     The old .dark block defined an unrelated gold/amber palette that would
+     have repainted the whole app if dark mode were ever switched on.
+     tailwind.config.ts keeps darkMode: ["class"] on purpose - dropping it
+     would fall back to the media strategy and activate leftover dark:
+     variants for users whose OS is in dark mode. */
 }
 
 @layer base {
