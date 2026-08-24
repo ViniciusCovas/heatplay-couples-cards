@@ -171,7 +171,7 @@ export const HeroDeck = () => {
               return (
                 <div
                   key={card.id}
-                  className="absolute inset-0"
+                  className="absolute inset-0 rounded-[1.5rem] focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[6px] focus-visible:outline-[#c2185b]"
                   style={{
                     zIndex: 10 - pos,
                     transform: isTop ? topTransform : rest,
