@@ -65,7 +65,7 @@ export const InsightsCards = ({ insights }: InsightsCardsProps) => {
           {insights.keyInsights?.slice(0, 4).map((insight, index) => (
             <Card 
               key={index}
-              className={`relative h-52 cursor-pointer transition-all duration-700 hover:shadow-xl hover-scale group perspective-1000 ${
+              className={`relative h-52 cursor-pointer transition-all duration-700 hover:shadow-xl hover-scale group perspective-1200 ${
                 flippedCards.includes(index) ? '[transform-style:preserve-3d] [transform:rotateY(180deg)]' : ''
               }`}
               onClick={() => toggleFlip(index)}

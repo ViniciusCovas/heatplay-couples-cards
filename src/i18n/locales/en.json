@@ -212,6 +212,14 @@
     "respond": "Respond",
     "changeLevel": "Change Level",
     "finish": "Finish",
+    "seeAnalysis": "See our analysis",
+    "leaveGame": "Leave game",
+    "leaveConfirmTitle": "Leave this game?",
+    "leaveConfirmBody": "Your progress in this round will be lost. You can always start a new game together.",
+    "leaveConfirmCancel": "Keep playing",
+    "partnerEvaluating": "Your partner is evaluating your response to this question",
+    "questionYouAnswered": "Question you just answered",
+    "progressLabel": "Game progress",
     "waitingForResponse": "Waiting for {{player}} to respond...",
     "safetyNote": "Remember to communicate and respect your boundaries",
     "evaluation": {
@@ -230,6 +238,8 @@
       "honestyDescription": "How genuine and authentic was the response?",
       "attractionDescription": "How attractive did you find the response?",
       "intimacyDescription": "How intimate and personal was the response?",
+      "close": "Close evaluation",
+      "rateAria": "Rate {{criterion}} {{value}} out of 5",
       "surpriseDescription": "How surprising or unexpected was the response?"
     },
     "processing": {

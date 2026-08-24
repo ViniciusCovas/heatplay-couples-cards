@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { useState, useEffect, useId } from "react";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Timer, Send, Mic, Play, Gamepad2 } from "lucide-react";
+import { Timer, Send, Mic, Heart } from "lucide-react";
 import { useTranslation } from 'react-i18next';
 
 interface ResponseInputProps {
@@ -15,23 +16,26 @@ interface ResponseInputProps {
   startTime?: number; // Optional: when card display started (for accurate timing)
   pausedTime?: number;
   isPaused?: boolean;
+  onClose?: () => void;
 }
 
-export const ResponseInput = ({ 
-  isVisible, 
-  question, 
+export const ResponseInput = ({
+  isVisible,
+  question,
   onSubmitResponse,
   playerName = "Tú",
   isCloseProximity = false,
   isSubmitting = false,
   startTime = 0,
   pausedTime = 0,
-  isPaused = false
+  isPaused = false,
+  onClose
 }: ResponseInputProps) => {
   const { t } = useTranslation();
   const [response, setResponse] = useState("");
   const [localStartTime, setLocalStartTime] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
+  const responseFieldId = useId();
 
   useEffect(() => {
     if (isVisible) {
@@ -40,7 +44,7 @@ export const ResponseInput = ({
       setLocalStartTime(actualStartTime);
       setCurrentTime(Date.now());
       setResponse("");
-      
+
       const interval = setInterval(() => {
         setCurrentTime(Date.now());
       }, 100);
@@ -72,119 +76,128 @@ export const ResponseInput = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 space-y-6 animate-scale-in bg-gradient-to-br from-card via-card/95 to-card/90 border-2 border-primary/20 shadow-2xl shadow-primary/10">
-        {/* Gaming Header */}
-        <div className="text-center space-y-4">
-          <div className="relative">
-            <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/30">
-              <Gamepad2 className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-accent rounded-full animate-pulse border-2 border-background flex items-center justify-center">
-              <Timer className="w-3 h-3 text-white" />
-            </div>
+    <Dialog
+      open={isVisible}
+      onOpenChange={(open) => {
+        if (!open) onClose?.();
+      }}
+    >
+      <DialogPortal>
+        {/* Light overlay so the question card stays visible above the sheet */}
+        <DialogOverlay className="bg-foreground/10 backdrop-blur-[2px]" />
+        <DialogPrimitive.Content
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-h-[82vh] w-full max-w-md flex-col rounded-t-[28px] border border-primary/15 border-b-0 bg-card p-0 shadow-[0_-8px_40px_-12px_rgba(196,60,110,.35)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom"
+        >
+          {/* Grab handle */}
+          <div className="flex justify-center pt-3" aria-hidden="true">
+            <div className="h-1.5 w-10 rounded-full bg-muted" />
           </div>
-          
-          <div>
-            <h2 className="text-xl font-heading bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              {t('game.yourTurnMessage', { playerName })} 🎮
-            </h2>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-2">
-              <Timer className="w-4 h-4 text-accent" />
-              <span className="font-mono text-accent">{Math.round(elapsedTime)}s</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Question Card */}
-        <div className="relative p-6 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-primary/10">
-          <div className="absolute top-2 left-2">
-            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          </div>
-          <div className="absolute top-2 right-2">
-            <div className="w-2 h-2 bg-secondary rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-          </div>
-          
-          <p className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
-            <Play className="w-4 h-4" />
-            {t('game.question')}:
-          </p>
-          <p className="font-medium text-lg leading-relaxed">{question}</p>
-        </div>
-        
-        {isCloseProximity ? (
-          /* Modo hablado */
-          <div className="space-y-4 text-center">
-            <div className="p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20">
-              <Mic className="w-12 h-12 mx-auto text-green-500 mb-3" />
-              <h3 className="font-heading text-lg mb-2">{t('game.spokenMode')} 🎙️</h3>
-              <p className="text-sm text-muted-foreground">
-                {t('game.spokenModeDescription')}
-              </p>
-            </div>
-            
-            <Button 
-              onClick={handleSpokenResponse}
-              className="w-full h-12 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white shadow-lg hover:shadow-xl transition-all"
-              size="lg"
-              disabled={isSubmitting} // Añade esta línea
-            >
-              {isSubmitting ? (
-                <>
-                  <Timer className="w-5 h-5 mr-2 animate-spin" />
-                  {t('game.submitting')}...
-                </>
-              ) : (
-                <>
-                  <Mic className="w-5 h-5 mr-2" />
-                  {t('game.weResponded')}
-                </>
-              )}
-            </Button>
-          </div>
-        ) : (
-          /* Modo escrito */
-          <div className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Send className="w-4 h-4 text-primary" />
-                <label className="text-sm font-medium">{t('game.yourResponse')}:</label>
+          <div className="flex-1 overflow-y-auto px-6 pb-4 pt-3 space-y-5">
+            {/* Header */}
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full btn-gradient-primary">
+                <Heart className="h-5 w-5 text-white" fill="currentColor" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <DialogTitle className="text-lg font-heading text-foreground">
+                  {t('game.yourTurnMessage', { playerName })}
+                </DialogTitle>
+                <div className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Timer className="h-3.5 w-3.5 text-primary" />
+                  <span className="font-mono text-primary">{Math.round(elapsedTime)}s</span>
+                </div>
               </div>
-              <Textarea
-                value={response}
-                onChange={(e) => setResponse(e.target.value)}
-                onKeyDown={handleKeyPress}
-                placeholder={t('game.responsePlaceholder')}
-                className="min-h-[120px] resize-none border-primary/20 focus:border-primary/40 bg-gradient-to-r from-background to-muted/30"
-                autoFocus
-              />
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Send className="w-3 h-3" />
-                {t('game.submitShortcut')}
-              </p>
             </div>
 
-            <Button 
-              onClick={handleSubmit}
-              className="w-full h-12 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 shadow-lg hover:shadow-xl transition-all"
-              disabled={!response.trim() || isSubmitting} // Modifica esta línea
-              size="lg"
-            >
-              {isSubmitting ? (
-                <>
-                  <Timer className="w-5 h-5 mr-2 animate-spin" />
-                  {t('game.submitting')}...
-                </>
-              ) : (
-                <>
-                  <Send className="w-5 h-5 mr-2" />
-                  {t('game.submitResponse')}
-                </>
-              )}
-            </Button>
+            {/* Compact question reminder (full card remains visible behind the sheet) */}
+            <DialogDescription className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-foreground/80">
+              {question}
+            </DialogDescription>
+
+            {isCloseProximity ? (
+              /* Modo hablado */
+              <div className="space-y-4 text-center">
+                <div className="rounded-xl border border-accent/25 bg-gradient-to-r from-accent/10 to-primary/10 p-6">
+                  <Mic className="mx-auto mb-3 h-10 w-10 text-accent" />
+                  <h3 className="mb-2 font-heading text-lg text-foreground">{t('game.spokenMode')}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {t('game.spokenModeDescription')}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              /* Modo escrito */
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Send className="h-4 w-4 text-primary" />
+                  <label htmlFor={responseFieldId} className="text-sm font-medium">
+                    {t('game.yourResponse')}
+                  </label>
+                </div>
+                <Textarea
+                  id={responseFieldId}
+                  value={response}
+                  onChange={(e) => setResponse(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder={t('game.responsePlaceholder')}
+                  className="min-h-[110px] resize-none border-primary/20 bg-background focus:border-primary/40"
+                  autoFocus
+                />
+                {/* Keyboard hint only on devices with a fine pointer */}
+                <p className="hidden items-center gap-1 text-xs text-muted-foreground [@media(pointer:fine)]:flex">
+                  <Send className="h-3 w-3" />
+                  {t('game.submitShortcut')}
+                </p>
+              </div>
+            )}
           </div>
-        )}
-      </Card>
-    </div>
+
+          {/* Sticky action footer — always in reach */}
+          <div className="sticky bottom-0 border-t border-border/60 bg-card/95 px-6 pb-6 pt-4 backdrop-blur">
+            {isCloseProximity ? (
+              <Button
+                onClick={handleSpokenResponse}
+                className="h-12 w-full btn-gradient-primary text-white disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+                size="lg"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Timer className="mr-2 h-5 w-5 animate-spin" />
+                    {t('game.submitting')}
+                  </>
+                ) : (
+                  <>
+                    <Mic className="mr-2 h-5 w-5" />
+                    {t('game.weResponded')}
+                  </>
+                )}
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSubmit}
+                className="h-12 w-full btn-gradient-primary text-white disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+                disabled={!response.trim() || isSubmitting}
+                size="lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Timer className="mr-2 h-5 w-5 animate-spin" />
+                    {t('game.submitting')}
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-5 w-5" />
+                    {t('game.submitResponse')}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   );
 };

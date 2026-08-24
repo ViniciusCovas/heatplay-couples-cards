@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { X } from "lucide-react";
+import { X, ShieldCheck, Flame, Heart, Sparkles } from "lucide-react";
 import { useTranslation } from 'react-i18next';
-import { Logo } from "@/components/ui/animated-logo";
 import { logger } from "@/utils/logger";
 
 interface ResponseEvaluationProps {
@@ -25,6 +24,8 @@ export interface EvaluationData {
   response_time?: number;
 }
 
+const RATINGS = [1, 2, 3, 4, 5];
+
 export const ResponseEvaluation = ({
   isVisible,
   question,
@@ -41,9 +42,6 @@ export const ResponseEvaluation = ({
     intimacy: 3,
     surprise: 3
   });
-  const [isClosing, setIsClosing] = useState(false);
-
-  if (!isVisible && !isClosing) return null;
 
   const handleSubmit = () => {
     if (isSubmitting) return; // Prevent double submission
@@ -56,137 +54,139 @@ export const ResponseEvaluation = ({
     onSubmitEvaluation(evaluation);
   };
 
-  const handleCancel = () => {
-    setIsClosing(true);
-    setTimeout(() => {
-      setIsClosing(false);
-      onCancel();
-    }, 200);
-  };
-
   const updateEvaluation = (key: keyof EvaluationData, value: number) => {
     setEvaluation(prev => ({ ...prev, [key]: value }));
-  };
-
-  const getSliderColor = (value: number) => {
-    if (value >= 4) return "bg-green-500";
-    if (value >= 3) return "bg-yellow-500";
-    return "bg-red-500";
   };
 
   const evaluationCriteria = [
     {
       key: "honesty" as keyof EvaluationData,
       label: t('game.evaluation.honesty'),
-      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
+      icon: <ShieldCheck className="w-5 h-5 text-primary" />,
       description: t('game.evaluation.honestyDescription')
     },
     {
       key: "attraction" as keyof EvaluationData,
       label: t('game.evaluation.attraction'),
-      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
+      icon: <Flame className="w-5 h-5 text-secondary" />,
       description: t('game.evaluation.attractionDescription')
     },
     {
       key: "intimacy" as keyof EvaluationData,
       label: t('game.evaluation.intimacy'),
-      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
+      icon: <Heart className="w-5 h-5 text-primary" fill="currentColor" />,
       description: t('game.evaluation.intimacyDescription')
     },
     {
       key: "surprise" as keyof EvaluationData,
       label: t('game.evaluation.surprise'),
-      icon: <Logo size="small" className="w-5 h-5 opacity-80" />,
+      icon: <Sparkles className="w-5 h-5 text-accent" />,
       description: t('game.evaluation.surpriseDescription')
     }
   ];
 
   logger.debug('ResponseEvaluation language', { language: i18n.language });
-  
+
   return (
-    <div className={`fixed inset-0 romantic-background backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto transition-opacity duration-200 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
-      <Card className={`w-full max-w-lg p-6 space-y-6 max-h-[90vh] overflow-y-auto romantic-card transition-transform duration-200 ${isClosing ? 'animate-scale-out' : 'animate-scale-in'}`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-brand font-semibold text-foreground">
-              {t('game.evaluation.title')}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {t('game.evaluation.subtitle', { player: playerName })}
-            </p>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCancel}
-            className="h-8 w-8"
-            disabled={isSubmitting}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="space-y-4">
-          <div className="p-4 bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg border border-primary/20">
-            <p className="text-sm font-medium text-foreground mb-2">
-              {t('game.evaluation.question')}:
-            </p>
-            <p className="text-sm text-muted-foreground mb-3">"{question}"</p>
-            <p className="text-sm font-medium text-foreground mb-2">
-              {t('game.evaluation.response')}:
-            </p>
-            <p className="text-sm text-primary italic font-medium">"{response}"</p>
+    <Dialog open={isVisible} onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogPortal>
+        <DialogOverlay className="bg-foreground/15 backdrop-blur-sm" />
+        <DialogPrimitive.Content
+          className="fixed left-1/2 top-1/2 z-50 flex max-h-[90vh] w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-[0_24px_60px_-20px_rgba(196,60,110,.4)] duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3 border-b border-border/60 px-6 py-4">
+            <div>
+              <DialogTitle className="text-xl font-brand font-semibold text-foreground">
+                {t('game.evaluation.title')}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {t('game.evaluation.subtitle', { player: playerName })}
+              </DialogDescription>
+            </div>
+            <DialogPrimitive.Close asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                disabled={isSubmitting}
+                aria-label={t('game.evaluation.close')}
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            </DialogPrimitive.Close>
           </div>
 
-          <div className="space-y-6">
-            {evaluationCriteria.map((criterion) => (
-              <div key={criterion.key} className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    {criterion.icon}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
+          {/* Scrollable body */}
+          <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+            <div className="rounded-lg border border-primary/20 bg-gradient-to-r from-primary/10 to-accent/10 p-4">
+              <p className="mb-1 text-sm font-medium text-foreground">
+                {t('game.evaluation.question')}
+              </p>
+              <p className="mb-3 text-sm text-muted-foreground">"{question}"</p>
+              <p className="mb-1 text-sm font-medium text-foreground">
+                {t('game.evaluation.response')}
+              </p>
+              <p className="text-sm font-medium italic text-primary">"{response}"</p>
+            </div>
+
+            <div className="space-y-5">
+              {evaluationCriteria.map((criterion) => (
+                <div key={criterion.key} className="space-y-2.5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0">{criterion.icon}</div>
+                    <div className="flex-1">
                       <span className="text-sm font-medium text-foreground font-brand">
                         {criterion.label}
                       </span>
-                      <span className="text-sm font-bold text-primary bg-primary/10 px-2 py-1 rounded">
-                        {evaluation[criterion.key]}/5
-                      </span>
+                      <p className="text-xs text-muted-foreground">{criterion.description}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      {criterion.description}
-                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-5 gap-2" role="group" aria-label={criterion.label}>
+                    {RATINGS.map((value) => {
+                      const selected = (evaluation[criterion.key] || 3) === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => updateEvaluation(criterion.key, value)}
+                          aria-pressed={selected}
+                          aria-label={t('game.evaluation.rateAria', {
+                            criterion: criterion.label,
+                            value,
+                          })}
+                          className={`h-11 min-h-[44px] rounded-xl border text-sm font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+                            selected
+                              ? 'border-transparent btn-gradient-primary text-white shadow-sm'
+                              : 'border-border bg-background text-muted-foreground hover:border-primary/40 hover:text-foreground'
+                          }`}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-                
-                <Slider
-                  value={[evaluation[criterion.key] || 3]}
-                  onValueChange={(value) => updateEvaluation(criterion.key, value[0])}
-                  max={5}
-                  min={1}
-                  step={1}
-                  className="w-full"
-                />
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        <Button
-          onClick={handleSubmit}
-          className="w-full btn-gradient-primary text-white font-brand font-semibold"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? t('common.submitting') : t('game.evaluation.submit')}
-        </Button>
-
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">
-            {t('game.evaluation.note')}
-          </p>
-        </div>
-      </Card>
-    </div>
+          {/* Sticky footer — submit is always visible */}
+          <div className="sticky bottom-0 border-t border-border/60 bg-card/95 px-6 pb-5 pt-4 backdrop-blur">
+            <Button
+              onClick={handleSubmit}
+              className="h-12 w-full btn-gradient-primary text-white font-brand font-semibold disabled:bg-none disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? t('common.submitting') : t('game.evaluation.submit')}
+            </Button>
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              {t('game.evaluation.note')}
+            </p>
+          </div>
+        </DialogPrimitive.Content>
+      </DialogPortal>
+    </Dialog>
   );
 };

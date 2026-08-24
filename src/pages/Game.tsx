@@ -7,6 +7,16 @@ import { ArrowUp, Home, Users, Play, BarChart3, Timer, Loader2 } from "lucide-re
 import { useToast } from "@/hooks/use-toast";
 import { GameCard } from "@/components/game/GameCard";
 import { ResponseInput } from "@/components/game/ResponseInput";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useTranslation } from 'react-i18next';
 
 import { LevelUpConfirmation } from "@/components/game/LevelUpConfirmation";
@@ -473,6 +483,7 @@ const Game = () => {
   const [currentTurn, setCurrentTurn] = useState<PlayerTurn>('player1');
   const [showCard, setShowCard] = useState(false);
   const [showResponseInput, setShowResponseInput] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   
   // Evaluation state
   const [pendingEvaluation, setPendingEvaluation] = useState<{
@@ -1871,12 +1882,17 @@ const Game = () => {
               {t('game.levelTitle', { level: currentLevel, name: levelNames[currentLevel] || t('game.level', { level: currentLevel }) })}
             </h1>
             <div className="space-y-2">
-              <Progress value={progress} className="h-2" />
-              <p className="text-xs text-muted-foreground">
+              <Progress
+                value={progress}
+                className="h-2"
+                aria-label={t('game.progressLabel')}
+                aria-valuetext={t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
+              />
+              <p className="text-sm text-muted-foreground">
                 {t('game.cardsCompleted', { completed: usedCards.length, total: totalCards })}
               </p>
-               <p className="text-sm text-primary font-medium">
-                 {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')} 
+               <p className="text-sm text-primary font-medium" aria-live="polite">
+                 {t('game.turn')}: {currentTurn === 'player1' ? t('game.player1') : t('game.player2')}
                  {isMyTurn ? t('game.yourTurn') : t('game.partnerTurn')}
                </p>
             </div>
@@ -1898,11 +1914,6 @@ const Game = () => {
               isGeneratingCard={isGeneratingCard || isLoadingCardData}
               aiFailureReason={isGeneratingCard ? undefined : (!aiCardInfo?.reasoning ? "Insufficient game history" : undefined)}
               subTurn={'first_response'}
-              questionProgress={{
-                current: gameState?.current_card_index || 1,
-                total: 6,
-                subPhase: '1st response'
-              }}
             />
 
             {/* Enhanced timer display with pause state */}
@@ -1923,32 +1934,41 @@ const Game = () => {
 
             {/* Action Button - Only show if it's my turn and NOT in evaluation phase */}
             {isMyTurn && gameState?.current_phase !== 'evaluation' && (
-              <div className="space-y-3 pb-8">
-                <Button 
+              <div className="sticky bottom-0 -mx-4 mt-2 space-y-3 border-t border-primary/10 bg-background/85 px-4 pb-6 pt-3 backdrop-blur-md">
+                <Button
                   onClick={handleStartResponse}
-                  className="w-full h-12 text-base font-heading bg-primary hover:bg-primary/90"
+                  className="w-full h-12 text-base font-heading btn-gradient-primary text-white"
                   size="lg"
                 >
                   <Play className="w-4 h-4 mr-2" />
                   {t('game.respond')}
                 </Button>
-                
+
                 <div className="grid grid-cols-2 gap-2">
-                  <Button 
+                  <Button
                     onClick={handleChangeLevel}
                     variant="outline"
                     className="h-10 text-sm"
                   >
                     {t('game.changeLevel')}
                   </Button>
-                  
-                  <Button 
+
+                  <Button
                     onClick={() => generateFinalReport()}
-                    variant="destructive"
-                    className="h-10 text-sm flex items-center gap-1"
+                    className="h-10 text-sm flex items-center gap-1 btn-gradient-primary text-white"
                   >
                     <BarChart3 className="w-4 h-4" />
-                    {t('game.finish')}
+                    {t('game.seeAnalysis')}
+                  </Button>
+                </div>
+
+                <div className="text-center">
+                  <Button
+                    onClick={() => setShowLeaveConfirm(true)}
+                    variant="ghost"
+                    className="h-9 text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    {t('game.leaveGame')}
                   </Button>
                 </div>
               </div>
@@ -1987,28 +2007,41 @@ const Game = () => {
                 {t('game.waitingForEvaluation')}
               </h2>
               <p className="text-muted-foreground">
-                Your partner is evaluating your response to this question
+                {t('game.partnerEvaluating')}
               </p>
             </div>
-            
+
             <div className="bg-muted/30 rounded-lg p-6 border border-border/30">
               <h3 className="text-lg font-semibold text-foreground mb-4">
-                Question you just answered:
+                {t('game.questionYouAnswered')}
               </h3>
               <p className="text-foreground/90 text-lg leading-relaxed">
                 {getCurrentCardText()}
               </p>
             </div>
-
-            <div className="flex items-center justify-center space-x-2 text-sm text-muted-foreground">
-              <span>Round {gameState?.current_card_index || 1} of 6</span>
-            </div>
           </div>
         )}
+
+        {/* Leave game confirmation */}
+        <AlertDialog open={showLeaveConfirm} onOpenChange={setShowLeaveConfirm}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t('game.leaveConfirmTitle')}</AlertDialogTitle>
+              <AlertDialogDescription>{t('game.leaveConfirmBody')}</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{t('game.leaveConfirmCancel')}</AlertDialogCancel>
+              <AlertDialogAction onClick={() => navigate('/')}>
+                {t('game.leaveGame')}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
          {/* Response Input Modal - Enhanced with timer pause functionality */}
         <ResponseInput
           isVisible={showResponseInput}
+          onClose={() => setShowResponseInput(false)}
           question={currentCard}
           onSubmitResponse={handleResponseSubmit}
           playerName={currentTurn === 'player1' ? t('game.player1') : t('game.player2')}

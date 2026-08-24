@@ -231,6 +231,14 @@
     "respond": "Répondre",
     "changeLevel": "Changer de Niveau",
     "finish": "Terminer",
+    "seeAnalysis": "Voir notre analyse",
+    "leaveGame": "Quitter la partie",
+    "leaveConfirmTitle": "Quitter cette partie ?",
+    "leaveConfirmBody": "Votre progression dans ce tour sera perdue. Vous pouvez toujours commencer une nouvelle partie.",
+    "leaveConfirmCancel": "Continuer à jouer",
+    "partnerEvaluating": "Votre partenaire évalue votre réponse à cette question",
+    "questionYouAnswered": "Question à laquelle vous venez de répondre",
+    "progressLabel": "Progression de la partie",
     "waitingForResponse": "En attente que {{player}} réponde...",
     "safetyNote": "N'oubliez pas de communiquer et de respecter vos limites",
     "evaluation": {
@@ -247,6 +255,8 @@
       "honestyDescription": "À quel point la réponse était-elle authentique?",
       "attractionDescription": "À quel point avez-vous trouvé la réponse attirante?",
       "intimacyDescription": "À quel point la réponse était-elle intime et personnelle?",
+      "close": "Fermer l'évaluation",
+      "rateAria": "Noter {{criterion}} {{value}} sur 5",
       "surpriseDescription": "À quel point la réponse était-elle surprenante ou inattendue?",
       "submitted": "Évaluation envoyée !",
       "processing": "Traitement de votre évaluation..."

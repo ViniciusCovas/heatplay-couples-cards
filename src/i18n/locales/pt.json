@@ -231,6 +231,14 @@
     "respond": "Responder",
     "changeLevel": "Mudar Nível",
     "finish": "Terminar",
+    "seeAnalysis": "Ver a nossa análise",
+    "leaveGame": "Sair do jogo",
+    "leaveConfirmTitle": "Sair deste jogo?",
+    "leaveConfirmBody": "O progresso desta rodada será perdido. Vocês podem sempre começar um novo jogo.",
+    "leaveConfirmCancel": "Continuar jogando",
+    "partnerEvaluating": "Seu parceiro está avaliando sua resposta a esta pergunta",
+    "questionYouAnswered": "Pergunta que você acabou de responder",
+    "progressLabel": "Progresso do jogo",
     "waitingForResponse": "Aguardando {{player}} responder...",
     "safetyNote": "Lembre-se de se comunicar e respeitar seus limites",
     "evaluation": {
@@ -247,6 +255,8 @@
       "honestyDescription": "Quão genuína e autêntica foi a resposta?",
       "attractionDescription": "Quão atraente você achou a resposta?",
       "intimacyDescription": "Quão íntima e pessoal foi a resposta?",
+      "close": "Fechar avaliação",
+      "rateAria": "Avaliar {{criterion}} com {{value}} de 5",
       "surpriseDescription": "Quão surpreendente ou inesperada foi a resposta?",
       "submitted": "Avaliação enviada!",
       "processing": "Processando sua avaliação..."
