@@ -1845,7 +1845,7 @@ const Game = () => {
           />
           
           {/* Debug sync button - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
+          {import.meta.env.DEV && (
             <Button 
               variant="outline" 
               size="sm" 

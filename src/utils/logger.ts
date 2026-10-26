@@ -5,7 +5,7 @@ interface Logger {
   error: (message: string, ...args: any[]) => void;
 }
 
-const isDevelopment = import.meta.env?.DEV || process.env.NODE_ENV === 'development';
+const isDevelopment = import.meta.env.DEV;
 
 export const logger: Logger = {
   debug: (message: string, ...args: any[]) => {
