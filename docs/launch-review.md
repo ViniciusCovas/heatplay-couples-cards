@@ -37,3 +37,13 @@ The configured Supabase ref is `bbdeyohqrutithaziulp`. It was absent from both c
 6. Only then promote the candidate to production and verify the canonical domain.
 
 `VITE_TABLE_PREVIEW=true` builds an isolated review of the one-phone experience at every route, without online-room links, payment flows or AI requests. It is explicitly labeled as a preview and must be unset for the full release. `vercel.json` supplies SPA deep-link rewrites; no domain is reassigned by that file.
+
+## Browser review completed
+
+Playable isolated preview: https://lets-get-close-preview.vercel.app/
+
+The deployed code at `8cacf5f` passed GitHub Actions Quality. Browser checks completed a six-card session, favorite save, follow-up reveal, refresh recovery, skip, pause, soften and closing screen. Both confirmations were cleared when limits changed. The preview-only `/review.html` page supplied actual 320×740 and 390×844 iframe viewports; the 320px setup and game had no horizontal overflow. This validates responsive layout in a desktop browser, not physical iOS/Android behavior.
+
+The preview excludes online-room, payment and AI calls by design. Production and Stripe end-to-end checks remain pending for the reasons above. Full-repository lint after the changes reports 171 pre-existing errors and 37 warnings; the new-surface lint gate and TypeScript checks pass.
+
+![Verified mobile layout](together-mobile.jpg)
