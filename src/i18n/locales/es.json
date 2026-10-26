@@ -1055,18 +1055,17 @@
     "playText": "Una carta a la vez, en ambos teléfonos. Respondan, escuchen y descubran algo nuevo."
   },
   "intelligentPlay": {
-    "feedbackTitle": "¿Qué te dejó esta carta?",
-    "feedbackSubtitle": "Una impresión tuya. Sin calificar quién es tu pareja.",
-    "feelingPrompt": "Al escucharle…",
-    "closer": "Me sentí más cerca",
-    "discovery": "Descubrí algo nuevo",
-    "desire": "Sentí deseo",
-    "uncomfortable": "Me incomodó",
+    "feedbackTitle": "¿Cómo te hizo sentir?",
+    "feedbackSubtitle": "Tu sensación, a tu manera.",
+    "feelingPrompt": "Esta carta me hizo sentir…",
+    "closer": "Más cerca",
+    "discovery": "Me sorprendió",
+    "desire": "Con ganas",
+    "uncomfortable": "Incómodo/a",
     "pacePrompt": "Para la próxima…",
     "lighter": "Más suave",
     "same": "Así está bien",
     "deeper": "Profundizar",
-    "notePrompt": "Quiero recordar algo…",
     "continue": "Continuar",
     "skipFeedback": "Continuar sin responder",
     "localOnly": "Prueba local: no se envía a IA ni a tu pareja.",
@@ -1076,6 +1075,7 @@
     "previewExplanation": "Estás probando cartas de muestra y una propuesta de retroalimentación. Solo se conservan en memoria de esta pestaña. La secuencia aún no se adapta por IA. El tiempo de pantalla activa no equivale a tiempo hablando.",
     "resume": "Volver a la carta",
     "finish": "Terminar",
-    "previewSummary": "Respuestas de prueba registradas: {{count}}. La versión conectada recogerá la perspectiva de cada persona; esta prueba no produce un análisis de pareja."
+    "previewSummary": "Respuestas de prueba registradas: {{count}}. La versión conectada recogerá la perspectiva de cada persona; esta prueba no produce un análisis de pareja.",
+    "yourMoment": "TU MOMENTO"
   }
 }

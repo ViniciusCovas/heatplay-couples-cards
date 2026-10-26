@@ -93,3 +93,10 @@ Deployed interaction at `ff1fdb7` passed type checking, focused lint, ten automa
 
 ![Immersive card](immersive-card-mobile.jpg)
 ![Optional round feedback](immersive-feedback-mobile.jpg)
+
+
+## Tactile card / inline emoji feedback — 26 October 2026
+
+The isolated preview now uses a bordered, layered card with a CSS 3D reverse face. Round feedback is inline on that face, with labeled emoji choices and a separate pacing preference. The ambiguous note field was removed from rounds. Hidden faces are inert, focus follows the active face, selections survive returning to the question, and reduced motion disables the flip. Original online room evaluation is unchanged.
+
+Added a pure shared round-policy foundation and tests for mutual agreement, comfort precedence, stale/third-party/duplicate signals, topic/level limits and exhausted candidates. It is not connected to live selection. See `intelligent-card-experience.md` for the official-source benchmark, memory/decision architecture, and remaining backend gates.

@@ -1037,18 +1037,17 @@
     "playText": "One card at a time, on both phones. Answer, listen and discover something new."
   },
   "intelligentPlay": {
-    "feedbackTitle": "What did this card bring up?",
-    "feedbackSubtitle": "Your impression. Not a grade for who your partner is.",
-    "feelingPrompt": "Listening to my partner…",
-    "closer": "I felt closer",
-    "discovery": "I learned something new",
-    "desire": "I felt desire",
-    "uncomfortable": "I felt uncomfortable",
+    "feedbackTitle": "How did it feel?",
+    "feedbackSubtitle": "Your feeling, your way.",
+    "feelingPrompt": "This card made me feel…",
+    "closer": "Closer",
+    "discovery": "Surprised",
+    "desire": "Desire",
+    "uncomfortable": "Uncomfortable",
     "pacePrompt": "For the next card…",
     "lighter": "Lighter",
     "same": "Keep this pace",
     "deeper": "Go deeper",
-    "notePrompt": "Something I want to remember…",
     "continue": "Continue",
     "skipFeedback": "Continue without answering",
     "localOnly": "Local test: nothing is sent to AI or your partner.",
@@ -1058,6 +1057,7 @@
     "previewExplanation": "You are trying sample cards and a proposed feedback flow. Data stays only in this tab’s memory. The sequence does not yet adapt through AI. Active screen time is not speaking time.",
     "resume": "Back to the card",
     "finish": "Finish",
-    "previewSummary": "Test feedback entries recorded: {{count}}. The connected version will collect each person’s perspective; this test does not produce a couples analysis."
+    "previewSummary": "Test feedback entries recorded: {{count}}. The connected version will collect each person’s perspective; this test does not produce a couples analysis.",
+    "yourMoment": "YOUR MOMENT"
   }
 }

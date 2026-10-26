@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, Heart, Link2, MessageCircle, RotateCcw, Users, MoreHorizontal } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, Link2, MessageCircle, RotateCcw, Users } from 'lucide-react';
 import { Logo } from '@/components/ui/animated-logo';
 import { LevelTiles } from '@/components/game/LevelTiles';
 import { PhysicalCard } from '@/components/game/PhysicalCard';
+import { ImmersiveCard } from '@/components/game/ImmersiveCard';
 import { RoundFeedback, type RoundSignal } from '@/components/game/RoundFeedback';
 import { useActiveCardTime } from '@/hooks/useActiveCardTime';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -95,10 +96,9 @@ export default function Play() {
     </main>}
 
     {stage === 'cards' && <main className="immersive-table" aria-label={t('intelligentPlay.gameLabel')}>
-      <div className="immersive-controls"><span>{t(`levels.level${level}Name`)} <span aria-hidden="true">·</span> {index + 1}/{questions.length}</span><button className="close-icon" onClick={() => setMenuOpen(true)} aria-label={t('intelligentPlay.options')}><MoreHorizontal size={22} /></button></div>
-      <PhysicalCard key={`${level}:${index}`} label={t(`levels.level${level}Name`)} footer={`${index + 1} / ${questions.length}`} tone={level - 1} revealed={revealed} onReveal={() => setRevealed(true)} revealLabel={t('closeFlow.reveal')}><p>{questions[index]}</p></PhysicalCard>
-      <div className="immersive-actions"><button className="close-text-button" onClick={skipCard}>{t('closeFlow.skip')}</button><button className="close-primary" onClick={revealed ? requestFeedback : () => setRevealed(true)}>{t(revealed ? 'intelligentPlay.answered' : 'closeFlow.reveal')}<ArrowRight size={18} /></button></div>
-      {feedbackOpen && <RoundFeedback onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />}
+      <ImmersiveCard key={`${run}:${level}:${index}`} label={t(`levels.level${level}Name`)} progress={`${index + 1} / ${questions.length}`} tone={level - 1} question={questions[index]} revealed={revealed} responding={feedbackOpen} onReveal={() => setRevealed(true)} onRespond={requestFeedback} onSkip={skipCard} onOptions={() => setMenuOpen(true)}>
+        <RoundFeedback active={feedbackOpen} onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />
+      </ImmersiveCard>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}><DialogContent className="round-feedback">
         <DialogTitle>{t('intelligentPlay.options')}</DialogTitle><DialogDescription>{t('intelligentPlay.previewExplanation')}</DialogDescription>
         <button className="close-primary" onClick={() => setMenuOpen(false)}>{t('intelligentPlay.resume')}</button>

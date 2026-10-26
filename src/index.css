@@ -580,40 +580,79 @@
 @media (max-width: 350px) { .close-level { padding: 13px; } .close-level-title { font-size: 16px; } .close-narrow { padding-left: 22px; padding-right: 22px; } }
 @media (prefers-reduced-motion: reduce) { .close-primary, .close-secondary, .close-level { transition: none; } .close-primary:hover, .close-level:hover:not(:disabled), .close-level[aria-pressed=true] { transform: none; } }
 
-/* During play the phone is the card; chrome lives in the options sheet. */
-.close-immersive { background: #fff5f7; padding: 0; }
-.immersive-table { display: flex; flex-direction: column; width: min(100%, 480px); min-height: 100svh; margin: auto; background: linear-gradient(155deg, #fff0f8, #fff 55%, #fff7f9); padding: max(8px, env(safe-area-inset-top)) 24px max(14px, env(safe-area-inset-bottom)); }
-.immersive-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; }
-.immersive-controls > span { font-size: 10px; color: #8c567d; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
-.immersive-controls > span > span { margin: 0 6px; }
-.immersive-table .physical-deck { flex: 1; display: flex; width: 100%; max-width: none; margin: 0; }
-.immersive-table .physical-deck::before, .immersive-table .physical-deck::after { display: none; }
-.immersive-table .physical-card { width: 100%; display: flex; min-height: 350px; border-radius: 0; }
-.immersive-table .physical-card-front { width: 100%; flex: 1; min-height: 0; padding: 8px 4px 15px; background: transparent; border: 0; box-shadow: none; }
-.immersive-table .physical-card-heading { display: none; }
-.immersive-table .physical-card-question { font-size: clamp(26px, 6.7vw, 35px); line-height: 1.35; min-height: 260px; padding: 42px 12px; }
-.immersive-table .physical-card-footer { border: none; padding: 8px 0; justify-content: center; opacity: .65; }
-.immersive-table .physical-card-footer > span { display: none; }
-.immersive-table .physical-card-back { border: 0; box-shadow: none; background: transparent; }
-.immersive-table .card-back-level, .immersive-table .card-back-tagline { display: none; }
-.immersive-table .physical-card-back::before, .immersive-table .physical-card-back::after { display: none; }
-.immersive-actions { display: flex; align-items: center; gap: 24px; padding: 12px 0 4px; }
-.immersive-actions > .close-primary { flex: 1; }
-.immersive-actions > .close-text-button { min-width: 48px; }
+/* A little space around the object makes its edge, thickness and shadow visible. */
+.close-immersive { background: radial-gradient(ellipse at 15% 0%, #f9dfec, transparent 65%), linear-gradient(145deg, #f3e6ee, #e9deee); padding: 0; }
+.immersive-table { width: min(100%, 500px); margin: auto; padding: max(12px, env(safe-area-inset-top)) 13px max(24px, env(safe-area-inset-bottom)); }
+.tactile-deck { position: relative; perspective: 1800px; isolation: isolate; --card-accent: #257157; --card-wash: #edf8f1; }
+.tactile-deck[data-tone="1"] { --card-accent: #8544aa; --card-wash: #f5edff; }
+.tactile-deck[data-tone="2"] { --card-accent: #be3a38; --card-wash: #fff0eb; }
+.tactile-deck[data-tone="3"] { --card-accent: #4166ba; --card-wash: #edf2ff; }
+.tactile-deck::before, .tactile-deck::after { content: ''; position: absolute; inset: 3px 3px -4px; border: 1px solid #d5bbc9; border-radius: 28px; background: #fff9fc; z-index: -1; box-shadow: 0 2px 1px #845b721c; pointer-events: none; }
+.tactile-deck::before { transform: rotate(-.6deg) translateY(3px); box-shadow: 0 18px 25px -14px #68446370, 0 32px 50px -26px #68446350; }
+.tactile-deck::after { transform: rotate(.35deg); }
+.tactile-turn { display: grid; min-height: calc(100svh - 36px); transform-style: preserve-3d; transition: transform .65s cubic-bezier(.2,.75,.2,1); }
+.tactile-turn[data-responding=true] { transform: rotateY(180deg); }
+.tactile-face { grid-area: 1 / 1; min-width: 0; position: relative; display: flex; flex-direction: column; padding: 18px 22px 23px; border: 1px solid #dcbfcf; border-radius: 28px; background: radial-gradient(ellipse at 0% 0%, var(--card-wash), transparent 58%), radial-gradient(ellipse at 100% 100%, #fce9f3, transparent 50%), #fffdfd; box-shadow: inset 0 1px 1px #fff, inset 0 0 0 5px #ffffff99, inset 0 -2px 2px #cfb1c52b, 0 3px 3px #845b721c, 0 10px 22px -16px #68446370; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.tactile-face::before { content: ''; position: absolute; inset: 8px; border: 1px solid #b088a51c; border-radius: 21px; pointer-events: none; }
+.tactile-face::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: .2; background-image: repeating-linear-gradient(0deg, #84647a09 0px, #84647a09 1px, transparent 1px, transparent 3px), repeating-linear-gradient(90deg, #84647a09 0px, #84647a09 1px, transparent 1px, transparent 3px); }
+.tactile-response-face { transform: rotateY(180deg); background: radial-gradient(ellipse at 100% 0%, #f2e3ff, transparent 65%), radial-gradient(ellipse at 0% 100%, #ffe7ed, transparent 60%), #fffafd; }
+.tactile-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; }
+.tactile-heading > span { display: flex; align-items: center; gap: 8px; color: var(--card-accent); font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; }
+.tactile-heading .close-icon { margin-right: -8px; color: #8c567d; }
+.tactile-question { display: flex; flex: 1; align-items: center; justify-content: center; padding: 30px 5px; min-height: 280px; }
+.tactile-question > p { text-align: center; text-wrap: balance; font: 600 clamp(25px, 6.6vw, 33px)/1.4 'Montserrat', sans-serif; letter-spacing: -.04em; }
+.tactile-question > p:focus, .card-response h2:focus { outline: none; }
+.tactile-question.is-revealed > p { animation: card-ink-in .4s ease both; }
+.tactile-cover { display: flex; width: 100%; flex-direction: column; align-items: center; justify-content: center; min-height: 280px; gap: 20px; }
+.tactile-logo { width: 230px; max-width: 90%; height: auto !important; aspect-ratio: 2 / 1; cursor: inherit; }
+.tactile-cover > span { color: #8e597a; font-size: 8px; letter-spacing: .18em; }
+.tactile-number { align-self: center; color: #8f7185; font-size: 10px; letter-spacing: .18em; padding-bottom: 20px; }
+.tactile-actions { display: flex; align-items: center; gap: 18px; padding-top: 16px; border-top: 1px solid #b088a526; }
+.tactile-actions .close-primary { flex: 1; font-size: 12px; padding: 13px 12px; }
+.tactile-actions .close-text-button { min-width: 44px; }
+.card-response { flex: 1; display: flex; flex-direction: column; gap: 24px; }
+.card-response-top { min-height: 44px; display: flex; align-items: center; justify-content: space-between; color: #8c567d; }
+.card-response-top > span:nth-child(2) { font-size: 9px; letter-spacing: .17em; font-weight: 600; }
+.card-response-top > span:last-child { width: 36px; text-align: center; font-size: 24px; }
+.card-response-top .close-icon { margin-left: -8px; }
+.card-response-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+.card-response h2 { font: 700 clamp(24px, 6.3vw, 30px)/1.2 'Montserrat', sans-serif; letter-spacing: -.045em; text-align: center; text-wrap: balance; margin: 0 auto; max-width: 280px; }
+.card-response-subtitle { text-align: center; font-size: 12px; color: #796978; margin: 12px 0 26px; }
+.card-response fieldset { min-width: 0; }
+.card-feelings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.card-feelings button, .card-paces button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; min-height: 96px; border: 1px solid #e6cddd; border-radius: 18px; background: #ffffffa6; box-shadow: 0 3px 0 #ddc5d52b, inset 0 1px 0 #fff; color: #654e64; font-size: 12px; line-height: 1.35; padding: 12px 6px; transition: background .15s, border-color .15s, transform .15s; }
+.card-feelings .feeling-emoji { font-size: 33px; line-height: 1.2; filter: drop-shadow(0 2px 1px #8a4f7722); }
+.card-feelings button[aria-pressed=true], .card-paces button[aria-pressed=true] { border-color: #a91a65; background: #fbe3ef; color: #8f1554; box-shadow: 0 0 0 1px #a91a65, inset 0 1px 0 #fff; }
+.card-feelings button:active, .card-paces button:active { transform: scale(.97); }
+.card-pace-field { margin-top: 26px; }
+.card-pace-field legend { font-size: 12px; color: #796978; margin-bottom: 12px; }
+.card-paces { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; }
+.card-paces button { min-height: 72px; font-size: 10px; border-radius: 15px; gap: 7px; }
+.card-paces button > span:first-child { font-size: 21px; }
+.card-response-bottom { display: grid; gap: 14px; }
+.card-response-bottom .close-primary { width: 100%; font-size: 12px; }
+.round-preview-note { font-size: 9px; line-height: 1.5; text-align: center; color: #796978; }
+/* Pause remains an explicit utility sheet; per-round feedback is a card face. */
 .round-feedback { max-width: 430px; max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 26px; background: #fffafd; padding: 28px; gap: 20px; }
 .round-feedback h2 { padding-right: 20px; font: 700 22px/1.25 'Montserrat', sans-serif; letter-spacing: -.035em; }
-.round-feedback fieldset { min-width: 0; }
-.round-feedback legend { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: #57465e; }
-.round-feelings, .round-paces { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.round-paces { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.round-feedback fieldset button { border: 1px solid #ecd5e3; border-radius: 13px; min-height: 48px; padding: 10px 8px; font-size: 12px; line-height: 1.4; color: #6f5268; background: #fff; }
-.round-feedback fieldset button[aria-pressed=true] { border-color: #ac276d; background: #fce8f2; color: #a91a65; }
-.round-feedback fieldset button:focus-visible, .round-feedback summary:focus-visible { outline: 2px solid #a91a65; outline-offset: 3px; }
-.round-feedback summary { min-height: 40px; font-size: 12px; color: #8c567d; cursor: pointer; padding: 10px 0; }
-.round-feedback textarea { border: 1px solid #ecd5e3; border-radius: 12px; padding: 12px; font-size: 14px; width: 100%; background: #fff; }
-.round-note-count { display: block; text-align: right; font-size: 10px; color: #796978; }
-.round-preview-note { font-size: 10px; line-height: 1.5; text-align: center; color: #796978; }
-@media (max-width: 480px) {
-  .round-feedback { top: auto; bottom: 0; left: 0; right: 0; transform: none; width: 100%; max-width: none; border-radius: 25px 25px 0 0; padding: 28px 22px max(22px, env(safe-area-inset-bottom)); }
-  .immersive-table { padding-left: 22px; padding-right: 22px; }
+@keyframes card-ink-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-height: 740px) {
+  .card-response { gap: 15px; }
+  .card-response-subtitle { margin-bottom: 18px; }
+  .card-feelings button { min-height: 83px; }
+  .card-pace-field { margin-top: 18px; }
+}
+@media (max-width: 350px) {
+  .tactile-face { padding: 15px 18px 20px; }
+  .card-response h2 { font-size: 24px; }
+  .tactile-actions { gap: 10px; }
+  .card-feelings button { font-size: 11px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tactile-turn { transition: none; transform: none !important; }
+  .tactile-response-face { transform: none; }
+  .tactile-face[aria-hidden=true] { visibility: hidden; }
+  .tactile-question.is-revealed > p { animation: none; }
+  .card-feelings button, .card-paces button { transition: none; }
+  .card-feelings button:active, .card-paces button:active { transform: none; }
 }

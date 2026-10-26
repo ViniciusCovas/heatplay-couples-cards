@@ -36,7 +36,7 @@ Tras una ronda, cada teléfono pregunta algo breve sobre la experiencia propia, 
 | Oyente | «Al escucharte…» | Me sentí más cerca / Descubrí algo / Sentí deseo / Me incomodó | Selección de tema y tipo de siguiente carta; autorreporte, no verdad sobre la pareja. |
 | Quien respondió, en puntos seleccionados | «Al compartir esto…» | Me sentí escuchado / Quería contar más / Prefería dejarlo ahí | Detectar experiencias diferentes sin asignar culpables. |
 | Cada persona | «Para la próxima…» | Más suave / Así está bien / Profundizar | Control directo del ritmo. Disponible siempre; no debe esconderse detrás de una nota. |
-| Opcional | «Quiero recordar…» | Hasta 140 caracteres | Ancla narrativa explícita. Distinguir recuerdo privado de contenido autorizado para compartir. |
+| Al cierre, propuesta futura | «Un momento que quiero guardar» | Una carta elegida o un recuerdo escrito voluntariamente | Fuera de las rondas. Distinguir recuerdo privado de contenido autorizado para compartir. |
 | Solo cuando aporte valor | «¿Qué creías que elegiría tu pareja?» | Una predicción sobre una carta de opciones | Comparar expectativa y respuesta real, con revelación voluntaria de ambos. Sin ranking de quién conoce mejor al otro. |
 
 No pedir todas estas cosas después de cada carta. Probar un pulso corto por ronda y un cambio de perspectiva cada 2–3 rondas, comparándolo con una frecuencia menor en pruebas de uso. Estos intervalos son hipótesis de diseño, no frecuencias validadas. Eliminar la nota obligatoria de «honestidad»: podemos preguntar cómo se percibió una respuesta, no medir si una persona miente.
@@ -98,8 +98,49 @@ Privacidad por defecto: cada persona ve sus notas y reflexiones privadas; el inf
 - Dos clientes reales deben conservar la misma carta y avanzar una sola vez con envíos simultáneos. Tercer usuario no puede leer sesión ni feedback.
 - El informe debe tolerar cero notas, datos escasos, contradicciones y una persona que no autoriza compartir.
 
-## Alcance implementado en esta iteración
+## Carta física y feedback inmersivo — revisión de 26/10
 
-La prévia aislada muestra una carta que ocupa la pantalla, sin encabezado/footer de sitio, texto «carta de demostración» ni favorito ambiguo. «Ya respondimos» abre una propuesta de microfeedback opcional sin valores iniciales, con percepción, ritmo y nota. Pausa/opciones explica las limitaciones de la prueba. El reloj local registra únicamente exposición visible/enfocada de la carta revelada y se pausa en overlays y cambios de visibilidad/foco. Los datos quedan solo en memoria y se reinician al iniciar otra muestra; no se envían a IA, compañero o backend. La selección de muestras continúa siendo fija: esta iteración valida interacción, no simula adaptación IA ni una segunda persona.
+La carta ocupa casi todo el teléfono con un pequeño margen que permite percibir bordes, grosor, capas y sombra. Conserva el rosa/lila y los acentos de cada nivel. Tiene esquinas redondeadas, bisel, textura sutil y luz; la profundidad se construye con CSS, sin sensores ni WebGL. La pregunta domina la cara principal. La marca grande aparece solo en la carta todavía sin revelar, no encima de cada pregunta.
 
-El evaluador online original permanece intacto. La corrección de unidades del prompt está en código, pendiente de despliegue de la función. Integrar el nuevo contrato en las salas, eliminar defaults de 3/5 sin romper reportes legacy, crear la proyección de sesión, actualizar la selección transaccional y generar informes verificables requieren migraciones y pruebas contra el Supabase original, todavía inaccesible en las conexiones disponibles.
+«Ya respondimos» gira el mismo objeto hacia su reverso. Allí aparecen cuatro emojis con significado escrito: 🥰 más cerca, 🤩 sorpresa, 🔥 deseo y 😕 incomodidad. Debajo, un segundo gesto define el ritmo: 🌿 más suave, 👌 así está bien, ✨ profundizar. Nada viene seleccionado. Elegir de nuevo desmarca. Se puede continuar sin responder o volver a leer la pregunta sin perder las selecciones. La siguiente carta empieza sin feedback anterior. Las etiquetas son necesarias porque el significado de un emoji puede variar entre personas y plataformas.
+
+Se elimina «Quiero recordar algo» del flujo. Era una nota de texto opcional, no una función de memoria automática. Si validamos un recuerdo al final, se llamará «Un momento que quiero guardar» y explicará qué se guarda y con quién. Durante la partida no debe abrir el teclado sin una razón clara.
+
+El reverso no usa Dialog, backdrop ni bloqueo de scroll; sigue dentro de la carta. Solo la pausa explícita conserva un diálogo utilitario. El lado inactivo usa inert/aria-hidden, el foco pasa al contenido activo, los botones tienen nombre y estado accesible y reduced-motion elimina el giro. En pantallas bajas o con texto ampliado se permite scroll natural para no recortar controles.
+
+## Benchmarking y oportunidad
+
+Fuentes oficiales consultadas el 26/10/2026. Revisión de funcionalidades documentadas, no pruebas prácticas de los cuatro productos ni auditoría completa del mercado. Las oportunidades son propuestas propias.
+
+| Referente | Funcionalidad documentada | Aprendizaje para GetClose |
+| --- | --- | --- |
+| [We’re Not Really Strangers — Couples](https://www.werenotreallystrangers.com/products/couples-edition) | Cartas físicas, tres niveles, preguntas y wildcards; ritmo flexible. | Cuidar el objeto, los turnos y la calidad editorial. La pregunta debe sostener el momento por sí sola. |
+| [Paired — FAQ](https://www.paired.com/frequently-asked-questions) | Actividades breves diarias, personalización al empezar, responder para desbloquear la respuesta de la pareja. | Reciprocidad y revelación equilibrada; evitar que una persona condicione la respuesta inicial de la otra. |
+| [Agapé — FAQ](https://www.getdailyagape.com/faq) | Declara personalización por machine learning y preguntas picantes opt-in; esta FAQ también describe su servicio SMS. | Personalizar preguntas ya existe; mantener el control explícito sobre contenido e intensidad. |
+| [Couply — anuncio de AI coach](https://www.couply.io/post/ai-couples-relationship-coach) | Coach con IA personalizado a partir de cuestionarios, consejos e ideas de citas. | La IA conversacional tampoco es un diferencial suficiente por sí sola. |
+
+Hipótesis de diferenciación: un mazo táctil compartido cuya secuencia se adapta ronda a ronda a la experiencia de ambos, con muy poco esfuerzo de pantalla y un recuerdo final fundamentado. No afirmar exclusividad ni superioridad hasta contrastar uso real y más alternativas.
+
+El momento «wow» propuesto: ambos indican sorpresa positiva ante una carta de recuerdos, quieren mantener el ritmo y permiten reutilizar el tema. Aparece una continuación editorial que encaja con ese momento. Después, una persona pide suavizar y el mazo cambia a algo juguetón sin señalarla. Al cerrar, el juego recupera las cartas que ambos marcaron como cercanía, sin fingir conocer la conversación hablada.
+
+Para no convertir cada ronda en un formulario, validar dos modos en pruebas con parejas: reverso opcional siempre disponible frente a pulsos intercalados con mayor frecuencia al inicio o tras cambios explícitos. La adaptación no puede depender de contestar todo. El objetivo es utilidad percibida por ambos y control del ritmo, no número de respuestas o minutos de pantalla.
+
+## IA: datos, decisiones y memoria
+
+**Recoger:** intención elegida, nivel acordado, temas excluidos, quién respondió/escuchó, feedback explícito de cada persona, pases sin atribuir motivo, cartas ya usadas y exposición activa separada de espera/formulario. Los emojis se guardan como categorías semánticas, no se someten a reconocimiento emocional. No hay grabación encubierta ni inferencia sobre el contenido hablado.
+
+**Decidir:** mantener, suavizar, profundizar dentro del nivel, cambiar de tema o cerrar. Conservar dos perspectivas; nunca promediarlas para convertir un desacuerdo en permiso. No usar duración o 🔥 como consentimiento. En una ronda de escucha la pregunta puede ser «Al escucharte…»; para quien habló, «Al compartirlo…». La prueba actual usa una perspectiva genérica única porque no simula dos participantes.
+
+**Recordar:** memoria de sesión por defecto. Entre sesiones, solo preferencias y recuerdos que la persona decida guardar, con controles de ver/borrar y alcance privado/compartido. La siguiente sesión consulta «¿Seguimos con este ritmo?» en lugar de tratar preferencias antiguas como permanentes. Separa memoria útil de historial bruto; no enviar toda la relación al modelo en cada carta.
+
+**Aprender:** primero, reglas y ranking editorial con señales explícitas; después evaluar si un modelo mejora continuaciones, variedad y coherencia. No hace falta entrenar un modelo con datos íntimos para arrancar. El LLM ordena candidatos autorizados y redacta insights basados en hechos; el servidor mantiene límites, turnos, sincronización y selección final. Si falla, el juego continúa con el mismo catálogo elegible.
+
+**Explicar al cierre:** hechos de la sesión, momentos elegidos y una propuesta para otra ocasión. Ejemplo condicionado a datos reales: «En dos cartas ambos marcaron “más cerca”». Sin una respuesta de ambos, no redactar conclusiones colectivas. Compartir requiere una vista previa y acuerdo sobre ese contenido. No presentar puntuaciones de compatibilidad, sinceridad o salud relacional.
+
+## Alcance implementado
+
+La previa aislada incorpora el objeto con profundidad, giro 3D al reverso y emojis sin popup. El reloj local mide exposición visible/enfocada de la pregunta revelada, excluyendo reverso, pausa y pérdida de foco. Las señales siguen en memoria de la pestaña, sin envío a IA, compañero o backend. La secuencia de muestra permanece fija; la interfaz lo explica en la entrada, pausa y reverso.
+
+`supabase/functions/_shared/round-policy.ts` añade una base pura, todavía sin conexión al selector: cualquier solicitud de suavizar o incomodidad prevalece; profundizar requiere dos señales vigentes y distintas; mantiene límites de nivel/temas, evita repeticiones y pausa si se agotan candidatos válidos. Las pruebas cubren señales ausentes, desacuerdo, deseo sin permiso, datos viejos, terceros, duplicados y catálogo agotado. No implementa aún ranking, cambio temático por historial, memoria, sincronización o informes.
+
+El evaluador online original permanece intacto. La corrección de unidades del prompt está en código, pendiente de despliegue de la función. Integrar el nuevo contrato en las salas, eliminar defaults de 3/5 sin romper reportes legacy, etiquetar el catálogo, validar entrada/identidad en servidor, crear la proyección, actualizar selección transaccional y generar informes verificables requieren migraciones y pruebas contra el Supabase original, todavía inaccesible en las conexiones disponibles.

@@ -1055,18 +1055,17 @@
     "playText": "Une carte à la fois, sur les deux téléphones. Répondez, écoutez et découvrez quelque chose de nouveau."
   },
   "intelligentPlay": {
-    "feedbackTitle": "Qu’a éveillé cette carte ?",
-    "feedbackSubtitle": "Votre impression. Pas une note sur qui est votre partenaire.",
-    "feelingPrompt": "En écoutant mon partenaire…",
-    "closer": "Je me suis senti·e plus proche",
-    "discovery": "J’ai découvert quelque chose",
-    "desire": "J’ai ressenti du désir",
-    "uncomfortable": "J’étais mal à l’aise",
+    "feedbackTitle": "Comment tu te sens ?",
+    "feedbackSubtitle": "Ton ressenti, à ta façon.",
+    "feelingPrompt": "Cette carte m’a fait ressentir…",
+    "closer": "Plus proche",
+    "discovery": "De la surprise",
+    "desire": "Du désir",
+    "uncomfortable": "Mal à l’aise",
     "pacePrompt": "Pour la prochaine…",
     "lighter": "Plus léger",
     "same": "Garder ce rythme",
     "deeper": "Approfondir",
-    "notePrompt": "Quelque chose à retenir…",
     "continue": "Continuer",
     "skipFeedback": "Continuer sans répondre",
     "localOnly": "Test local : rien n’est envoyé à l’IA ou à votre partenaire.",
@@ -1076,6 +1075,7 @@
     "previewExplanation": "Vous testez des exemples de cartes et une proposition de retour. Les données restent uniquement dans la mémoire de cet onglet. La séquence n’est pas encore adaptée par IA. Le temps d’écran actif n’est pas le temps de parole.",
     "resume": "Revenir à la carte",
     "finish": "Terminer",
-    "previewSummary": "Retours de test enregistrés : {{count}}. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple."
+    "previewSummary": "Retours de test enregistrés : {{count}}. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple.",
+    "yourMoment": "TON MOMENT"
   }
 }
