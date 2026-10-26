@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "12.2.3"
   }
   public: {
     Tables: {
@@ -557,28 +557,22 @@ export type Database = {
         Args: { player_id_param: string; room_id_param: string }
         Returns: number
       }
-      auto_advance_stuck_rooms: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      auto_advance_stuck_rooms: { Args: never; Returns: undefined }
       check_room_credit_status: {
         Args: { room_code_param: string }
         Returns: Json
       }
-      cleanup_inactive_rooms: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_inactive_rooms: { Args: never; Returns: undefined }
       consume_credit: {
         Args: { room_id_param: string; user_id_param: string }
         Returns: Json
       }
-      consume_credit_for_room: {
-        Args:
-          | { room_code_param: string }
-          | { room_code_param: string; user_id_param: string }
-        Returns: Json
-      }
+      consume_credit_for_room:
+        | { Args: { room_code_param: string }; Returns: Json }
+        | {
+            Args: { room_code_param: string; user_id_param: string }
+            Returns: Json
+          }
       consume_credit_for_room_v2: {
         Args: { room_code_param: string; user_id_param: string }
         Returns: Json
@@ -595,21 +589,21 @@ export type Database = {
         Returns: Json
       }
       detect_and_fix_stuck_rooms: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           action_taken: string
           room_id: string
         }[]
       }
       detect_disconnected_players: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           action_taken: string
           room_id: string
         }[]
       }
       fix_stuck_evaluation_rooms: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           action_taken: string
           room_id: string
@@ -640,10 +634,7 @@ export type Database = {
         Args: { room_id_param: string }
         Returns: string[]
       }
-      get_user_credits: {
-        Args: { user_id_param: string }
-        Returns: number
-      }
+      get_user_credits: { Args: { user_id_param: string }; Returns: number }
       get_user_role: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -664,10 +655,7 @@ export type Database = {
         }
         Returns: Json
       }
-      is_admin: {
-        Args: { user_id: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_id: string }; Returns: boolean }
       is_user_participant: {
         Args: { room_id_param: string; user_id_param: string }
         Returns: boolean
@@ -676,29 +664,20 @@ export type Database = {
         Args: { player_id_param: string; room_code_param: string }
         Returns: Json
       }
-      normalize_used_cards: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      normalize_used_cards: { Args: never; Returns: undefined }
       player_participates_in_room: {
         Args: { player_id_param: string; room_id_param: string }
         Returns: boolean
       }
       process_game_flow_queue: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           error_count: number
           processed_count: number
         }[]
       }
-      promote_to_admin: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
-      room_is_open: {
-        Args: { room_id_param: string }
-        Returns: boolean
-      }
+      promote_to_admin: { Args: { user_email: string }; Returns: boolean }
+      room_is_open: { Args: { room_id_param: string }; Returns: boolean }
       select_next_card_robust: {
         Args: { current_used_cards?: string[]; room_id_param: string }
         Returns: string
@@ -719,12 +698,12 @@ export type Database = {
         }
         Returns: Json
       }
-      sync_game_state_reliably: {
-        Args:
-          | { player_id_param: string; room_id_param: string }
-          | { room_id_param: string }
-        Returns: Json
-      }
+      sync_game_state_reliably:
+        | { Args: { room_id_param: string }; Returns: Json }
+        | {
+            Args: { player_id_param: string; room_id_param: string }
+            Returns: Json
+          }
       update_user_activity: {
         Args: { user_id_param: string }
         Returns: undefined
@@ -747,12 +726,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -776,11 +755,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -801,11 +780,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -826,11 +805,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -843,11 +822,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
