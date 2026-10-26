@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, ArrowRight, Check, Heart, Pause, Sparkles, X } from 'lucide-react';
+import { Logo } from '@/components/ui/animated-logo';
 import { PhysicalCard } from '@/components/game/PhysicalCard';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getSparkSample, toSparkLocale } from '@/lib/dailySpark';
@@ -115,7 +116,7 @@ export default function Together() {
       <header className="table-header">
         {!session ? <Link to="/" className="table-icon" aria-label={t('together.back')}><ArrowLeft size={20} /></Link> :
           <button className="table-icon" onClick={() => setPaused(true)} aria-label={t('together.pause')}><Pause size={20} /></button>}
-        <Link to="/" onClick={e => { if (session && !finished) { e.preventDefault(); setPaused(true); } }} className="table-wordmark">let’s get close<span>✦</span></Link>
+        <Link to="/" onClick={e => { if (session && !finished) { e.preventDefault(); setPaused(true); } }} className="table-wordmark"><Logo size="small" className="close-logo" /></Link>
         <label className="sr-only" htmlFor="table-language">{t('together.language')}</label>
         <select id="table-language" aria-label={t('together.language')} value={locale} onChange={e => void i18n.changeLanguage(e.target.value)} className="table-language">
           <option value="en">EN</option><option value="es">ES</option><option value="pt">PT</option><option value="fr">FR</option>
@@ -128,7 +129,7 @@ export default function Together() {
           <h1>{t('together.title')}</h1>
           <p>{t('together.subtitle')}</p>
           <span className="table-free">{t('together.free')}</span>
-          <div className="table-preview" aria-hidden="true"><div>let’s get<br /><em>close.</em><Heart size={26} /></div></div>
+          <div className="table-preview" aria-hidden="true"><div><Logo size="large" /></div></div>
         </div>
         <form className="table-settings" onSubmit={e => { e.preventDefault(); void start(); }}>
           <fieldset disabled={preparing} className="space-y-6">

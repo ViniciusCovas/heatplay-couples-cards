@@ -28,7 +28,7 @@ export const Logo = ({
     >
       <img 
         src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png" 
-        alt="Let's Get Close - Dating App Logo"
+        alt="Let's Get Close - Card Game Logo"
         className="w-auto max-w-full h-full object-contain"
       />
     </div>

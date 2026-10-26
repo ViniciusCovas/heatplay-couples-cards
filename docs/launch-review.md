@@ -4,7 +4,7 @@ This branch builds on `claude/project-complete-analysis-30nhin` at `2d3b74f`, pr
 
 ## Product change
 
-The primary CTA now opens `/play`: a complete, free, single-phone evening with no account, checkout, answer recording or per-answer ratings. Couples choose a mood, approximate duration (6/10/16 cards), independent sensuality and emotional-depth limits, then each confirms the pace and adulthood. Changing preferences clears both confirmations. Cards turn over on tap; partners speak, guess each other's answers, pass, pause, soften the remaining deck or end early. Optional favorite **card IDs** are retained only with this tab's session, not partner answers. A refreshed page resumes for up to eight hours. The closing card invites an actual next date.
+The optional `/together` route provides a complete, free, single-phone evening with no account, checkout, answer recording or per-answer ratings. Couples choose a mood, approximate duration (6/10/16 cards), independent sensuality and emotional-depth limits, then each confirms the pace and adulthood. Changing preferences clears both confirmations. Cards turn over on tap; partners speak, guess each other's answers, pass, pause, soften the remaining deck or end early. Optional favorite **card IDs** are retained only with this tab's session, not partner answers. A refreshed page resumes for up to eight hours. The closing card invites an actual next date.
 
 Sixty existing editorial questions, in English, Spanish, Portuguese and French, now share one catalog between the Daily Spark, landing previews, local play and AI planner. No database question content was replaced. The paper card component is also used by existing realtime rooms. Reduced motion disables the flip transition.
 
@@ -17,7 +17,7 @@ Optional AI prepares an order of existing question IDs within explicit limits. I
 - Edge room guards reject missing identities before querying data. Recent rooms are no longer a public access window.
 - `grant_checkout_credits` atomically commits the Stripe ledger and credits. Webhook and success-page verification use the same transaction. Subscription checkout no longer claims a ledger record before persisting state.
 - Removed an unsupported comparative percentile from new analysis generation and from rendering old reports. Existing compatibility/bond metrics still describe user ratings; they are not validated clinical or relationship diagnostics. A deeper report redesign remains separate.
-- Pageview URLs omit invite query strings. CORS includes the `.app` domain already named in the site metadata.
+- Pageview URLs omit invite query strings. CORS supports the original `.com` domain and retains `.app` compatibility. Canonical URLs, sitemap and robots now use the owner-confirmed `.com`; support mailbox ownership is still unverified.
 
 ## Validation
 
@@ -36,9 +36,9 @@ The configured Supabase ref is `bbdeyohqrutithaziulp`. It was absent from both c
 5. Verify two actual clients: create/pay or Premium entitlement, invite join, reconnect, level choice, one complete game and analysis access. Check a third identity cannot read either room. Replay a test-mode Stripe checkout through webhook and verification; ensure a single credit grant. Verify AI outage fallback and allowed-origin requests.
 6. Only then promote the candidate to production and verify the canonical domain.
 
-`VITE_TABLE_PREVIEW=true` builds an isolated review of the one-phone experience at every route, without online-room links, payment flows or AI requests. It is explicitly labeled as a preview and must be unset for the full release. `vercel.json` supplies SPA deep-link rewrites; no domain is reassigned by that file.
+`VITE_TABLE_PREVIEW=true` now builds an isolated, explicitly labeled visual review of the connect → levels → cards flow at every route. It does not create rooms, simulate actual partners, process payments or request AI. It is explicitly labeled as a preview and must be unset for the full release. `vercel.json` supplies SPA deep-link rewrites; no domain is reassigned by that file.
 
-## Browser review completed
+## Previous one-phone browser review (superseded visual direction)
 
 Playable isolated preview: https://lets-get-close-preview.vercel.app/
 
@@ -47,3 +47,27 @@ The deployed code at `8cacf5f` passed GitHub Actions Quality. Browser checks com
 The preview excludes online-room, payment and AI calls by design. Production and Stripe end-to-end checks remain pending for the reasons above. Full-repository lint after the changes reports 171 pre-existing errors and 37 warnings; the new-surface lint gate and TypeScript checks pass.
 
 ![Verified mobile layout](together-mobile.jpg)
+
+
+## Brand and journey correction — 26 October 2026
+
+Owner feedback and the supplied GetClose Project Guide establish the original identity and two-phone journey as authoritative. The prior beige/serif one-phone-first preview was a product-direction mistake.
+
+### Implemented
+
+- `/play` is the connection entry: create a room or join by invitation; one-phone play is secondary at `/together`.
+- Original uploaded pill-letter logo, Montserrat/Inter, blush pink, coral and purple. Cards have layered edges, tactile flip, readable type, level symbols and real brand artwork on both sides.
+- Four choices follow the guide: Spark/Connection/Fire/No Filter with green/purple/red/blue accents. `LevelTiles` is shared with the actual online level-select screen; existing mutual level voting remains authoritative.
+- The online room still reads its existing catalog and titles from Supabase. No production questions have been replaced. Removed fabricated fallback card counts.
+- The isolated review uses existing Daily Spark editorial samples, labeled as samples rather than the full level catalog. No fictitious room codes or connected-player claims.
+- Four-language entry, level descriptions and preview controls; restored the original translated level labels in local UI.
+- `.com` replaces `.app` in canonical/social URLs, sitemap and robots. Existing support email addresses are not changed without verifying mailbox ownership.
+
+### Remaining product and launch gaps
+
+1. `CreateRoom.tsx` requires credits or Premium before a room can be activated. This interrupts the desired immediate entry; do not claim free online play. An introductory online session needs an explicit server-side entitlement design and abuse limits, not removal of a client check.
+2. `LevelSelect.tsx` retains mutual voting, mismatch reset and countdown behavior. Redesigning it to a proposal/accept interaction would require server state changes and two-client regression tests. The visual change does not claim to solve those races.
+3. The guide reports Spanish content in Portuguese/French database levels. Confirm and repair against the actual catalog once backend access is restored; local four-language samples do not prove the production catalog is correct.
+4. The guide describes written answers, while code paths also refer to spoken responses. Audit the active production configuration before making an AI promise. AI cannot infer intimacy from speech it never receives, and ratings must not become purportedly scientific relationship scores.
+5. The ideal experience starts with connection, uses one mutually selected level, shows one synchronized question, and keeps pass/pause available. AI should reduce selection work and offer optional conversation continuations within agreed limits. This is a product direction; those adaptive online capabilities are not live in the preview.
+6. Original Supabase access, live two-device synchronization, payment integration and AI execution remain release gates. The visual review is not a replacement for letsgetclose.com.

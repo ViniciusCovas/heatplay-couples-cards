@@ -28,7 +28,7 @@ export function GameCard({ currentCard, currentLevel, showCard, cardIndex, total
   return (
     <div className="flex-1 flex flex-col items-center justify-center gap-5 px-6 py-3" role="region" aria-label={t('game.question')} aria-live="polite" aria-busy={isGeneratingCard}>
       <div className="w-full max-w-[368px] transition-opacity motion-reduce:transition-none" style={{ opacity: showCard ? 1 : .65 }}>
-        <PhysicalCard key={`${currentLevel}:${currentCard}`} label={t(`levels.level${currentLevel}Name`)} footer={`${cardIndex + 1} / ${totalCards}`} tone={Math.max(0, currentLevel - 2)}>
+        <PhysicalCard key={`${currentLevel}:${currentCard}`} label={t(`levels.level${currentLevel}Name`)} footer={`${cardIndex + 1} / ${totalCards}`} tone={Math.max(0, Math.min(3, currentLevel - 1))}>
           {isGeneratingCard ? <p className="font-sans text-base text-muted-foreground" role="status">{t('game.loadingQuestions')}</p> : <p>{currentCard}</p>}
         </PhysicalCard>
       </div>

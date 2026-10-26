@@ -33,9 +33,9 @@ const SectionHeading = ({ eyebrow, title, sub }: { eyebrow?: string; title: stri
 export const HowItWorks = () => {
   const { t } = useTranslation();
   const steps = [
-    { title: t('together.moodTitle'), desc: t('together.limitsHint'), mini: <Sparkles className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
-    { title: t('together.start'), desc: t('together.subtitle'), mini: <MessageCircle className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
-    { title: t('together.doneTitle'), desc: t('together.noSaved'), mini: <Heart className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
+    { title: t('closeFlow.create'), desc: t('closeFlow.inviteText'), mini: <MessageCircle className="h-16 w-16 text-primary-ink" strokeWidth={1} /> },
+    { title: t('closeFlow.chooseTitle'), desc: t('closeFlow.chooseText'), mini: <Sparkles className="h-16 w-16 text-primary-ink" strokeWidth={1} /> },
+    { title: t('closeFlow.playTitle'), desc: t('closeFlow.playText'), mini: <Heart className="h-16 w-16 text-primary-ink" strokeWidth={1} /> },
   ];
   return (
     <section className="landing-band px-5 py-20 md:py-28">

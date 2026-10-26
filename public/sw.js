@@ -12,7 +12,7 @@
  * are always network-only — a cached auth or payment response would be a bug.
  */
 
-const CACHE = 'lgc-shell-v2';
+const CACHE = 'lgc-shell-v3';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/app-icon.png'];
 
 self.addEventListener('install', (event) => {
