@@ -1072,10 +1072,17 @@
     "gameLabel": "Carta do jogo",
     "options": "Pausa e opções",
     "answered": "Já respondemos",
-    "previewExplanation": "Você está testando cartas de exemplo e uma proposta de feedback. Os dados ficam apenas na memória desta aba. A sequência ainda não se adapta por IA. Tempo de tela ativa não equivale a tempo falando.",
+    "previewExplanation": "Teste local dos turnos: uma pessoa pergunta, a outra responde; depois trocam. Pular mantém o turno. O verso registra a impressão de quem ouviu. Não conecta celulares nem adapta a sequência com IA. Tudo fica na memória desta aba; tempo ativo não mede quanto conversaram.",
     "resume": "Voltar à carta",
     "finish": "Encerrar",
     "previewSummary": "Feedbacks de teste registrados: {{count}}. A versão conectada recolherá a perspectiva de cada pessoa; este teste não produz uma análise do casal.",
-    "yourMoment": "SEU MOMENTO"
+    "yourMoment": "SEU MOMENTO",
+    "person": "Pessoa {{number}}",
+    "asks": "Pergunta e escuta",
+    "answers": "Responde",
+    "turnDescription": "Pessoa {{asker}} pergunta. Pessoa {{respondent}} responde.",
+    "responseReady": "Resposta pronta",
+    "listenerTitle": "Ao ouvir…",
+    "listenerSubtitle": "Como a resposta fez você se sentir?"
   }
 }

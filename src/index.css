@@ -656,3 +656,11 @@
   .card-feelings button, .card-paces button { transition: none; }
   .card-feelings button:active, .card-paces button:active { transform: none; }
 }
+/* Roles stay on the card; a new turn does not require an interstitial screen. */
+.tactile-roles { display: flex; align-items: center; justify-content: center; gap: 14px; padding: 16px 0 10px; color: #95758d; }
+.tactile-role { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.tactile-person { display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border: 1px solid #dfc6d7; border-radius: 50%; background: #ffffff9c; color: #89557b; font-size: 10px; flex-shrink: 0; }
+.tactile-role strong, .tactile-role small { display: block; }
+.tactile-role strong { font-size: 11px; font-weight: 600; color: #6c5168; }
+.tactile-role small { font-size: 9px; line-height: 1.6; color: #85707f; }
+@media (max-width: 350px) { .tactile-roles { gap: 9px; } .tactile-role { gap: 6px; } .tactile-person { width: 23px; height: 23px; } }

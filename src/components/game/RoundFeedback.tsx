@@ -19,17 +19,17 @@ const feelings = [
 const paces = [{ value: 'lighter', emoji: '🌿' }, { value: 'same', emoji: '👌' }, { value: 'deeper', emoji: '✨' }] as const;
 
 /** Explicit self-reports, never prefilled ratings of a partner's honesty. */
-export function RoundFeedback({ active, onSubmit, onClose }: { active: boolean; onSubmit: (signal: RoundSignal) => void; onClose: () => void }) {
+export function RoundFeedback({ participantName, active, onSubmit, onClose }: { participantName: string; active: boolean; onSubmit: (signal: RoundSignal) => void; onClose: () => void }) {
   const { t } = useTranslation();
   const [feeling, setFeeling] = useState<Feeling | null>(null);
   const [pace, setPace] = useState<Pace | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (active) heading.current?.focus({ preventScroll: true }); }, [active]);
   return <div className="card-response">
-    <div className="card-response-top"><button className="close-icon" onClick={onClose} aria-label={t('intelligentPlay.resume')}><ArrowLeft size={20} /></button><span>{t('intelligentPlay.yourMoment')}</span><span aria-hidden="true">✧</span></div>
+    <div className="card-response-top"><button className="close-icon" onClick={onClose} aria-label={t('intelligentPlay.resume')}><ArrowLeft size={20} /></button><span>{participantName}</span><span aria-hidden="true">✧</span></div>
     <div className="card-response-body">
-      <h2 ref={heading} tabIndex={-1}>{t('intelligentPlay.feedbackTitle')}</h2>
-      <p className="card-response-subtitle">{t('intelligentPlay.feedbackSubtitle')}</p>
+      <h2 ref={heading} tabIndex={-1}>{t('intelligentPlay.listenerTitle')}</h2>
+      <p className="card-response-subtitle">{t('intelligentPlay.listenerSubtitle')}</p>
       <fieldset><legend className="sr-only">{t('intelligentPlay.feelingPrompt')}</legend><div className="card-feelings">
         {feelings.map(({ value, emoji }) => <button key={value} type="button" aria-pressed={feeling === value} onClick={() => setFeeling(feeling === value ? null : value)}><span className="feeling-emoji" aria-hidden="true">{emoji}</span><span>{t(`intelligentPlay.${value}`)}</span></button>)}
       </div></fieldset>

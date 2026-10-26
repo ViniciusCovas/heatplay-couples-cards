@@ -1054,10 +1054,17 @@
     "gameLabel": "Game card",
     "options": "Pause and options",
     "answered": "We’ve answered",
-    "previewExplanation": "You are trying sample cards and a proposed feedback flow. Data stays only in this tab’s memory. The sequence does not yet adapt through AI. Active screen time is not speaking time.",
+    "previewExplanation": "Local turn preview: one person asks, the other answers; then they swap. Passing keeps the same turn. The reverse collects the listener’s impression. Phones are not connected and AI does not adapt the sequence. Everything stays in this tab’s memory; active time does not measure conversation time.",
     "resume": "Back to the card",
     "finish": "Finish",
     "previewSummary": "Test feedback entries recorded: {{count}}. The connected version will collect each person’s perspective; this test does not produce a couples analysis.",
-    "yourMoment": "YOUR MOMENT"
+    "yourMoment": "YOUR MOMENT",
+    "person": "Person {{number}}",
+    "asks": "Asks and listens",
+    "answers": "Answers",
+    "turnDescription": "Person {{asker}} asks. Person {{respondent}} answers.",
+    "responseReady": "Answer finished",
+    "listenerTitle": "As you listened…",
+    "listenerSubtitle": "How did their answer make you feel?"
   }
 }

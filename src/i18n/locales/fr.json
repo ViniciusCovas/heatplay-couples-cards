@@ -1072,10 +1072,17 @@
     "gameLabel": "Carte de jeu",
     "options": "Pause et options",
     "answered": "Nous avons répondu",
-    "previewExplanation": "Vous testez des exemples de cartes et une proposition de retour. Les données restent uniquement dans la mémoire de cet onglet. La séquence n’est pas encore adaptée par IA. Le temps d’écran actif n’est pas le temps de parole.",
+    "previewExplanation": "Aperçu local des tours : une personne pose la question, l’autre répond, puis elles échangent les rôles. Passer conserve le tour. Le verso recueille le ressenti de la personne qui a écouté. Aucun téléphone n’est connecté et l’IA n’adapte pas la séquence. Tout reste en mémoire dans cet onglet ; le temps actif ne mesure pas la durée de conversation.",
     "resume": "Revenir à la carte",
     "finish": "Terminer",
     "previewSummary": "Retours de test enregistrés : {{count}}. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple.",
-    "yourMoment": "TON MOMENT"
+    "yourMoment": "TON MOMENT",
+    "person": "Personne {{number}}",
+    "asks": "Demande et écoute",
+    "answers": "Répond",
+    "turnDescription": "La personne {{asker}} pose la question. La personne {{respondent}} répond.",
+    "responseReady": "Réponse terminée",
+    "listenerTitle": "En l’écoutant…",
+    "listenerSubtitle": "Qu’avez-vous ressenti à sa réponse ?"
   }
 }

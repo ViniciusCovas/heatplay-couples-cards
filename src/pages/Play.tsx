@@ -23,10 +23,12 @@ export default function Play() {
   const [run, setRun] = useState(0);
   const [level, setLevel] = useState(1);
   const [index, setIndex] = useState(0);
+  const [asker, setAsker] = useState<1 | 2>(1);
+  const respondent = asker === 1 ? 2 : 1;
   const [revealed, setRevealed] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [rounds, setRounds] = useState<Array<RoundSignal & { cardId: number; activeVisibleMs: number; skipped: boolean }>>([]);
+  const [rounds, setRounds] = useState<Array<RoundSignal & { cardId: number; activeVisibleMs: number; skipped: boolean; asker: 1 | 2; respondent: 1 | 2; feedbackPerspective: 'listener' }>>([]);
   const readTime = useActiveCardTime(`${run}:${level}:${index}`, stage === 'cards' && revealed && !feedbackOpen && !menuOpen);
   const exposure = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
@@ -37,14 +39,16 @@ export default function Play() {
     if (review) setStage(joining ? 'join' : 'invite');
     else navigate(joining ? '/join-room' : '/create-room');
   };
-  const choose = (id: number) => { setRun(value => value + 1); setLevel(id); setIndex(0); setRevealed(false); setRounds([]); setStage('cards'); };
+  const choose = (id: number) => { setRun(value => value + 1); setLevel(id); setIndex(0); setAsker(1); setRevealed(false); setRounds([]); setStage('cards'); };
   const next = () => {
     if (index === questions.length - 1) setStage('done');
     else { setIndex(index + 1); setRevealed(false); }
   };
   const finishCard = (signal: RoundSignal, skipped = false) => {
-    setRounds(previous => [...previous, { ...signal, cardId: samples[level - 1][index], activeVisibleMs: exposure.current, skipped }]);
+    setRounds(previous => [...previous, { ...signal, cardId: samples[level - 1][index], activeVisibleMs: exposure.current, skipped, asker, respondent, feedbackPerspective: 'listener' }]);
     setFeedbackOpen(false);
+    // Replacing an unwanted card keeps the same person's opportunity to answer.
+    if (!skipped) setAsker(respondent);
     next();
   };
   const requestFeedback = () => { exposure.current = readTime(); setFeedbackOpen(true); };
@@ -96,8 +100,8 @@ export default function Play() {
     </main>}
 
     {stage === 'cards' && <main className="immersive-table" aria-label={t('intelligentPlay.gameLabel')}>
-      <ImmersiveCard key={`${run}:${level}:${index}`} label={t(`levels.level${level}Name`)} progress={`${index + 1} / ${questions.length}`} tone={level - 1} question={questions[index]} revealed={revealed} responding={feedbackOpen} onReveal={() => setRevealed(true)} onRespond={requestFeedback} onSkip={skipCard} onOptions={() => setMenuOpen(true)}>
-        <RoundFeedback active={feedbackOpen} onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />
+      <ImmersiveCard key={`${run}:${level}:${index}`} label={t(`levels.level${level}Name`)} progress={`${index + 1} / ${questions.length}`} tone={level - 1} asker={asker} respondent={respondent} question={questions[index]} revealed={revealed} responding={feedbackOpen} onReveal={() => setRevealed(true)} onRespond={requestFeedback} onSkip={skipCard} onOptions={() => setMenuOpen(true)}>
+        <RoundFeedback participantName={t('intelligentPlay.person', { number: asker })} active={feedbackOpen} onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />
       </ImmersiveCard>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}><DialogContent className="round-feedback">
         <DialogTitle>{t('intelligentPlay.options')}</DialogTitle><DialogDescription>{t('intelligentPlay.previewExplanation')}</DialogDescription>
