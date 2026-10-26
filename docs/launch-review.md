@@ -71,3 +71,11 @@ Owner feedback and the supplied GetClose Project Guide establish the original id
 4. The guide describes written answers, while code paths also refer to spoken responses. Audit the active production configuration before making an AI promise. AI cannot infer intimacy from speech it never receives, and ratings must not become purportedly scientific relationship scores.
 5. The ideal experience starts with connection, uses one mutually selected level, shows one synchronized question, and keeps pass/pause available. AI should reduce selection work and offer optional conversation continuations within agreed limits. This is a product direction; those adaptive online capabilities are not live in the preview.
 6. Original Supabase access, live two-device synchronization, payment integration and AI execution remain release gates. The visual review is not a replacement for letsgetclose.com.
+
+### Corrected preview verification
+
+Deployed code `515cdcb` is available at https://lets-get-close-preview.vercel.app/ . TypeScript, focused ESLint, all nine existing SQL/deck tests, production build and isolated preview build passed. Browser review exercised connection preview → four levels → card reveal → favorite → next → pass → finish → return to levels. At the 320px iframe viewport, the document client width and scroll width were both 305px (15px scrollbar), including the question screen; no horizontal overflow. The 390px view was visually inspected as well. These are responsive browser checks, not two real connected devices.
+
+![Restored brand entry](brand-connect.jpg)
+![Four-level mobile selection](brand-levels-mobile.jpg)
+![Branded mobile card](brand-card-mobile.jpg)
