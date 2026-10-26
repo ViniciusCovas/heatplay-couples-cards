@@ -1076,6 +1076,6 @@
     "previewExplanation": "Estás probando cartas de muestra y una propuesta de retroalimentación. Solo se conservan en memoria de esta pestaña. La secuencia aún no se adapta por IA. El tiempo de pantalla activa no equivale a tiempo hablando.",
     "resume": "Volver a la carta",
     "finish": "Terminar",
-    "previewSummary": "Probaste {{count}} retroalimentaciones en esta pestaña. La versión conectada recogerá la perspectiva de cada persona; esta prueba no produce un análisis de pareja."
+    "previewSummary": "Respuestas de prueba registradas: {{count}}. La versión conectada recogerá la perspectiva de cada persona; esta prueba no produce un análisis de pareja."
   }
 }

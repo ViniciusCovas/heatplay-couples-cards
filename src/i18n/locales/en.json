@@ -1058,6 +1058,6 @@
     "previewExplanation": "You are trying sample cards and a proposed feedback flow. Data stays only in this tab’s memory. The sequence does not yet adapt through AI. Active screen time is not speaking time.",
     "resume": "Back to the card",
     "finish": "Finish",
-    "previewSummary": "You tried {{count}} feedback entries in this tab. The connected version will collect each person’s perspective; this test does not produce a couples analysis."
+    "previewSummary": "Test feedback entries recorded: {{count}}. The connected version will collect each person’s perspective; this test does not produce a couples analysis."
   }
 }

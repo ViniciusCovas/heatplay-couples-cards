@@ -1076,6 +1076,6 @@
     "previewExplanation": "Você está testando cartas de exemplo e uma proposta de feedback. Os dados ficam apenas na memória desta aba. A sequência ainda não se adapta por IA. Tempo de tela ativa não equivale a tempo falando.",
     "resume": "Voltar à carta",
     "finish": "Encerrar",
-    "previewSummary": "Você testou {{count}} feedbacks nesta aba. A versão conectada recolherá a perspectiva de cada pessoa; este teste não produz uma análise do casal."
+    "previewSummary": "Feedbacks de teste registrados: {{count}}. A versão conectada recolherá a perspectiva de cada pessoa; este teste não produz uma análise do casal."
   }
 }

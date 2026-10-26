@@ -85,3 +85,11 @@ Deployed code `515cdcb` is available at https://lets-get-close-preview.vercel.ap
 The latest isolated review removes the site header, demo label, explanatory paragraph and favorite button while a card is active. The phone becomes the card, with a small level/progress label, options, pass and an answered action. Optional microfeedback follows the answered action; no rating is preselected. This prototype stores one tester's impressions, pace choice, optional note and visible/focused card duration in memory only. It does not yet adapt the sequence, connect a partner or call AI. Those limits appear before entering and in the options/feedback sheets.
 
 See [intelligent-card-experience.md](intelligent-card-experience.md) for the complete signal model, per-person/shared memory, adaptive narrative, deterministic boundaries, transactional selection, privacy and evidence-based report specification. Original online ratings remain unchanged pending integration. The legacy AI selector's prompt incorrectly labeled seconds as milliseconds; its label is corrected in code, not yet deployed as an Edge Function.
+
+
+### Immersive review verification
+
+Deployed interaction at `ff1fdb7` passed type checking, focused lint, ten automated tests and production build. The added clock test checks that paused time and repeated focus events do not inflate visible exposure. Browser checks verified full-screen cards, reveal, optional feeling/pace feedback, reset between cards, omitted feedback, pass, pause/resume and completion. At 390×844 and 320×740, the game document matched viewport width/height exactly without scrolling; the feedback sheet also fit at 320px. The preview counted only the one explicitly supplied feedback entry when the next was omitted and the final card passed. No two-client or AI claim follows from these checks.
+
+![Immersive card](immersive-card-mobile.jpg)
+![Optional round feedback](immersive-feedback-mobile.jpg)

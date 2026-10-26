@@ -1076,6 +1076,6 @@
     "previewExplanation": "Vous testez des exemples de cartes et une proposition de retour. Les données restent uniquement dans la mémoire de cet onglet. La séquence n’est pas encore adaptée par IA. Le temps d’écran actif n’est pas le temps de parole.",
     "resume": "Revenir à la carte",
     "finish": "Terminer",
-    "previewSummary": "Vous avez testé {{count}} retours dans cet onglet. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple."
+    "previewSummary": "Retours de test enregistrés : {{count}}. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple."
   }
 }
