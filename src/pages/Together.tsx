@@ -103,6 +103,7 @@ export default function Together() {
   }
 
   function reset() {
+    saveSession(null);
     setSession(null); setNotice(''); setAgreed([false, false]); setPaused(false);
   }
 
@@ -160,7 +161,7 @@ export default function Together() {
         <p className="mt-5 leading-relaxed">{t('together.doneText')}</p>
         {session.favorites.length > 0 ? <section className="mt-10 text-left"><h2 className="table-eyebrow mb-4">{t('together.saved')}</h2>{getSparkSample(locale, session.favorites).map(q => <p key={q} className="table-keepsake">{q}</p>)}</section> : <p className="table-hint mt-8">{t('together.noSaved')}</p>}
         <button className="table-primary w-full mt-10" onClick={reset}>{t('together.again')}<ArrowRight size={18} /></button>
-        <Link to="/" onClick={() => saveSession(null)} className="table-link block mt-5">{t('together.exit')}</Link>
+        <Link to="/" onClick={reset} className="table-link block mt-5">{t('together.exit')}</Link>
       </main> : <main className="table-play">
         <div className="table-play-heading"><p className="table-eyebrow">{t(`together.moods.${session.preferences.mood}`)}</p><h1 ref={heading} tabIndex={-1} className="sr-only">{t('together.progress', { current: session.index + 1, total: count })}</h1><span>{String(session.index + 1).padStart(2, '0')} <span className="opacity-50">/ {String(count).padStart(2, '0')}</span></span></div>
         <p className="table-notice" role="status">{notice ? t(`together.${notice}`) : t(session.source === 'ai' ? 'together.aiReady' : 'together.editorial')}</p>
@@ -182,7 +183,7 @@ export default function Together() {
         <DialogTitle className="font-display text-3xl">{t('together.paused')}</DialogTitle><DialogDescription>{t('together.pauseHint')}</DialogDescription>
         <button className="table-primary mt-3" onClick={() => setPaused(false)}>{t('together.resume')}</button>
         {!finished && <><button className="table-pass" onClick={soften}>{t('together.lighter')}</button><button className="table-pass" onClick={() => { setSession(s => s ? { ...s, index: s.cards.length } : s); setPaused(false); }}>{t('together.finish')}</button></>}
-        <Link className="table-link text-center" to="/" onClick={() => saveSession(null)}><X size={14} className="inline mr-2" />{t('together.exit')}</Link>
+        <Link className="table-link text-center" to="/" onClick={reset}><X size={14} className="inline mr-2" />{t('together.exit')}</Link>
       </DialogContent></Dialog>
     </div>
   );
