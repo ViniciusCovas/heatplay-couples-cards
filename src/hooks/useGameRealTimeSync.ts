@@ -34,8 +34,8 @@ export const useRealTimeGameSync = ({
   });
 
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isActiveRef = useRef(true);
   // Removed hasJoinedRef - no longer showing join notifications
 

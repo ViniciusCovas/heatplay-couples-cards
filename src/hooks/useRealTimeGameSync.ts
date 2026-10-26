@@ -48,11 +48,11 @@ export const useRealTimeGameSync = ({
   });
 
   const channelRef = useRef<RealtimeChannel | null>(null);
-  const heartbeatRef = useRef<NodeJS.Timeout | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const heartbeatRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isActiveRef = useRef(true);
   const hasTrackedPresenceRef = useRef(false);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isSubscribedRef = useRef(false);
 
   // Rate-limited notification helper
