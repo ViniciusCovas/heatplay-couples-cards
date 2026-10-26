@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, ChevronDown, Heart, MessageCircle, Shield, Star, Users2 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { LegalFooter } from '@/components/navigation/LegalFooter';
 import { DailySpark } from '@/components/home/DailySpark';
@@ -13,7 +12,6 @@ import { track } from '@/lib/analytics';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { t } = useTranslation();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSticky, setShowSticky] = useState(false);
@@ -39,11 +37,7 @@ const Home = () => {
 
   const handleStartJourney = (section: string) => {
     track('landing_cta_clicked', { section });
-    if (!user) {
-      setShowAuthModal(true);
-    } else {
-      navigate('/create-room');
-    }
+    navigate('/play');
   };
 
   return (

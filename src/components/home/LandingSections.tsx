@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Check, Crown, Flame, Link2, MessageCircle, Sparkles } from 'lucide-react';
+import { Check, Crown, Flame, Heart, MessageCircle, Sparkles } from 'lucide-react';
 import { Reveal } from '@/components/home/Reveal';
 import { HEAT_STYLE } from '@/components/home/HeroDeck';
 import { getSparkSample } from '@/lib/dailySpark';
-import { paintShareCard } from '@/components/insights/ShareableCard';
+import { PhysicalCard } from '@/components/game/PhysicalCard';
 import { track } from '@/lib/analytics';
 
 /* ------------------------------------------------------------------ */
@@ -30,89 +30,12 @@ const SectionHeading = ({ eyebrow, title, sub }: { eyebrow?: string; title: stri
 /* How it works — 3 steps with HTML/CSS mini-mockups                   */
 /* ------------------------------------------------------------------ */
 
-const RoomCodeMini = ({ label }: { label: string }) => (
-  <div className="flex flex-col items-center gap-2.5">
-    <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6c6577]">{label}</span>
-    <div className="flex gap-1.5" aria-hidden="true">
-      {['L', 'G', 'C', '6', '9'].map((ch, i) => (
-        <span
-          key={i}
-          className="flex h-11 w-9 items-center justify-center rounded-xl border border-[#f4c3d5] bg-white font-mono text-lg font-bold text-[#c2185b] shadow-[0_4px_10px_-6px_rgba(194,24,91,0.45)]"
-        >
-          {ch}
-        </span>
-      ))}
-    </div>
-  </div>
-);
-
-const ChatMini = ({ bubble, reply }: { bubble: string; reply: string }) => (
-  <div className="flex w-full max-w-[240px] flex-col gap-2" aria-hidden="true">
-    <div className="self-start rounded-2xl rounded-bl-sm border border-[#ece7ef] bg-white px-3.5 py-2 text-[13px] leading-snug text-[#3b3745] shadow-[0_4px_12px_-8px_rgba(120,40,70,0.35)]">
-      {bubble}
-      <span className="mt-1 flex items-center gap-1 text-[10px] text-[#6c6577]">
-        <Link2 className="h-2.5 w-2.5" /> letsgetclose.app/join
-      </span>
-    </div>
-    <div className="self-end rounded-2xl rounded-br-sm bg-[#e91e63] px-3.5 py-2 text-[13px] leading-snug text-white shadow-[0_6px_14px_-8px_rgba(233,30,99,0.7)]">
-      {reply}
-    </div>
-  </div>
-);
-
-const ScoreRingMini = ({ label }: { label: string }) => {
-  const r = 34;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="flex flex-col items-center gap-2" aria-hidden="true">
-      <div className="relative h-24 w-24">
-        <svg viewBox="0 0 84 84" className="h-full w-full -rotate-90">
-          <circle cx="42" cy="42" r={r} fill="none" stroke="#f6e2ea" strokeWidth="7" />
-          <circle
-            cx="42"
-            cy="42"
-            r={r}
-            fill="none"
-            stroke="url(#lgc-ring)"
-            strokeWidth="7"
-            strokeLinecap="round"
-            strokeDasharray={`${c * 0.87} ${c}`}
-          />
-          <defs>
-            <linearGradient id="lgc-ring" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#ff7043" />
-              <stop offset="55%" stopColor="#e91e63" />
-              <stop offset="100%" stopColor="#c2185b" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <span className="absolute inset-0 flex items-center justify-center text-xl font-extrabold text-[#23212b]">
-          87<span className="text-[11px] font-semibold text-[#6c6577]">%</span>
-        </span>
-      </div>
-      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#6c6577]">{label}</span>
-    </div>
-  );
-};
-
 export const HowItWorks = () => {
   const { t } = useTranslation();
   const steps = [
-    {
-      title: t('landing.how.step1.title'),
-      desc: t('landing.how.step1.desc'),
-      mini: <RoomCodeMini label={t('landing.how.step1.chip')} />,
-    },
-    {
-      title: t('landing.how.step2.title'),
-      desc: t('landing.how.step2.desc'),
-      mini: <ChatMini bubble={t('landing.how.step2.bubble')} reply={t('landing.how.step2.reply')} />,
-    },
-    {
-      title: t('landing.how.step3.title'),
-      desc: t('landing.how.step3.desc'),
-      mini: <ScoreRingMini label={t('landing.how.step3.score')} />,
-    },
+    { title: t('together.moodTitle'), desc: t('together.limitsHint'), mini: <Sparkles className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
+    { title: t('together.start'), desc: t('together.subtitle'), mini: <MessageCircle className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
+    { title: t('together.doneTitle'), desc: t('together.noSaved'), mini: <Heart className="h-16 w-16 text-[#8e2947]" strokeWidth={1} /> },
   ];
   return (
     <section className="landing-band px-5 py-20 md:py-28">
@@ -213,28 +136,12 @@ export const HeatLevels = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* AI analysis tease — real share-card painter with demo data          */
+/* Optional AI sequencing — preview uses an actual editorial card          */
 /* ------------------------------------------------------------------ */
 
 export const AiTease = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const [cardUrl, setCardUrl] = useState('');
-
-  useEffect(() => {
-    const canvas = document.createElement('canvas');
-    paintShareCard(canvas, 87, {
-      brand: "Let's Get Close",
-      archetype: t('shareCard.archetypes.magnetic'),
-      compatibility: t('shareCard.compatibility'),
-      ourVibe: t('shareCard.ourVibe'),
-      insightLabel: t('shareCard.insightLabel'),
-      insight: t('landing.ai.insight'),
-      footer: t('shareCard.footer'),
-    });
-    setCardUrl(canvas.toDataURL('image/png'));
-  }, [t]);
-
   return (
     <section className="landing-band px-5 py-20 md:py-28">
       <div className="mx-auto grid max-w-6xl items-center gap-14 md:grid-cols-2 md:gap-16">
@@ -250,7 +157,7 @@ export const AiTease = () => {
           <button
             onClick={() => {
               track('landing_cta_clicked', { section: 'ai_tease' });
-              navigate('/premium');
+              navigate('/play');
             }}
             className="landing-cta mt-8 inline-flex min-h-12 items-center gap-2 rounded-full px-7 font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2185b]"
           >
@@ -265,14 +172,9 @@ export const AiTease = () => {
               style={{ background: 'radial-gradient(closest-side, rgba(255,164,197,0.65), transparent)' }}
               aria-hidden="true"
             />
-            {cardUrl && (
-              <img
-                src={cardUrl}
-                alt={t('shareCard.previewAlt')}
-                className="relative w-full rotate-2 rounded-[1.75rem] ring-1 ring-[#f0c7d5] transition-transform duration-500 hover:rotate-0 motion-reduce:transition-none"
-                style={{ boxShadow: '0 30px 60px -24px rgba(160,60,105,0.45), 0 4px 10px -6px rgba(160,60,105,0.3)' }}
-              />
-            )}
+            <PhysicalCard label={t('together.editorial')} footer="01 / 06">
+              <p>{getSparkSample(i18n.language, [23])[0]}</p>
+            </PhysicalCard>
           </div>
         </Reveal>
       </div>

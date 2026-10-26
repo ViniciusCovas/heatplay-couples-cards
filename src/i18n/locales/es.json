@@ -813,20 +813,20 @@
   },
   "landing": {
     "badge": "Para parejas · Privado · +18",
-    "headline": "El juego que os acerca de verdad.",
-    "sub": "Preguntas reales, cuatro niveles de intensidad y una sala solo para vosotros dos. Esta noche, cero conversación de ascensor.",
-    "ctaPlay": "Jugar ahora",
+    "headline": "Todavía puedes sorprenderme.",
+    "sub": "Una baraja, dos personas y tiempo para volver a descubrirse. Jueguen gratis con un teléfono o creen una sala para dos.",
+    "ctaPlay": "Un teléfono · Gratis",
     "ctaJoin": "Tengo un código",
     "deckHint": "Toca una carta para girarla · desliza para ver la siguiente",
     "deckBack": "Tu pregunta te espera…",
     "deckPrompt": "Respóndanla en voz alta — y devuélvanla.",
     "stats": {
-      "couples": "Privado, solo vosotros dos",
-      "questions": "Más de 400 preguntas",
-      "rating": "Análisis de pareja con IA"
+      "couples": "Un teléfono o dos",
+      "questions": "Cuatro idiomas",
+      "rating": "A su propio ritmo"
     },
     "how": {
-      "title": "De «hola» a «esto no se lo he contado a nadie» en tres pasos",
+      "title": "Una noche en tres pasos",
       "step1": {
         "title": "Crea vuestra sala privada",
         "desc": "Un toque y listo. Un código que es solo vuestro.",
@@ -845,7 +845,7 @@
       }
     },
     "levels": {
-      "title": "Elegid vuestra temperatura",
+      "title": "Cuatro niveles en las salas online",
       "sub": "Cuatro niveles y una sola regla: solo llegáis hasta donde queráis los dos.",
       "sample": "Carta de muestra",
       "l1desc": "Preguntas dulces que saben a primera cita.",
@@ -854,15 +854,15 @@
       "l4desc": "Sin filtros y sin guion. Solo vosotros dos, a por todas."
     },
     "ai": {
-      "eyebrow": "Análisis de pareja con IA",
-      "title": "Terminad la noche con vuestra historia, contada por la IA.",
-      "body": "Al acabar, la IA convierte vuestra noche en un arquetipo de pareja, una puntuación de compatibilidad y una frase para enmarcar — lista para compartir, sin revelar ninguna respuesta.",
+      "eyebrow": "La IA prepara. Ustedes se encuentran.",
+      "title": "Una baraja para el momento que quieren vivir.",
+      "body": "La IA puede ordenar nuestras cartas según el ánimo y los límites que elijan. Las respuestas se quedan entre ustedes; si la IA no está disponible, la selección editorial mantiene la noche en marcha.",
       "insight": "Vosotros convertís cualquier pregunta en una conversación de cuarenta minutos.",
-      "cta": "Desbloquear el análisis completo"
+      "cta": "Preparar nuestra noche"
     },
     "pricing": {
       "free": "Gratis",
-      "freeDesc": "Jugad esta noche: primeros niveles, sala privada y chispa diaria.",
+      "freeDesc": "Partidas completas con un teléfono y la chispa diaria. Sin registro.",
       "premium": "Premium",
       "premiumDesc": "Todos los niveles, análisis completo con IA y noches sin límite.",
       "cta": "Comparar planes"
@@ -941,5 +941,78 @@
         "body": "Existe una fuerte correlación entre el equilibrio atracción-intimidad y la satisfacción a largo plazo."
       }
     }
+  },
+  "together": {
+    "eyebrow": "UNA BARAJA. DOS PERSONAS.",
+    "title": "Todavía puedes sorprenderme.",
+    "subtitle": "Deja el teléfono en la mesa. El resto pasa entre ustedes.",
+    "mode": "Juntos, con un teléfono",
+    "free": "Una partida completa gratis · Sin cuenta",
+    "moodTitle": "¿Qué les apetece esta noche?",
+    "moods": {
+      "playful": "Reír juntos",
+      "close": "Reconectar",
+      "flirty": "Coquetear"
+    },
+    "timeTitle": "Tiempo para ustedes",
+    "minutes": "{{count}} min",
+    "timeHint": "Orientativo. Ninguna respuesta tiene cronómetro.",
+    "heatTitle": "Hasta dónde quieren jugar",
+    "heats": [
+      "Tierno",
+      "Pícaro",
+      "Sensual"
+    ],
+    "depthTitle": "La conversación",
+    "depths": [
+      "Ligera",
+      "Más personal"
+    ],
+    "limitsHint": "Elijan lo que les apetece a ambos. Siempre pueden bajar la intensidad o pasar.",
+    "consentTitle": "Un pequeño acuerdo antes de empezar",
+    "consent": "Somos mayores de 18 y este ritmo nos apetece.",
+    "person": "Persona {{number}}: de acuerdo",
+    "ai": "Que la IA prepare la baraja",
+    "aiHint": "Solo recibe estas preferencias. No escucha ni guarda lo que dicen. Si no está disponible, usamos nuestra selección editorial.",
+    "start": "Poner las cartas sobre la mesa",
+    "preparing": "Preparando su momento…",
+    "online": "¿Prefieren dos teléfonos? Crear sala",
+    "join": "Tengo un código de invitación",
+    "back": "Inicio",
+    "reveal": "Dar la vuelta",
+    "next": "Siguiente carta",
+    "skip": "Pasar",
+    "favorite": "Guardar esta carta",
+    "unfavorite": "Quitar de favoritas",
+    "pause": "Pausa",
+    "paused": "Este momento es suyo.",
+    "pauseHint": "Pueden dejar la pantalla y volver cuando quieran.",
+    "resume": "Seguir jugando",
+    "finish": "Cerrar la noche",
+    "lighter": "Bajar a tierno",
+    "softened": "El resto de la baraja será tierno y ligero.",
+    "talk": "Respondan los dos. Sin prisa.",
+    "guess": "Primero, adivina su respuesta. Después, descubre la suya.",
+    "followup": "Un poco más",
+    "followupText": "¿Qué pequeño detalle haría esto aún más especial para ti?",
+    "editorial": "Selección editorial",
+    "aiReady": "Baraja preparada con IA",
+    "fallback": "La IA no está disponible ahora. Su baraja editorial está lista.",
+    "progress": "Carta {{current}} de {{total}}",
+    "doneTitle": "Lo mejor sigue fuera de la pantalla.",
+    "doneText": "Antes de irse, cuéntense una cosa que les sorprendió hoy. Luego elijan un pequeño plan para repetirlo.",
+    "saved": "Cartas para recordar",
+    "noSaved": "Sus respuestas se quedan entre ustedes.",
+    "again": "Otra noche, otra baraja",
+    "privacy": "No grabamos audio ni pedimos escribir respuestas. El progreso se conserva solo en esta pestaña durante 8 horas.",
+    "closeCard": "Un plan para después",
+    "ending": "Última carta",
+    "exit": "Salir y borrar la partida",
+    "language": "Idioma",
+    "confirmExit": "¿Terminar la partida?",
+    "confirmHint": "Pueden volver a la baraja o cerrar la noche ahora.",
+    "continue": "Volver a las cartas",
+    "setupLink": "Un teléfono · Gratis",
+    "preview": "Vista previa · Juntos con un teléfono"
   }
 }

@@ -144,20 +144,6 @@ export const useRoomService = (): UseRoomServiceReturn => {
     }
     
     try {
-      // Special handling for test code
-      if (roomCode === 'TEST123') {
-        const testRoom: GameRoom = {
-          id: 'test-room-id',
-          room_code: 'TEST123',
-          level: 1,
-          status: 'playing',
-          created_at: new Date().toISOString()
-        };
-        setRoom(testRoom);
-        setIsConnected(true);
-        return true;
-      }
-
       // Use 2-parameter join_room_by_code RPC (now the only version after migration)
       logger.debug('🚀 Calling join_room_by_code RPC...', { 
         roomCode,

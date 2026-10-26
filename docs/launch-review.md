@@ -1,0 +1,39 @@
+# Let’s Get Close — launch candidate
+
+This branch builds on `claude/project-complete-analysis-30nhin` at `2d3b74f`, preserving its realtime rooms, account upgrade, Premium, four languages and existing question library. That branch was 23 commits ahead of `main` when reviewed. Do not replace it with an older checkout.
+
+## Product change
+
+The primary CTA now opens `/play`: a complete, free, single-phone evening with no account, checkout, answer recording or per-answer ratings. Couples choose a mood, approximate duration (6/10/16 cards), independent sensuality and emotional-depth limits, then each confirms the pace and adulthood. Changing preferences clears both confirmations. Cards turn over on tap; partners speak, guess each other's answers, pass, pause, soften the remaining deck or end early. Optional favorite **card IDs** are retained only with this tab's session, not partner answers. A refreshed page resumes for up to eight hours. The closing card invites an actual next date.
+
+Sixty existing editorial questions, in English, Spanish, Portuguese and French, now share one catalog between the Daily Spark, landing previews, local play and AI planner. No database question content was replaced. The paper card component is also used by existing realtime rooms. Reduced motion disables the flip transition.
+
+Optional AI prepares an order of existing question IDs within explicit limits. It does not listen, interpret unrecorded speech, generate intimate profiles, or adjust consent. A failed/slow request falls back to the editorial deck within eight seconds; a late response cannot replace an active game. Server limits: five attempts per identity per day and 500 total per day. This limits spend but is not full abuse prevention against disposable guest identities; configure Supabase anonymous sign-in protections before exposing the online service.
+
+## Privacy and payment changes
+
+- Both online players now require real Supabase identities (permanent or anonymous-auth JWT). Forged `localStorage` player UUIDs are removed.
+- A new migration removes no-JWT reads/writes on room data, binds join and game RPCs to `auth.uid()`, serializes seat assignment, and revokes historical SECURITY DEFINER maintenance RPCs from clients. The client allowlist uses **exact signatures**, so older overloads cannot inherit access accidentally.
+- Edge room guards reject missing identities before querying data. Recent rooms are no longer a public access window.
+- `grant_checkout_credits` atomically commits the Stripe ledger and credits. Webhook and success-page verification use the same transaction. Subscription checkout no longer claims a ledger record before persisting state.
+- Removed an unsupported comparative percentile from new analysis generation and from rendering old reports. Existing compatibility/bond metrics still describe user ratings; they are not validated clinical or relationship diagnostics. A deeper report redesign remains separate.
+- Pageview URLs omit invite query strings. CORS includes the `.app` domain already named in the site metadata.
+
+## Validation
+
+`npm run typecheck`, `npm test`, `npm run build` and lint of the new surfaces are the release checks. Node 24 is required by the test runner. Tests execute the actual new SQL migrations in embedded PostgreSQL with a minimal schema fixture; they cover cross-room isolation, forged identities, legacy RPC privileges, seat limits, duplicate grants, transactional rollback/retry and AI usage caps. They also exercise all 54 deck configurations repeatedly, model-output validation, four-language completeness, and session recovery/expiry.
+
+These are not a substitute for applying all historical migrations and testing two real clients against Supabase Realtime. Full-repository ESLint had 171 errors and 38 warnings **before** this change. CI gates type checking, focused lint, SQL/domain tests and production build without claiming that legacy lint debt is fixed.
+
+## Deployment status and order
+
+The configured Supabase ref is `bbdeyohqrutithaziulp`. It was absent from both connected Supabase accounts. The original Lovable project `9efb8ab7-d861-473b-88f1-2736da9c245d` returned `project_not_found` from the connected account. No production database, Edge Function, Stripe configuration, DNS, original published site or `main` branch was changed during development.
+
+1. Restore access to the existing Supabase and hosting projects. Inspect deployed migrations and function versions first; this repository contains historical migrations and the August launch migrations were not previously verified as applied.
+2. In staging, enable anonymous sign-in and verify the profile trigger from the August migration. Apply pending migrations in order, including `20261026110000_private_guest_rooms.sql` and `20261026120000_atomic_credits_and_date_plans.sql`. Do not bulk-run an unreviewed historical migration backlog against production.
+3. Redeploy `intelligent-question-selector`, `getclose-ai-analysis`, `send-ai-analysis-email` (shared membership guard), `stripe-webhook`, `verify-payment`, and the new `plan-date` function. Supply the existing OpenAI/Stripe secrets and an explicit `ALLOWED_ORIGINS` list. No new secret is embedded in browser code.
+4. Deploy the frontend together with the membership changes. Legacy no-JWT guests must rejoin using a new verified guest identity; schedule the cutover outside active games. Preserve prior branches for rollback, but do **not** roll back the privacy fix to public room access.
+5. Verify two actual clients: create/pay or Premium entitlement, invite join, reconnect, level choice, one complete game and analysis access. Check a third identity cannot read either room. Replay a test-mode Stripe checkout through webhook and verification; ensure a single credit grant. Verify AI outage fallback and allowed-origin requests.
+6. Only then promote the candidate to production and verify the canonical domain.
+
+`VITE_TABLE_PREVIEW=true` builds an isolated review of the one-phone experience at every route, without online-room links, payment flows or AI requests. It is explicitly labeled as a preview and must be unset for the full release. `vercel.json` supplies SPA deep-link rewrites; no domain is reassigned by that file.

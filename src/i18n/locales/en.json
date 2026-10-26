@@ -795,20 +795,20 @@
   },
   "landing": {
     "badge": "For couples · Private · 18+",
-    "headline": "The game that gets you closer.",
-    "sub": "Real questions, four heat levels, one room for just the two of you. Tonight, skip the small talk.",
-    "ctaPlay": "Play now",
+    "headline": "You can still surprise me.",
+    "sub": "One deck, two people and time to rediscover each other. Play free on one phone or create a room for two.",
+    "ctaPlay": "One phone · Free",
     "ctaJoin": "I have a code",
     "deckHint": "Tap a card to flip it · swipe for the next one",
     "deckBack": "Your question is waiting…",
     "deckPrompt": "Answer out loud — then ask it back.",
     "stats": {
-      "couples": "Private, just the two of you",
-      "questions": "400+ curated questions",
-      "rating": "AI couple analysis"
+      "couples": "One phone or two",
+      "questions": "Four languages",
+      "rating": "At your own pace"
     },
     "how": {
-      "title": "From “hey” to “I never told anyone that” in three steps",
+      "title": "Your evening in three steps",
       "step1": {
         "title": "Create your private room",
         "desc": "One tap, no setup. You get a code that belongs to the two of you only.",
@@ -827,7 +827,7 @@
       }
     },
     "levels": {
-      "title": "Choose your heat",
+      "title": "Four levels in online rooms",
       "sub": "Four levels, one rule: you only go as far as you both want to.",
       "sample": "Sample card",
       "l1desc": "Sweet openers that feel like your first date again.",
@@ -836,15 +836,15 @@
       "l4desc": "No filters, no scripts. Just the two of you, all in."
     },
     "ai": {
-      "eyebrow": "AI couple analysis",
-      "title": "End the night with your story, told back to you.",
-      "body": "After you play, our AI turns your night into a couple archetype, a compatibility score and one insight worth framing — ready to share, with zero answers revealed.",
+      "eyebrow": "AI prepares. You connect.",
+      "title": "A deck for the evening you want.",
+      "body": "AI can arrange our cards around your mood and chosen limits. Answers stay between you; when AI is unavailable, our editorial selection keeps the evening going.",
       "insight": "You two turn ordinary questions into forty-minute conversations.",
-      "cta": "Unlock the full analysis"
+      "cta": "Prepare our evening"
     },
     "pricing": {
       "free": "Free",
-      "freeDesc": "Play tonight — first levels, private room, daily spark.",
+      "freeDesc": "Full sessions on one phone and the Daily Spark. No account needed.",
       "premium": "Premium",
       "premiumDesc": "Every heat level, full AI analysis, unlimited nights.",
       "cta": "Compare plans"
@@ -923,5 +923,78 @@
         "body": "There is a strong correlation between attraction-intimacy balance and long-term relationship satisfaction."
       }
     }
+  },
+  "together": {
+    "eyebrow": "ONE DECK. TWO PEOPLE.",
+    "title": "You can still surprise me.",
+    "subtitle": "Put your phone on the table. The rest happens between you.",
+    "mode": "Together, on one phone",
+    "free": "A complete free session · No account",
+    "moodTitle": "What are you in the mood for?",
+    "moods": {
+      "playful": "Laugh together",
+      "close": "Reconnect",
+      "flirty": "Flirt"
+    },
+    "timeTitle": "Time for the two of you",
+    "minutes": "{{count}} min",
+    "timeHint": "Just a guide. There is no timer on your answers.",
+    "heatTitle": "How far would you like to play?",
+    "heats": [
+      "Sweet",
+      "Cheeky",
+      "Sensual"
+    ],
+    "depthTitle": "The conversation",
+    "depths": [
+      "Light",
+      "More personal"
+    ],
+    "limitsHint": "Choose what feels good to both of you. You can always soften things or pass.",
+    "consentTitle": "A little agreement before you begin",
+    "consent": "We are both 18+ and happy with this pace.",
+    "person": "Person {{number}}: I’m in",
+    "ai": "Let AI arrange the deck",
+    "aiHint": "It only receives these preferences. It cannot hear or save what you say. If unavailable, we use our editorial selection.",
+    "start": "Put the cards on the table",
+    "preparing": "Preparing your moment…",
+    "online": "Prefer two phones? Create a room",
+    "join": "I have an invitation code",
+    "back": "Home",
+    "reveal": "Turn it over",
+    "next": "Next card",
+    "skip": "Pass",
+    "favorite": "Save this card",
+    "unfavorite": "Remove from favorites",
+    "pause": "Pause",
+    "paused": "This moment is yours.",
+    "pauseHint": "Put the screen aside. Come back whenever you like.",
+    "resume": "Keep playing",
+    "finish": "Close the evening",
+    "lighter": "Keep it sweet",
+    "softened": "The rest of the deck will be sweet and light.",
+    "talk": "Both of you answer. Take your time.",
+    "guess": "First, guess their answer. Then discover theirs.",
+    "followup": "A little more",
+    "followupText": "What little detail would make this even more special for you?",
+    "editorial": "Editorial selection",
+    "aiReady": "Deck arranged with AI",
+    "fallback": "AI is unavailable right now. Your editorial deck is ready.",
+    "progress": "Card {{current}} of {{total}}",
+    "doneTitle": "The best part is off-screen.",
+    "doneText": "Before you go, share one thing that surprised you tonight. Then choose a little plan to do this again.",
+    "saved": "Cards to remember",
+    "noSaved": "Your answers stay between you.",
+    "again": "Another evening, another deck",
+    "privacy": "We do not record audio or ask you to type answers. Progress stays in this tab for 8 hours only.",
+    "closeCard": "A plan for later",
+    "ending": "Last card",
+    "exit": "Leave and clear this session",
+    "language": "Language",
+    "confirmExit": "Finish this session?",
+    "confirmHint": "You can return to the deck or close your evening now.",
+    "continue": "Back to the cards",
+    "setupLink": "One phone · Free",
+    "preview": "Preview · Together on one phone"
   }
 }

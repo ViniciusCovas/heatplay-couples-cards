@@ -813,20 +813,20 @@
   },
   "landing": {
     "badge": "Pour les couples · Privé · 18+",
-    "headline": "Le jeu qui vous rapproche vraiment.",
-    "sub": "De vraies questions, quatre niveaux d'intensité, un salon rien que pour vous deux. Ce soir, on oublie la petite conversation.",
-    "ctaPlay": "Jouer maintenant",
+    "headline": "Tu peux encore me surprendre.",
+    "sub": "Un jeu, deux personnes et du temps pour se redécouvrir. Jouez gratuitement sur un téléphone ou créez un salon pour deux.",
+    "ctaPlay": "Un téléphone · Gratuit",
     "ctaJoin": "J'ai un code",
     "deckHint": "Touchez une carte pour la retourner · glissez pour la suivante",
     "deckBack": "Votre question vous attend…",
     "deckPrompt": "Répondez à voix haute — puis renvoyez-la.",
     "stats": {
-      "couples": "Privé, rien que vous deux",
-      "questions": "Plus de 400 questions",
-      "rating": "Analyse de couple par IA"
+      "couples": "Un téléphone ou deux",
+      "questions": "Quatre langues",
+      "rating": "À votre rythme"
     },
     "how": {
-      "title": "De « salut » à « je ne l'avais jamais dit à personne » en trois étapes",
+      "title": "Votre soirée en trois étapes",
       "step1": {
         "title": "Créez votre salon privé",
         "desc": "Un geste, zéro réglage. Un code qui n'appartient qu'à vous deux.",
@@ -845,7 +845,7 @@
       }
     },
     "levels": {
-      "title": "Choisissez votre température",
+      "title": "Quatre niveaux dans les salons en ligne",
       "sub": "Quatre niveaux, une seule règle : vous n'allez que là où vous le voulez tous les deux.",
       "sample": "Carte d'exemple",
       "l1desc": "Des questions douces, comme un premier rendez-vous.",
@@ -854,15 +854,15 @@
       "l4desc": "Sans filtre, sans script. Rien que vous deux, à fond."
     },
     "ai": {
-      "eyebrow": "Analyse de couple par IA",
-      "title": "Finissez la soirée avec votre histoire, racontée par l'IA.",
-      "body": "Après le jeu, l'IA transforme votre soirée en archétype de couple, score de compatibilité et une phrase à encadrer — prête à partager, sans révéler aucune réponse.",
+      "eyebrow": "L’IA prépare. Vous vous retrouvez.",
+      "title": "Des cartes pour la soirée dont vous avez envie.",
+      "body": "L’IA peut organiser nos cartes selon votre humeur et vos limites. Vos réponses restent entre vous ; si l’IA est indisponible, notre sélection éditoriale prend le relais.",
       "insight": "Vous deux transformez une simple question en conversation de quarante minutes.",
-      "cta": "Débloquer l'analyse complète"
+      "cta": "Préparer notre soirée"
     },
     "pricing": {
       "free": "Gratuit",
-      "freeDesc": "Jouez ce soir : premiers niveaux, salon privé, étincelle du jour.",
+      "freeDesc": "Des parties complètes sur un téléphone et l’étincelle du jour. Sans compte.",
       "premium": "Premium",
       "premiumDesc": "Tous les niveaux, analyse IA complète, soirées illimitées.",
       "cta": "Comparer les offres"
@@ -941,5 +941,78 @@
         "body": "Il existe une forte corrélation entre l'équilibre attirance-intimité et la satisfaction à long terme."
       }
     }
+  },
+  "together": {
+    "eyebrow": "UN JEU. DEUX PERSONNES.",
+    "title": "Tu peux encore me surprendre.",
+    "subtitle": "Posez le téléphone sur la table. La suite se passe entre vous.",
+    "mode": "Ensemble, sur un téléphone",
+    "free": "Une partie complète gratuite · Sans compte",
+    "moodTitle": "De quoi avez-vous envie ce soir ?",
+    "moods": {
+      "playful": "Rire ensemble",
+      "close": "Se retrouver",
+      "flirty": "Flirter"
+    },
+    "timeTitle": "Du temps pour vous deux",
+    "minutes": "{{count}} min",
+    "timeHint": "À titre indicatif. Vos réponses ne sont pas chronométrées.",
+    "heatTitle": "Jusqu’où voulez-vous jouer ?",
+    "heats": [
+      "Tendre",
+      "Taquin",
+      "Sensuel"
+    ],
+    "depthTitle": "La conversation",
+    "depths": [
+      "Légère",
+      "Plus personnelle"
+    ],
+    "limitsHint": "Choisissez ce qui vous plaît à tous les deux. Vous pouvez toujours adoucir le jeu ou passer.",
+    "consentTitle": "Un petit accord avant de commencer",
+    "consent": "Nous avons plus de 18 ans et ce rythme nous convient.",
+    "person": "Personne {{number}} : d’accord",
+    "ai": "Laisser l’IA préparer les cartes",
+    "aiHint": "Elle reçoit uniquement ces préférences. Elle n’écoute ni ne conserve vos paroles. Si elle est indisponible, nous utilisons notre sélection éditoriale.",
+    "start": "Poser les cartes sur la table",
+    "preparing": "Votre moment se prépare…",
+    "online": "Deux téléphones ? Créer un salon",
+    "join": "J’ai un code d’invitation",
+    "back": "Accueil",
+    "reveal": "Retourner la carte",
+    "next": "Carte suivante",
+    "skip": "Passer",
+    "favorite": "Garder cette carte",
+    "unfavorite": "Retirer des favoris",
+    "pause": "Pause",
+    "paused": "Ce moment est à vous.",
+    "pauseHint": "Posez l’écran. Revenez quand vous voulez.",
+    "resume": "Continuer à jouer",
+    "finish": "Terminer la soirée",
+    "lighter": "Tout en douceur",
+    "softened": "Le reste du jeu sera tendre et léger.",
+    "talk": "Répondez tous les deux. Prenez votre temps.",
+    "guess": "Devinez d’abord sa réponse. Puis découvrez-la.",
+    "followup": "Un peu plus",
+    "followupText": "Quel petit détail rendrait ce moment encore plus spécial pour toi ?",
+    "editorial": "Sélection éditoriale",
+    "aiReady": "Cartes préparées avec l’IA",
+    "fallback": "L’IA est indisponible. Votre sélection éditoriale est prête.",
+    "progress": "Carte {{current}} sur {{total}}",
+    "doneTitle": "Le meilleur continue loin de l’écran.",
+    "doneText": "Avant de partir, partagez une chose qui vous a surpris ce soir. Puis choisissez un petit projet pour recommencer.",
+    "saved": "Des cartes à retenir",
+    "noSaved": "Vos réponses restent entre vous.",
+    "again": "Une autre soirée, un autre jeu",
+    "privacy": "Aucun enregistrement audio ni réponse à saisir. Votre progression reste dans cet onglet pendant 8 heures seulement.",
+    "closeCard": "Un projet pour après",
+    "ending": "Dernière carte",
+    "exit": "Quitter et effacer la partie",
+    "language": "Langue",
+    "confirmExit": "Terminer cette partie ?",
+    "confirmHint": "Vous pouvez revenir aux cartes ou terminer la soirée maintenant.",
+    "continue": "Revenir aux cartes",
+    "setupLink": "Un téléphone · Gratuit",
+    "preview": "Aperçu · Ensemble sur un téléphone"
   }
 }

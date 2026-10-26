@@ -86,7 +86,7 @@ export function page(): void {
   if (!enabled) return;
   loadPostHog().then((ph) => {
     try {
-      ph?.capture('$pageview', { $current_url: window.location.href });
+      ph?.capture('$pageview', { $current_url: window.location.origin + window.location.pathname });
     } catch {
       /* noop */
     }

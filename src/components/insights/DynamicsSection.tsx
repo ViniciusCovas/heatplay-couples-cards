@@ -122,7 +122,6 @@ export const DynamicsSection: React.FC<DynamicsSectionProps> = ({ markers, metri
 
   if (tiles.length === 0) return null;
 
-  const rarity = markers?.rarityPercentile;
 
   return (
     <section className="space-y-4">
@@ -154,11 +153,7 @@ export const DynamicsSection: React.FC<DynamicsSectionProps> = ({ markers, metri
           ))}
         </div>
 
-        {rarity && (
-          <p className="text-center text-sm text-muted-foreground">
-            {t('ai.fullAnalysis.dynamics.rarity', { value: rarity })}
-          </p>
-        )}
+
       </div>
     </section>
   );

@@ -9,6 +9,7 @@ import { page } from "@/lib/analytics";
 import Home from "./pages/Home";
 
 // Route-level code splitting: everything except Home is lazy-loaded.
+const Together = lazy(() => import("./pages/Together"));
 const CreateRoom = lazy(() => import("./pages/CreateRoom"));
 const JoinRoom = lazy(() => import("./pages/JoinRoom"));
 const LevelSelect = lazy(() => import("./pages/LevelSelect"));
@@ -53,8 +54,13 @@ const AppContent = () => {
   }, [location.pathname]);
 
   // Pages that shouldn't show the header
-  const noHeaderPages = ['/game', '/admin-panel-secret', '/admin/levels', '/admin/questions-bulk', '/admin/questions-manual'];
+  const noHeaderPages = ['/play', '/game', '/admin-panel-secret', '/admin/levels', '/admin/questions-bulk', '/admin/questions-manual'];
   const showHeader = !noHeaderPages.includes(location.pathname);
+
+  // Isolated review builds never expose legacy online rooms or checkout.
+  if (import.meta.env.VITE_TABLE_PREVIEW === 'true') {
+    return <Suspense fallback={<RouteFallback />}><Together /></Suspense>;
+  }
 
   return (
     <div className="min-h-screen">
@@ -62,6 +68,7 @@ const AppContent = () => {
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/play" element={<Together />} />
           <Route path="/create-room" element={<CreateRoom />} />
           <Route path="/join-room" element={<JoinRoom />} />
           <Route path="/level-select" element={<LevelSelect />} />
