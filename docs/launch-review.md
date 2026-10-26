@@ -79,3 +79,9 @@ Deployed code `515cdcb` is available at https://lets-get-close-preview.vercel.ap
 ![Restored brand entry](brand-connect.jpg)
 ![Four-level mobile selection](brand-levels-mobile.jpg)
 ![Branded mobile card](brand-card-mobile.jpg)
+
+## Immersive cards and intelligence design
+
+The latest isolated review removes the site header, demo label, explanatory paragraph and favorite button while a card is active. The phone becomes the card, with a small level/progress label, options, pass and an answered action. Optional microfeedback follows the answered action; no rating is preselected. This prototype stores one tester's impressions, pace choice, optional note and visible/focused card duration in memory only. It does not yet adapt the sequence, connect a partner or call AI. Those limits appear before entering and in the options/feedback sheets.
+
+See [intelligent-card-experience.md](intelligent-card-experience.md) for the complete signal model, per-person/shared memory, adaptive narrative, deterministic boundaries, transactional selection, privacy and evidence-based report specification. Original online ratings remain unchanged pending integration. The legacy AI selector's prompt incorrectly labeled seconds as milliseconds; its label is corrected in code, not yet deployed as an Edge Function.

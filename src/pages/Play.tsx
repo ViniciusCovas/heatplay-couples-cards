@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ArrowRight, Heart, Link2, MessageCircle, RotateCcw, Users } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Heart, Link2, MessageCircle, RotateCcw, Users, MoreHorizontal } from 'lucide-react';
 import { Logo } from '@/components/ui/animated-logo';
 import { LevelTiles } from '@/components/game/LevelTiles';
 import { PhysicalCard } from '@/components/game/PhysicalCard';
+import { RoundFeedback, type RoundSignal } from '@/components/game/RoundFeedback';
+import { useActiveCardTime } from '@/hooks/useActiveCardTime';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { getSparkSample } from '@/lib/dailySpark';
 
 const review = import.meta.env.VITE_TABLE_PREVIEW === 'true';
@@ -16,10 +19,15 @@ export default function Play() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>('connect');
+  const [run, setRun] = useState(0);
   const [level, setLevel] = useState(1);
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [favorite, setFavorite] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [rounds, setRounds] = useState<Array<RoundSignal & { cardId: number; activeVisibleMs: number; skipped: boolean }>>([]);
+  const readTime = useActiveCardTime(`${run}:${level}:${index}`, stage === 'cards' && revealed && !feedbackOpen && !menuOpen);
+  const exposure = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, [stage]);
   const levels = [1, 2, 3, 4].map(id => ({ id, title: t(`levels.level${id}Name`), description: t(`closeFlow.level${id}`) }));
@@ -28,22 +36,29 @@ export default function Play() {
     if (review) setStage(joining ? 'join' : 'invite');
     else navigate(joining ? '/join-room' : '/create-room');
   };
-  const choose = (id: number) => { setLevel(id); setIndex(0); setRevealed(false); setFavorite(false); setStage('cards'); };
+  const choose = (id: number) => { setRun(value => value + 1); setLevel(id); setIndex(0); setRevealed(false); setRounds([]); setStage('cards'); };
   const next = () => {
     if (index === questions.length - 1) setStage('done');
-    else { setIndex(index + 1); setRevealed(false); setFavorite(false); }
+    else { setIndex(index + 1); setRevealed(false); }
   };
+  const finishCard = (signal: RoundSignal, skipped = false) => {
+    setRounds(previous => [...previous, { ...signal, cardId: samples[level - 1][index], activeVisibleMs: exposure.current, skipped }]);
+    setFeedbackOpen(false);
+    next();
+  };
+  const requestFeedback = () => { exposure.current = readTime(); setFeedbackOpen(true); };
+  const skipCard = () => { exposure.current = revealed ? readTime() : 0; finishCard({ feeling: null, pace: null, note: null }, true); };
   const back = () => setStage(stage === 'cards' || stage === 'done' ? 'levels' : 'connect');
-  return <div className="close-experience">
-    <header className="close-header">
+  return <div className={`close-experience ${stage === 'cards' ? 'close-immersive' : ''}`}>
+    {stage !== 'cards' && <header className="close-header">
       {stage === 'connect' ? <Link className="close-icon" to="/" aria-label={t('common.backToHome')}><ArrowLeft size={20} /></Link>
         : <button className="close-icon" onClick={back} aria-label={t('closeFlow.back')}><ArrowLeft size={20} /></button>}
       <Logo size="small" className="close-logo" />
       <select className="close-language" aria-label={t('together.language')} value={i18n.language.split('-')[0]} onChange={e => i18n.changeLanguage(e.target.value)}>
         <option value="pt">PT</option><option value="es">ES</option><option value="en">EN</option><option value="fr">FR</option>
       </select>
-    </header>
-    {review && <p className="close-review-note">{t('closeFlow.review')}</p>}
+    </header>}
+    {review && stage !== 'cards' && <p className="close-review-note">{t('closeFlow.review')}</p>}
 
     {stage === 'connect' && <main className="close-connect">
       <section className="close-intro">
@@ -79,17 +94,20 @@ export default function Play() {
       <p className="close-small">{t('closeFlow.limits')}</p>
     </main>}
 
-    {stage === 'cards' && <main className="close-game close-narrow">
-      <div className="close-game-top"><h1 ref={heading} tabIndex={-1}>{t('closeFlow.cardSample')}</h1><button className="close-text-button" onClick={() => setStage('levels')}>{t('closeFlow.changeLevel')}</button></div>
+    {stage === 'cards' && <main className="immersive-table" aria-label={t('intelligentPlay.gameLabel')}>
+      <div className="immersive-controls"><span>{t(`levels.level${level}Name`)} <span aria-hidden="true">·</span> {index + 1}/{questions.length}</span><button className="close-icon" onClick={() => setMenuOpen(true)} aria-label={t('intelligentPlay.options')}><MoreHorizontal size={22} /></button></div>
       <PhysicalCard key={`${level}:${index}`} label={t(`levels.level${level}Name`)} footer={`${index + 1} / ${questions.length}`} tone={level - 1} revealed={revealed} onReveal={() => setRevealed(true)} revealLabel={t('closeFlow.reveal')}><p>{questions[index]}</p></PhysicalCard>
-      <p className="close-card-instruction" aria-live="polite">{t(revealed ? 'closeFlow.answer' : 'closeFlow.revealHint')}</p>
-      <div className="close-game-actions"><button className="close-icon" aria-label={t('closeFlow.favorite')} aria-pressed={favorite} onClick={() => setFavorite(!favorite)} disabled={!revealed}><Heart size={22} fill={favorite ? 'currentColor' : 'none'} /></button>
-        <button className="close-primary" onClick={revealed ? next : () => setRevealed(true)}>{t(revealed ? 'closeFlow.next' : 'closeFlow.reveal')}<ArrowRight size={18} /></button>
-        <button className="close-text-button" onClick={next}>{t('closeFlow.skip')}</button></div>
-      <p className="close-small">{t('closeFlow.samplesOnly')}</p>
+      <div className="immersive-actions"><button className="close-text-button" onClick={skipCard}>{t('closeFlow.skip')}</button><button className="close-primary" onClick={revealed ? requestFeedback : () => setRevealed(true)}>{t(revealed ? 'intelligentPlay.answered' : 'closeFlow.reveal')}<ArrowRight size={18} /></button></div>
+      {feedbackOpen && <RoundFeedback onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />}
+      <Dialog open={menuOpen} onOpenChange={setMenuOpen}><DialogContent className="round-feedback">
+        <DialogTitle>{t('intelligentPlay.options')}</DialogTitle><DialogDescription>{t('intelligentPlay.previewExplanation')}</DialogDescription>
+        <button className="close-primary" onClick={() => setMenuOpen(false)}>{t('intelligentPlay.resume')}</button>
+        <button className="close-secondary" onClick={() => { setMenuOpen(false); setStage('levels'); }}>{t('closeFlow.changeLevel')}</button>
+        <button className="close-text-button" onClick={() => { setMenuOpen(false); setStage('done'); }}>{t('intelligentPlay.finish')}</button>
+      </DialogContent></Dialog>
     </main>}
 
-    {stage === 'done' && <main className="close-room close-narrow"><Heart className="mx-auto text-primary" size={40} /><h1 ref={heading} tabIndex={-1}>{t('closeFlow.done')}</h1><p className="close-subtitle">{t('closeFlow.doneText')}</p><button className="close-primary" onClick={() => setStage('levels')}><RotateCcw size={18} />{t('closeFlow.changeLevel')}</button></main>}
-    <footer className="close-footer">LET’S GET CLOSE <span>·</span> letsgetclose.com</footer>
+    {stage === 'done' && <main className="close-room close-narrow"><Heart className="mx-auto text-primary" size={40} /><h1 ref={heading} tabIndex={-1}>{t('closeFlow.done')}</h1><p className="close-subtitle">{t('intelligentPlay.previewSummary', { count: rounds.filter(round => round.feeling || round.pace || round.note).length })}</p><button className="close-primary" onClick={() => setStage('levels')}><RotateCcw size={18} />{t('closeFlow.changeLevel')}</button></main>}
+    {stage !== 'cards' && <footer className="close-footer">LET’S GET CLOSE <span>·</span> letsgetclose.com</footer>}
   </div>;
 }

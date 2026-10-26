@@ -425,7 +425,7 @@ Most Recent Response Evaluation (scale 1-5):
 - Attraction: ${lastResponseAnalysis.attraction}/5
 - Intimacy: ${lastResponseAnalysis.intimacy}/5
 - Surprise: ${lastResponseAnalysis.surprise}/5
-- Response Time: ${lastResponseAnalysis.response_time}ms
+- Response Time: ${lastResponseAnalysis.response_time} seconds (legacy client timing; not measured speech or emotional evidence)
 
 Strategy: Based on their most recent emotional state, pick the question that best deepens connection right now. Prefer gently raising their weakest dimension, and vary the category/theme from recent questions so the session feels like a journey, not a loop.
 ` : `

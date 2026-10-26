@@ -579,3 +579,41 @@
 }
 @media (max-width: 350px) { .close-level { padding: 13px; } .close-level-title { font-size: 16px; } .close-narrow { padding-left: 22px; padding-right: 22px; } }
 @media (prefers-reduced-motion: reduce) { .close-primary, .close-secondary, .close-level { transition: none; } .close-primary:hover, .close-level:hover:not(:disabled), .close-level[aria-pressed=true] { transform: none; } }
+
+/* During play the phone is the card; chrome lives in the options sheet. */
+.close-immersive { background: #fff5f7; padding: 0; }
+.immersive-table { display: flex; flex-direction: column; width: min(100%, 480px); min-height: 100svh; margin: auto; background: linear-gradient(155deg, #fff0f8, #fff 55%, #fff7f9); padding: max(8px, env(safe-area-inset-top)) 24px max(14px, env(safe-area-inset-bottom)); }
+.immersive-controls { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 48px; }
+.immersive-controls > span { font-size: 10px; color: #8c567d; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; }
+.immersive-controls > span > span { margin: 0 6px; }
+.immersive-table .physical-deck { flex: 1; display: flex; width: 100%; max-width: none; margin: 0; }
+.immersive-table .physical-deck::before, .immersive-table .physical-deck::after { display: none; }
+.immersive-table .physical-card { width: 100%; display: flex; min-height: 350px; border-radius: 0; }
+.immersive-table .physical-card-front { width: 100%; flex: 1; min-height: 0; padding: 8px 4px 15px; background: transparent; border: 0; box-shadow: none; }
+.immersive-table .physical-card-heading { display: none; }
+.immersive-table .physical-card-question { font-size: clamp(26px, 6.7vw, 35px); line-height: 1.35; min-height: 260px; padding: 42px 12px; }
+.immersive-table .physical-card-footer { border: none; padding: 8px 0; justify-content: center; opacity: .65; }
+.immersive-table .physical-card-footer > span { display: none; }
+.immersive-table .physical-card-back { border: 0; box-shadow: none; background: transparent; }
+.immersive-table .card-back-level, .immersive-table .card-back-tagline { display: none; }
+.immersive-table .physical-card-back::before, .immersive-table .physical-card-back::after { display: none; }
+.immersive-actions { display: flex; align-items: center; gap: 24px; padding: 12px 0 4px; }
+.immersive-actions > .close-primary { flex: 1; }
+.immersive-actions > .close-text-button { min-width: 48px; }
+.round-feedback { max-width: 430px; max-height: calc(100dvh - 24px); overflow-y: auto; border-radius: 26px; background: #fffafd; padding: 28px; gap: 20px; }
+.round-feedback h2 { padding-right: 20px; font: 700 22px/1.25 'Montserrat', sans-serif; letter-spacing: -.035em; }
+.round-feedback fieldset { min-width: 0; }
+.round-feedback legend { font-size: 12px; font-weight: 600; margin-bottom: 10px; color: #57465e; }
+.round-feelings, .round-paces { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.round-paces { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.round-feedback fieldset button { border: 1px solid #ecd5e3; border-radius: 13px; min-height: 48px; padding: 10px 8px; font-size: 12px; line-height: 1.4; color: #6f5268; background: #fff; }
+.round-feedback fieldset button[aria-pressed=true] { border-color: #ac276d; background: #fce8f2; color: #a91a65; }
+.round-feedback fieldset button:focus-visible, .round-feedback summary:focus-visible { outline: 2px solid #a91a65; outline-offset: 3px; }
+.round-feedback summary { min-height: 40px; font-size: 12px; color: #8c567d; cursor: pointer; padding: 10px 0; }
+.round-feedback textarea { border: 1px solid #ecd5e3; border-radius: 12px; padding: 12px; font-size: 14px; width: 100%; background: #fff; }
+.round-note-count { display: block; text-align: right; font-size: 10px; color: #796978; }
+.round-preview-note { font-size: 10px; line-height: 1.5; text-align: center; color: #796978; }
+@media (max-width: 480px) {
+  .round-feedback { top: auto; bottom: 0; left: 0; right: 0; transform: none; width: 100%; max-width: none; border-radius: 25px 25px 0 0; padding: 28px 22px max(22px, env(safe-area-inset-bottom)); }
+  .immersive-table { padding-left: 22px; padding-right: 22px; }
+}
