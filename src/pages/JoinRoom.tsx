@@ -1,3 +1,4 @@
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,7 +15,7 @@ import { Logo } from '@/components/ui/animated-logo';
 import { logger } from '@/utils/logger';
 import { track } from '@/lib/analytics';
 
-export default function JoinRoom() {
+function JoinRoomContent() {
   const [roomCode, setRoomCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
@@ -89,7 +90,7 @@ export default function JoinRoom() {
       } else {
         logger.warn('JoinRoom: Room join returned false');
         toast.error(t('joinRoom.errors.invalidCode'));
-        setHasProcessedUrl(false); // Reset to allow retry
+        // Retry failed invitations explicitly through the form.
       }
     } catch (error: any) {
       logger.error('JoinRoom: Room join error', { 
@@ -111,7 +112,7 @@ export default function JoinRoom() {
         logger.error('Unexpected join error', error);
         toast.error(t('joinRoom.errors.connectionError'));
       }
-      setHasProcessedUrl(false); // Reset to allow retry
+      // Retry failed invitations explicitly through the form.
     } finally {
       setIsLoading(false);
       setIsJoining(false);
@@ -256,4 +257,7 @@ export default function JoinRoom() {
       </Card>
     </div>
   );
+}
+export default function JoinRoom() {
+  return <ProtectedRoute><JoinRoomContent /></ProtectedRoute>;
 }

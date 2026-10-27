@@ -11,6 +11,8 @@
  */
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  "https://letsgetclose.app",
+  "https://www.letsgetclose.app",
   "https://letsgetclose.com",
   "https://www.letsgetclose.com",
   "http://localhost:5173",

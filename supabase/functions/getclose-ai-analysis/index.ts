@@ -536,7 +536,6 @@ Return EXACTLY this JSON shape (all strings in ${language}):
       primaryDynamic,
       communicationDNA: communicationStyle,
       volatilityProfile: volatility.honesty < 1 ? 'Stable' : 'Dynamic',
-      rarityPercentile: `${Math.round(Math.min(95, Math.max(5, (bondMap.closeness + bondMap.spark + bondMap.anchor) * 6.67)))}th`,
       dataPoints: responses.length * 4,
       analysisDepth: 'Advanced Psychological Framework'
     };

@@ -13,7 +13,8 @@ const languages = [
 export function LanguageSelector() {
   const { i18n } = useTranslation();
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  const languageCode = (i18n.resolvedLanguage ?? i18n.language).split('-')[0];
+  const currentLanguage = languages.find(lang => lang.code === languageCode) || languages[0];
 
   const handleLanguageChange = (languageCode: string) => {
     i18n.changeLanguage(languageCode);
@@ -22,7 +23,7 @@ export function LanguageSelector() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto">
+        <Button variant="ghost" size="sm" className="gap-2 min-w-[44px] min-h-[44px] sm:min-w-auto sm:min-h-auto" aria-label={currentLanguage.name}>
           <Globe className="h-4 w-4" />
           <span className="hidden sm:inline">{currentLanguage.flag} {currentLanguage.name}</span>
           <span className="sm:hidden text-lg">{currentLanguage.flag}</span>
@@ -34,7 +35,7 @@ export function LanguageSelector() {
             key={language.code}
             onClick={() => handleLanguageChange(language.code)}
             className={`cursor-pointer hover:bg-accent min-h-[44px] ${
-              i18n.language === language.code ? 'bg-accent' : ''
+              languageCode === language.code ? 'bg-accent' : ''
             }`}
           >
             <span className="mr-2 text-lg">{language.flag}</span>

@@ -33,6 +33,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
+
   try {
     // ---- 1. Authenticate the caller -------------------------------------
     const caller = await getCallerUser(req);
@@ -55,7 +57,7 @@ serve(async (req) => {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
     const metadataUserId = session.metadata?.user_id;
-    const credits = parseInt(session.metadata?.credits || "0", 10);
+    const credits = Number(session.metadata?.credits || "0");
 
     // The session must belong to the calling user.
     if (!metadataUserId || metadataUserId !== caller.id) {
@@ -69,65 +71,23 @@ serve(async (req) => {
       return json({ success: false, status: "pending", error: "Payment not completed" }, 400);
     }
 
-    if (!Number.isFinite(credits) || credits <= 0) {
+    if (!Number.isInteger(credits) || credits <= 0 || credits > 1000) {
       return json({ success: false, error: "Invalid credits metadata" }, 400);
     }
 
     const supabase = serviceClient();
 
-    // ---- 4. Already processed? (webhook is the source of truth) ---------
-    const { data: existing, error: lookupError } = await supabase
-      .from("stripe_events")
-      .select("event_id, credits_granted")
-      .eq("session_id", session.id)
-      .maybeSingle();
-
-    if (lookupError) {
-      console.error("verify-payment: ledger lookup failed:", lookupError);
-      throw new Error("Failed to verify payment status");
-    }
-
-    if (existing) {
-      return json({
-        success: true,
-        credits_added: existing.credits_granted ?? credits,
-        already_processed: true,
-      });
-    }
-
-    // ---- 5. Fallback grant (webhook not seen yet), idempotent -----------
-    // Claim the session in the ledger first; UNIQUE(session_id) guarantees
-    // that a concurrently arriving webhook cannot also grant.
-    const { error: claimError } = await supabase.from("stripe_events").insert({
-      event_id: `verify_${session.id}`,
-      session_id: session.id,
-      event_type: "verify-payment.grant",
-      user_id: caller.id,
-      credits_granted: credits,
+    // Ledger insert + credits happen in one database transaction.
+    const { data: grant, error: grantError } = await supabase.rpc("grant_checkout_credits", {
+      p_event_id: `verify_${session.id}`,
+      p_session_id: session.id,
+      p_event_type: "verify-payment.grant",
+      p_user_id: caller.id,
+      p_credits: credits,
     });
+    if (grantError) throw new Error("Failed to grant checkout credits");
+    return json({ success: true, ...grant });
 
-    if (claimError) {
-      if (claimError.code === "23505") {
-        // The webhook won the race between our lookup and our claim.
-        return json({ success: true, credits_added: credits, already_processed: true });
-      }
-      console.error("verify-payment: failed to claim session:", claimError);
-      throw new Error("Failed to record payment");
-    }
-
-    const { error: grantError } = await supabase.rpc("add_credits", {
-      user_id_param: caller.id,
-      credits_amount: credits,
-    });
-
-    if (grantError) {
-      console.error("verify-payment: add_credits failed:", grantError);
-      // Roll back the claim so the webhook (or a retry) can grant later.
-      await supabase.from("stripe_events").delete().eq("event_id", `verify_${session.id}`);
-      throw new Error("Failed to add credits to account");
-    }
-
-    return json({ success: true, credits_added: credits });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error("Payment verification error:", error);

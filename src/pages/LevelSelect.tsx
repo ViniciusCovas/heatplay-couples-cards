@@ -1,5 +1,5 @@
 import { useState, useEffect, type ComponentType } from "react";
-import { Card } from "@/components/ui/card";
+import { LevelTiles } from "@/components/game/LevelTiles";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import {
@@ -174,7 +174,7 @@ const LevelSelect = () => {
                 iconDisplay: { type: 'lucide', component: Heart, emoji: null },
                 color: accent.color,
                 bgColor: accent.bgColor,
-                cards: 5,
+                cards: undefined,
                 database_id: level.id
               };
             }
@@ -201,7 +201,7 @@ const LevelSelect = () => {
             iconDisplay: { type: 'emoji', component: null, emoji: '✨' },
             color: LEVEL_ACCENTS[0].color,
             bgColor: LEVEL_ACCENTS[0].bgColor,
-            cards: 10
+            cards: undefined
           },
           {
             id: 2,
@@ -210,7 +210,7 @@ const LevelSelect = () => {
             iconDisplay: { type: 'lucide', component: Heart, emoji: null },
             color: LEVEL_ACCENTS[1].color,
             bgColor: LEVEL_ACCENTS[1].bgColor,
-            cards: 15
+            cards: undefined
           },
           {
             id: 3,
@@ -219,7 +219,7 @@ const LevelSelect = () => {
             iconDisplay: { type: 'emoji', component: null, emoji: '🔥' },
             color: LEVEL_ACCENTS[2].color,
             bgColor: LEVEL_ACCENTS[2].bgColor,
-            cards: 20
+            cards: undefined
           },
           {
             id: 4,
@@ -228,7 +228,7 @@ const LevelSelect = () => {
             iconDisplay: { type: 'lucide', component: AlertTriangle, emoji: null },
             color: LEVEL_ACCENTS[3].color,
             bgColor: LEVEL_ACCENTS[3].bgColor,
-            cards: 25
+            cards: undefined
           }
         ];
         
@@ -508,8 +508,8 @@ const LevelSelect = () => {
   }
 
   return (
-    <div className="min-h-screen romantic-background p-4 flex flex-col">
-      <div className="w-full max-w-md mx-auto space-y-6 flex-1">
+    <div className="close-experience min-h-screen p-4 flex flex-col">
+      <div className="w-full max-w-2xl mx-auto space-y-6 flex-1">
         {/* Header */}
         <div className="text-center space-y-2 pt-8">
           <div className="flex items-center justify-center mb-4">
@@ -596,93 +596,9 @@ const LevelSelect = () => {
            )}
         </div>
 
-        {/* Levels */}
-        <div className="space-y-4">
-        {levels.map((level) => {
-            const isSelected = votedLevel === level.id;
-            const isDisabled = !playerId || !playerIdReady || !room?.id || agreedLevel !== null;
-            const isWaitingDisabled = isWaitingForPartner || levelsMismatch;
-            const isMismatched = levelsMismatch && isSelected;
-            const isInteractive = !isDisabled && !isWaitingDisabled;
-
-            return (
-              <Card 
-                key={level.id}
-                role="button"
-                tabIndex={isInteractive ? 0 : -1}
-                aria-pressed={isSelected}
-                aria-disabled={!isInteractive}
-                className={`p-6 transition-all duration-300 border-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-                  isSelected 
-                    ? isMismatched
-                      ? `border-destructive bg-destructive/10 ${showMismatchAnimation ? 'animate-shake motion-reduce:animate-none' : ''}`
-                      : agreedLevel === level.id
-                        ? `border-primary bg-primary/10 ${showMatchAnimation ? 'animate-pulse motion-reduce:animate-none' : ''}`
-                        : 'border-primary bg-primary/5'
-                    : !isInteractive
-                      ? 'opacity-60 border-muted cursor-not-allowed'
-                      : 'cursor-pointer hover:shadow-lg hover:scale-[1.02] hover:border-primary/30'
-                }`}
-                onClick={() => isInteractive && handleLevelClick(level.id)}
-                onKeyDown={(e) => {
-                  if (!isInteractive) return;
-                  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-                    e.preventDefault();
-                    handleLevelClick(level.id);
-                  }
-                }}
-              >
-                <div className="flex items-start space-x-4">
-                  <div className={`w-12 h-12 rounded-full ${level.bgColor} flex items-center justify-center flex-shrink-0 relative`}>
-                    {level.iconDisplay.type === 'emoji' ? (
-                      <span className="text-2xl">{level.iconDisplay.emoji}</span>
-                    ) : (
-                      <level.iconDisplay.component className={`w-6 h-6 ${level.color}`} />
-                    )}
-                        {isSelected && agreedLevel === level.id && showMatchAnimation && (
-                          <>
-                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping motion-reduce:hidden"></div>
-                            <Heart className="absolute -top-2 -left-2 w-4 h-4 text-primary animate-heartbeat motion-reduce:animate-none" />
-                          </>
-                        )}
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="text-lg font-heading text-foreground">
-                        {level.title}
-                      </h3>
-                      <span className="text-xs text-muted-foreground">
-                        {t('levelSelect.cardCount', '{{count}} cards', { count: level.cards })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {level.description}
-                    </p>
-                    
-                    {isSelected && (
-                      <div className="flex items-center space-x-2">
-                        <p className="text-xs text-primary-ink font-medium">
-                          ✓ {t('levelSelect.youChose', 'You chose this level')}
-                        </p>
-                        {agreedLevel === level.id && showMatchAnimation && (
-                          <Heart className="w-4 h-4 text-primary animate-heartbeat motion-reduce:animate-none" />
-                        )}
-                      </div>
-                    )}
-                    
-                    {isMismatched && showMismatchAnimation && (
-                      <div className="text-xs text-destructive font-bold mt-2 flex items-center space-x-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>{t('levelSelect.mismatch.card', "Different from your partner's choice")}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
+        <LevelTiles levels={levels} selected={votedLevel}
+          disabled={!playerId || !playerIdReady || !room?.id || agreedLevel !== null || isWaitingForPartner || levelsMismatch}
+          onSelect={handleLevelClick} />
 
         {/* Confirmation Dialog for Locked Levels */}
         <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>

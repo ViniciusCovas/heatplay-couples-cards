@@ -1,19 +1,4 @@
-/**
- * Shared authorization guards for edge functions.
- *
- * The game supports anonymous partners (no JWT - the client calls functions
- * with the project's anon key as the bearer token), so per-user auth is not
- * always possible. These helpers implement the layered checks used instead:
- *
- *  - requireInternalSecret: for functions that must only be called from
- *    inside the platform (DB trigger / pg_cron), authenticated by the
- *    INTERNAL_FUNCTION_SECRET shared secret.
- *  - getCallerUser: resolves the Authorization bearer to a real user when
- *    there is one (returns null for the anon key / invalid tokens).
- *  - checkRoomAccess: validates that a roomId is a real, recently active
- *    room and - when the caller is an identified user - that they are the
- *    host or a participant of it.
- */
+/** Shared authentication and room membership guards. Guests use anonymous-auth JWTs. */
 
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -90,10 +75,7 @@ export interface RoomAccessResult {
  *
  * - roomId must be a syntactically valid UUID of an existing room.
  * - Identified callers must be the host or a registered participant.
- * - Anonymous callers (anon key) are allowed only while the room is in the
- *   "recently active" window (waiting/playing, or finished within
- *   maxAgeHours). This mirrors the RLS policy room_is_recently_active() and
- *   means historical rooms can never be queried anonymously.
+ * - No-JWT callers are rejected before any database lookup.
  */
 export async function checkRoomAccess(
   supabase: SupabaseClient,
@@ -101,7 +83,8 @@ export async function checkRoomAccess(
   callerUserId: string | null,
   opts: { requireActive?: boolean; maxAgeHours?: number } = {},
 ): Promise<RoomAccessResult> {
-  const { requireActive = false, maxAgeHours = 24 } = opts;
+  const { requireActive = false } = opts;
+  if (!callerUserId) return { ok: false, status: 401, error: "Authentication required" };
 
   if (!isUuid(roomId)) {
     return { ok: false, status: 400, error: "Invalid roomId" };
@@ -138,14 +121,5 @@ export async function checkRoomAccess(
     return { ok: true, status: 200, room };
   }
 
-  // Anonymous caller: only recently active rooms are reachable.
-  const referenceTs = room.finished_at ?? room.created_at;
-  const recent = referenceTs
-    ? Date.now() - new Date(referenceTs as string).getTime() < maxAgeHours * 3600 * 1000
-    : false;
-
-  if (!isActive && !recent) {
-    return { ok: false, status: 403, error: "Room is no longer accessible" };
-  }
-  return { ok: true, status: 200, room };
+  return { ok: false, status: 403, error: "Not a participant of this room" };
 }

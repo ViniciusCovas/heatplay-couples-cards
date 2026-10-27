@@ -46,3 +46,7 @@ verify_jwt = false
 # signature (STRIPE_WEBHOOK_SECRET) verified inside the function.
 [functions.stripe-webhook]
 verify_jwt = false
+
+# Requires a real user or anonymous-auth session; per-user and global daily cap.
+[functions.plan-date]
+verify_jwt = true

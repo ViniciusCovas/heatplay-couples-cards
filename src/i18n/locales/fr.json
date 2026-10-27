@@ -354,12 +354,12 @@
     "gettingPersonal": "Devenir Personnel",
     "deepThoughts": "Pensées Profondes",
     "intimate": "Intime",
-    "level1": "Découverte",
-    "level1Name": "Découverte",
+    "level1": "Étincelle",
+    "level1Name": "Étincelle",
     "level2": "Connexion",
     "level2Name": "Connexion",
-    "level3": "Chaud",
-    "level3Name": "Chaud",
+    "level3": "Feu",
+    "level3Name": "Feu",
     "level4": "Sans Filtres",
     "level4Name": "Sans Filtres"
   },
@@ -719,7 +719,7 @@
     "compatibility": "Compatibilité",
     "ourVibe": "Notre vibe",
     "insightLabel": "Ce soir on a découvert",
-    "footer": "à jouer sur letsgetclose.app",
+    "footer": "à jouer sur letsgetclose.com",
     "fallbackInsight": "Certaines étincelles se découvrent seulement en personne.",
     "fallbackArchetype": "Une histoire qui commence",
     "archetypes": {
@@ -811,68 +811,6 @@
     "streak_many": "Série de {{count}} jours",
     "shareText": "Notre question Daily Spark du jour : « {{question}} » — tu me réponds ? 😏 Joue avec moi ici : {{url}}"
   },
-  "landing": {
-    "badge": "Pour les couples · Privé · 18+",
-    "headline": "Le jeu qui vous rapproche vraiment.",
-    "sub": "De vraies questions, quatre niveaux d'intensité, un salon rien que pour vous deux. Ce soir, on oublie la petite conversation.",
-    "ctaPlay": "Jouer maintenant",
-    "ctaJoin": "J'ai un code",
-    "deckHint": "Touchez une carte pour la retourner · glissez pour la suivante",
-    "deckBack": "Votre question vous attend…",
-    "deckPrompt": "Répondez à voix haute — puis renvoyez-la.",
-    "stats": {
-      "couples": "Privé, rien que vous deux",
-      "questions": "Plus de 400 questions",
-      "rating": "Analyse de couple par IA"
-    },
-    "how": {
-      "title": "De « salut » à « je ne l'avais jamais dit à personne » en trois étapes",
-      "step1": {
-        "title": "Créez votre salon privé",
-        "desc": "Un geste, zéro réglage. Un code qui n'appartient qu'à vous deux.",
-        "chip": "Code du salon"
-      },
-      "step2": {
-        "title": "Envoyez le lien à votre partenaire",
-        "desc": "Un clic et c'est parti. Le jeu commence dès que vous êtes deux.",
-        "bubble": "Tu joues avec moi ce soir ? Une question et tu verras 😏",
-        "reply": "Je suis partant·e. Envoie le lien 🔥"
-      },
-      "step3": {
-        "title": "Jouez et recevez votre analyse IA",
-        "desc": "Répondez, notez, provoquez-vous. À la fin, l'IA vous raconte votre soirée : votre vibe, votre score, votre histoire.",
-        "score": "Compatibilité"
-      }
-    },
-    "levels": {
-      "title": "Choisissez votre température",
-      "sub": "Quatre niveaux, une seule règle : vous n'allez que là où vous le voulez tous les deux.",
-      "sample": "Carte d'exemple",
-      "l1desc": "Des questions douces, comme un premier rendez-vous.",
-      "l2desc": "Celles auxquelles on pense sans jamais oser les poser.",
-      "l3desc": "Là où la pièce se réchauffe et les réponses deviennent sincères.",
-      "l4desc": "Sans filtre, sans script. Rien que vous deux, à fond."
-    },
-    "ai": {
-      "eyebrow": "Analyse de couple par IA",
-      "title": "Finissez la soirée avec votre histoire, racontée par l'IA.",
-      "body": "Après le jeu, l'IA transforme votre soirée en archétype de couple, score de compatibilité et une phrase à encadrer — prête à partager, sans révéler aucune réponse.",
-      "insight": "Vous deux transformez une simple question en conversation de quarante minutes.",
-      "cta": "Débloquer l'analyse complète"
-    },
-    "pricing": {
-      "free": "Gratuit",
-      "freeDesc": "Jouez ce soir : premiers niveaux, salon privé, étincelle du jour.",
-      "premium": "Premium",
-      "premiumDesc": "Tous les niveaux, analyse IA complète, soirées illimitées.",
-      "cta": "Comparer les offres"
-    },
-    "sticky": "Jouer maintenant",
-    "spark": {
-      "title": "Pas encore prêts pour le jeu complet ?",
-      "sub": "Prenez la question du jour — une par jour, gratuite pour toujours."
-    }
-  },
   "notFound": {
     "title": "Cette page est sortie du scénario",
     "description": "Nous n'avons pas trouvé la page que vous cherchiez. Revenons à quelque chose de plus proche.",
@@ -939,6 +877,320 @@
       "predictors": {
         "title": "Prédicteurs de réussite",
         "body": "Il existe une forte corrélation entre l'équilibre attirance-intimité et la satisfaction à long terme."
+      }
+    }
+  },
+  "together": {
+    "eyebrow": "UN JEU. DEUX PERSONNES.",
+    "title": "Tu peux encore me surprendre.",
+    "subtitle": "Posez le téléphone sur la table. La suite se passe entre vous.",
+    "mode": "Ensemble, sur un téléphone",
+    "free": "Une partie complète gratuite · Sans compte",
+    "moodTitle": "De quoi avez-vous envie ce soir ?",
+    "moods": {
+      "playful": "Rire ensemble",
+      "close": "Se retrouver",
+      "flirty": "Flirter"
+    },
+    "timeTitle": "Du temps pour vous deux",
+    "minutes": "{{count}} min",
+    "timeHint": "À titre indicatif. Vos réponses ne sont pas chronométrées.",
+    "heatTitle": "Jusqu’où voulez-vous jouer ?",
+    "heats": [
+      "Tendre",
+      "Taquin",
+      "Sensuel"
+    ],
+    "depthTitle": "La conversation",
+    "depths": [
+      "Légère",
+      "Plus personnelle"
+    ],
+    "limitsHint": "Choisissez ce qui vous plaît à tous les deux. Vous pouvez toujours adoucir le jeu ou passer.",
+    "consentTitle": "Un petit accord avant de commencer",
+    "consent": "Nous avons plus de 18 ans et ce rythme nous convient.",
+    "person": "Personne {{number}} : d’accord",
+    "ai": "Laisser l’IA préparer les cartes",
+    "aiHint": "Elle reçoit uniquement ces préférences. Elle n’écoute ni ne conserve vos paroles. Si elle est indisponible, nous utilisons notre sélection éditoriale.",
+    "start": "Poser les cartes sur la table",
+    "preparing": "Votre moment se prépare…",
+    "online": "Deux téléphones ? Créer un salon",
+    "join": "J’ai un code d’invitation",
+    "back": "Accueil",
+    "reveal": "Retourner la carte",
+    "next": "Carte suivante",
+    "skip": "Passer",
+    "favorite": "Garder cette carte",
+    "unfavorite": "Retirer des favoris",
+    "pause": "Pause",
+    "paused": "Ce moment est à vous.",
+    "pauseHint": "Posez l’écran. Revenez quand vous voulez.",
+    "resume": "Continuer à jouer",
+    "finish": "Terminer la soirée",
+    "lighter": "Tout en douceur",
+    "softened": "Le reste du jeu sera tendre et léger.",
+    "talk": "Répondez tous les deux. Prenez votre temps.",
+    "guess": "Devinez d’abord sa réponse. Puis découvrez-la.",
+    "followup": "Un peu plus",
+    "followupText": "Quel petit détail rendrait ce moment encore plus spécial pour toi ?",
+    "editorial": "Sélection éditoriale",
+    "aiReady": "Cartes préparées avec l’IA",
+    "fallback": "L’IA est indisponible. Votre sélection éditoriale est prête.",
+    "progress": "Carte {{current}} sur {{total}}",
+    "doneTitle": "Le meilleur continue loin de l’écran.",
+    "doneText": "Avant de partir, partagez une chose qui vous a surpris ce soir. Puis choisissez un petit projet pour recommencer.",
+    "saved": "Des cartes à retenir",
+    "noSaved": "Vos réponses restent entre vous.",
+    "again": "Une autre soirée, un autre jeu",
+    "privacy": "Aucun enregistrement audio ni réponse à saisir. Votre progression reste dans cet onglet pendant 8 heures seulement.",
+    "closeCard": "Un projet pour après",
+    "ending": "Dernière carte",
+    "exit": "Quitter et effacer la partie",
+    "language": "Langue",
+    "confirmExit": "Terminer cette partie ?",
+    "confirmHint": "Vous pouvez revenir aux cartes ou terminer la soirée maintenant.",
+    "continue": "Revenir aux cartes",
+    "setupLink": "Un téléphone · Gratuit",
+    "preview": "Aperçu · Ensemble sur un téléphone"
+  },
+  "closeFlow": {
+    "title": "Vous deux. Et la prochaine carte.",
+    "subtitle": "Connectez vos téléphones, choisissez un niveau et laissez venir la conversation.",
+    "create": "Rejoindre mon partenaire",
+    "join": "J’ai une invitation",
+    "steps": "Se connecter · Choisir le niveau · Jouer",
+    "onePhone": "Jouer sur un téléphone",
+    "cardCaption": "Une carte. Une nouvelle façon de se découvrir.",
+    "inviteTitle": "Invitez votre partenaire.",
+    "inviteText": "Partagez le lien ou le code du salon. Chacun joue sur son téléphone.",
+    "joinTitle": "Votre partenaire vous attend.",
+    "joinText": "Ouvrez l’invitation ou saisissez le code pour rejoindre le même salon.",
+    "previewInvite": "L’invitation réelle sera créée dans la version connectée. Cet aperçu ne connecte pas deux téléphones.",
+    "previewContinue": "Voir le choix du niveau",
+    "yourRhythm": "À VOTRE RYTHME",
+    "chooseTitle": "Par où commencer ?",
+    "chooseText": "Choisissez le même niveau sur les deux téléphones. La première carte arrive ensuite.",
+    "choose": "Choisir",
+    "level1": "Léger, ludique. La première étincelle.",
+    "level2": "Histoires, émotions et découvertes.",
+    "level3": "Flirt, désir et un peu d’audace.",
+    "level4": "Plus d’intensité. Avec vos propres limites.",
+    "limits": "Vous choisissez le rythme à deux. Passez une carte ou arrêtez quand vous le souhaitez.",
+    "review": "Aperçu visuel · Sans connexion entre téléphones",
+    "cardSample": "Carte de démonstration",
+    "changeLevel": "Changer de niveau",
+    "reveal": "Touchez pour retourner",
+    "revealHint": "La prochaine découverte est de l’autre côté.",
+    "answer": "Prenez le temps de parler. La carte peut attendre.",
+    "favorite": "Ajouter aux favoris de cet aperçu",
+    "next": "Carte suivante",
+    "skip": "Passer",
+    "samplesOnly": "Exemples éditoriaux. Le catalogue complet de chaque niveau reste dans le projet original.",
+    "done": "La conversation continue.",
+    "doneText": "Vous avez parcouru les exemples de ce niveau.",
+    "back": "Retour",
+    "playTitle": "Laissez les cartes vous rapprocher.",
+    "playText": "Une carte à la fois, sur les deux téléphones. Répondez, écoutez et découvrez quelque chose de nouveau."
+  },
+  "intelligentPlay": {
+    "feedbackTitle": "Comment tu te sens ?",
+    "feedbackSubtitle": "Ton ressenti, à ta façon.",
+    "feelingPrompt": "Cette carte m’a fait ressentir…",
+    "closer": "Plus proche",
+    "discovery": "De la surprise",
+    "desire": "Du désir",
+    "uncomfortable": "Mal à l’aise",
+    "pacePrompt": "Pour la prochaine…",
+    "lighter": "Plus léger",
+    "same": "Garder ce rythme",
+    "deeper": "Approfondir",
+    "continue": "Continuer",
+    "localOnly": "Test local : rien n’est envoyé à l’IA ou à votre partenaire.",
+    "gameLabel": "Carte de jeu",
+    "options": "Pause et options",
+    "answered": "Nous avons répondu",
+    "previewExplanation": "Aperçu local des tours : une personne pose la question, l’autre répond, puis elles échangent les rôles. Passer conserve le tour. Le verso recueille le ressenti de la personne qui a écouté. Aucun téléphone n’est connecté et l’IA n’adapte pas la séquence. Tout reste en mémoire dans cet onglet ; le temps actif ne mesure pas la durée de conversation.",
+    "resume": "Revenir à la carte",
+    "finish": "Terminer",
+    "previewSummary": "Retours de test enregistrés : {{count}}. La version connectée recueillera chaque point de vue ; ce test ne produit pas d’analyse du couple.",
+    "yourMoment": "TON MOMENT",
+    "person": "Personne {{number}}",
+    "asks": "Demande et écoute",
+    "answers": "Répond",
+    "turnDescription": "La personne {{asker}} pose la question. La personne {{respondent}} répond.",
+    "responseReady": "Réponse terminée",
+    "listenerTitle": "En l’écoutant…",
+    "listenerSubtitle": "Qu’avez-vous ressenti à sa réponse ?",
+    "feedbackRequired": "Choisis ton ressenti et le rythme pour continuer."
+  },
+  "variations": {
+    "guess": {
+      "badge": "🤭 DEVINE MA RÉPONSE",
+      "first": "Personne {{person}}, devine le choix de ton partenaire.",
+      "second": "Personne {{person}}, choisis ta propre réponse.",
+      "success": "Tu as deviné !",
+      "different": "Une petite surprise…",
+      "conversation": "Qu’est-ce qui t’a fait choisir cette réponse ?"
+    },
+    "match": {
+      "badge": "✨ NOS ENVIES COMMUNES",
+      "first": "Personne {{person}}, choisis une ou plusieurs expériences. Seuls les choix communs seront révélés.",
+      "second": "Personne {{person}}, choisis ce qui te tente. Seuls les choix communs seront révélés.",
+      "success": "Vos envies se rejoignent ici.",
+      "different": "Vos envies diffèrent aujourd’hui.",
+      "conversation": "Un choix commun ouvre une conversation ; des choix différents aussi. Que voulez-vous partager ?"
+    },
+    "seal": "Valider et masquer",
+    "localPrivacy": "Un téléphone : choisissez séparément, sans regarder le choix de l’autre.",
+    "handoff": "Passe le téléphone à la personne {{person}}. Ton choix n’est plus affiché.",
+    "itsMe": "Je suis la personne {{person}}",
+    "ready": "Les deux choix sont prêts. Regardez la carte ensemble.",
+    "reveal": "Découvrir ensemble",
+    "prediction": "Ta prédiction",
+    "answer": "Son choix",
+    "next": "On continue",
+    "action": {
+      "badge": "🫶 UN MOMENT ENSEMBLE",
+      "permission": "Prenez votre temps. Vous pouvez passer si vous préférez.",
+      "done": "C’est fait, on continue"
+    },
+    "stay": {
+      "button": "Approfondir cette réponse",
+      "back": "Revenir à la question"
+    },
+    "closing": {
+      "badge": "💌 À EMPORTER",
+      "title": "Un moment à nous.",
+      "body": "Choisissez ensemble une question à garder. Chaque personne confirme son choix.",
+      "empty": "Vous pouvez terminer ici et poursuivre la conversation loin du téléphone.",
+      "agree": "Personne {{person}} : je la garde",
+      "keep": "Garder ce moment",
+      "without": "Terminer sans garder"
+    },
+    "download": "Télécharger le souvenir",
+    "localMemory": "Seule la question choisie est téléchargée. Vos réponses ne sont pas enregistrées.",
+    "preview": "Aperçu local avec variations éditoriales ; l’IA et le jeu sur deux téléphones ne sont pas encore connectés.",
+    "together": "À DEUX",
+    "levels": {
+      "1": {
+        "questions": {
+          "0": "Quel petit détail chez moi te fait sourire même quand je suis sérieux/se ?",
+          "1": "Quel souvenir de nous raconterais-tu comme une comédie ?",
+          "2": "Quelle petite manie partageons-nous sans le remarquer ?",
+          "3": "Qu’as-tu découvert sur moi aujourd’hui qui t’intrigue ?"
+        },
+        "followups": {
+          "0": "Te souviens-tu de la dernière fois ?",
+          "1": "Quelle partie te fait encore rire ?",
+          "2": "Comment cette habitude a-t-elle commencé ?",
+          "3": "Que voudrais-tu me demander à ce sujet ?"
+        },
+        "guessTitle": "Qu’est-ce qui fait le plus facilement sourire ton partenaire ?",
+        "guessOptions": {
+          "joke": "Une blague à nous",
+          "look": "Un regard complice",
+          "compliment": "Un compliment inattendu",
+          "memory": "Un souvenir drôle"
+        },
+        "matchTitle": "Avec quoi voulez-vous continuer à jouer ?",
+        "matchOptions": {
+          "story": "Une anecdote drôle",
+          "memory": "Un souvenir de nous",
+          "compliment": "Un compliment",
+          "discovery": "Un fait surprenant"
+        },
+        "actionTitle": "Fais-moi sourire.",
+        "actionBody": "À tour de rôle, imitez avec tendresse une expression de l’autre. L’autre essaie de la reconnaître."
+      },
+      "2": {
+        "questions": {
+          "0": "Quand t’es-tu senti/e vraiment compris/e par moi ?",
+          "1": "Quelle part de toi aimerais-tu que je connaisse mieux ?",
+          "2": "Quel geste de ma part te soutient dans une journée difficile ?",
+          "3": "Quel rêve aimerais-tu que nous soutenions ensemble ?"
+        },
+        "followups": {
+          "0": "Qu’ai-je fait qui t’a aidé/e à ce moment-là ?",
+          "1": "Que pourrais-je demander pour mieux te comprendre ?",
+          "2": "Comment reconnaître quand tu as besoin de ce geste ?",
+          "3": "Quel petit premier pas pourrions-nous faire ?"
+        },
+        "guessTitle": "Qu’est-ce qui aide ton partenaire à se sentir compris ?",
+        "guessOptions": {
+          "listen": "Écouter sans interrompre",
+          "hug": "Une étreinte",
+          "questions": "Des questions attentives",
+          "space": "Laisser de l’espace"
+        },
+        "matchTitle": "Que voulez-vous partager plus profondément ?",
+        "matchOptions": {
+          "gratitude": "Une gratitude",
+          "memory": "Un souvenir important",
+          "need": "Un besoin personnel",
+          "dream": "Un rêve personnel"
+        },
+        "actionTitle": "Ce que j’apprécie chez toi.",
+        "actionBody": "À tour de rôle, complétez : « Je me suis senti/e soutenu/e quand… ». La personne qui écoute dit ce que cela lui fait entendre."
+      },
+      "3": {
+        "questions": {
+          "0": "Que fais-je sans le savoir que tu trouves irrésistible ?",
+          "1": "Quel moment de flirt entre nous aimes-tu le plus te rappeler ?",
+          "2": "Qu’aimerais-tu m’entendre dire davantage quand nous sommes proches ?",
+          "3": "Comment me ferais-tu comprendre que tu veux un baiser sans le dire ?"
+        },
+        "followups": {
+          "0": "Qu’est-ce qui t’attire dans ce détail ?",
+          "1": "Quelle partie de ce moment aimerais-tu retrouver ?",
+          "2": "Comment aimerais-tu l’entendre de ma part ?",
+          "3": "Comment saurions-nous que nous en avons envie tous les deux ?"
+        },
+        "guessTitle": "Quel flirt plaît le plus à ton partenaire ?",
+        "guessOptions": {
+          "gaze": "Un regard prolongé",
+          "whisper": "Des mots à l’oreille",
+          "compliment": "Un compliment audacieux",
+          "closeness": "Se rapprocher doucement"
+        },
+        "matchTitle": "Quel flirt voulez-vous explorer ?",
+        "matchOptions": {
+          "attraction": "Dire ce qui m’attire",
+          "gaze": "Un regard complice",
+          "chemistry": "Rappeler notre alchimie",
+          "desire": "Dire ce qui donne envie"
+        },
+        "actionTitle": "Un compliment avec intention.",
+        "actionBody": "À tour de rôle, dites quel détail de l’autre vous attire et pourquoi. Prenez un instant pour recevoir le compliment."
+      },
+      "4": {
+        "questions": {
+          "0": "Qu’aimerais-tu me demander plus librement dans l’intimité ?",
+          "1": "Quelle curiosité intime voudrais-tu aborder sans t’engager à la réaliser ?",
+          "2": "Comment aimerais-tu que je demande ce qui te plaît quand nous sommes seuls ?",
+          "3": "Qu’est-ce qui rend une invitation intime désirable et sans pression ?"
+        },
+        "followups": {
+          "0": "Qu’est-ce qui t’aiderait à le dire en confiance ?",
+          "1": "Qu’est-ce qui t’attire dans cette idée et quelles limites poserais-tu ?",
+          "2": "Quels mots te permettraient de dire librement oui ou non ?",
+          "3": "Comment préserver ensemble cette liberté ?"
+        },
+        "guessTitle": "Que veut exprimer ton partenaire dans l’intimité ?",
+        "guessOptions": {
+          "enjoyment": "Ce qui lui plaît",
+          "curiosity": "Une curiosité",
+          "pace": "Son rythme préféré",
+          "boundary": "Ce qu’il ne veut pas"
+        },
+        "matchTitle": "De quoi voulez-vous parler sans filtre ?",
+        "matchOptions": {
+          "enjoyment": "Ce qui nous plaît",
+          "curiosity": "Une curiosité intime",
+          "boundaries": "Nos limites",
+          "invitation": "Nos invitations"
+        },
+        "actionTitle": "Une invitation sans pression.",
+        "actionBody": "À tour de rôle, complétez : « J’aimerais parler avec toi de… ». L’autre dit si cette conversation lui fait envie maintenant. En parler n’engage pas à le faire."
       }
     }
   }

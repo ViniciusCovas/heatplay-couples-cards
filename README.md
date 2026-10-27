@@ -1,3 +1,16 @@
+# Let's Get Close
+
+The product is a shared game on **two phones**, one authenticated participant per device. The current immersive `/play` route is an explicitly labeled local card demo; it is not connected multiplayer.
+
+- [Two-phone launch runbook (ES)](docs/two-phone-launch.md): project access, transfer, infrastructure, environment settings, server integration and acceptance gates.
+- [Supabase consolidation](docs/supabase-consolidation.md): verified accounts and source project.
+- [Review evidence](docs/launch-review.md): implemented features and validation.
+- [Public environment template](.env.example): no server secrets belong in browser variables.
+
+Before enabling online routes, configure the correct Supabase URL/public key/project ID. Builds reject missing/unsafe/mismatched configuration; isolated preview can omit database values entirely. Changing the preview flag does not implement the new synchronized round contract.
+
+---
+
 # Welcome to your Lovable project
 
 ## Project info

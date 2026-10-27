@@ -104,10 +104,10 @@ serve(async (req) => {
   }
 
   const userId = session.metadata?.user_id;
-  const credits = parseInt(session.metadata?.credits || "0", 10);
+  const credits = Number(session.metadata?.credits || "0");
   const uuidRe = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-  if (!userId || !uuidRe.test(userId) || !Number.isFinite(credits) || credits <= 0) {
+  if (!userId || !uuidRe.test(userId) || !Number.isInteger(credits) || credits <= 0 || credits > 1000) {
     // Metadata written by our create-payment function is malformed/absent.
     // Acknowledge (retrying will not fix it) but log loudly.
     console.error(`stripe-webhook: invalid metadata on session ${session.id}`, session.metadata);
@@ -116,42 +116,16 @@ serve(async (req) => {
 
   const supabase = serviceClient();
 
-  // ---- Idempotency claim -------------------------------------------------
-  // Insert the ledger row FIRST. The PK on event_id kills webhook redelivery
-  // duplicates; the UNIQUE on session_id kills races with verify-payment.
-  const { error: claimError } = await supabase.from("stripe_events").insert({
-    event_id: event.id,
-    session_id: session.id,
-    event_type: event.type,
-    user_id: userId,
-    credits_granted: credits,
+  const { data: grant, error: grantError } = await supabase.rpc("grant_checkout_credits", {
+    p_event_id: event.id,
+    p_session_id: session.id,
+    p_event_type: event.type,
+    p_user_id: userId,
+    p_credits: credits,
   });
+  if (grantError) return json({ error: "Failed to grant checkout credits" }, 500);
+  return json({ received: true, duplicate: grant.already_processed, credits_granted: grant.credits_added });
 
-  if (claimError) {
-    if (claimError.code === "23505") {
-      // Already processed (redelivery or verify-payment won the race).
-      console.log(`stripe-webhook: session ${session.id} already processed, skipping`);
-      return json({ received: true, duplicate: true });
-    }
-    console.error("stripe-webhook: failed to record event:", claimError);
-    return json({ error: "Failed to record event" }, 500); // let Stripe retry
-  }
-
-  // ---- Grant credits -----------------------------------------------------
-  const { error: grantError } = await supabase.rpc("add_credits", {
-    user_id_param: userId,
-    credits_amount: credits,
-  });
-
-  if (grantError) {
-    console.error("stripe-webhook: add_credits failed:", grantError);
-    // Roll back the claim so a Stripe retry can attempt the grant again.
-    await supabase.from("stripe_events").delete().eq("event_id", event.id);
-    return json({ error: "Failed to grant credits" }, 500); // let Stripe retry
-  }
-
-  console.log(`stripe-webhook: granted ${credits} credits to ${userId} (session ${session.id})`);
-  return json({ received: true, credits_granted: credits });
 });
 
 // ============================================================================
@@ -217,10 +191,13 @@ async function upsertSubscription(
 
 /** customer.subscription.created / updated / deleted */
 async function handleSubscriptionEvent(
-  _stripe: Stripe,
+  stripe: Stripe,
   event: Stripe.Event,
 ): Promise<Response> {
-  const sub = event.data.object as Stripe.Subscription;
+  // Fetch current state: Stripe may deliver lifecycle events out of order.
+  let sub: Stripe.Subscription;
+  try { sub = await stripe.subscriptions.retrieve((event.data.object as Stripe.Subscription).id); }
+  catch { return json({ error: "Failed to retrieve subscription" }, 500); }
   const overrideStatus = event.type === "customer.subscription.deleted" ? "canceled" : undefined;
   return await upsertSubscription(sub, overrideStatus);
 }
@@ -230,12 +207,11 @@ async function handleSubscriptionEvent(
  *
  * Usually customer.subscription.created arrives too, but ordering is not
  * guaranteed; syncing here as well makes premium available immediately after
- * checkout. Claimed in the stripe_events ledger (credits_granted = 0) so a
- * redelivered checkout event is a clean no-op.
+ * checkout. Repeated upserts are safe; never claim before persisting state.
  */
 async function handleSubscriptionCheckout(
   stripe: Stripe,
-  event: Stripe.Event,
+  _event: Stripe.Event,
   session: Stripe.Checkout.Session,
 ): Promise<Response> {
   const subscriptionId =
@@ -245,35 +221,12 @@ async function handleSubscriptionCheckout(
     return json({ received: true, error: "missing_subscription" });
   }
 
-  const supabase = serviceClient();
-
-  // Idempotency claim (same ledger as credit grants; no credits involved).
-  const { error: claimError } = await supabase.from("stripe_events").insert({
-    event_id: event.id,
-    session_id: session.id,
-    event_type: event.type,
-    user_id: session.metadata?.user_id && UUID_RE.test(session.metadata.user_id)
-      ? session.metadata.user_id
-      : null,
-    credits_granted: 0,
-  });
-
-  if (claimError) {
-    if (claimError.code === "23505") {
-      console.log(`stripe-webhook: subscription session ${session.id} already processed`);
-      return json({ received: true, duplicate: true });
-    }
-    console.error("stripe-webhook: failed to record subscription event:", claimError);
-    return json({ error: "Failed to record event" }, 500);
-  }
-
   // Fetch the full subscription so metadata/status/period are authoritative.
   let sub: Stripe.Subscription;
   try {
     sub = await stripe.subscriptions.retrieve(subscriptionId);
   } catch (err) {
     console.error("stripe-webhook: failed to retrieve subscription:", err);
-    await supabase.from("stripe_events").delete().eq("event_id", event.id);
     return json({ error: "Failed to retrieve subscription" }, 500); // retry
   }
 
@@ -282,10 +235,5 @@ async function handleSubscriptionCheckout(
     sub.metadata = { ...sub.metadata, ...session.metadata };
   }
 
-  const result = await upsertSubscription(sub);
-  if (result.status >= 500) {
-    // Roll back the claim so Stripe's retry can re-attempt the sync.
-    await supabase.from("stripe_events").delete().eq("event_id", event.id);
-  }
-  return result;
+  return await upsertSubscription(sub);
 }

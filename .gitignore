@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local deployment credentials; the example contains public placeholders only.
+.env.*
+!.env.example

@@ -1,14 +1,17 @@
 {
   "name": "Let's Get Close",
   "short_name": "Get Close",
-  "description": "The card game that gets you closer. Play tonight from a link — no install needed for your partner.",
+  "description": "Explore the cards of a couples game designed for two phones. Connected play is in development; this preview is a local demo.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFF5F7",
   "theme_color": "#E91E63",
-  "categories": ["lifestyle", "entertainment"],
+  "categories": [
+    "lifestyle",
+    "entertainment"
+  ],
   "icons": [
     {
       "src": "/app-icon.png",
