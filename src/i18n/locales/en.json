@@ -1066,5 +1066,65 @@
     "responseReady": "Answer finished",
     "listenerTitle": "As you listened…",
     "listenerSubtitle": "How did their answer make you feel?"
+  },
+  "variations": {
+    "options": {
+      "walk": "Sunset walk",
+      "dinner": "Dinner for two",
+      "dance": "Go dancing",
+      "home": "A night at home"
+    },
+    "guess": {
+      "badge": "🤭 GUESS MY ANSWER",
+      "title": "Which plan would your partner choose today?",
+      "first": "Person {{person}}, predict your partner’s choice.",
+      "second": "Person {{person}}, choose the plan you feel like today.",
+      "success": "You guessed it!",
+      "different": "A little surprise…",
+      "conversation": "What makes that plan feel so right today?"
+    },
+    "match": {
+      "badge": "✨ OUR COMMON GROUND",
+      "title": "What would you enjoy together?",
+      "first": "Person {{person}}, choose one or more plans. Only matches will be revealed.",
+      "second": "Person {{person}}, choose your plans. Only matches will be revealed.",
+      "success": "Here is where your wishes meet.",
+      "different": "You chose different things today.",
+      "conversation": "Would you like to invent another plan together? You don’t have to agree on everything."
+    },
+    "seal": "Save and hide",
+    "localPrivacy": "One phone: choose separately without watching each other’s choices.",
+    "handoff": "Pass the phone to person {{person}}. Your choice is no longer on screen.",
+    "itsMe": "I’m person {{person}}",
+    "ready": "Both choices are ready. Look at the card together.",
+    "reveal": "Discover together",
+    "prediction": "Your prediction",
+    "answer": "Their choice",
+    "next": "Keep going",
+    "action": {
+      "badge": "🫶 A MOMENT TOGETHER",
+      "title": "A compliment you haven’t shared.",
+      "body": "Put the phone on the table. Take turns sharing one little thing you liked about each other today.",
+      "permission": "Take your time. You can pass if you don’t feel like it.",
+      "done": "We shared it"
+    },
+    "stay": {
+      "button": "Stay here",
+      "question": "What would you like me to understand better about what you just shared?",
+      "back": "Back to the question"
+    },
+    "closing": {
+      "badge": "💌 TAKE IT WITH YOU",
+      "title": "A moment of ours.",
+      "body": "Together, choose a question to remember. Each person confirms their choice.",
+      "empty": "You can finish here and keep the conversation going away from the phone.",
+      "agree": "Person {{person}}: save this one",
+      "keep": "Keep this moment",
+      "without": "Finish without saving"
+    },
+    "download": "Download keepsake",
+    "localMemory": "Only the selected question is downloaded. Your answers are not saved.",
+    "preview": "Local preview with editorial variations; AI and two-phone play are not connected yet.",
+    "together": "BOTH OF YOU"
   }
 }

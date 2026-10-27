@@ -1084,5 +1084,65 @@
     "responseReady": "Resposta pronta",
     "listenerTitle": "Ao ouvir…",
     "listenerSubtitle": "Como a resposta fez você se sentir?"
+  },
+  "variations": {
+    "options": {
+      "walk": "Passeio ao pôr do sol",
+      "dinner": "Jantar a dois",
+      "dance": "Sair para dançar",
+      "home": "Uma noite em casa"
+    },
+    "guess": {
+      "badge": "🤭 ADIVINHE MINHA RESPOSTA",
+      "title": "Qual programa seu par escolheria hoje?",
+      "first": "Pessoa {{person}}, escolha o que você acha que seu par vai responder.",
+      "second": "Pessoa {{person}}, escolha o programa que você quer hoje.",
+      "success": "Você acertou!",
+      "different": "Uma pequena surpresa…",
+      "conversation": "O que faz esse programa parecer tão bom hoje?"
+    },
+    "match": {
+      "badge": "✨ EM SINTONIA",
+      "title": "O que vocês querem compartilhar?",
+      "first": "Pessoa {{person}}, escolha um ou mais programas. Só mostraremos coincidências.",
+      "second": "Pessoa {{person}}, escolha seus programas. Só mostraremos coincidências.",
+      "success": "Aqui os desejos se encontram.",
+      "different": "Hoje vocês escolheram coisas diferentes.",
+      "conversation": "Que tal inventar outro programa juntos? Não precisam concordar em tudo."
+    },
+    "seal": "Guardar e esconder",
+    "localPrivacy": "Um celular: escolham separadamente, sem olhar a escolha do outro.",
+    "handoff": "Passe o celular para a pessoa {{person}}. Sua escolha não está mais na tela.",
+    "itsMe": "Sou a pessoa {{person}}",
+    "ready": "As duas escolhas estão prontas. Olhem a carta juntos.",
+    "reveal": "Descobrir juntos",
+    "prediction": "O que você imaginou",
+    "answer": "A escolha do seu par",
+    "next": "Vamos continuar",
+    "action": {
+      "badge": "🫶 UM MOMENTO JUNTOS",
+      "title": "Um elogio que você ainda não fez.",
+      "body": "Deixem o celular sobre a mesa. Cada um conta um pequeno detalhe do outro de que gostou hoje.",
+      "permission": "Sem pressa. Podem passar se não estiverem a fim.",
+      "done": "Já contamos"
+    },
+    "stay": {
+      "button": "Ficar aqui",
+      "question": "O que você gostaria que eu entendesse melhor sobre o que acabou de contar?",
+      "back": "Voltar à pergunta"
+    },
+    "closing": {
+      "badge": "💌 PARA LEVAR",
+      "title": "Um momento nosso.",
+      "body": "Escolham juntos uma pergunta para lembrar. Cada pessoa confirma sua escolha.",
+      "empty": "Podem encerrar aqui e continuar a conversa longe do celular.",
+      "agree": "Pessoa {{person}}: quero guardar",
+      "keep": "Guardar este momento",
+      "without": "Encerrar sem guardar"
+    },
+    "download": "Baixar lembrança",
+    "localMemory": "Só a pergunta escolhida será baixada. Suas respostas não são salvas.",
+    "preview": "Teste local com variações editoriais; a IA e os dois celulares ainda não estão conectados.",
+    "together": "VOCÊS DOIS"
   }
 }

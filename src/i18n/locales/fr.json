@@ -1084,5 +1084,65 @@
     "responseReady": "Réponse terminée",
     "listenerTitle": "En l’écoutant…",
     "listenerSubtitle": "Qu’avez-vous ressenti à sa réponse ?"
+  },
+  "variations": {
+    "options": {
+      "walk": "Balade au coucher du soleil",
+      "dinner": "Dîner à deux",
+      "dance": "Aller danser",
+      "home": "Soirée à la maison"
+    },
+    "guess": {
+      "badge": "🤭 DEVINE MA RÉPONSE",
+      "title": "Quel programme choisirait ton partenaire aujourd’hui ?",
+      "first": "Personne {{person}}, devine le choix de ton partenaire.",
+      "second": "Personne {{person}}, choisis le programme qui te tente aujourd’hui.",
+      "success": "Tu as deviné !",
+      "different": "Une petite surprise…",
+      "conversation": "Pourquoi ce programme te tente-t-il autant aujourd’hui ?"
+    },
+    "match": {
+      "badge": "✨ NOS ENVIES COMMUNES",
+      "title": "Que souhaitez-vous partager ?",
+      "first": "Personne {{person}}, choisis un ou plusieurs programmes. Seuls les choix communs seront révélés.",
+      "second": "Personne {{person}}, choisis tes programmes. Seuls les choix communs seront révélés.",
+      "success": "Vos envies se rejoignent ici.",
+      "different": "Vos envies diffèrent aujourd’hui.",
+      "conversation": "Et si vous inventiez un autre programme ensemble ? Pas besoin d’être d’accord sur tout."
+    },
+    "seal": "Valider et masquer",
+    "localPrivacy": "Un téléphone : choisissez séparément, sans regarder le choix de l’autre.",
+    "handoff": "Passe le téléphone à la personne {{person}}. Ton choix n’est plus affiché.",
+    "itsMe": "Je suis la personne {{person}}",
+    "ready": "Les deux choix sont prêts. Regardez la carte ensemble.",
+    "reveal": "Découvrir ensemble",
+    "prediction": "Ta prédiction",
+    "answer": "Son choix",
+    "next": "On continue",
+    "action": {
+      "badge": "🫶 UN MOMENT ENSEMBLE",
+      "title": "Un compliment encore jamais dit.",
+      "body": "Posez le téléphone sur la table. À tour de rôle, racontez un petit détail que vous avez aimé chez l’autre aujourd’hui.",
+      "permission": "Prenez votre temps. Vous pouvez passer si vous préférez.",
+      "done": "Nous l’avons partagé"
+    },
+    "stay": {
+      "button": "Rester ici",
+      "question": "Que voudrais-tu que je comprenne mieux dans ce que tu viens de raconter ?",
+      "back": "Revenir à la question"
+    },
+    "closing": {
+      "badge": "💌 À EMPORTER",
+      "title": "Un moment à nous.",
+      "body": "Choisissez ensemble une question à garder. Chaque personne confirme son choix.",
+      "empty": "Vous pouvez terminer ici et poursuivre la conversation loin du téléphone.",
+      "agree": "Personne {{person}} : je la garde",
+      "keep": "Garder ce moment",
+      "without": "Terminer sans garder"
+    },
+    "download": "Télécharger le souvenir",
+    "localMemory": "Seule la question choisie est téléchargée. Vos réponses ne sont pas enregistrées.",
+    "preview": "Aperçu local avec variations éditoriales ; l’IA et le jeu sur deux téléphones ne sont pas encore connectés.",
+    "together": "À DEUX"
   }
 }

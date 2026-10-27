@@ -664,3 +664,36 @@
 .tactile-role strong { font-size: 11px; font-weight: 600; color: #6c5168; }
 .tactile-role small { font-size: 9px; line-height: 1.6; color: #85707f; }
 @media (max-width: 350px) { .tactile-roles { gap: 9px; } .tactile-role { gap: 6px; } .tactile-person { width: 23px; height: 23px; } }
+/* Occasional games remain on the same physical card, with native-sized touch targets. */
+.tactile-question.has-variation { padding: 20px 0; min-height: 0; }
+.variation-content { width: 100%; display: flex; flex-direction: column; gap: 18px; text-align: center; }
+.variation-content h2 { font: 650 clamp(23px, 6vw, 29px)/1.3 'Montserrat', sans-serif; letter-spacing: -.04em; text-wrap: balance; }
+.variation-content h2:focus { outline: none; }
+.variation-kicker { font-size: 10px; letter-spacing: .12em; color: #915178; font-weight: 600; }
+.variation-instruction { font-size: 13px; line-height: 1.7; color: #6d5970; text-wrap: pretty; }
+.variation-symbol { font-size: 52px; line-height: 1.5; }
+.variation-footnote { font-size: 10px; line-height: 1.5; color: #796978; }
+.variation-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.variation-options button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 14px 8px; min-height: 104px; font-size: 12px; line-height: 1.4; border-radius: 18px; border: 1px solid #e4c9d9; background: #ffffffb3; color: #654e64; box-shadow: 0 3px 0 #ddc5d52b; }
+.variation-options button > span { font-size: 30px; }
+.variation-options button[aria-pressed=true], .variation-moments button[aria-pressed=true], .variation-agreement button[aria-pressed=true] { border-color: #a91a65; background: #fbe3ef; color: #8f1554; box-shadow: 0 0 0 1px #a91a65; }
+.variation-content .close-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.variation-result-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.variation-result-pair > div { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 8px; border: 1px solid #e4c9d9; border-radius: 18px; background: #ffffff80; }
+.variation-result-pair small { font-size: 10px; color: #796978; }
+.variation-result-pair span { font-size: 35px; }
+.variation-result-pair strong { font-size: 13px; font-weight: 500; }
+.variation-matches { display: flex; flex-direction: column; gap: 10px; }
+.variation-matches > span { border-radius: 16px; background: #fbe3ef; padding: 16px; font-size: 15px; color: #8f1554; }
+.variation-moments { display: grid; gap: 9px; }
+.variation-moments button { border: 1px solid #e4c9d9; border-radius: 15px; background: #ffffff90; padding: 14px; min-height: 48px; font-size: 12px; line-height: 1.5; color: #654e64; }
+.variation-agreement { display: grid; gap: 8px; }
+.variation-agreement button { min-height: 48px; padding: 10px; border-radius: 14px; border: 1px solid #e4c9d9; font-size: 12px; }
+.tactile-actions { flex-wrap: wrap; }
+.tactile-actions .tactile-stay { order: 3; flex-basis: 100%; min-height: 36px; font-size: 11px; }
+.keepsake-card { margin: 24px 0; padding: 25px 20px; background: linear-gradient(135deg,#fff,#fce5f2); border: 1px solid #e4c9d9; border-radius: 24px; box-shadow: 0 8px 22px #9c6d8522; display: grid; gap: 18px; }
+.keepsake-card > span { font-size: 38px; }
+.keepsake-card h2 { font: 600 22px/1.3 'Montserrat', sans-serif; }
+.keepsake-card > p { font-size: 16px; line-height: 1.6; }
+.keepsake-card small { font-size: 10px; color: #796978; }
+@media (max-height: 740px) { .variation-content { gap: 13px; } .variation-options button { min-height: 88px; } }
