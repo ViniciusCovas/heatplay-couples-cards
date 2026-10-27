@@ -1090,7 +1090,11 @@
       "walk": "Balade au coucher du soleil",
       "dinner": "Dîner à deux",
       "dance": "Aller danser",
-      "home": "Soirée à la maison"
+      "home": "Soirée à la maison",
+      "talk": "Parler sans se presser",
+      "laugh": "Rire ensemble",
+      "explore": "Sortir de la routine",
+      "cuddle": "Un câlin"
     },
     "guess": {
       "badge": "🤭 DEVINE MA RÉPONSE",
@@ -1104,11 +1108,11 @@
     "match": {
       "badge": "✨ NOS ENVIES COMMUNES",
       "title": "Que souhaitez-vous partager ?",
-      "first": "Personne {{person}}, choisis un ou plusieurs programmes. Seuls les choix communs seront révélés.",
-      "second": "Personne {{person}}, choisis tes programmes. Seuls les choix communs seront révélés.",
+      "first": "Personne {{person}}, choisis une ou plusieurs expériences. Seuls les choix communs seront révélés.",
+      "second": "Personne {{person}}, choisis ce qui te tente. Seuls les choix communs seront révélés.",
       "success": "Vos envies se rejoignent ici.",
       "different": "Vos envies diffèrent aujourd’hui.",
-      "conversation": "Et si vous inventiez un autre programme ensemble ? Pas besoin d’être d’accord sur tout."
+      "conversation": "Comment aimeriez-vous vivre cela ensemble ? Sans choix commun aujourd’hui, explorez une autre idée."
     },
     "seal": "Valider et masquer",
     "localPrivacy": "Un téléphone : choisissez séparément, sans regarder le choix de l’autre.",

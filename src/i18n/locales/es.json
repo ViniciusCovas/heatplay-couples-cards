@@ -1090,7 +1090,11 @@
       "walk": "Paseo al atardecer",
       "dinner": "Cena para dos",
       "dance": "Salir a bailar",
-      "home": "Noche en casa"
+      "home": "Noche en casa",
+      "talk": "Conversar sin prisa",
+      "laugh": "Reír juntos",
+      "explore": "Salir de la rutina",
+      "cuddle": "Abrazarnos"
     },
     "guess": {
       "badge": "🤭 ADIVINA MI RESPUESTA",
@@ -1104,11 +1108,11 @@
     "match": {
       "badge": "✨ COINCIDIMOS",
       "title": "¿Qué les apetece compartir?",
-      "first": "Persona {{person}}, elige uno o varios planes. Solo revelaremos coincidencias.",
-      "second": "Persona {{person}}, ahora elige tus planes. Solo revelaremos coincidencias.",
+      "first": "Persona {{person}}, elige una o varias experiencias. Solo revelaremos coincidencias.",
+      "second": "Persona {{person}}, elige lo que te apetece. Solo revelaremos coincidencias.",
       "success": "Aquí se encuentran sus ganas.",
       "different": "Hoy eligieron cosas distintas.",
-      "conversation": "¿Les gustaría inventar juntos otro plan? No hace falta coincidir en todo."
+      "conversation": "¿Cómo les gustaría vivirlo juntos? Si hoy no coinciden, pueden explorar otra idea."
     },
     "seal": "Guardar y ocultar",
     "localPrivacy": "Un teléfono: elijan por separado, sin mirar la elección del otro.",

@@ -1072,7 +1072,11 @@
       "walk": "Sunset walk",
       "dinner": "Dinner for two",
       "dance": "Go dancing",
-      "home": "A night at home"
+      "home": "A night at home",
+      "talk": "An unhurried talk",
+      "laugh": "Laugh together",
+      "explore": "Break the routine",
+      "cuddle": "A cuddle"
     },
     "guess": {
       "badge": "🤭 GUESS MY ANSWER",
@@ -1086,11 +1090,11 @@
     "match": {
       "badge": "✨ OUR COMMON GROUND",
       "title": "What would you enjoy together?",
-      "first": "Person {{person}}, choose one or more plans. Only matches will be revealed.",
-      "second": "Person {{person}}, choose your plans. Only matches will be revealed.",
+      "first": "Person {{person}}, choose one or more experiences. Only matches will be revealed.",
+      "second": "Person {{person}}, choose what you feel like. Only matches will be revealed.",
       "success": "Here is where your wishes meet.",
       "different": "You chose different things today.",
-      "conversation": "Would you like to invent another plan together? You don’t have to agree on everything."
+      "conversation": "How would you enjoy this together? If nothing matches today, you can explore another idea."
     },
     "seal": "Save and hide",
     "localPrivacy": "One phone: choose separately without watching each other’s choices.",

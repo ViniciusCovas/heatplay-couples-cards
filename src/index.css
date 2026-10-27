@@ -697,3 +697,12 @@
 .keepsake-card > p { font-size: 16px; line-height: 1.6; }
 .keepsake-card small { font-size: 10px; color: #796978; }
 @media (max-height: 740px) { .variation-content { gap: 13px; } .variation-options button { min-height: 88px; } }
+@media (max-width: 350px) and (max-height: 760px) {
+  .tactile-question.has-variation { padding: 10px 0; }
+  .variation-content { gap: 10px; }
+  .variation-content h2 { font-size: 22px; }
+  .variation-instruction { font-size: 12px; line-height: 1.5; }
+  .variation-options { gap: 8px; }
+  .variation-options button { min-height: 78px; padding: 9px 6px; font-size: 11px; gap: 6px; }
+  .variation-options button > span { font-size: 26px; }
+}

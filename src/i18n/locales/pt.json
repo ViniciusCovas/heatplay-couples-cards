@@ -1090,7 +1090,11 @@
       "walk": "Passeio ao pôr do sol",
       "dinner": "Jantar a dois",
       "dance": "Sair para dançar",
-      "home": "Uma noite em casa"
+      "home": "Uma noite em casa",
+      "talk": "Conversar sem pressa",
+      "laugh": "Rir juntos",
+      "explore": "Sair da rotina",
+      "cuddle": "Abraçar"
     },
     "guess": {
       "badge": "🤭 ADIVINHE MINHA RESPOSTA",
@@ -1104,11 +1108,11 @@
     "match": {
       "badge": "✨ EM SINTONIA",
       "title": "O que vocês querem compartilhar?",
-      "first": "Pessoa {{person}}, escolha um ou mais programas. Só mostraremos coincidências.",
-      "second": "Pessoa {{person}}, escolha seus programas. Só mostraremos coincidências.",
+      "first": "Pessoa {{person}}, escolha uma ou mais experiências. Só mostraremos coincidências.",
+      "second": "Pessoa {{person}}, escolha o que você quer. Só mostraremos coincidências.",
       "success": "Aqui os desejos se encontram.",
       "different": "Hoje vocês escolheram coisas diferentes.",
-      "conversation": "Que tal inventar outro programa juntos? Não precisam concordar em tudo."
+      "conversation": "Como gostariam de viver isso juntos? Se hoje não coincidirem, podem explorar outra ideia."
     },
     "seal": "Guardar e esconder",
     "localPrivacy": "Um celular: escolham separadamente, sem olhar a escolha do outro.",

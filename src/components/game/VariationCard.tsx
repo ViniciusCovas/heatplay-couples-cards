@@ -3,11 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { advanceChoices, emptyChoices, sharedChoices, variationOutcome, type VariationOutcome, type SessionMoment } from '@/lib/cardVariations';
 
 interface ChoiceProps { kind: 'guess' | 'match'; asker: 1 | 2; respondent: 1 | 2; onComplete: (outcome: VariationOutcome) => void }
-const options = ['walk', 'dinner', 'dance', 'home'] as const;
-const emoji = { walk: '🌅', dinner: '🍝', dance: '💃', home: '🛋️' };
+const dateOptions = ['walk', 'dinner', 'dance', 'home'] as const;
+const connectionOptions = ['talk', 'laugh', 'explore', 'cuddle'] as const;
+const emoji = { walk: '🌅', dinner: '🍝', dance: '💃', home: '🛋️', talk: '💬', laugh: '😂', explore: '🧭', cuddle: '🫂' };
 
 export function ChoiceVariation({ kind, asker, respondent, onComplete }: ChoiceProps) {
   const { t } = useTranslation();
+  const options = kind === 'guess' ? dateOptions : connectionOptions;
   const [state, setState] = useState(emptyChoices);
   const [selection, setSelection] = useState<string[]>([]);
   const title = useRef<HTMLHeadingElement>(null);

@@ -64,7 +64,7 @@ export default function Play() {
   const downloadKeepsake = () => {
     if (!keepsake) return;
     const url = URL.createObjectURL(new Blob([keepsakeText(keepsake, i18n.language)], { type: 'text/plain;charset=utf-8' }));
-    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'lets-get-close-moment.txt'; anchor.click();
+    const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'lets-get-close-moment.txt'; anchor.hidden = true; document.body.appendChild(anchor); anchor.click(); anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
   const variation = kind === 'guess' || kind === 'match' ? <ChoiceVariation kind={kind} asker={asker} respondent={respondent} onComplete={completeVariation} />
