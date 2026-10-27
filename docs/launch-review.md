@@ -156,3 +156,5 @@ Final responsive review: code `6fdc1dfd19d1439fa0833eb6a5099bb554f78e4b`, deploy
 - Legal pages retain connected-service documents with an explicit localized notice distinguishing the current local game; full commercial legal review remains part of backend/billing launch.
 
 - Final loading pass: explicit Rollup chunk assignments keep charts and Supabase out of static landing preloads (~143 KB gzip combined deferred chunks). Current preview entry plus preloads total ~217 KB gzip. This is a bundle measurement, not a measured Core Web Vitals score. Normal builds retain their existing dynamic AuthProvider behavior. Removed all four unused legacy landing translation subtrees after verifying zero references.
+
+- Final deployed revision `db7a615c98fc5951279633c0dfb3e3fc01922af2`: Vercel READY; GitHub Quality run 40 completed successfully. Rechecked the compact 320px hero (full first question visible), 390px layout, and published language/copy. Screenshots: `landing-desktop.jpg`, `landing-mobile-320.jpg`.
