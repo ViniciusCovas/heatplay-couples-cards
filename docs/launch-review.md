@@ -127,3 +127,11 @@ The keepsake text serialization is covered by tests. Actual file saving was not 
 
 ![Prediction card at mobile size](variation-guess-mobile.jpg)
 ![Shared wishes card at 320×740](variation-match-mobile.jpg)
+
+## Level-aware content and direct opening — 27 October 2026
+
+Owner correction implemented: conversation feedback requires an explicit feeling AND pace before continuing, with a handler guard in addition to disabled UI. Passing a card remains distinct from completing it. Cards open directly on their question; a small brand/category group is centered in the header. The reverse remains the immersive feedback face.
+
+Replaced generic date plans and Daily Spark samples in this preview with 16 level-specific conversation questions, 16 question-specific followups and per-level prediction/matching/action content in ES/EN/PT/FR. “Profundizar esta respuesta” replaces the ambiguous “Quedarnos aquí”. The new pure catalog supplies level/topic/version identifiers to local round evidence; prediction matches remain factual outcomes, not relationship scores. Production question records are unchanged.
+
+Validation before preview deployment: typecheck, focused lint, production build and all 24 tests pass (21 existing plus three new tests covering localized content completeness, context boundaries and mandatory feedback). Browser verification is recorded in the follow-up evidence commit. Supabase remains blocked by source-project access; see `supabase-consolidation.md` for observed accounts, transfer recommendation, costs and integration acceptance criteria.

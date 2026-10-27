@@ -1067,7 +1067,6 @@
     "same": "Garder ce rythme",
     "deeper": "Approfondir",
     "continue": "Continuer",
-    "skipFeedback": "Continuer sans répondre",
     "localOnly": "Test local : rien n’est envoyé à l’IA ou à votre partenaire.",
     "gameLabel": "Carte de jeu",
     "options": "Pause et options",
@@ -1083,36 +1082,25 @@
     "turnDescription": "La personne {{asker}} pose la question. La personne {{respondent}} répond.",
     "responseReady": "Réponse terminée",
     "listenerTitle": "En l’écoutant…",
-    "listenerSubtitle": "Qu’avez-vous ressenti à sa réponse ?"
+    "listenerSubtitle": "Qu’avez-vous ressenti à sa réponse ?",
+    "feedbackRequired": "Choisis ton ressenti et le rythme pour continuer."
   },
   "variations": {
-    "options": {
-      "walk": "Balade au coucher du soleil",
-      "dinner": "Dîner à deux",
-      "dance": "Aller danser",
-      "home": "Soirée à la maison",
-      "talk": "Parler sans se presser",
-      "laugh": "Rire ensemble",
-      "explore": "Sortir de la routine",
-      "cuddle": "Un câlin"
-    },
     "guess": {
       "badge": "🤭 DEVINE MA RÉPONSE",
-      "title": "Quel programme choisirait ton partenaire aujourd’hui ?",
       "first": "Personne {{person}}, devine le choix de ton partenaire.",
-      "second": "Personne {{person}}, choisis le programme qui te tente aujourd’hui.",
+      "second": "Personne {{person}}, choisis ta propre réponse.",
       "success": "Tu as deviné !",
       "different": "Une petite surprise…",
-      "conversation": "Pourquoi ce programme te tente-t-il autant aujourd’hui ?"
+      "conversation": "Qu’est-ce qui t’a fait choisir cette réponse ?"
     },
     "match": {
       "badge": "✨ NOS ENVIES COMMUNES",
-      "title": "Que souhaitez-vous partager ?",
       "first": "Personne {{person}}, choisis une ou plusieurs expériences. Seuls les choix communs seront révélés.",
       "second": "Personne {{person}}, choisis ce qui te tente. Seuls les choix communs seront révélés.",
       "success": "Vos envies se rejoignent ici.",
       "different": "Vos envies diffèrent aujourd’hui.",
-      "conversation": "Comment aimeriez-vous vivre cela ensemble ? Sans choix commun aujourd’hui, explorez une autre idée."
+      "conversation": "Un choix commun ouvre une conversation ; des choix différents aussi. Que voulez-vous partager ?"
     },
     "seal": "Valider et masquer",
     "localPrivacy": "Un téléphone : choisissez séparément, sans regarder le choix de l’autre.",
@@ -1125,14 +1113,11 @@
     "next": "On continue",
     "action": {
       "badge": "🫶 UN MOMENT ENSEMBLE",
-      "title": "Un compliment encore jamais dit.",
-      "body": "Posez le téléphone sur la table. À tour de rôle, racontez un petit détail que vous avez aimé chez l’autre aujourd’hui.",
       "permission": "Prenez votre temps. Vous pouvez passer si vous préférez.",
-      "done": "Nous l’avons partagé"
+      "done": "C’est fait, on continue"
     },
     "stay": {
-      "button": "Rester ici",
-      "question": "Que voudrais-tu que je comprenne mieux dans ce que tu viens de raconter ?",
+      "button": "Approfondir cette réponse",
       "back": "Revenir à la question"
     },
     "closing": {
@@ -1147,6 +1132,128 @@
     "download": "Télécharger le souvenir",
     "localMemory": "Seule la question choisie est téléchargée. Vos réponses ne sont pas enregistrées.",
     "preview": "Aperçu local avec variations éditoriales ; l’IA et le jeu sur deux téléphones ne sont pas encore connectés.",
-    "together": "À DEUX"
+    "together": "À DEUX",
+    "levels": {
+      "1": {
+        "questions": {
+          "0": "Quel petit détail chez moi te fait sourire même quand je suis sérieux/se ?",
+          "1": "Quel souvenir de nous raconterais-tu comme une comédie ?",
+          "2": "Quelle petite manie partageons-nous sans le remarquer ?",
+          "3": "Qu’as-tu découvert sur moi aujourd’hui qui t’intrigue ?"
+        },
+        "followups": {
+          "0": "Te souviens-tu de la dernière fois ?",
+          "1": "Quelle partie te fait encore rire ?",
+          "2": "Comment cette habitude a-t-elle commencé ?",
+          "3": "Que voudrais-tu me demander à ce sujet ?"
+        },
+        "guessTitle": "Qu’est-ce qui fait le plus facilement sourire ton partenaire ?",
+        "guessOptions": {
+          "joke": "Une blague à nous",
+          "look": "Un regard complice",
+          "compliment": "Un compliment inattendu",
+          "memory": "Un souvenir drôle"
+        },
+        "matchTitle": "Avec quoi voulez-vous continuer à jouer ?",
+        "matchOptions": {
+          "story": "Une anecdote drôle",
+          "memory": "Un souvenir de nous",
+          "compliment": "Un compliment",
+          "discovery": "Un fait surprenant"
+        },
+        "actionTitle": "Fais-moi sourire.",
+        "actionBody": "À tour de rôle, imitez avec tendresse une expression de l’autre. L’autre essaie de la reconnaître."
+      },
+      "2": {
+        "questions": {
+          "0": "Quand t’es-tu senti/e vraiment compris/e par moi ?",
+          "1": "Quelle part de toi aimerais-tu que je connaisse mieux ?",
+          "2": "Quel geste de ma part te soutient dans une journée difficile ?",
+          "3": "Quel rêve aimerais-tu que nous soutenions ensemble ?"
+        },
+        "followups": {
+          "0": "Qu’ai-je fait qui t’a aidé/e à ce moment-là ?",
+          "1": "Que pourrais-je demander pour mieux te comprendre ?",
+          "2": "Comment reconnaître quand tu as besoin de ce geste ?",
+          "3": "Quel petit premier pas pourrions-nous faire ?"
+        },
+        "guessTitle": "Qu’est-ce qui aide ton partenaire à se sentir compris ?",
+        "guessOptions": {
+          "listen": "Écouter sans interrompre",
+          "hug": "Une étreinte",
+          "questions": "Des questions attentives",
+          "space": "Laisser de l’espace"
+        },
+        "matchTitle": "Que voulez-vous partager plus profondément ?",
+        "matchOptions": {
+          "gratitude": "Une gratitude",
+          "memory": "Un souvenir important",
+          "need": "Un besoin personnel",
+          "dream": "Un rêve personnel"
+        },
+        "actionTitle": "Ce que j’apprécie chez toi.",
+        "actionBody": "À tour de rôle, complétez : « Je me suis senti/e soutenu/e quand… ». La personne qui écoute dit ce que cela lui fait entendre."
+      },
+      "3": {
+        "questions": {
+          "0": "Que fais-je sans le savoir que tu trouves irrésistible ?",
+          "1": "Quel moment de flirt entre nous aimes-tu le plus te rappeler ?",
+          "2": "Qu’aimerais-tu m’entendre dire davantage quand nous sommes proches ?",
+          "3": "Comment me ferais-tu comprendre que tu veux un baiser sans le dire ?"
+        },
+        "followups": {
+          "0": "Qu’est-ce qui t’attire dans ce détail ?",
+          "1": "Quelle partie de ce moment aimerais-tu retrouver ?",
+          "2": "Comment aimerais-tu l’entendre de ma part ?",
+          "3": "Comment saurions-nous que nous en avons envie tous les deux ?"
+        },
+        "guessTitle": "Quelle façon de flirter avec moi attire le plus ton partenaire ?",
+        "guessOptions": {
+          "gaze": "Un regard prolongé",
+          "whisper": "Des mots à l’oreille",
+          "compliment": "Un compliment audacieux",
+          "closeness": "Se rapprocher doucement"
+        },
+        "matchTitle": "Quel flirt voulez-vous explorer ?",
+        "matchOptions": {
+          "attraction": "Dire ce qui m’attire",
+          "gaze": "Un regard complice",
+          "chemistry": "Rappeler notre alchimie",
+          "desire": "Dire ce qui donne envie"
+        },
+        "actionTitle": "Un compliment avec intention.",
+        "actionBody": "À tour de rôle, dites quel détail de l’autre vous attire et pourquoi. Prenez un instant pour recevoir le compliment."
+      },
+      "4": {
+        "questions": {
+          "0": "Qu’aimerais-tu me demander plus librement dans l’intimité ?",
+          "1": "Quelle curiosité intime voudrais-tu aborder sans t’engager à la réaliser ?",
+          "2": "Comment aimerais-tu que je demande ce qui te plaît quand nous sommes seuls ?",
+          "3": "Qu’est-ce qui rend une invitation intime désirable et sans pression ?"
+        },
+        "followups": {
+          "0": "Qu’est-ce qui t’aiderait à le dire en confiance ?",
+          "1": "Qu’est-ce qui t’attire dans cette idée et quelles limites poserais-tu ?",
+          "2": "Quels mots te permettraient de dire librement oui ou non ?",
+          "3": "Comment préserver ensemble cette liberté ?"
+        },
+        "guessTitle": "Qu’aimerait exprimer ton partenaire plus librement dans l’intimité ?",
+        "guessOptions": {
+          "enjoyment": "Ce qui lui plaît",
+          "curiosity": "Une curiosité",
+          "pace": "Son rythme préféré",
+          "boundary": "Ce qu’il ne veut pas"
+        },
+        "matchTitle": "De quoi voulez-vous parler sans filtre ?",
+        "matchOptions": {
+          "enjoyment": "Ce qui nous plaît",
+          "curiosity": "Une curiosité intime",
+          "boundaries": "Nos limites",
+          "invitation": "Nos invitations"
+        },
+        "actionTitle": "Une invitation sans pression.",
+        "actionBody": "À tour de rôle, complétez : « J’aimerais parler avec toi de… ». L’autre dit si cette conversation lui fait envie maintenant. En parler n’engage pas à le faire."
+      }
+    }
   }
 }

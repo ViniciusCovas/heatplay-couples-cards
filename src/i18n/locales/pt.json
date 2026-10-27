@@ -1067,7 +1067,6 @@
     "same": "Assim está bom",
     "deeper": "Aprofundar",
     "continue": "Continuar",
-    "skipFeedback": "Continuar sem responder",
     "localOnly": "Teste local: nada é enviado à IA ou ao seu par.",
     "gameLabel": "Carta do jogo",
     "options": "Pausa e opções",
@@ -1083,36 +1082,25 @@
     "turnDescription": "Pessoa {{asker}} pergunta. Pessoa {{respondent}} responde.",
     "responseReady": "Resposta pronta",
     "listenerTitle": "Ao ouvir…",
-    "listenerSubtitle": "Como a resposta fez você se sentir?"
+    "listenerSubtitle": "Como a resposta fez você se sentir?",
+    "feedbackRequired": "Escolha como se sentiu e o ritmo para continuar."
   },
   "variations": {
-    "options": {
-      "walk": "Passeio ao pôr do sol",
-      "dinner": "Jantar a dois",
-      "dance": "Sair para dançar",
-      "home": "Uma noite em casa",
-      "talk": "Conversar sem pressa",
-      "laugh": "Rir juntos",
-      "explore": "Sair da rotina",
-      "cuddle": "Abraçar"
-    },
     "guess": {
       "badge": "🤭 ADIVINHE MINHA RESPOSTA",
-      "title": "Qual programa seu par escolheria hoje?",
       "first": "Pessoa {{person}}, escolha o que você acha que seu par vai responder.",
-      "second": "Pessoa {{person}}, escolha o programa que você quer hoje.",
+      "second": "Pessoa {{person}}, escolha sua própria resposta.",
       "success": "Você acertou!",
       "different": "Uma pequena surpresa…",
-      "conversation": "O que faz esse programa parecer tão bom hoje?"
+      "conversation": "O que fez você escolher essa resposta?"
     },
     "match": {
       "badge": "✨ EM SINTONIA",
-      "title": "O que vocês querem compartilhar?",
       "first": "Pessoa {{person}}, escolha uma ou mais experiências. Só mostraremos coincidências.",
       "second": "Pessoa {{person}}, escolha o que você quer. Só mostraremos coincidências.",
       "success": "Aqui os desejos se encontram.",
       "different": "Hoje vocês escolheram coisas diferentes.",
-      "conversation": "Como gostariam de viver isso juntos? Se hoje não coincidirem, podem explorar outra ideia."
+      "conversation": "Coincidir abre uma conversa; escolher diferente também. O que querem contar?"
     },
     "seal": "Guardar e esconder",
     "localPrivacy": "Um celular: escolham separadamente, sem olhar a escolha do outro.",
@@ -1125,14 +1113,11 @@
     "next": "Vamos continuar",
     "action": {
       "badge": "🫶 UM MOMENTO JUNTOS",
-      "title": "Um elogio que você ainda não fez.",
-      "body": "Deixem o celular sobre a mesa. Cada um conta um pequeno detalhe do outro de que gostou hoje.",
       "permission": "Sem pressa. Podem passar se não estiverem a fim.",
-      "done": "Já contamos"
+      "done": "Pronto, vamos seguir"
     },
     "stay": {
-      "button": "Ficar aqui",
-      "question": "O que você gostaria que eu entendesse melhor sobre o que acabou de contar?",
+      "button": "Aprofundar esta resposta",
       "back": "Voltar à pergunta"
     },
     "closing": {
@@ -1147,6 +1132,128 @@
     "download": "Baixar lembrança",
     "localMemory": "Só a pergunta escolhida será baixada. Suas respostas não são salvas.",
     "preview": "Teste local com variações editoriais; a IA e os dois celulares ainda não estão conectados.",
-    "together": "VOCÊS DOIS"
+    "together": "VOCÊS DOIS",
+    "levels": {
+      "1": {
+        "questions": {
+          "0": "Que detalhe meu faz você sorrir até quando tento falar sério?",
+          "1": "Que lembrança nossa você contaria como uma comédia?",
+          "2": "Que pequena mania temos em comum sem perceber?",
+          "3": "O que você descobriu sobre mim hoje que despertou curiosidade?"
+        },
+        "followups": {
+          "0": "Você lembra da última vez que aconteceu?",
+          "1": "Que parte ainda faz você rir?",
+          "2": "Como esse costume começou?",
+          "3": "O que você gostaria de me perguntar sobre isso?"
+        },
+        "guessTitle": "O que faz seu par sorrir mais facilmente?",
+        "guessOptions": {
+          "joke": "Uma piada nossa",
+          "look": "Um olhar cúmplice",
+          "compliment": "Um elogio inesperado",
+          "memory": "Uma lembrança divertida"
+        },
+        "matchTitle": "Com o que vocês querem continuar brincando?",
+        "matchOptions": {
+          "story": "Uma história engraçada",
+          "memory": "Uma lembrança nossa",
+          "compliment": "Um elogio",
+          "discovery": "Um fato inesperado"
+        },
+        "actionTitle": "Me faça sorrir.",
+        "actionBody": "Alternem imitando com carinho uma expressão do outro. A outra pessoa tenta reconhecer."
+      },
+      "2": {
+        "questions": {
+          "0": "Quando você se sentiu realmente compreendido/a por mim?",
+          "1": "Que parte de você gostaria que eu conhecesse melhor?",
+          "2": "Que gesto meu faz você se sentir acolhido/a em um dia difícil?",
+          "3": "Que sonho seu gostaria que apoiássemos juntos?"
+        },
+        "followups": {
+          "0": "O que eu fiz naquele momento que ajudou?",
+          "1": "O que posso perguntar para entender você melhor?",
+          "2": "Como posso perceber quando você precisa desse gesto?",
+          "3": "Qual pequeno primeiro passo podemos dar?"
+        },
+        "guessTitle": "O que ajuda seu par a se sentir compreendido?",
+        "guessOptions": {
+          "listen": "Ouvir sem interromper",
+          "hug": "Um abraço",
+          "questions": "Perguntar com interesse",
+          "space": "Dar espaço"
+        },
+        "matchTitle": "O que vocês querem compartilhar mais profundamente?",
+        "matchOptions": {
+          "gratitude": "Algo que agradeço",
+          "memory": "Uma lembrança importante",
+          "need": "Algo de que preciso",
+          "dream": "Um sonho pessoal"
+        },
+        "actionTitle": "Algo que valorizo em você.",
+        "actionBody": "Alternem completando: «Eu me senti acolhido/a por você quando…». Quem escuta conta como se sentiu ao ouvir isso."
+      },
+      "3": {
+        "questions": {
+          "0": "O que faço sem perceber que você acha irresistível?",
+          "1": "Que momento de flerte nosso você mais gosta de lembrar?",
+          "2": "O que gostaria que eu dissesse mais quando estamos perto?",
+          "3": "Como me mostraria que quer um beijo sem falar?"
+        },
+        "followups": {
+          "0": "O que nesse detalhe atrai você?",
+          "1": "Que parte daquele momento gostaria de reviver?",
+          "2": "Como gostaria de ouvir isso de mim?",
+          "3": "Como saberíamos que os dois querem?"
+        },
+        "guessTitle": "Que jeito de flertar comigo mais atrai seu par?",
+        "guessOptions": {
+          "gaze": "Sustentar o olhar",
+          "whisper": "Palavras ao ouvido",
+          "compliment": "Um elogio ousado",
+          "closeness": "Chegar perto devagar"
+        },
+        "matchTitle": "Que flerte vocês querem explorar?",
+        "matchOptions": {
+          "attraction": "Dizer o que me atrai",
+          "gaze": "Um olhar cúmplice",
+          "chemistry": "Lembrar nossa química",
+          "desire": "Contar o que dá vontade"
+        },
+        "actionTitle": "Um elogio com intenção.",
+        "actionBody": "Alternem dizendo que detalhe do outro atrai vocês e por quê. Deem um instante para receber o elogio."
+      },
+      "4": {
+        "questions": {
+          "0": "O que gostaria de me pedir com mais liberdade na intimidade?",
+          "1": "Que curiosidade íntima gostaria de conversar comigo, sem compromisso de experimentar?",
+          "2": "Como gostaria que eu perguntasse o que você quer quando estamos a sós?",
+          "3": "O que faz um convite íntimo parecer desejado e sem pressão?"
+        },
+        "followups": {
+          "0": "O que ajudaria você a dizer isso com confiança?",
+          "1": "O que atrai você nessa ideia e que limites colocaria?",
+          "2": "Que palavras fariam você se sentir livre para dizer sim ou não?",
+          "3": "Como podemos cuidar dessa liberdade juntos?"
+        },
+        "guessTitle": "O que seu par gostaria de expressar com mais liberdade na intimidade?",
+        "guessOptions": {
+          "enjoyment": "O que gosta",
+          "curiosity": "Uma curiosidade",
+          "pace": "O ritmo que prefere",
+          "boundary": "O que não quer"
+        },
+        "matchTitle": "Sobre o que vocês querem falar sem filtros?",
+        "matchOptions": {
+          "enjoyment": "O que gostamos",
+          "curiosity": "Uma curiosidade íntima",
+          "boundaries": "Nossos limites",
+          "invitation": "Como nos convidamos"
+        },
+        "actionTitle": "Um convite, sem pressão.",
+        "actionBody": "Alternem completando: «Gostaria de conversar com você sobre…». A outra pessoa diz se quer conversar sobre isso agora. Conversar não é assumir compromisso de fazer."
+      }
+    }
   }
 }

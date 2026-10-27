@@ -23,7 +23,7 @@ export function keepsakeText(moment: SessionMoment, language: string): string {
   const title = ({ es: 'Un momento nuestro', pt: 'Um momento nosso', en: 'A moment of ours', fr: 'Un moment à nous' } as Record<string, string>)[language.split('-')[0]] ?? 'A moment of ours';
   return `Let’s Get Close\n${title}\n\n${moment.question}\n\nletsgetclose.com\n`;
 }
-export interface VariationOutcome { kind: 'guess' | 'match'; sharedOptionIds: string[]; predictionMatched?: boolean }
+export interface VariationOutcome { cardKey?: string; level?: number; topic?: string; catalogVersion?: string; kind: 'guess' | 'match'; sharedOptionIds: string[]; predictionMatched?: boolean }
 export function variationOutcome(kind: 'guess' | 'match', state: ChoiceState): VariationOutcome | null {
   if (state.phase !== 'result') return null;
   return { kind, sharedOptionIds: sharedChoices(state), ...(kind === 'guess' ? { predictionMatched: state.first[0] === state.second[0] } : {}) };

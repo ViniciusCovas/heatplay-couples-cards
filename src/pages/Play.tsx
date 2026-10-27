@@ -11,11 +11,11 @@ import { useActiveCardTime } from '@/hooks/useActiveCardTime';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { ChoiceVariation, ActionVariation, ClosingVariation } from '@/components/game/VariationCard';
 import { previewSequence, keepsakeText, type SessionMoment, type VariationKind, type VariationOutcome } from '@/lib/cardVariations';
+import { cardContext, feedbackComplete } from '@/lib/levelDeck';
 import { getSparkSample } from '@/lib/dailySpark';
 
 const review = import.meta.env.VITE_TABLE_PREVIEW === 'true';
-// Existing editorial samples only. These are NOT the production level catalog.
-const samples = [[0, 7, 12, 18], [22, 28, 33, 36], [40, 43, 47, 51], [54, 56, 58, 59]];
+// Level-specific editorial preview; the production catalog remains in Supabase.
 type Stage = 'connect' | 'invite' | 'join' | 'levels' | 'cards' | 'done';
 
 export default function Play() {
@@ -31,34 +31,34 @@ export default function Play() {
   const questionIndex = Math.max(0, previewSequence.slice(0, index + 1).filter(item => item === 'conversation').length - 1);
   const [asker, setAsker] = useState<1 | 2>(1);
   const respondent = asker === 1 ? 2 : 1;
-  const [revealed, setRevealed] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [rounds, setRounds] = useState<Array<RoundSignal & { cardId: number; activeVisibleMs: number; skipped: boolean; asker: 1 | 2; respondent: 1 | 2; feedbackPerspective: 'listener' | null; kind: VariationKind; question: string; followedUp: boolean; outcome?: VariationOutcome }>>([]);
-  const readTime = useActiveCardTime(`${run}:${level}:${index}`, stage === 'cards' && revealed && !feedbackOpen && !menuOpen);
+  const [rounds, setRounds] = useState<Array<RoundSignal & { cardId: string; level: number; topic: string; catalogVersion: string; activeVisibleMs: number; skipped: boolean; asker: 1 | 2; respondent: 1 | 2; feedbackPerspective: 'listener' | null; kind: VariationKind; question: string; followedUp: boolean; outcome?: VariationOutcome }>>([]);
+  const readTime = useActiveCardTime(`${run}:${level}:${index}`, stage === 'cards' && !feedbackOpen && !menuOpen);
   const exposure = useRef(0);
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus(); }, [stage]);
   const levels = [1, 2, 3, 4].map(id => ({ id, title: t(`levels.level${id}Name`), description: t(`closeFlow.level${id}`) }));
-  const questions = getSparkSample(i18n.language, samples[level - 1]);
+  const questions = [0, 1, 2, 3].map(position => t(`variations.levels.${level}.questions.${position}`));
   const connect = (joining: boolean) => {
     if (review) setStage(joining ? 'join' : 'invite');
     else navigate(joining ? '/join-room' : '/create-room');
   };
-  const choose = (id: number) => { setRun(value => value + 1); setLevel(id); setIndex(0); setFollowup(false); setKeepsake(null); setAsker(1); setRevealed(false); setRounds([]); setStage('cards'); };
+  const choose = (id: number) => { setRun(value => value + 1); setLevel(id); setIndex(0); setFollowup(false); setKeepsake(null); setAsker(1); setRounds([]); setStage('cards'); };
   const next = () => {
     if (index === previewSequence.length - 1) setStage('done');
-    else { setIndex(index + 1); setRevealed(false); setFollowup(false); }
+    else { setIndex(index + 1); setFollowup(false); }
   };
   const finishCard = (signal: RoundSignal, skipped = false, outcome?: VariationOutcome) => {
-    setRounds(previous => [...previous, { ...signal, cardId: kind === 'conversation' ? samples[level - 1][questionIndex] : -1, activeVisibleMs: exposure.current, skipped, asker, respondent, feedbackPerspective: kind === 'conversation' ? 'listener' : null, kind, question: questions[questionIndex], followedUp: followup, outcome }]);
+    if (!skipped && kind === 'conversation' && !feedbackComplete(signal)) return;
+    setRounds(previous => [...previous, { ...signal, cardId: kind === 'closing' ? `editorial-v2:${level}:closing` : cardContext(level, kind, kind === 'conversation' ? questionIndex : 0).cardKey, level, topic: cardContext(level, 'conversation').topic, catalogVersion: 'editorial-v2', activeVisibleMs: exposure.current, skipped, asker, respondent, feedbackPerspective: kind === 'conversation' ? 'listener' : null, kind, question: questions[questionIndex], followedUp: followup, outcome }]);
     setFeedbackOpen(false);
     // Replacing an unwanted card keeps the same person's opportunity to answer.
     if (!skipped) setAsker(respondent);
     next();
   };
   const requestFeedback = () => { exposure.current = readTime(); setFeedbackOpen(true); };
-  const skipCard = () => { exposure.current = revealed ? readTime() : 0; finishCard({ feeling: null, pace: null, note: null }, true); };
+  const skipCard = () => { exposure.current = readTime(); finishCard({ feeling: null, pace: null, note: null }, true); };
   const completeVariation = (outcome?: VariationOutcome) => { exposure.current = readTime(); finishCard({ feeling: null, pace: null, note: null }, false, outcome); };
   const moments = rounds.filter(round => round.kind === 'conversation' && !round.skipped).map(round => ({ id: String(round.cardId), question: round.question }));
   const downloadKeepsake = () => {
@@ -67,8 +67,8 @@ export default function Play() {
     const anchor = document.createElement('a'); anchor.href = url; anchor.download = 'lets-get-close-moment.txt'; anchor.hidden = true; document.body.appendChild(anchor); anchor.click(); anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
-  const variation = kind === 'guess' || kind === 'match' ? <ChoiceVariation kind={kind} asker={asker} respondent={respondent} onComplete={completeVariation} />
-    : kind === 'action' ? <ActionVariation onComplete={() => completeVariation()} />
+  const variation = kind === 'guess' || kind === 'match' ? <ChoiceVariation level={level} kind={kind} asker={asker} respondent={respondent} onComplete={completeVariation} />
+    : kind === 'action' ? <ActionVariation level={level} onComplete={() => completeVariation()} />
     : kind === 'closing' ? <ClosingVariation moments={moments} onComplete={moment => { setKeepsake(moment); completeVariation(); }} /> : undefined;
   const back = () => setStage(stage === 'cards' || stage === 'done' ? 'levels' : 'connect');
   return <div className={`close-experience ${stage === 'cards' ? 'close-immersive' : ''}`}>
@@ -117,7 +117,7 @@ export default function Play() {
     </main>}
 
     {stage === 'cards' && <main className="immersive-table" aria-label={t('intelligentPlay.gameLabel')}>
-      <ImmersiveCard key={`${run}:${level}:${index}`} label={t(`levels.level${level}Name`)} progress={`${index + 1} / ${previewSequence.length}`} tone={level - 1} asker={asker} respondent={respondent} question={followup ? t('variations.stay.question') : questions[questionIndex]} content={variation} sharedTurn={kind === 'match' || kind === 'action' || kind === 'closing'} extraAction={kind === 'conversation' ? <button className="close-text-button tactile-stay" onClick={() => setFollowup(previous => !previous)}>{t(followup ? 'variations.stay.back' : 'variations.stay.button')}</button> : undefined} revealed={revealed} responding={feedbackOpen} onReveal={() => setRevealed(true)} onRespond={requestFeedback} onSkip={skipCard} onOptions={() => setMenuOpen(true)}>
+      <ImmersiveCard key={`${run}:${level}:${index}`} label={t(`levels.level${level}Name`)} progress={`${index + 1} / ${previewSequence.length}`} tone={level - 1} asker={asker} respondent={respondent} question={followup ? t(`variations.levels.${level}.followups.${questionIndex}`) : questions[questionIndex]} content={variation} sharedTurn={kind === 'match' || kind === 'action' || kind === 'closing'} extraAction={kind === 'conversation' ? <button className="close-text-button tactile-stay" onClick={() => setFollowup(previous => !previous)}>{t(followup ? 'variations.stay.back' : 'variations.stay.button')}</button> : undefined} responding={feedbackOpen} onRespond={requestFeedback} onSkip={skipCard} onOptions={() => setMenuOpen(true)}>
         <RoundFeedback participantName={t('intelligentPlay.person', { number: asker })} active={feedbackOpen} onSubmit={finishCard} onClose={() => setFeedbackOpen(false)} />
       </ImmersiveCard>
       <Dialog open={menuOpen} onOpenChange={setMenuOpen}><DialogContent className="round-feedback">

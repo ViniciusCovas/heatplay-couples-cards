@@ -706,3 +706,12 @@
   .variation-options button { min-height: 78px; padding: 9px 6px; font-size: 11px; gap: 6px; }
   .variation-options button > span { font-size: 26px; }
 }
+
+/* Quiet centered branding; cards open directly on the question. */
+.tactile-heading { display: grid; grid-template-columns: 36px minmax(0, 1fr) 36px; gap: 2px; }
+.tactile-brand { grid-column: 2; display: flex; align-items: center; justify-content: center; gap: 10px; min-width: 0; }
+.tactile-brand > span { display: flex; align-items: center; gap: 5px; color: var(--card-accent); font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.tactile-mini-logo { height: 30px !important; width: 66px; flex-shrink: 0; cursor: default; }
+.tactile-mini-logo:hover { transform: none; }
+.tactile-heading > .close-icon { grid-column: 3; margin-right: 0; }
+.card-response-bottom .close-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }

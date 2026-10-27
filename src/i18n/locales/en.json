@@ -1049,7 +1049,6 @@
     "same": "Keep this pace",
     "deeper": "Go deeper",
     "continue": "Continue",
-    "skipFeedback": "Continue without answering",
     "localOnly": "Local test: nothing is sent to AI or your partner.",
     "gameLabel": "Game card",
     "options": "Pause and options",
@@ -1065,36 +1064,25 @@
     "turnDescription": "Person {{asker}} asks. Person {{respondent}} answers.",
     "responseReady": "Answer finished",
     "listenerTitle": "As you listened…",
-    "listenerSubtitle": "How did their answer make you feel?"
+    "listenerSubtitle": "How did their answer make you feel?",
+    "feedbackRequired": "Choose how you felt and the pace to continue."
   },
   "variations": {
-    "options": {
-      "walk": "Sunset walk",
-      "dinner": "Dinner for two",
-      "dance": "Go dancing",
-      "home": "A night at home",
-      "talk": "An unhurried talk",
-      "laugh": "Laugh together",
-      "explore": "Break the routine",
-      "cuddle": "A cuddle"
-    },
     "guess": {
       "badge": "🤭 GUESS MY ANSWER",
-      "title": "Which plan would your partner choose today?",
       "first": "Person {{person}}, predict your partner’s choice.",
-      "second": "Person {{person}}, choose the plan you feel like today.",
+      "second": "Person {{person}}, choose your own answer.",
       "success": "You guessed it!",
       "different": "A little surprise…",
-      "conversation": "What makes that plan feel so right today?"
+      "conversation": "What made you choose that answer?"
     },
     "match": {
       "badge": "✨ OUR COMMON GROUND",
-      "title": "What would you enjoy together?",
       "first": "Person {{person}}, choose one or more experiences. Only matches will be revealed.",
       "second": "Person {{person}}, choose what you feel like. Only matches will be revealed.",
       "success": "Here is where your wishes meet.",
       "different": "You chose different things today.",
-      "conversation": "How would you enjoy this together? If nothing matches today, you can explore another idea."
+      "conversation": "A match opens a conversation; different choices can too. What would you like to share?"
     },
     "seal": "Save and hide",
     "localPrivacy": "One phone: choose separately without watching each other’s choices.",
@@ -1107,14 +1095,11 @@
     "next": "Keep going",
     "action": {
       "badge": "🫶 A MOMENT TOGETHER",
-      "title": "A compliment you haven’t shared.",
-      "body": "Put the phone on the table. Take turns sharing one little thing you liked about each other today.",
       "permission": "Take your time. You can pass if you don’t feel like it.",
-      "done": "We shared it"
+      "done": "Ready, let’s continue"
     },
     "stay": {
-      "button": "Stay here",
-      "question": "What would you like me to understand better about what you just shared?",
+      "button": "Go deeper into this answer",
       "back": "Back to the question"
     },
     "closing": {
@@ -1129,6 +1114,128 @@
     "download": "Download keepsake",
     "localMemory": "Only the selected question is downloaded. Your answers are not saved.",
     "preview": "Local preview with editorial variations; AI and two-phone play are not connected yet.",
-    "together": "BOTH OF YOU"
+    "together": "BOTH OF YOU",
+    "levels": {
+      "1": {
+        "questions": {
+          "0": "What little thing I do makes you smile even when I try to be serious?",
+          "1": "Which memory of us would you tell as a comedy?",
+          "2": "What small quirk do we share without noticing?",
+          "3": "What did you discover about me today that made you curious?"
+        },
+        "followups": {
+          "0": "Do you remember the last time it happened?",
+          "1": "Which part still makes you laugh?",
+          "2": "How did that habit start?",
+          "3": "What would you like to ask me about it?"
+        },
+        "guessTitle": "What most easily makes your partner smile?",
+        "guessOptions": {
+          "joke": "An inside joke",
+          "look": "A knowing look",
+          "compliment": "An unexpected compliment",
+          "memory": "A funny memory"
+        },
+        "matchTitle": "What would you enjoy playing with next?",
+        "matchOptions": {
+          "story": "A funny story",
+          "memory": "A shared memory",
+          "compliment": "A compliment",
+          "discovery": "A surprising fact"
+        },
+        "actionTitle": "Make me smile.",
+        "actionBody": "Take turns affectionately imitating an expression the other makes. The other person tries to recognize it."
+      },
+      "2": {
+        "questions": {
+          "0": "When have you felt truly understood by me?",
+          "1": "What part of yourself would you like me to know better?",
+          "2": "What do I do that helps you feel supported on a difficult day?",
+          "3": "What dream of yours would you like us to support together?"
+        },
+        "followups": {
+          "0": "What did I do that helped in that moment?",
+          "1": "What could I ask to understand you better?",
+          "2": "How can I tell when you need that gesture?",
+          "3": "What small first step could we take?"
+        },
+        "guessTitle": "What helps your partner feel understood?",
+        "guessOptions": {
+          "listen": "Listening without interrupting",
+          "hug": "A hug",
+          "questions": "Interested questions",
+          "space": "Giving them space"
+        },
+        "matchTitle": "What would you like to share more deeply?",
+        "matchOptions": {
+          "gratitude": "Something I appreciate",
+          "memory": "An important memory",
+          "need": "Something I need",
+          "dream": "A personal dream"
+        },
+        "actionTitle": "Something I value in you.",
+        "actionBody": "Take turns completing: “I felt supported by you when…” The listener shares how it felt to hear that."
+      },
+      "3": {
+        "questions": {
+          "0": "What do I do without realizing that you find irresistible?",
+          "1": "Which moment of flirting between us do you most enjoy remembering?",
+          "2": "What would you like me to say more when we are close?",
+          "3": "How would you let me know you want a kiss without saying it?"
+        },
+        "followups": {
+          "0": "What about that detail attracts you?",
+          "1": "What part of that moment would you like to bring back?",
+          "2": "How would you like to hear it from me?",
+          "3": "How would we know we both want it?"
+        },
+        "guessTitle": "What kind of flirting with me most appeals to your partner?",
+        "guessOptions": {
+          "gaze": "Holding eye contact",
+          "whisper": "Words whispered close",
+          "compliment": "A bold compliment",
+          "closeness": "Getting closer slowly"
+        },
+        "matchTitle": "What kind of flirting would you like to explore?",
+        "matchOptions": {
+          "attraction": "Saying what attracts me",
+          "gaze": "A knowing look",
+          "chemistry": "Remembering our chemistry",
+          "desire": "Sharing what sparks desire"
+        },
+        "actionTitle": "A compliment with intention.",
+        "actionBody": "Take turns saying which detail about the other attracts you and why. Leave a moment to receive the compliment."
+      },
+      "4": {
+        "questions": {
+          "0": "What would you like to ask me for more freely in intimacy?",
+          "1": "What intimate curiosity would you like to discuss without committing to try it?",
+          "2": "How would you like me to ask what you want when we are alone?",
+          "3": "What makes an intimate invitation feel welcome and pressure-free?"
+        },
+        "followups": {
+          "0": "What would help you say it confidently?",
+          "1": "What attracts you to the idea, and what boundaries would you set?",
+          "2": "What words would help you feel free to say yes or no?",
+          "3": "How can we protect that freedom together?"
+        },
+        "guessTitle": "What would your partner like to express more freely in intimacy?",
+        "guessOptions": {
+          "enjoyment": "What they enjoy",
+          "curiosity": "A curiosity",
+          "pace": "Their preferred pace",
+          "boundary": "What they do not want"
+        },
+        "matchTitle": "What would you like to talk openly about?",
+        "matchOptions": {
+          "enjoyment": "What we enjoy",
+          "curiosity": "An intimate curiosity",
+          "boundaries": "Our boundaries",
+          "invitation": "How we invite each other"
+        },
+        "actionTitle": "An invitation without pressure.",
+        "actionBody": "Take turns completing: “I would like to talk with you about…” The other says whether they would like that conversation now. Discussing it is not a commitment to do it."
+      }
+    }
   }
 }

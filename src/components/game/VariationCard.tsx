@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { advanceChoices, emptyChoices, sharedChoices, variationOutcome, type VariationOutcome, type SessionMoment } from '@/lib/cardVariations';
 
-interface ChoiceProps { kind: 'guess' | 'match'; asker: 1 | 2; respondent: 1 | 2; onComplete: (outcome: VariationOutcome) => void }
-const dateOptions = ['walk', 'dinner', 'dance', 'home'] as const;
-const connectionOptions = ['talk', 'laugh', 'explore', 'cuddle'] as const;
-const emoji = { walk: '🌅', dinner: '🍝', dance: '💃', home: '🛋️', talk: '💬', laugh: '😂', explore: '🧭', cuddle: '🫂' };
+import { cardContext, getLevelDeck } from '@/lib/levelDeck';
 
-export function ChoiceVariation({ kind, asker, respondent, onComplete }: ChoiceProps) {
+interface ChoiceProps { level: number; kind: 'guess' | 'match'; asker: 1 | 2; respondent: 1 | 2; onComplete: (outcome: VariationOutcome) => void }
+export function ChoiceVariation({ kind, level, asker, respondent, onComplete }: ChoiceProps) {
   const { t } = useTranslation();
-  const options = kind === 'guess' ? dateOptions : connectionOptions;
+  const emoji: Record<string, string> = getLevelDeck(level)[kind];
+  const options = Object.keys(emoji);
+  const contentKey = `variations.levels.${level}`;
+  const prompt = t(`${contentKey}.${kind}Title`);
+  const optionLabel = (id: string) => t(`${contentKey}.${kind}Options.${id}`);
   const [state, setState] = useState(emptyChoices);
   const [selection, setSelection] = useState<string[]>([]);
   const title = useRef<HTMLHeadingElement>(null);
@@ -24,27 +26,27 @@ export function ChoiceVariation({ kind, asker, respondent, onComplete }: ChoiceP
   const toggle = (value: string) => setSelection(previous => kind === 'guess' ? [value] : previous.includes(value) ? previous.filter(item => item !== value) : [...previous, value]);
   return <div className="variation-content">
     <p className="variation-kicker">{t(`variations.${kind}.badge`)}</p>
-    <h2 ref={title} tabIndex={-1}>{t(`variations.${kind}.${state.phase === 'result' ? (matches.length ? 'success' : 'different') : 'title'}`)}</h2>
+    <h2 ref={title} tabIndex={-1}>{state.phase === 'result' ? t(`variations.${kind}.${matches.length ? 'success' : 'different'}`) : prompt}</h2>
     {choosing && <>
       <p className="variation-instruction">{t(`variations.${kind}.${isFirst ? 'first' : 'second'}`, { person: isFirst ? asker : respondent })}</p>
-      <div className="variation-options" role="group" aria-label={t(`variations.${kind}.title`)}>{options.map(id => <button key={id} aria-pressed={selection.includes(id)} onClick={() => toggle(id)}><span aria-hidden="true">{emoji[id]}</span>{t(`variations.options.${id}`)}</button>)}</div>
+      <div className="variation-options" role="group" aria-label={prompt}>{options.map(id => <button key={id} aria-pressed={selection.includes(id)} onClick={() => toggle(id)}><span aria-hidden="true">{emoji[id]}</span>{optionLabel(id)}</button>)}</div>
       <button className="close-primary" disabled={!selection.length} onClick={submit}>{t('variations.seal')}</button>
       <p className="variation-footnote">{t('variations.localPrivacy')}</p>
     </>}
     {state.phase === 'handoff' && <><span className="variation-symbol" aria-hidden="true">💌</span><p className="variation-instruction">{t('variations.handoff', { person: respondent })}</p><button className="close-primary" onClick={() => setState(previous => advanceChoices(previous, { type: 'accept-handoff' }, options, kind === 'match'))}>{t('variations.itsMe', { person: respondent })}</button></>}
     {state.phase === 'reveal' && <><span className="variation-symbol" aria-hidden="true">✨</span><p className="variation-instruction">{t('variations.ready')}</p><button className="close-primary" onClick={() => setState(previous => advanceChoices(previous, { type: 'reveal' }, options, kind === 'match'))}>{t('variations.reveal')}</button></>}
     {state.phase === 'result' && <>
-      {kind === 'guess' ? <div className="variation-result-pair">{[state.first[0], state.second[0]].map((id, index) => <div key={index}><small>{t(index === 0 ? 'variations.prediction' : 'variations.answer')}</small><span aria-hidden="true">{emoji[id as keyof typeof emoji]}</span><strong>{t(`variations.options.${id}`)}</strong></div>)}</div>
-        : <div className="variation-matches">{matches.map(id => <span key={id}>{emoji[id as keyof typeof emoji]} {t(`variations.options.${id}`)}</span>)}</div>}
+      {kind === 'guess' ? <div className="variation-result-pair">{[state.first[0], state.second[0]].map((id, index) => <div key={index}><small>{t(index === 0 ? 'variations.prediction' : 'variations.answer')}</small><span aria-hidden="true">{emoji[id as keyof typeof emoji]}</span><strong>{optionLabel(id)}</strong></div>)}</div>
+        : <div className="variation-matches">{matches.map(id => <span key={id}>{emoji[id as keyof typeof emoji]} {optionLabel(id)}</span>)}</div>}
       <p className="variation-instruction">{t(`variations.${kind}.conversation`)}</p>
-      <button className="close-primary" onClick={() => { const outcome = variationOutcome(kind, state); if (outcome) onComplete(outcome); }}>{t('variations.next')}</button>
+      <button className="close-primary" onClick={() => { const outcome = variationOutcome(kind, state); if (outcome) onComplete({ ...outcome, ...cardContext(level, kind) }); }}>{t('variations.next')}</button>
     </>}
   </div>;
 }
 
-export function ActionVariation({ onComplete }: { onComplete: () => void }) {
+export function ActionVariation({ level, onComplete }: { level: number; onComplete: () => void }) {
   const { t } = useTranslation();
-  return <div className="variation-content"><p className="variation-kicker">{t('variations.action.badge')}</p><span className="variation-symbol" aria-hidden="true">🫶</span><h2>{t('variations.action.title')}</h2><p className="variation-instruction">{t('variations.action.body')}</p><p className="variation-footnote">{t('variations.action.permission')}</p><button className="close-primary" onClick={onComplete}>{t('variations.action.done')}</button></div>;
+  return <div className="variation-content"><p className="variation-kicker">{t('variations.action.badge')}</p><span className="variation-symbol" aria-hidden="true">🫶</span><h2>{t(`variations.levels.${level}.actionTitle`)}</h2><p className="variation-instruction">{t(`variations.levels.${level}.actionBody`)}</p><p className="variation-footnote">{t('variations.action.permission')}</p><button className="close-primary" onClick={onComplete}>{t('variations.action.done')}</button></div>;
 }
 
 export function ClosingVariation({ moments, onComplete }: { moments: SessionMoment[]; onComplete: (moment: SessionMoment | null) => void }) {

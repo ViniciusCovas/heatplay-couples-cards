@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { feedbackComplete } from '@/lib/levelDeck';
 
 export type Feeling = 'closer' | 'discovery' | 'desire' | 'uncomfortable';
 export type Pace = 'lighter' | 'same' | 'deeper';
@@ -37,6 +38,6 @@ export function RoundFeedback({ participantName, active, onSubmit, onClose }: { 
         {paces.map(({ value, emoji }) => <button key={value} type="button" aria-pressed={pace === value} onClick={() => setPace(pace === value ? null : value)}><span aria-hidden="true">{emoji}</span><span>{t(`intelligentPlay.${value}`)}</span></button>)}
       </div></fieldset>
     </div>
-    <div className="card-response-bottom"><button className="close-primary" onClick={() => onSubmit({ feeling, pace, note: null })}>{t(feeling || pace ? 'intelligentPlay.continue' : 'intelligentPlay.skipFeedback')}<ArrowRight size={17} /></button><p className="round-preview-note">{t('intelligentPlay.localOnly')}</p></div>
+    <div className="card-response-bottom"><p className="round-preview-note" id="feedback-requirement">{t('intelligentPlay.feedbackRequired')}</p><button className="close-primary" disabled={!feedbackComplete({ feeling, pace })} aria-describedby="feedback-requirement" onClick={() => { if (feedbackComplete({ feeling, pace })) onSubmit({ feeling, pace, note: null }); }}>{t('intelligentPlay.continue')}<ArrowRight size={17} /></button><p className="round-preview-note">{t('intelligentPlay.localOnly')}</p></div>
   </div>;
 }
