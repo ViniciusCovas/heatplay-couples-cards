@@ -1,168 +1,63 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ChevronDown, Heart, MessageCircle, Shield, Star, Users2 } from 'lucide-react';
-import { AuthModal } from '@/components/auth/AuthModal';
+import { ArrowRight, MoveUpRight, Heart } from 'lucide-react';
 import { LegalFooter } from '@/components/navigation/LegalFooter';
-import { DailySpark } from '@/components/home/DailySpark';
 import { HeroDeck } from '@/components/home/HeroDeck';
-import { Reveal } from '@/components/home/Reveal';
-import { AiTease, HeatLevels, HowItWorks, PricingStrip, StickyCta } from '@/components/home/LandingSections';
+import { AiTease, HeatLevels, HowItWorks, PricingStrip, StickyCta, FAQ } from '@/components/home/LandingSections';
+import { getLandingCopy } from '@/components/home/landing-copy';
 import { track } from '@/lib/analytics';
+import '@/components/home/landing-home.css';
 
-const Home = () => {
+export default function Home() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { i18n } = useTranslation();
+  const copy = getLandingCopy(i18n.language).hero;
   const [showSticky, setShowSticky] = useState(false);
-  const heroRef = useRef<HTMLElement | null>(null);
+  const heroRef = useRef<HTMLElement>(null);
+  const demoRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const handleAuthModalEvent = () => setShowAuthModal(true);
-    window.addEventListener('home-auth-modal', handleAuthModalEvent);
-    return () => window.removeEventListener('home-auth-modal', handleAuthModalEvent);
-  }, []);
-
-  // Sticky mobile CTA appears once the hero has scrolled out of view
   useEffect(() => {
     const node = heroRef.current;
     if (!node || typeof IntersectionObserver === 'undefined') return;
-    const io = new IntersectionObserver(
-      ([entry]) => setShowSticky(!entry.isIntersecting),
-      { threshold: 0.05 }
-    );
-    io.observe(node);
-    return () => io.disconnect();
+    const observer = new IntersectionObserver(([entry]) => setShowSticky(!entry.isIntersecting), { threshold: 0 });
+    observer.observe(node);
+    return () => observer.disconnect();
   }, []);
 
-  const handleStartJourney = (section: string) => {
+  const play = (section: string) => {
     track('landing_cta_clicked', { section });
     navigate('/play');
   };
+  const tryCard = () => {
+    track('landing_demo_opened');
+    demoRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    demoRef.current?.focus({ preventScroll: true });
+  };
 
-  return (
-    <div className="landing-light relative min-h-screen overflow-x-hidden">
-      {/* ------------------------------------------------ HERO ------ */}
-      {/* The hero owns the fold on desktop: it fills the viewport below the
-          header and centres its two columns, so 900px-tall screens no longer
-          show a band of dead space under the CTA column. */}
-      <section
-        ref={heroRef}
-        className="relative mx-auto flex max-w-6xl flex-col justify-center px-5 pb-20 pt-10 md:pt-16 lg:min-h-[calc(100svh-4.0625rem)] lg:pb-24"
-      >
-        <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-12">
-          {/* Copy + CTAs */}
-          <div className="text-center lg:text-left">
-            <div className="mb-7 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <span className="landing-chip inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#55505f]">
-                <Shield className="h-3.5 w-3.5 text-[#c2185b]" aria-hidden="true" />
-                {t('landing.badge')}
-              </span>
-            </div>
-
-            <img
-              src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png"
-              alt="Let's Get Close"
-              className="mx-auto mb-7 h-16 w-auto md:h-20 lg:mx-0"
-            />
-
-            <h1 className="font-display text-balance text-[2.6rem] font-semibold leading-[1.06] tracking-[-0.015em] text-[#23212b] md:text-5xl lg:text-[3.5rem]">
-              {t('landing.headline')}
-            </h1>
-            <p className="mx-auto mt-6 max-w-xl text-balance text-[1.0625rem] leading-[1.65] text-[#55505f] md:text-lg lg:mx-0">
-              {t('landing.sub')}
-            </p>
-
-            <div className="mx-auto mt-9 flex max-w-md flex-col gap-3 sm:flex-row lg:mx-0">
-              <button
-                onClick={() => handleStartJourney('hero')}
-                className="landing-cta group inline-flex min-h-14 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2185b]"
-              >
-                <Heart className="h-5 w-5 transition-transform group-hover:scale-110" aria-hidden="true" />
-                {t('landing.ctaPlay')}
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </button>
-              <button
-                onClick={() => {
-                  track('landing_cta_clicked', { section: 'hero_join' });
-                  navigate('/join-room');
-                }}
-                className="landing-ghost inline-flex min-h-14 items-center justify-center gap-2 whitespace-nowrap rounded-full px-8 text-lg font-semibold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#c2185b]"
-              >
-                <MessageCircle className="h-5 w-5" aria-hidden="true" />
-                {t('landing.ctaJoin')}
-              </button>
-            </div>
-
-            {/* Social proof strip */}
-            {/* Two aligned columns on desktop so the third item reads as a
-                deliberate second row rather than an orphaned wrap. */}
-            <div className="mx-auto mt-10 flex max-w-md flex-wrap items-center justify-center gap-x-7 gap-y-3 text-sm font-medium text-[#55505f] lg:mx-0 lg:grid lg:max-w-lg lg:grid-cols-2 lg:justify-items-start lg:gap-x-4">
-              <span className="inline-flex items-center gap-2">
-                <Users2 className="h-4 w-4 text-[#c2185b]" aria-hidden="true" />
-                {t('landing.stats.couples')}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <MessageCircle className="h-4 w-4 text-[#c2185b]" aria-hidden="true" />
-                {t('landing.stats.questions')}
-              </span>
-              <span className="inline-flex items-center gap-2">
-                <Star className="h-4 w-4 fill-[#f59e0b] text-[#b45309]" aria-hidden="true" />
-                {t('landing.stats.rating')}
-              </span>
-            </div>
-          </div>
-
-          {/* Interactive deck */}
-          <div className="pt-2 lg:pt-6">
-            <HeroDeck />
-          </div>
+  return <main id="main-content" className="landing-light landing-v2">
+    <section ref={heroRef} className="landing-hero" aria-labelledby="hero-title">
+      <div className="landing-hero-orbit" aria-hidden="true" />
+      <div className="landing-hero-copy">
+        <p className="landing-eyebrow"><span className="landing-pair-mark" aria-hidden="true"><Heart size={14} fill="currentColor" /><Heart size={14} /></span>{copy.eyebrow}</p>
+        <h1 id="hero-title">{copy.title}<br /><span>{copy.accent}</span></h1>
+        <p className="landing-hero-description">{copy.description}</p>
+        <div className="landing-hero-actions">
+          <button className="landing-main-action" onClick={() => play('hero')}>{copy.play}<ArrowRight size={19} aria-hidden="true" /></button>
+          <button className="landing-demo-action" onClick={tryCard}>{copy.tryCard}<MoveUpRight size={17} aria-hidden="true" /></button>
         </div>
-
-        {/* Makes the fold deliberate instead of accidental */}
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-x-0 bottom-7 hidden justify-center lg:flex"
-        >
-          <span className="landing-chip flex h-9 w-9 items-center justify-center rounded-full text-[#c2185b]">
-            <ChevronDown className="h-4 w-4 animate-bounce" />
-          </span>
-        </span>
-      </section>
-
-      {/* --------------------------------------------- SECTIONS ---- */}
-      <HowItWorks />
-      <HeatLevels />
-      <AiTease />
-
-      {/* Daily Spark ritual */}
-      <section className="mx-auto max-w-2xl px-5 py-20 md:py-28">
-        <Reveal>
-          <div className="mb-9 text-center">
-            <h2 className="font-display text-balance text-[2rem] font-semibold leading-[1.15] tracking-[-0.01em] text-[#23212b] md:text-4xl">
-              {t('landing.spark.title')}
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-balance leading-relaxed text-[#55505f]">
-              {t('landing.spark.sub')}
-            </p>
-          </div>
-          <DailySpark />
-        </Reveal>
-      </section>
-
-      <PricingStrip />
-
-      <div className="border-t border-[#f0dbe3] bg-white/45 px-5">
-        <LegalFooter className="text-[#6c6577]" />
+        <p className="landing-hero-note">{copy.note}</p>
       </div>
-
-      {/* Sticky mobile CTA */}
-      <StickyCta visible={showSticky} onPlay={() => handleStartJourney('sticky_bar')} />
-
-      {/* Auth Modal */}
-      <AuthModal open={showAuthModal} onOpenChange={setShowAuthModal} onSuccess={() => navigate('/create-room')} />
-    </div>
-  );
-};
-
-export default Home;
+      <div ref={demoRef} className="landing-hero-demo" id="try-a-card" tabIndex={-1} aria-label={copy.tryCard}>
+        <HeroDeck />
+      </div>
+    </section>
+    <HowItWorks />
+    <HeatLevels />
+    <AiTease />
+    <PricingStrip />
+    <FAQ />
+    <div className="landing-footer"><img src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png" alt="Let's Get Close" width="96" height="48" loading="lazy" /><LegalFooter /></div>
+    <StickyCta visible={showSticky} onPlay={() => play('sticky_bar')} />
+  </main>;
+}

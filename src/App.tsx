@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { page } from "@/lib/analytics";
 import Home from "./pages/Home";
@@ -31,8 +31,8 @@ const Privacy = lazy(() => import("./pages/legal/Privacy"));
 const Refund = lazy(() => import("./pages/legal/Refund"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-import { AuthProvider } from "./contexts/AuthContext";
-import AdminGuard from "./components/auth/AdminGuard";
+const AuthProvider = lazy(() => import('./contexts/AuthContext').then(module => ({ default: module.AuthProvider })));
+const AdminGuard = lazy(() => import('./components/auth/AdminGuard'));
 import { AppHeader } from "./components/navigation/AppHeader";
 
 const queryClient = new QueryClient();
@@ -54,13 +54,53 @@ const AppContent = () => {
     page();
   }, [location.pathname]);
 
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      if (location.hash) {
+        document.getElementById(location.hash.slice(1))?.scrollIntoView();
+      } else {
+        window.scrollTo(0, 0);
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    const publicPaths = ['/', '/terms', '/privacy', '/refund'];
+    const canIndex = import.meta.env.VITE_TABLE_PREVIEW !== 'true' && publicPaths.includes(location.pathname);
+    let robots = document.querySelector<HTMLMetaElement>('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement('meta');
+      robots.name = 'robots';
+      document.head.appendChild(robots);
+    }
+    robots.content = canIndex ? 'index,follow' : 'noindex,nofollow';
+    const canonical = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    if (canonical) canonical.href = `https://letsgetclose.com${publicPaths.includes(location.pathname) ? location.pathname : '/'}`;
+  }, [location.pathname]);
+
   // Pages that shouldn't show the header
   const noHeaderPages = ['/play', '/together', '/level-select', '/create-room', '/join-room', '/game', '/admin-panel-secret', '/admin/levels', '/admin/questions-bulk', '/admin/questions-manual'];
   const showHeader = !noHeaderPages.includes(location.pathname);
 
   // Isolated review builds never expose legacy online rooms or checkout.
   if (import.meta.env.VITE_TABLE_PREVIEW === 'true') {
-    return <Suspense fallback={<RouteFallback />}><Play /></Suspense>;
+    return (
+      <div className="min-h-screen">
+        {showHeader && <AppHeader />}
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/play" element={<Play />} />
+            <Route path="/premium" element={<Navigate to="/#plans" replace />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/refund" element={<Refund />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </div>
+    );
   }
 
   return (
@@ -117,9 +157,13 @@ const AppContent = () => {
   );
 };
 
+// Preview is an offline editorial experience: do not initialize auth, refresh
+// old tokens, or subscribe to the previous database while reviewing it.
+const SessionBoundary = import.meta.env.VITE_TABLE_PREVIEW === 'true' ? React.Fragment : AuthProvider;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
+    <Suspense fallback={<RouteFallback />}><SessionBoundary>
       <TooltipProvider>
         <ErrorBoundary>
           <Toaster />
@@ -129,7 +173,7 @@ const App = () => (
           </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
-    </AuthProvider>
+    </SessionBoundary></Suspense>
   </QueryClientProvider>
 );
 

@@ -1,204 +1,47 @@
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { LanguageSelector } from '@/components/ui/language-selector';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { lazy, Suspense } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Menu, LogOut, Settings, User, BarChart3 } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
+import { LanguageSelector } from '@/components/ui/language-selector';
+import { track } from '@/lib/analytics';
 
-interface AppHeaderProps {
-  onAuthClick?: () => void;
-}
+// The public header never loads the account client in isolated preview builds.
+const AccountHeader = lazy(() => import('./AccountHeader'));
+const copy = {
+  es: { how: 'Cómo se juega', levels: 'Los niveles', faq: 'Dudas', play: 'Jugar', nav: 'Navegación principal', home: 'Página principal' },
+  en: { how: 'How to play', levels: 'The levels', faq: 'FAQs', play: 'Play', nav: 'Main navigation', home: 'Home' },
+  pt: { how: 'Como jogar', levels: 'Os níveis', faq: 'Dúvidas', play: 'Jogar', nav: 'Navegação principal', home: 'Página inicial' },
+  fr: { how: 'Comment jouer', levels: 'Les niveaux', faq: 'Questions', play: 'Jouer', nav: 'Navigation principale', home: 'Accueil' },
+};
 
-export const AppHeader = ({ onAuthClick }: AppHeaderProps) => {
-  const { user, isAdmin, signOut } = useAuth();
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+export const AppHeader = ({ onAuthClick }: { onAuthClick?: () => void }) => {
   const location = useLocation();
-  const isMobile = useIsMobile();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Define game flow routes where login should be hidden
-  const gameFlowRoutes = ['/join-room', '/proximity-selection', '/level-select'];
-  const isGameFlow = gameFlowRoutes.includes(location.pathname);
-  
-  // Show login on marketing/auth pages only
-  const showAuthButton = !isGameFlow;
-
-  // Light-romantic landing page gets a translucent blush header
+  const { i18n } = useTranslation();
+  const language = i18n.language.split('-')[0] as keyof typeof copy;
+  const labels = copy[language] ?? copy.en;
   const isLanding = location.pathname === '/';
+  const isolatedPreview = import.meta.env.VITE_TABLE_PREVIEW === 'true';
 
-  const handleSignOut = async () => {
-    await signOut();
-    window.location.reload();
-  };
-
-  const handleAuthClick = () => {
-    if (onAuthClick) {
-      onAuthClick();
-    } else {
-      navigate('/auth');
-    }
-  };
-
-  const UserMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-10 w-10 rounded-full p-0">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={user?.user_metadata?.avatar_url} />
-            <AvatarFallback className="text-sm">
-              {user?.email?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <div className="flex flex-col space-y-1 p-2">
-          <p className="text-sm font-medium leading-none">
-            {user?.user_metadata?.full_name || 'User'}
-          </p>
-          <p className="text-xs leading-none text-muted-foreground">
-            {user?.email}
-          </p>
-        </div>
-        <DropdownMenuItem onClick={() => navigate('/insights')}>
-          <BarChart3 className="mr-2 h-4 w-4" />
-          Connection Insights
-        </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem onClick={() => navigate('/admin-panel-secret')}>
-            <Settings className="mr-2 h-4 w-4" />
-            {t('navigation.admin')}
-          </DropdownMenuItem>
-        )}
-        <DropdownMenuItem onClick={handleSignOut}>
-          <LogOut className="mr-2 h-4 w-4" />
-          {t('auth.signOut', 'Sign Out')}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
-  const AuthButton = () => (
-    <Button
-      onClick={handleAuthClick}
-      // On the light landing the default pink only reaches 3.6:1 against white
-      // label text — the deeper brand pink clears AA at 5.9:1.
-      className={
-        isLanding
-          ? 'bg-[#c2185b] text-white hover:bg-[#a71550] font-semibold min-h-[44px] px-6 rounded-full'
-          : 'bg-primary text-primary-foreground hover:bg-primary/90 font-medium min-h-[44px] px-6'
-      }
-      size={isMobile ? "lg" : "default"}
-    >
-      {t('home.buttons.login')}
-    </Button>
-  );
-
-  const MobileMenu = () => (
-    <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu className="h-5 w-5" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-[280px] sm:w-[320px]">
-        <div className="flex flex-col space-y-6 mt-6">
-          <div className="flex flex-col space-y-3">
-            {user ? (
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3 px-3 py-2 rounded-lg bg-muted/50">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-sm">
-                      {user?.email?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
-                      {user?.user_metadata?.full_name || 'User'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {user?.email}
-                    </p>
-                  </div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate('/insights');
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Connection Insights
-                </Button>
-                {isAdmin && (
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start"
-                    onClick={() => {
-                      navigate('/admin-panel-secret');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <Settings className="mr-2 h-4 w-4" />
-                    {t('navigation.admin')}
-                  </Button>
-                )}
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start text-destructive hover:text-destructive"
-                  onClick={() => {
-                    handleSignOut();
-                    setMobileMenuOpen(false);
-                  }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  {t('auth.signOut', 'Sign Out')}
-                </Button>
-              </div>
-            ) : (
-              showAuthButton && <AuthButton />
-            )}
-          </div>
-          
-          <div className="pt-4 border-t">
-            <div className="flex justify-center">
-              <LanguageSelector />
-            </div>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
+  if (!isLanding && !isolatedPreview) {
+    return <Suspense fallback={null}><AccountHeader onAuthClick={onAuthClick} /></Suspense>;
+  }
 
   return (
-    <header
-      className={
-        isLanding
-          ? 'sticky top-0 z-50 w-full border-b border-[#f4dde5]/80 bg-[#fff7f9]/75 backdrop-blur-md'
-          : 'sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'
-      }
-    >
-      <div className="container mx-auto flex h-16 items-center justify-end px-4">
-        {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-4">
+    <header className="relative z-40 border-b border-[#efdce5]/70 bg-[#fff8fa]">
+      <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-10">
+        <Link to="/" aria-label={`Let's Get Close · ${labels.home}`} className="shrink-0 rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c2185b]">
+          <img src="/lovable-uploads/385342b9-2cf5-4ed2-9d9c-54f0fe86b2f8.png" alt="Let's Get Close" width="112" height="48" className="h-10 w-auto sm:h-11" />
+        </Link>
+        <nav aria-label={labels.nav} className="hidden items-center gap-7 text-[13px] font-semibold text-[#55485c] lg:flex">
+          <a href="/#how-it-works" className="rounded hover:text-[#c2185b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">{labels.how}</a>
+          <a href="/#levels" className="rounded hover:text-[#c2185b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">{labels.levels}</a>
+          <a href="/#faq" className="rounded hover:text-[#c2185b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4">{labels.faq}</a>
+        </nav>
+        <div className="flex shrink-0 items-center gap-1 sm:gap-3 text-[#342439]">
           <LanguageSelector />
-          {user ? <UserMenu /> : (showAuthButton && <AuthButton />)}
-        </div>
-
-        {/* Mobile Navigation — language switcher stays visible, not buried in the sheet */}
-        <div className="md:hidden flex items-center space-x-2">
-          <LanguageSelector />
-          {!user && showAuthButton && <AuthButton />}
-          <MobileMenu />
+          <Link to="/play" onClick={() => track('landing_cta_clicked', { section: 'header' })} className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-[#c2185b] px-4 text-sm font-semibold text-white transition-colors hover:bg-[#a71550] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#c2185b] sm:px-6">
+            {labels.play}<ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </header>

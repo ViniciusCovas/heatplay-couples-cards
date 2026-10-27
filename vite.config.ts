@@ -14,6 +14,9 @@ export default defineConfig(({ mode }) => ({
     react(),
     process.env.VITE_TABLE_PREVIEW === 'true' && {
       name: 'preview-viewport-review',
+      transformIndexHtml() {
+        return [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' as const }];
+      },
       generateBundle() {
         this.emitFile({ type: 'asset', fileName: 'review.html', source: readFileSync('tests/viewport.html', 'utf8') });
       },
