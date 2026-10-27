@@ -37,3 +37,7 @@ The preview now opens directly on the question, requires explicit feeling and pa
 - https://supabase.com/docs/guides/platform/billing-faq
 - https://supabase.com/docs/guides/platform/migrating-within-supabase
 - https://supabase.com/changelog.md (reviewed; database/API exposure changes must be checked against the actual source version before applying migrations)
+
+## Product correction and launch runbook
+
+The product is two phones, one identity per participant. The one-screen experience is only a local card demo. See [two-phone-launch.md](two-phone-launch.md) for the current access blocker, owner transfer steps, environment setup, server integration contract and release criteria. Inventory rechecked on 27 October: original project is still absent from both connected accounts.

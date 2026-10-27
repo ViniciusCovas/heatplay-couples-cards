@@ -158,3 +158,12 @@ Final responsive review: code `6fdc1dfd19d1439fa0833eb6a5099bb554f78e4b`, deploy
 - Final loading pass: explicit Rollup chunk assignments keep charts and Supabase out of static landing preloads (~143 KB gzip combined deferred chunks). Current preview entry plus preloads total ~217 KB gzip. This is a bundle measurement, not a measured Core Web Vitals score. Normal builds retain their existing dynamic AuthProvider behavior. Removed all four unused legacy landing translation subtrees after verifying zero references.
 
 - Final deployed revision `db7a615c98fc5951279633c0dfb3e3fc01922af2`: Vercel READY; GitHub Quality run 40 completed successfully. Rechecked the compact 320px hero (full first question visible), 390px layout, and published language/copy. Screenshots: `landing-desktop.jpg`, `landing-mobile-320.jpg`.
+
+
+## Two-phone product correction and server preparation — 27 October 2026
+
+The product owner clarified that each person plays on their own phone. Updated four-language landing, rules, CTA, local demo label, header and manifest to represent that requirement. Local cards are a demonstration only; connected play remains unavailable until integration.
+
+Rechecked both Supabase connections: source `bbdeyohqrutithaziulp` remains absent. No remote schema writes, transfers, billing changes or project creation performed. `docs/two-phone-launch.md` gives owner transfer steps and the actual integration backlog, including authoritative rounds, private choices, reconnect and AI guardrails. Existing room RPCs/realtime are reusable but do not power the new Play route.
+
+Replaced hardcoded client URL/key with validated deployment variables and `.env.example`. Build-time and runtime validation reject missing/mismatched project configuration and secret/service-role keys without printing supplied values. Preserved the legacy tracked public `.env` for compatibility; target deployments must explicitly supply their own verified values. Added eight configuration tests (32 total pass). TypeScript, focused lint and preview build pass; a build with a synthetic secret-format key was rejected before bundling and did not echo the value. This does not claim all server or two-client tests have passed.

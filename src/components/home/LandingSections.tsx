@@ -1,4 +1,4 @@
-import { ArrowRight, Check, ChevronDown, Heart, Sparkles, Flame, Zap } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Heart, Sparkles, Flame, Zap, Smartphone, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Reveal } from '@/components/home/Reveal';
@@ -23,9 +23,9 @@ export function HowItWorks() {
       <div className="lgc-steps">
         {copy.how.steps.map((step, index) => <Reveal key={step.title} delay={index * 70}>
           <div className="lgc-step-illustration" aria-hidden="true">
-            {index === 0 ? <div className="lgc-mini-levels">{levelNumbers.map(level => { const Icon = levelIcons[level - 1]; return <span key={level} data-level={level}><Icon size={19} /><small>{t(`levels.level${level}Name`)}</small></span>; })}</div>
-              : index === 1 ? <div className="lgc-mini-turn"><span>1</span><div><ArrowRight size={25} /><small>{copy.how.micro[1]}</small></div><span>2</span></div>
-              : <div className="lgc-mini-feelings"><small>{copy.how.micro[2]}</small><div><span>🫶</span><span>🤩</span><span>🔥</span></div></div>}
+            {index === 0 ? <div className="lgc-mini-turn"><span><Smartphone size={28} /></span><div><Link2 size={25} /><small>{copy.how.micro[0]}</small></div><span><Smartphone size={28} /></span></div>
+              : index === 1 ? <div className="lgc-mini-levels">{levelNumbers.map(level => { const Icon = levelIcons[level - 1]; return <span key={level} data-level={level}><Icon size={19} /><small>{t(`levels.level${level}Name`)}</small></span>; })}</div>
+              : <div className="lgc-mini-turn"><span>1</span><div><ArrowRight size={25} /><small>{copy.how.micro[2]}</small></div><span>2</span></div>}
           </div>
           <div className="lgc-step-title"><span>0{index + 1}</span><h3>{step.title}</h3></div>
           <p className="lgc-section-body">{step.body}</p>

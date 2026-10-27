@@ -8,10 +8,10 @@ import { track } from '@/lib/analytics';
 // The public header never loads the account client in isolated preview builds.
 const AccountHeader = lazy(() => import('./AccountHeader'));
 const copy = {
-  es: { how: 'Cómo se juega', levels: 'Los niveles', faq: 'Dudas', play: 'Jugar', nav: 'Navegación principal', home: 'Página principal' },
-  en: { how: 'How to play', levels: 'The levels', faq: 'FAQs', play: 'Play', nav: 'Main navigation', home: 'Home' },
-  pt: { how: 'Como jogar', levels: 'Os níveis', faq: 'Dúvidas', play: 'Jogar', nav: 'Navegação principal', home: 'Página inicial' },
-  fr: { how: 'Comment jouer', levels: 'Les niveaux', faq: 'Questions', play: 'Jouer', nav: 'Navigation principale', home: 'Accueil' },
+  es: { how: 'Cómo se juega', levels: 'Los niveles', faq: 'Dudas', play: 'Ver demo', nav: 'Navegación principal', home: 'Página principal' },
+  en: { how: 'How to play', levels: 'The levels', faq: 'FAQs', play: 'Try demo', nav: 'Main navigation', home: 'Home' },
+  pt: { how: 'Como jogar', levels: 'Os níveis', faq: 'Dúvidas', play: 'Ver demo', nav: 'Navegação principal', home: 'Página inicial' },
+  fr: { how: 'Comment jouer', levels: 'Les niveaux', faq: 'Questions', play: 'Démo', nav: 'Navigation principale', home: 'Accueil' },
 };
 
 export const AppHeader = ({ onAuthClick }: { onAuthClick?: () => void }) => {

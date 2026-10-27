@@ -1,7 +1,7 @@
 {
   "name": "Let's Get Close",
   "short_name": "Get Close",
-  "description": "A card game for couples to laugh, flirt, and discover each other. Choose a level and take turns on one phone.",
+  "description": "Explore the cards of a couples game designed for two phones. Connected play is in development; this preview is a local demo.",
   "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
