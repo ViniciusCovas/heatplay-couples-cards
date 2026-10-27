@@ -114,3 +114,16 @@ Turn validation: typecheck, all 16 tests, focused lint and build pass. Browser v
 ## Occasional card variations — 26 October 2026
 
 Implemented an eight-card local editorial sequence with conversation separators, a prediction/reveal card, private-choice intersection, shared compliment action, optional in-place follow-up and mutually confirmed closing keepsake. All interactions stay within the card; the local one-phone handoff explicitly replaces unavailable multiplayer. Private choices are not mounted during handoff or exported in session outcomes. The exported text keepsake includes only the selected completed question. Added transport-independent state rules and five behavior tests for premature reveal, invalid submissions, intersection privacy, factual prediction outcomes, spacing and minimal export. Supabase integration remains deferred until access is provided; production original site is untouched.
+
+### Variation verification — 27 October 2026
+
+Code `1cd64a5d3df393c02b69c80921d07b0bf0beac3c` is deployed READY as `dpl_Gro212LxBp3vL9dGas3fW8aDU2ND` at https://lets-get-close-preview.vercel.app/ . GitHub Quality run 40429604667 succeeded: all 21 tests, type checking, focused lint and production build pass.
+
+Browser review exercised the complete eight-card sequence: inline follow-up and return without advancing, alternating roles, prediction handoff and joint reveal, shared-choice intersection, compliment action, skipped conversations excluded from the closing options, and two separate local confirmations before retaining a completed question. Omitted feedback remains uncounted. The prediction offers date plans; the matching card offers conversation, laughter, novelty and affection. A final matching check selected conversation/laughter for one person and laughter/affection for the other; only laughter was revealed.
+
+The final matching card fits a 320×740 viewport with document width/scroll width 320 and height/scroll height 740. The prediction was visually reviewed at 390×844. This is responsive browser verification, not native iOS/Android or two-device testing. Local handoff relies on cooperative use of one phone and is not authenticated private storage. Reloading clears this preview session; its editorial sequence is fixed and no AI is invoked.
+
+The keepsake text serialization is covered by tests. Actual file saving was not confirmed: the browser download-event capture timed out. The download control needs verification on real mobile browsers before release. Native-device checks and synchronized Supabase integration remain outstanding.
+
+![Prediction card at mobile size](variation-guess-mobile.jpg)
+![Shared wishes card at 320×740](variation-match-mobile.jpg)
