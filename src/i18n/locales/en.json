@@ -1189,7 +1189,7 @@
           "2": "How would you like to hear it from me?",
           "3": "How would we know we both want it?"
         },
-        "guessTitle": "What kind of flirting with me most appeals to your partner?",
+        "guessTitle": "Which flirting style does your partner prefer?",
         "guessOptions": {
           "gaze": "Holding eye contact",
           "whisper": "Words whispered close",
@@ -1219,7 +1219,7 @@
           "2": "What words would help you feel free to say yes or no?",
           "3": "How can we protect that freedom together?"
         },
-        "guessTitle": "What would your partner like to express more freely in intimacy?",
+        "guessTitle": "What would your partner like to voice in intimacy?",
         "guessOptions": {
           "enjoyment": "What they enjoy",
           "curiosity": "A curiosity",

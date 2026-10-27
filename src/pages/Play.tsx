@@ -51,7 +51,7 @@ export default function Play() {
   };
   const finishCard = (signal: RoundSignal, skipped = false, outcome?: VariationOutcome) => {
     if (!skipped && kind === 'conversation' && !feedbackComplete(signal)) return;
-    setRounds(previous => [...previous, { ...signal, cardId: kind === 'closing' ? `editorial-v2:${level}:closing` : cardContext(level, kind, kind === 'conversation' ? questionIndex : 0).cardKey, level, topic: cardContext(level, 'conversation').topic, catalogVersion: 'editorial-v2', activeVisibleMs: exposure.current, skipped, asker, respondent, feedbackPerspective: kind === 'conversation' ? 'listener' : null, kind, question: questions[questionIndex], followedUp: followup, outcome }]);
+    setRounds(previous => [...previous, { ...signal, cardId: kind === 'closing' ? `editorial-v2:${level}:closing` : cardContext(level, kind, kind === 'conversation' ? questionIndex : 0).cardKey, level, topic: cardContext(level, 'conversation').topic, catalogVersion: 'editorial-v2', activeVisibleMs: exposure.current, skipped, asker, respondent, feedbackPerspective: kind === 'conversation' ? 'listener' : null, kind, question: kind === 'conversation' ? questions[questionIndex] : kind === 'closing' ? t('variations.closing.title') : t(`variations.levels.${level}.${kind === 'action' ? 'actionTitle' : `${kind}Title`}`), followedUp: followup, outcome }]);
     setFeedbackOpen(false);
     // Replacing an unwanted card keeps the same person's opportunity to answer.
     if (!skipped) setAsker(respondent);

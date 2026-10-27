@@ -1207,7 +1207,7 @@
           "2": "¿Cómo te gustaría escucharlo de mí?",
           "3": "¿Cómo sabríamos que a los dos nos apetece?"
         },
-        "guessTitle": "¿Qué forma de coquetear conmigo le atrae más a tu pareja?",
+        "guessTitle": "¿Qué coqueteo le gusta más a tu pareja?",
         "guessOptions": {
           "gaze": "Una mirada sostenida",
           "whisper": "Palabras al oído",
@@ -1237,7 +1237,7 @@
           "2": "¿Qué palabras te harían sentir libre de decir sí o no?",
           "3": "¿Cómo podemos cuidar esa libertad entre los dos?"
         },
-        "guessTitle": "¿Qué le gustaría expresar con más libertad a tu pareja en la intimidad?",
+        "guessTitle": "¿Qué quiere expresar tu pareja en la intimidad?",
         "guessOptions": {
           "enjoyment": "Lo que disfruta",
           "curiosity": "Una curiosidad",

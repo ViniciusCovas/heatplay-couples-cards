@@ -1207,7 +1207,7 @@
           "2": "Comment aimerais-tu l’entendre de ma part ?",
           "3": "Comment saurions-nous que nous en avons envie tous les deux ?"
         },
-        "guessTitle": "Quelle façon de flirter avec moi attire le plus ton partenaire ?",
+        "guessTitle": "Quel flirt plaît le plus à ton partenaire ?",
         "guessOptions": {
           "gaze": "Un regard prolongé",
           "whisper": "Des mots à l’oreille",
@@ -1237,7 +1237,7 @@
           "2": "Quels mots te permettraient de dire librement oui ou non ?",
           "3": "Comment préserver ensemble cette liberté ?"
         },
-        "guessTitle": "Qu’aimerait exprimer ton partenaire plus librement dans l’intimité ?",
+        "guessTitle": "Que veut exprimer ton partenaire dans l’intimité ?",
         "guessOptions": {
           "enjoyment": "Ce qui lui plaît",
           "curiosity": "Une curiosité",

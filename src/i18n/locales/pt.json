@@ -1207,7 +1207,7 @@
           "2": "Como gostaria de ouvir isso de mim?",
           "3": "Como saberíamos que os dois querem?"
         },
-        "guessTitle": "Que jeito de flertar comigo mais atrai seu par?",
+        "guessTitle": "Que flerte seu par prefere?",
         "guessOptions": {
           "gaze": "Sustentar o olhar",
           "whisper": "Palavras ao ouvido",
@@ -1237,7 +1237,7 @@
           "2": "Que palavras fariam você se sentir livre para dizer sim ou não?",
           "3": "Como podemos cuidar dessa liberdade juntos?"
         },
-        "guessTitle": "O que seu par gostaria de expressar com mais liberdade na intimidade?",
+        "guessTitle": "O que seu par quer expressar na intimidade?",
         "guessOptions": {
           "enjoyment": "O que gosta",
           "curiosity": "Uma curiosidade",
