@@ -811,68 +811,6 @@
     "streak_many": "Série de {{count}} jours",
     "shareText": "Notre question Daily Spark du jour : « {{question}} » — tu me réponds ? 😏 Joue avec moi ici : {{url}}"
   },
-  "landing": {
-    "badge": "Pour les couples · Privé · 18+",
-    "headline": "Tu peux encore me surprendre.",
-    "sub": "Connectez vos téléphones, choisissez un niveau et laissez venir la conversation.",
-    "ctaPlay": "Rejoindre mon partenaire",
-    "ctaJoin": "J'ai un code",
-    "deckHint": "Touchez une carte pour la retourner · glissez pour la suivante",
-    "deckBack": "Votre question vous attend…",
-    "deckPrompt": "Répondez à voix haute — puis renvoyez-la.",
-    "stats": {
-      "couples": "Deux téléphones, une connexion",
-      "questions": "Quatre langues",
-      "rating": "À votre rythme"
-    },
-    "how": {
-      "title": "Votre soirée en trois étapes",
-      "step1": {
-        "title": "Créez votre salon privé",
-        "desc": "Un geste, zéro réglage. Un code qui n'appartient qu'à vous deux.",
-        "chip": "Code du salon"
-      },
-      "step2": {
-        "title": "Envoyez le lien à votre partenaire",
-        "desc": "Un clic et c'est parti. Le jeu commence dès que vous êtes deux.",
-        "bubble": "Tu joues avec moi ce soir ? Une question et tu verras 😏",
-        "reply": "Je suis partant·e. Envoie le lien 🔥"
-      },
-      "step3": {
-        "title": "Jouez et recevez votre analyse IA",
-        "desc": "Répondez, notez, provoquez-vous. À la fin, l'IA vous raconte votre soirée : votre vibe, votre score, votre histoire.",
-        "score": "Compatibilité"
-      }
-    },
-    "levels": {
-      "title": "Quatre niveaux dans les salons en ligne",
-      "sub": "Quatre niveaux, une seule règle : vous n'allez que là où vous le voulez tous les deux.",
-      "sample": "Carte d'exemple",
-      "l1desc": "Des questions douces, comme un premier rendez-vous.",
-      "l2desc": "Celles auxquelles on pense sans jamais oser les poser.",
-      "l3desc": "Là où la pièce se réchauffe et les réponses deviennent sincères.",
-      "l4desc": "Sans filtre, sans script. Rien que vous deux, à fond."
-    },
-    "ai": {
-      "eyebrow": "L’IA prépare. Vous vous retrouvez.",
-      "title": "Des cartes pour la soirée dont vous avez envie.",
-      "body": "L’IA peut organiser nos cartes selon votre humeur et vos limites. Vos réponses restent entre vous ; si l’IA est indisponible, notre sélection éditoriale prend le relais.",
-      "insight": "Vous deux transformez une simple question en conversation de quarante minutes.",
-      "cta": "Préparer notre soirée"
-    },
-    "pricing": {
-      "free": "Gratuit",
-      "freeDesc": "Des parties complètes sur un téléphone et l’étincelle du jour. Sans compte.",
-      "premium": "Premium",
-      "premiumDesc": "Tous les niveaux, analyse IA complète, soirées illimitées.",
-      "cta": "Comparer les offres"
-    },
-    "sticky": "Jouer maintenant",
-    "spark": {
-      "title": "Pas encore prêts pour le jeu complet ?",
-      "sub": "Prenez la question du jour — une par jour, gratuite pour toujours."
-    }
-  },
   "notFound": {
     "title": "Cette page est sortie du scénario",
     "description": "Nous n'avons pas trouvé la page que vous cherchiez. Revenons à quelque chose de plus proche.",

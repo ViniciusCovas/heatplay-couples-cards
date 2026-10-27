@@ -32,16 +32,25 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-charts": ["recharts"],
-          "vendor-i18n": [
-            "i18next",
-            "react-i18next",
-            "i18next-browser-languagedetector",
-          ],
+        manualChunks(id) {
+          // Runtime helpers and tiny utilities are shared by the landing and
+          // lazy screens. Giving them their own home prevents Rollup 4.24
+          // from pulling an entire chart/database chunk into the entry page.
+          if (id.includes('commonjsHelpers') || id.includes('vite/preload-helper') || id.includes('vite/modulepreload-polyfill')) {
+            return 'vendor-runtime';
+          }
+          if (/[/\\]node_modules[/\\](clsx|tailwind-merge|class-variance-authority)[/\\]/.test(id)) {
+            return 'vendor-ui-utils';
+          }
+          if (/[/\\]node_modules[/\\](react|react-dom|react-router|react-router-dom|scheduler|react-is)[/\\]/.test(id)) {
+            return 'vendor-react';
+          }
+          if (id.includes('/node_modules/@supabase/')) return 'vendor-supabase';
+          if (id.includes('/node_modules/@tanstack/')) return 'vendor-query';
+          if (id.includes('/node_modules/recharts/')) return 'vendor-charts';
+          if (/[/\\]node_modules[/\\](i18next|react-i18next|i18next-browser-languagedetector)[/\\]/.test(id)) {
+            return 'vendor-i18n';
+          }
         },
       },
     },

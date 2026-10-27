@@ -140,3 +140,19 @@ Final responsive review: code `6fdc1dfd19d1439fa0833eb6a5099bb554f78e4b`, deploy
 
 ![Direct question with centered brand/category](direct-card-mobile.jpg)
 ![Level-aware Fuego prediction](level-guess-mobile.jpg)
+
+
+## Interactive landing and conversion path — 2026-10-27
+
+- Rebuilt the marketing page around a real, playable editorial card; retained the original logo, pink/coral/purple branding and four game-level palettes.
+- Demo uses the same 16 questions and followups as Play. Level choice, another-card control, on-card emoji feedback and contextual continuation work without registration.
+- All marketing play actions lead to `/play`, which now starts directly at level selection in every build. Removed simulated invitation/setup steps from this local experience.
+- Added illustrated turn-taking, level examples, occasional dynamics, shared ritual, current/free versus upcoming capabilities, FAQ and a replay-oriented completion screen in ES/EN/PT/FR.
+- Preview `/` is now landing, `/play` game; legacy backend/auth/payment paths stay excluded. Preview does not mount AuthProvider. Added static preview noindex, route metadata, document language sync and accurate social/manifest descriptions.
+- Funnel events distinguish demo interaction, game start, first completed card and completed session; events contain no level, question, response or reaction data. Analytics is still disabled without a configured key; no conversion uplift has been measured.
+- Removed the landing's visit-based Daily Spark streak and unsupported social-proof/pricing promises. Billing, connected phones and live AI remain pending backend consolidation; no payment flow was enabled.
+- Browser verification on deployed preview: desktop hero, 320/390-width viewports without horizontal overflow, four-language switching, selected-level question changes, inline emoji/followup and discomfort branch, direct level entry, required feeling+pace guard, and alternating respondent after completion. Smallest-screen hero was subsequently compacted after visual review.
+- Validation: all 24 existing tests passed; TypeScript, normal build and preview build passed. Focused lint passed. Real-device Safari/Android and paid conversion/retention outcomes remain unmeasured.
+- Legal pages retain connected-service documents with an explicit localized notice distinguishing the current local game; full commercial legal review remains part of backend/billing launch.
+
+- Final loading pass: explicit Rollup chunk assignments keep charts and Supabase out of static landing preloads (~143 KB gzip combined deferred chunks). Current preview entry plus preloads total ~217 KB gzip. This is a bundle measurement, not a measured Core Web Vitals score. Normal builds retain their existing dynamic AuthProvider behavior. Removed all four unused legacy landing translation subtrees after verifying zero references.

@@ -7,7 +7,7 @@ import { track } from '@/lib/analytics';
 import './hero-deck.css';
 
 /** The same four accents used on the cards in Play. */
-export const HEAT_STYLE = {
+const HEAT_STYLE = {
   1: { dot: '#257157', ink: '#257157', wash: '#edf8f1', tint: 'linear-gradient(155deg, #edf8f1, #fff 65%)', line: '#cce4d7', glow: '#25715722', levelKey: 'levels.level1Name' },
   2: { dot: '#8544aa', ink: '#8544aa', wash: '#f5edff', tint: 'linear-gradient(155deg, #f5edff, #fff 65%)', line: '#e0cdeb', glow: '#8544aa22', levelKey: 'levels.level2Name' },
   3: { dot: '#be3a38', ink: '#be3a38', wash: '#fff0eb', tint: 'linear-gradient(155deg, #fff0eb, #fff 65%)', line: '#f0cec7', glow: '#be3a3822', levelKey: 'levels.level3Name' },

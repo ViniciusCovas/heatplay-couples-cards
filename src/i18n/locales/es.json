@@ -811,68 +811,6 @@
     "streak_many": "Racha de {{count}} días",
     "shareText": "Nuestra pregunta Daily Spark de hoy: \"{{question}}\" — ¿me respondes? 😏 Juega conmigo aquí: {{url}}"
   },
-  "landing": {
-    "badge": "Para parejas · Privado · +18",
-    "headline": "Todavía puedes sorprenderme.",
-    "sub": "Conecten sus teléfonos, elijan el nivel y dejen que fluya la conversación.",
-    "ctaPlay": "Conectar con mi pareja",
-    "ctaJoin": "Tengo un código",
-    "deckHint": "Toca una carta para girarla · desliza para ver la siguiente",
-    "deckBack": "Tu pregunta te espera…",
-    "deckPrompt": "Respóndanla en voz alta — y devuélvanla.",
-    "stats": {
-      "couples": "Dos teléfonos, una conexión",
-      "questions": "Cuatro idiomas",
-      "rating": "A su ritmo"
-    },
-    "how": {
-      "title": "Una noche en tres pasos",
-      "step1": {
-        "title": "Crea vuestra sala privada",
-        "desc": "Un toque y listo. Un código que es solo vuestro.",
-        "chip": "Código de sala"
-      },
-      "step2": {
-        "title": "Envíale el enlace a tu pareja",
-        "desc": "Un clic y ya está dentro. El juego empieza en cuanto estéis los dos.",
-        "bubble": "¿Juegas conmigo esta noche? Una pregunta y verás 😏",
-        "reply": "Me apunto. Pásame el enlace 🔥"
-      },
-      "step3": {
-        "title": "Jugad y recibid vuestro análisis con IA",
-        "desc": "Responded, puntuad, provocaos. Al final, la IA os devuelve la noche: vuestro rollo, vuestra puntuación, vuestra historia.",
-        "score": "Compatibilidad"
-      }
-    },
-    "levels": {
-      "title": "Cuatro niveles en las salas online",
-      "sub": "Cuatro niveles y una sola regla: solo llegáis hasta donde queráis los dos.",
-      "sample": "Carta de muestra",
-      "l1desc": "Preguntas dulces que saben a primera cita.",
-      "l2desc": "Lo que piensas pero nunca te atreves a preguntar.",
-      "l3desc": "Aquí sube la temperatura y las respuestas se vuelven sinceras.",
-      "l4desc": "Sin filtros y sin guion. Solo vosotros dos, a por todas."
-    },
-    "ai": {
-      "eyebrow": "La IA prepara. Ustedes se encuentran.",
-      "title": "Una baraja para el momento que quieren vivir.",
-      "body": "La IA puede ordenar nuestras cartas según el ánimo y los límites que elijan. Las respuestas se quedan entre ustedes; si la IA no está disponible, la selección editorial mantiene la noche en marcha.",
-      "insight": "Vosotros convertís cualquier pregunta en una conversación de cuarenta minutos.",
-      "cta": "Preparar nuestra noche"
-    },
-    "pricing": {
-      "free": "Gratis",
-      "freeDesc": "Partidas completas con un teléfono y la chispa diaria. Sin registro.",
-      "premium": "Premium",
-      "premiumDesc": "Todos los niveles, análisis completo con IA y noches sin límite.",
-      "cta": "Comparar planes"
-    },
-    "sticky": "Jugar ahora",
-    "spark": {
-      "title": "¿Aún no os animáis con el juego completo?",
-      "sub": "Llevaos la pregunta de hoy: una al día, gratis para siempre."
-    }
-  },
   "notFound": {
     "title": "Esta página se salió del guion",
     "description": "No encontramos la página que buscabas. Volvamos a algo más cercano.",

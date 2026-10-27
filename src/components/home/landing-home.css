@@ -39,3 +39,5 @@
 }
 @media (max-width: 360px) { .landing-hero { padding: 25px 16px 42px; gap: 28px; } .landing-hero-actions { gap: 4px 14px; } .landing-main-action { padding-inline: 18px; } .landing-demo-action { font-size: 12px; } }
 @media (prefers-reduced-motion: reduce) { .landing-v2 *, .landing-v2 *::before, .landing-v2 *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
+
+@media (max-width: 360px) { .landing-demo-action { display: none; } .landing-hero-description { font-size: 14px; } }

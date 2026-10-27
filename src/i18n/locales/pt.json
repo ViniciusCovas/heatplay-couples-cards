@@ -811,68 +811,6 @@
     "streak_many": "Sequência de {{count}} dias",
     "shareText": "Nossa pergunta Daily Spark de hoje: \"{{question}}\" — me responde? 😏 Joga comigo aqui: {{url}}"
   },
-  "landing": {
-    "badge": "Para casais · Privado · +18",
-    "headline": "Você ainda pode me surpreender.",
-    "sub": "Conectem seus celulares, escolham o nível e deixem a conversa acontecer.",
-    "ctaPlay": "Conectar com meu par",
-    "ctaJoin": "Tenho um código",
-    "deckHint": "Toque numa carta para virar · deslize para ver a próxima",
-    "deckBack": "Sua pergunta está esperando…",
-    "deckPrompt": "Respondam em voz alta — e devolvam.",
-    "stats": {
-      "couples": "Dois celulares, uma conexão",
-      "questions": "Quatro idiomas",
-      "rating": "No ritmo de vocês"
-    },
-    "how": {
-      "title": "Uma noite em três passos",
-      "step1": {
-        "title": "Crie sua sala privada",
-        "desc": "Um toque, sem configuração. Um código que é só de vocês.",
-        "chip": "Código da sala"
-      },
-      "step2": {
-        "title": "Mande o link para seu amor",
-        "desc": "Um clique e pronto. O jogo começa assim que vocês dois entrarem.",
-        "bubble": "Joga comigo hoje à noite? Uma pergunta e você vai entender 😏",
-        "reply": "Topo. Manda o link 🔥"
-      },
-      "step3": {
-        "title": "Joguem e recebam a análise da IA",
-        "desc": "Respondam, avaliem, provoquem. No final, a IA devolve a noite de vocês: a vibe, a nota, a história.",
-        "score": "Compatibilidade"
-      }
-    },
-    "levels": {
-      "title": "Quatro níveis nas salas online",
-      "sub": "Quatro níveis, uma regra só: vocês só vão até onde os dois quiserem.",
-      "sample": "Carta de exemplo",
-      "l1desc": "Perguntas doces com gostinho de primeiro encontro.",
-      "l2desc": "Aquilo que você pensa mas nunca teve coragem de perguntar.",
-      "l3desc": "Onde a temperatura sobe e as respostas ficam sinceras.",
-      "l4desc": "Sem filtro, sem roteiro. Só vocês dois, com tudo."
-    },
-    "ai": {
-      "eyebrow": "A IA prepara. Vocês se encontram.",
-      "title": "Um baralho para o momento que vocês querem viver.",
-      "body": "A IA pode ordenar nossas cartas conforme o clima e os limites escolhidos. As respostas ficam entre vocês; se a IA não estiver disponível, a seleção editorial mantém a noite em movimento.",
-      "insight": "Vocês transformam qualquer pergunta numa conversa de quarenta minutos.",
-      "cta": "Preparar nossa noite"
-    },
-    "pricing": {
-      "free": "Grátis",
-      "freeDesc": "Partidas completas com um celular e a faísca diária. Sem cadastro.",
-      "premium": "Premium",
-      "premiumDesc": "Todos os níveis, análise completa com IA e noites ilimitadas.",
-      "cta": "Comparar planos"
-    },
-    "sticky": "Jogar agora",
-    "spark": {
-      "title": "Ainda não estão prontos para o jogo completo?",
-      "sub": "Levem a pergunta de hoje — uma por dia, grátis para sempre."
-    }
-  },
   "notFound": {
     "title": "Esta página saiu do roteiro",
     "description": "Não encontramos a página que você procurava. Vamos voltar para algo mais próximo.",
